@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Mrishana Vivaah Ledger — Wedding Vendor Budget</title>
+<title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,9 +46,11 @@
     padding-bottom:20px; margin-bottom:28px;
   }
   .brand-mark{display:flex; align-items:center; gap:14px;}
+  .logo-slot{position:relative; width:46px; height:46px; flex-shrink:0; display:inline-block;}
   .brand-glyph{
     width:46px; height:46px; flex-shrink:0;
   }
+  .logo-slot .brand-glyph{position:absolute; top:0; left:0;}
   .brand h1{
     font-family:'Cormorant Garamond', serif;
     font-weight:700; font-size:30px; line-height:1;
@@ -58,6 +60,19 @@
     margin:4px 0 0; font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase;
     color:var(--ink-soft); font-weight:600;
   }
+  #btnEditBranding{
+    margin-left:2px; opacity:0.45; transition:opacity .15s;
+  }
+  .brand-mark:hover #btnEditBranding{opacity:1;}
+  .branding-logo-row{display:flex; align-items:center; gap:14px;}
+  .logo-preview{
+    position:relative; width:64px; height:64px; flex-shrink:0; border-radius:50%;
+    border:1px solid var(--line); overflow:hidden; display:flex; align-items:center; justify-content:center;
+    background:var(--ivory-deep);
+  }
+  .logo-preview svg, .logo-preview img{width:100%; height:100%;}
+  .branding-logo-actions{display:flex; flex-direction:column; gap:8px;}
+  .field-hint{font-size:11px; color:var(--ink-soft); margin-top:6px;}
   .topbar-actions{display:flex; gap:10px; flex-wrap:wrap;}
   .btn{
     display:inline-flex; align-items:center; gap:7px;
@@ -328,16 +343,20 @@
 
   <div class="topbar">
     <div class="brand-mark">
-      <svg class="brand-glyph" viewBox="0 0 48 48" fill="none">
-        <circle cx="24" cy="24" r="22" stroke="#D4A24C" stroke-width="1.5"/>
-        <path d="M24 8 C30 14, 30 20, 24 24 C18 20, 18 14, 24 8 Z" fill="#5C1A2B"/>
-        <path d="M24 24 C30 28, 30 34, 24 40 C18 34, 18 28, 24 24 Z" fill="#D4A24C"/>
-        <circle cx="24" cy="24" r="2.4" fill="#FBF6EE"/>
-      </svg>
+      <span class="logo-slot" id="logoSlot">
+        <svg class="brand-glyph" id="defaultLogo" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="22" stroke="#D4A24C" stroke-width="1.5"/>
+          <path d="M24 8 C30 14, 30 20, 24 24 C18 20, 18 14, 24 8 Z" fill="#5C1A2B"/>
+          <path d="M24 24 C30 28, 30 34, 24 40 C18 34, 18 28, 24 24 Z" fill="#D4A24C"/>
+          <circle cx="24" cy="24" r="2.4" fill="#FBF6EE"/>
+        </svg>
+        <img class="brand-glyph" id="customLogo" alt="Logo" style="display:none; object-fit:cover; border-radius:50%;">
+      </span>
       <div class="brand">
-        <h1>Vivaah Ledger</h1>
-        <p>Wedding vendor budget &amp; payment intelligence</p>
+        <h1 id="brandTitle">Vivaah Ledger</h1>
+        <p id="brandTagline">Wedding vendor budget &amp; payment intelligence</p>
       </div>
+      <button class="icon-btn" id="btnEditBranding" title="Edit logo &amp; header">✎</button>
     </div>
     <div class="topbar-actions">
       <input type="file" id="fileInput" accept=".xlsx,.xls">
@@ -491,6 +510,44 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="brandingModalOverlay">
+  <div class="modal">
+    <h3>Edit logo &amp; header</h3>
+    <div class="field">
+      <label>Logo</label>
+      <div class="branding-logo-row">
+        <span class="logo-preview" id="logoPreviewSlot">
+          <svg viewBox="0 0 48 48" fill="none" id="logoPreviewDefault">
+            <circle cx="24" cy="24" r="22" stroke="#D4A24C" stroke-width="1.5"/>
+            <path d="M24 8 C30 14, 30 20, 24 24 C18 20, 18 14, 24 8 Z" fill="#5C1A2B"/>
+            <path d="M24 24 C30 28, 30 34, 24 40 C18 34, 18 28, 24 24 Z" fill="#D4A24C"/>
+            <circle cx="24" cy="24" r="2.4" fill="#FBF6EE"/>
+          </svg>
+          <img id="logoPreviewCustom" alt="Logo preview" style="display:none; object-fit:cover; border-radius:50%;">
+        </span>
+        <div class="branding-logo-actions">
+          <input type="file" id="logoFileInput" accept="image/*">
+          <button class="btn btn-ghost" id="btnPickLogo" type="button">Upload image</button>
+          <button class="btn btn-ghost" id="btnResetLogo" type="button">Use default</button>
+        </div>
+      </div>
+      <div class="field-hint">PNG or JPG, square images work best. Kept under 300KB for smooth saving.</div>
+    </div>
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="brandTitleInput" placeholder="Vivaah Ledger" maxlength="40">
+    </div>
+    <div class="field">
+      <label>Tagline</label>
+      <input type="text" id="brandTaglineInput" placeholder="Wedding vendor budget & payment intelligence" maxlength="80">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="brandingCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="brandingSaveBtn">Save changes</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -500,9 +557,10 @@ let editingVendorId = null;
 let openRowId = null;
 let functions = [];
 let lastExportAt = null;
+let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -557,9 +615,14 @@ async function loadData(){
     const m = await storageGet('wedding-sync-meta');
     if(m){ lastExportAt = JSON.parse(m).lastExportAt || null; }
   }catch(e){ lastExportAt = null; }
+  try{
+    const b = await storageGet('wedding-branding');
+    if(b){ branding = {...branding, ...JSON.parse(b)}; }
+  }catch(e){ /* keep defaults */ }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
   }
+  applyBranding();
   render();
 }
 async function saveData(){
@@ -569,6 +632,24 @@ async function saveData(){
 async function saveFunctions(){
   await storageSet('wedding-functions', JSON.stringify(functions));
   queueCloudSave();
+}
+async function saveBranding(){
+  await storageSet('wedding-branding', JSON.stringify(branding));
+}
+function applyBranding(){
+  document.getElementById('brandTitle').textContent = branding.title || 'Vivaah Ledger';
+  document.getElementById('brandTagline').textContent = branding.tagline || 'Wedding vendor budget & payment intelligence';
+  document.title = (branding.title || 'Vivaah Ledger') + ' — Wedding Vendor Budget';
+  const defaultLogo = document.getElementById('defaultLogo');
+  const customLogo = document.getElementById('customLogo');
+  if(branding.logo){
+    customLogo.src = branding.logo;
+    customLogo.style.display = 'block';
+    defaultLogo.style.display = 'none';
+  } else {
+    customLogo.style.display = 'none';
+    defaultLogo.style.display = 'block';
+  }
 }
 async function saveSyncMeta(){
   await storageSet('wedding-sync-meta', JSON.stringify({lastExportAt}));
@@ -1091,6 +1172,79 @@ document.getElementById('vendorSaveBtn').onclick = ()=>{
   closeVendorModal();
   saveData(); render();
   showToast('Vendor saved');
+};
+
+/* ---------------- Branding (logo, title, tagline) ---------------- */
+let pendingLogoData = null; // holds newly-picked logo until Save is clicked; null = no change
+
+function openBrandingModal(){
+  pendingLogoData = undefined; // undefined = no change yet; null = explicit reset; string = new logo
+  document.getElementById('brandTitleInput').value = branding.title || '';
+  document.getElementById('brandTaglineInput').value = branding.tagline || '';
+  refreshLogoPreview(branding.logo || null);
+  document.getElementById('brandingModalOverlay').classList.add('show');
+}
+function closeBrandingModal(){
+  document.getElementById('brandingModalOverlay').classList.remove('show');
+}
+function refreshLogoPreview(dataUrl){
+  const img = document.getElementById('logoPreviewCustom');
+  const def = document.getElementById('logoPreviewDefault');
+  if(dataUrl){
+    img.src = dataUrl;
+    img.style.display = 'block';
+    def.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    def.style.display = 'block';
+  }
+}
+
+document.getElementById('btnEditBranding').onclick = openBrandingModal;
+document.getElementById('brandingCancelBtn').onclick = closeBrandingModal;
+document.getElementById('brandingModalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='brandingModalOverlay') closeBrandingModal();
+});
+
+document.getElementById('btnPickLogo').onclick = ()=>document.getElementById('logoFileInput').click();
+
+document.getElementById('logoFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ showToast('Please choose an image file'); return; }
+  if(file.size > 600*1024){
+    showToast('Image is large — try one under 300KB so saving stays smooth');
+  }
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    pendingLogoData = evt.target.result;
+    refreshLogoPreview(pendingLogoData);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+document.getElementById('btnResetLogo').onclick = ()=>{
+  pendingLogoData = null; // explicit reset to default
+  refreshLogoPreview(null);
+};
+
+document.getElementById('brandingSaveBtn').onclick = async ()=>{
+  const title = document.getElementById('brandTitleInput').value.trim();
+  const tagline = document.getElementById('brandTaglineInput').value.trim();
+  branding.title = title;
+  branding.tagline = tagline;
+  if(pendingLogoData !== undefined){
+    branding.logo = pendingLogoData || '';
+  }
+  try{
+    await saveBranding();
+    applyBranding();
+    closeBrandingModal();
+    showToast('Branding updated');
+  }catch(e){
+    showToast('Could not save — try a smaller logo image');
+  }
 };
 
 /* ---------------- Table interactions ---------------- */
