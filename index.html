@@ -320,13 +320,131 @@
   .catering-actions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center;}
   .catering-link-msg{font-size:12px; color:var(--sage); font-weight:600;}
 
+  /* ---------- Vendor advertising ticker ---------- */
+  .ticker-wrap{
+    position:relative; overflow:hidden; background:var(--maroon-dark); border-radius:14px;
+    margin-bottom:26px; height:42px; display:flex; align-items:center;
+  }
+  .ticker-wrap.empty{display:none;}
+  .ticker-label{
+    position:relative; z-index:2; background:var(--gold); color:var(--maroon-dark);
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    padding:6px 12px; height:100%; display:flex; align-items:center; flex-shrink:0;
+  }
+  .ticker-track{
+    display:flex; align-items:center; gap:36px; white-space:nowrap;
+    animation:ticker-scroll 28s linear infinite;
+    padding-left:24px;
+  }
+  .ticker-wrap:hover .ticker-track, .ticker-wrap.paused .ticker-track{animation-play-state:paused;}
+  .ticker-item{color:var(--ivory); font-size:12.5px; font-weight:600; display:inline-flex; align-items:center; gap:8px;}
+  .ticker-item .t-cat{color:var(--gold-light); font-weight:700;}
+  .ticker-item .t-sep{color:var(--gold); opacity:0.6;}
+  .ticker-item .t-contact{color:var(--ivory); opacity:0.75; font-weight:500;}
+  @keyframes ticker-scroll{
+    0%{ transform:translateX(0); }
+    100%{ transform:translateX(-50%); }
+  }
+
+  /* ---------- Reminders ---------- */
+  .reminders-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:30px;}
+  @media (max-width:880px){ .reminders-grid{grid-template-columns:1fr;} }
+  .reminder-card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--card-shadow); padding:18px 18px 16px; display:flex; flex-direction:column;
+  }
+  .reminder-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+  .reminder-head h3{
+    font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--maroon-dark); margin:0;
+    display:flex; align-items:center; gap:7px;
+  }
+  .reminder-count{font-size:11px; font-weight:700; color:var(--ink-soft); background:var(--ivory-deep); padding:2px 8px; border-radius:20px;}
+  .reminder-list{list-style:none; margin:10px 0; padding:0; display:flex; flex-direction:column; gap:6px; max-height:160px; overflow-y:auto;}
+  .reminder-item{
+    display:flex; align-items:flex-start; gap:8px; font-size:12.5px; padding:7px 8px; border-radius:8px;
+    background:var(--ivory); border:1px solid var(--line);
+  }
+  .reminder-item.done{opacity:0.55;}
+  .reminder-item.done .r-text{text-decoration:line-through;}
+  .reminder-item input[type=checkbox]{margin-top:2px; accent-color:var(--sage); cursor:pointer;}
+  .reminder-item .r-text{flex:1; line-height:1.35;}
+  .reminder-item .r-date{font-size:10.5px; color:var(--ink-soft); white-space:nowrap;}
+  .reminder-item .r-del{background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:13px; padding:0 2px;}
+  .reminder-item .r-del:hover{color:var(--rust);}
+  .reminder-empty{font-size:12px; color:var(--ink-soft); padding:8px 0;}
+  .reminder-add-row{display:flex; gap:6px; margin-top:auto;}
+  .reminder-add-row input[type=text]{
+    flex:1; padding:8px 10px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';
+  }
+  .reminder-add-row input[type=date]{
+    padding:8px 8px; border-radius:8px; border:1px solid var(--line); font-size:11.5px; font-family:'Inter'; width:120px;
+  }
+  .reminder-add-row button{
+    background:var(--maroon); color:var(--ivory); border:none; border-radius:8px; padding:8px 12px;
+    font-weight:700; cursor:pointer; font-size:13px;
+  }
+  .reminder-add-row button:hover{background:var(--maroon-dark);}
+
+  /* ---------- Guest list ---------- */
+  .guest-card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
+  }
+  .guest-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .guest-head h2{font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:700; color:var(--maroon-dark); margin:0;}
+  .guest-event-chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .event-chip{
+    font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:20px; cursor:pointer;
+    border:1px solid var(--line); background:var(--ivory); color:var(--ink-soft); transition:all .15s;
+  }
+  .event-chip.active{background:var(--maroon); color:var(--ivory); border-color:var(--maroon);}
+  .event-chip .ec-count{opacity:0.75; margin-left:4px;}
+  .guest-table-wrap{overflow-x:auto;}
+  table.guest-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.guest-table th{
+    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);
+    font-weight:700; padding:9px 10px; border-bottom:2px solid var(--line); white-space:nowrap;
+  }
+  table.guest-table td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  table.guest-table td.gname{font-weight:600; white-space:normal; min-width:120px;}
+  table.guest-table input[type=checkbox]{accent-color:var(--sage); cursor:pointer;}
+  .guest-add-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  .guest-add-row input[type=text]{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
+  .guest-add-row select{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter'; background:#fff;}
+  .guest-del-btn{background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:13px;}
+  .guest-del-btn:hover{color:var(--rust);}
+  .guest-empty{padding:30px; text-align:center; color:var(--ink-soft); font-size:13px;}
+
+  /* ---------- Voice control ---------- */
+  .voice-fab{
+    position:fixed; bottom:24px; right:24px; width:56px; height:56px; border-radius:50%;
+    background:var(--maroon); color:var(--ivory); border:none; cursor:pointer; font-size:22px;
+    box-shadow:0 10px 28px -6px rgba(92,26,43,0.5); z-index:60; display:flex; align-items:center; justify-content:center;
+    transition:transform .15s, background .15s;
+  }
+  .voice-fab:hover{transform:scale(1.06);}
+  .voice-fab.listening{background:var(--rust); animation:voice-pulse 1.2s ease-in-out infinite;}
+  @keyframes voice-pulse{
+    0%, 100%{ box-shadow:0 0 0 0 rgba(181,86,47,0.5); }
+    50%{ box-shadow:0 0 0 14px rgba(181,86,47,0); }
+  }
+  .voice-caption{
+    position:fixed; bottom:90px; right:24px; max-width:260px; background:var(--maroon-dark); color:var(--ivory);
+    padding:10px 14px; border-radius:12px; font-size:12.5px; box-shadow:0 10px 28px -6px rgba(0,0,0,0.3);
+    z-index:60; opacity:0; transform:translateY(8px); transition:all .2s; pointer-events:none;
+  }
+  .voice-caption.show{opacity:1; transform:translateY(0);}
+
   /* ---------- Print stylesheet ---------- */
   @media print{
     body{background:#fff;}
     .topbar-actions, .sync-banner, .toolbar .filters, .empty-state,
     .row-actions, .icon-btn, .chev, #btnAddVendor, .catering-actions,
-    .add-payment-form, .pay-item .del, .footnote { display:none !important; }
-    .card, .ledger, .catering-card{box-shadow:none; border:1px solid #ccc;}
+    .add-payment-form, .pay-item .del, .footnote, .ticker-wrap, .voice-fab,
+    .voice-caption, .reminder-add-row, .guest-add-row, .guest-del-btn,
+    #btnEditBranding { display:none !important; }
+    .card, .ledger, .catering-card, .reminder-card, .guest-card{box-shadow:none; border:1px solid #ccc;}
+    .reminder-list{max-height:none; overflow:visible;}
     tr.detail-row{display:table-row !important;}
     .wrap{max-width:100%; padding:0;}
     .dash{grid-template-columns:repeat(4,1fr);}
@@ -383,6 +501,11 @@
     <div class="meta" id="printDate"></div>
   </div>
 
+  <div class="ticker-wrap empty" id="tickerWrap">
+    <span class="ticker-label">Our Vendors</span>
+    <div class="ticker-track" id="tickerTrack"></div>
+  </div>
+
   <div class="dash">
     <div class="card budget">
       <div class="label">Total wedding budget</div>
@@ -407,6 +530,45 @@
     </div>
   </div>
 
+  <div class="reminders-grid" id="remindersGrid">
+    <div class="reminder-card" data-reminder="trial">
+      <div class="reminder-head">
+        <h3>🥻 Trial Reminder</h3>
+        <span class="reminder-count" id="countTrial">0</span>
+      </div>
+      <ul class="reminder-list" id="listTrial"></ul>
+      <div class="reminder-add-row">
+        <input type="text" id="inputTrial" placeholder="e.g. Bridal trial — 3pm">
+        <input type="date" id="dateTrial">
+        <button data-add-reminder="trial">+</button>
+      </div>
+    </div>
+    <div class="reminder-card" data-reminder="clothes">
+      <div class="reminder-head">
+        <h3>👗 Clothes Reminder</h3>
+        <span class="reminder-count" id="countClothes">0</span>
+      </div>
+      <ul class="reminder-list" id="listClothes"></ul>
+      <div class="reminder-add-row">
+        <input type="text" id="inputClothes" placeholder="e.g. Pick up groom's sherwani">
+        <input type="date" id="dateClothes">
+        <button data-add-reminder="clothes">+</button>
+      </div>
+    </div>
+    <div class="reminder-card" data-reminder="guest">
+      <div class="reminder-head">
+        <h3>📋 Guest Reminder</h3>
+        <span class="reminder-count" id="countGuest">0</span>
+      </div>
+      <ul class="reminder-list" id="listGuest"></ul>
+      <div class="reminder-add-row">
+        <input type="text" id="inputGuest" placeholder="e.g. Confirm headcount with caterer">
+        <input type="date" id="dateGuest">
+        <button data-add-reminder="guest">+</button>
+      </div>
+    </div>
+  </div>
+
   <div class="catering-card">
     <div class="catering-head">
       <div>
@@ -426,6 +588,33 @@
       <select id="cateringVendorSelect"><option value="">Link to a catering vendor…</option></select>
       <button class="btn btn-gold" id="btnApplyCatering">Apply estimate to vendor quote</button>
       <span class="catering-link-msg" id="cateringLinkMsg"></span>
+    </div>
+  </div>
+
+  <div class="guest-card">
+    <div class="guest-head">
+      <div>
+        <h2>Guest list</h2>
+        <p style="margin:3px 0 0; font-size:12px; color:var(--ink-soft);">One list, tag each guest for whichever functions they're invited to.</p>
+      </div>
+    </div>
+    <div class="guest-event-chips" id="guestEventChips"></div>
+    <div class="guest-table-wrap">
+      <table class="guest-table" id="guestTable">
+        <thead><tr id="guestTableHead"></tr></thead>
+        <tbody id="guestTableBody"></tbody>
+      </table>
+      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first guest below.</div>
+    </div>
+    <div class="guest-add-row">
+      <input type="text" id="newGuestName" placeholder="Guest name">
+      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
+      <select id="newGuestSide">
+        <option value="Bride">Bride's side</option>
+        <option value="Groom">Groom's side</option>
+        <option value="Both">Both</option>
+      </select>
+      <button class="btn btn-primary" id="btnAddGuest">+ Add guest</button>
     </div>
   </div>
 
@@ -550,6 +739,9 @@
 
 <div class="toast" id="toast"></div>
 
+<button class="voice-fab" id="voiceFab" title="Voice reminders">🎤</button>
+<div class="voice-caption" id="voiceCaption"></div>
+
 <script>
 /* ---------------- State ---------------- */
 let vendors = [];
@@ -559,8 +751,14 @@ let functions = [];
 let lastExportAt = null;
 let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 
+/* Guest list & reminders state */
+const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grah Shanti', 'Mosalu', 'Mehendi', 'Sangeet', 'Marriage', 'Reception'];
+let guests = [];
+let activeEventFilter = ''; // '' = show all
+let reminders = {trial:[], clothes:[], guest:[]};
+
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -619,6 +817,14 @@ async function loadData(){
     const b = await storageGet('wedding-branding');
     if(b){ branding = {...branding, ...JSON.parse(b)}; }
   }catch(e){ /* keep defaults */ }
+  try{
+    const g = await storageGet('wedding-guests');
+    if(g){ guests = JSON.parse(g); }
+  }catch(e){ guests = []; }
+  try{
+    const r = await storageGet('wedding-reminders');
+    if(r){ reminders = {...reminders, ...JSON.parse(r)}; }
+  }catch(e){ /* keep defaults */ }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
   }
@@ -635,6 +841,14 @@ async function saveFunctions(){
 }
 async function saveBranding(){
   await storageSet('wedding-branding', JSON.stringify(branding));
+}
+async function saveGuests(){
+  await storageSet('wedding-guests', JSON.stringify(guests));
+  queueCloudSave();
+}
+async function saveReminders(){
+  await storageSet('wedding-reminders', JSON.stringify(reminders));
+  queueCloudSave();
 }
 function applyBranding(){
   document.getElementById('brandTitle').textContent = branding.title || 'Vivaah Ledger';
@@ -781,6 +995,10 @@ async function onSignedIn(){
     if(cloudData){
       vendors = cloudData.vendors || vendors;
       functions = cloudData.functions && cloudData.functions.length ? cloudData.functions : functions;
+      guests = cloudData.guests || guests;
+      reminders = cloudData.reminders || reminders;
+      branding = cloudData.branding || branding;
+      applyBranding();
     } else {
       // First-ever connection with an empty sheet — push current local data up
       await pushToSheet();
@@ -808,7 +1026,7 @@ async function pullFromSheet(){
 
 async function pushToSheet(){
   if(!googleAccessToken || !sheetId) return;
-  const payload = JSON.stringify({vendors, functions, savedAt: new Date().toISOString()});
+  const payload = JSON.stringify({vendors, functions, guests, reminders, branding, savedAt: new Date().toISOString()});
   try{
     await sheetsApi(`/${sheetId}/values/${encodeURIComponent(SHEET_DATA_RANGE)}?valueInputOption=RAW`, {
       method:'PUT',
@@ -844,6 +1062,9 @@ function render(){
   renderCategoryOptions();
   renderTable();
   renderCatering();
+  renderTicker();
+  renderReminders();
+  renderGuests();
 }
 
 function renderStats(){
@@ -1017,6 +1238,28 @@ document.getElementById('btnApplyCatering').onclick = ()=>{
   saveData(); render();
   showToast(`Set ${v.name}'s quoted amount to ${fmt(totalCost)}`);
 };
+
+/* ---------------- Vendor advertising ticker ---------------- */
+function renderTicker(){
+  const wrap = document.getElementById('tickerWrap');
+  const track = document.getElementById('tickerTrack');
+  if(vendors.length===0){
+    wrap.classList.add('empty');
+    track.innerHTML = '';
+    return;
+  }
+  wrap.classList.remove('empty');
+  const itemsHtml = vendors.map(v=>`
+    <span class="ticker-item">
+      <span class="t-cat">${escapeHtml(v.category||'Vendor')}</span>
+      ${escapeHtml(v.name)}
+      ${v.phone ? `<span class="t-contact">· ${escapeHtml(v.phone)}</span>` : ''}
+      <span class="t-sep">✦</span>
+    </span>
+  `).join('');
+  // Duplicate the set so the looping animation has no visible seam
+  track.innerHTML = itemsHtml + itemsHtml;
+}
 
 function renderTable(){
   const body = document.getElementById('ledgerBody');
@@ -1247,6 +1490,170 @@ document.getElementById('brandingSaveBtn').onclick = async ()=>{
   }
 };
 
+/* ---------------- Reminders (Trial / Clothes / Guest) ---------------- */
+const REMINDER_KEYS = ['trial', 'clothes', 'guest'];
+
+function renderReminders(){
+  REMINDER_KEYS.forEach(key=>{
+    const list = reminders[key] || [];
+    const ul = document.getElementById('list' + capitalize(key));
+    const countEl = document.getElementById('count' + capitalize(key));
+    const pending = list.filter(item=>!item.done).length;
+    countEl.textContent = pending;
+    if(list.length===0){
+      ul.innerHTML = '<div class="reminder-empty">Nothing added yet.</div>';
+      return;
+    }
+    const sorted = list.slice().sort((a,b)=>{
+      if(a.done !== b.done) return a.done ? 1 : -1;
+      return (a.date||'9999').localeCompare(b.date||'9999');
+    });
+    ul.innerHTML = sorted.map(item=>`
+      <li class="reminder-item ${item.done?'done':''}" data-reminder-key="${key}" data-reminder-id="${item.id}">
+        <input type="checkbox" ${item.done?'checked':''} data-toggle-reminder>
+        <span class="r-text">${escapeHtml(item.text)}</span>
+        ${item.date ? `<span class="r-date">${formatShortDate(item.date)}</span>` : ''}
+        <button class="r-del" data-del-reminder title="Remove">✕</button>
+      </li>
+    `).join('');
+  });
+}
+function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+function formatShortDate(dateStr){
+  const d = new Date(dateStr);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
+}
+
+function addReminder(key, text, date){
+  if(!text || !text.trim()) return false;
+  reminders[key] = reminders[key] || [];
+  reminders[key].push({id:uid(), text:text.trim(), date:date||'', done:false});
+  saveReminders(); renderReminders();
+  return true;
+}
+
+REMINDER_KEYS.forEach(key=>{
+  const cap = capitalize(key);
+  document.querySelector(`[data-add-reminder="${key}"]`).onclick = ()=>{
+    const textInput = document.getElementById('input'+cap);
+    const dateInput = document.getElementById('date'+cap);
+    if(addReminder(key, textInput.value, dateInput.value)){
+      textInput.value = '';
+      dateInput.value = '';
+    } else {
+      showToast('Type something to add');
+    }
+  };
+  document.getElementById('input'+cap).addEventListener('keydown', (e)=>{
+    if(e.key==='Enter'){
+      document.querySelector(`[data-add-reminder="${key}"]`).click();
+    }
+  });
+});
+
+document.getElementById('remindersGrid').addEventListener('click', (e)=>{
+  const item = e.target.closest('.reminder-item');
+  if(!item) return;
+  const key = item.dataset.reminderKey;
+  const id = item.dataset.reminderId;
+  if(e.target.matches('[data-toggle-reminder]')){
+    const r = (reminders[key]||[]).find(x=>x.id===id);
+    if(r){ r.done = e.target.checked; saveReminders(); renderReminders(); }
+  }
+  if(e.target.closest('[data-del-reminder]')){
+    reminders[key] = (reminders[key]||[]).filter(x=>x.id!==id);
+    saveReminders(); renderReminders();
+  }
+});
+
+/* ---------------- Guest list ---------------- */
+function renderGuests(){
+  // Event filter chips
+  const chipsEl = document.getElementById('guestEventChips');
+  const allCount = guests.length;
+  chipsEl.innerHTML = `<span class="event-chip ${activeEventFilter===''?'active':''}" data-event-filter="">All <span class="ec-count">${allCount}</span></span>` +
+    WEDDING_EVENTS.map(ev=>{
+      const count = guests.filter(g=>(g.events||[]).includes(ev)).length;
+      return `<span class="event-chip ${activeEventFilter===ev?'active':''}" data-event-filter="${escapeHtml(ev)}">${escapeHtml(ev)} <span class="ec-count">${count}</span></span>`;
+    }).join('');
+
+  // Table head
+  const head = document.getElementById('guestTableHead');
+  head.innerHTML = '<th>Name</th><th>Phone</th><th>Side</th>' +
+    WEDDING_EVENTS.map(ev=>`<th>${escapeHtml(ev)}</th>`).join('') + '<th></th>';
+
+  // Table body
+  const body = document.getElementById('guestTableBody');
+  const empty = document.getElementById('guestEmpty');
+  const filtered = activeEventFilter ? guests.filter(g=>(g.events||[]).includes(activeEventFilter)) : guests;
+
+  if(filtered.length===0){
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('guestTable').style.display = guests.length===0 ? 'none' : 'table';
+    return;
+  }
+  empty.style.display = 'none';
+  document.getElementById('guestTable').style.display = 'table';
+
+  body.innerHTML = filtered.map(g=>`
+    <tr data-guest-id="${g.id}">
+      <td class="gname">${escapeHtml(g.name)}</td>
+      <td>${escapeHtml(g.phone||'—')}</td>
+      <td>${escapeHtml(g.side||'—')}</td>
+      ${WEDDING_EVENTS.map(ev=>`<td style="text-align:center;"><input type="checkbox" data-guest-event="${escapeHtml(ev)}" ${(g.events||[]).includes(ev)?'checked':''}></td>`).join('')}
+      <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
+    </tr>
+  `).join('');
+}
+
+document.getElementById('guestEventChips').addEventListener('click', (e)=>{
+  const chip = e.target.closest('[data-event-filter]');
+  if(!chip) return;
+  activeEventFilter = chip.dataset.eventFilter;
+  renderGuests();
+});
+
+document.getElementById('btnAddGuest').onclick = ()=>{
+  const nameInput = document.getElementById('newGuestName');
+  const phoneInput = document.getElementById('newGuestPhone');
+  const sideInput = document.getElementById('newGuestSide');
+  const name = nameInput.value.trim();
+  if(!name){ showToast('Enter a guest name first'); return; }
+  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:[]});
+  nameInput.value=''; phoneInput.value='';
+  saveGuests(); renderGuests();
+  showToast('Guest added');
+};
+document.getElementById('newGuestName').addEventListener('keydown', (e)=>{
+  if(e.key==='Enter') document.getElementById('btnAddGuest').click();
+});
+
+document.getElementById('guestTableBody').addEventListener('click', (e)=>{
+  const row = e.target.closest('tr[data-guest-id]');
+  if(!row) return;
+  const gid = row.dataset.guestId;
+  const g = guests.find(x=>x.id===gid);
+  if(!g) return;
+
+  if(e.target.matches('[data-guest-event]')){
+    const ev = e.target.dataset.guestEvent;
+    g.events = g.events || [];
+    if(e.target.checked){
+      if(!g.events.includes(ev)) g.events.push(ev);
+    } else {
+      g.events = g.events.filter(x=>x!==ev);
+    }
+    saveGuests();
+    renderGuests(); // refreshes chip counts; checkbox state preserved via re-render from data
+  }
+  if(e.target.closest('[data-del-guest]')){
+    guests = guests.filter(x=>x.id!==gid);
+    saveGuests(); renderGuests();
+  }
+});
+
 /* ---------------- Table interactions ---------------- */
 document.getElementById('ledgerBody').addEventListener('click', (e)=>{
   const editBtn = e.target.closest('[data-edit]');
@@ -1339,9 +1746,13 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       const paySheetName = wb.SheetNames.find(n=>/payment/i.test(n));
       if(paySheetName) paymentRows = XLSX.utils.sheet_to_json(wb.Sheets[paySheetName], {defval:''});
 
-      let guestRows = [];
-      const guestSheetName = wb.SheetNames.find(n=>/guest/i.test(n));
-      if(guestSheetName) guestRows = XLSX.utils.sheet_to_json(wb.Sheets[guestSheetName], {defval:''});
+      let cateringRows = [];
+      const cateringSheetName = wb.SheetNames.find(n=>/catering|headcount/i.test(n));
+      if(cateringSheetName) cateringRows = XLSX.utils.sheet_to_json(wb.Sheets[cateringSheetName], {defval:''});
+
+      let guestListRows = [];
+      const guestListSheetName = wb.SheetNames.find(n=>/^guest\s*list$/i.test(n.trim()) || /^guests?$/i.test(n.trim()));
+      if(guestListSheetName) guestListRows = XLSX.utils.sheet_to_json(wb.Sheets[guestListSheetName], {defval:''});
 
       if(rows.length===0){ showToast('No rows found in the sheet'); return; }
 
@@ -1393,22 +1804,51 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
         if(v){ v.payments.push({id:uid(), date:dateStr, amount, note}); paymentsImported++; }
       });
 
-      let guestsImported = 0;
-      if(guestRows.length){
+      let functionsImported = 0;
+      if(cateringRows.length){
         const newFunctions = [];
-        guestRows.forEach(row=>{
-          const name = String(getVal(row,['function','functionname','name'])).trim();
-          if(!name) return;
-          const guests = Number(getVal(row,['guestcount','guests','headcount'])) || 0;
+        cateringRows.forEach(row=>{
+          const fname = String(getVal(row,['function','functionname','name'])).trim();
+          if(!fname) return;
+          const headcount = Number(getVal(row,['guestcount','guests','headcount'])) || 0;
           const rate = Number(getVal(row,['rateperplate','rate','perheadrate','perhead'])) || 0;
-          newFunctions.push({id:uid(), name, guests, rate});
-          guestsImported++;
+          newFunctions.push({id:uid(), name:fname, guests:headcount, rate});
+          functionsImported++;
         });
         if(newFunctions.length) functions = newFunctions;
       }
 
-      saveData(); saveFunctions(); render();
-      showToast(`Imported ${imported} vendor${imported===1?'':'s'}${paymentsImported? ' & '+paymentsImported+' payment(s)':''}${guestsImported? ' & '+guestsImported+' function(s)':''}`);
+      let guestsImported = 0;
+      if(guestListRows.length){
+        guestListRows.forEach(row=>{
+          const gname = String(getVal(row,['name','guestname'])).trim();
+          if(!gname) return;
+          const phone = String(getVal(row,['phone','phonenumber','mobile'])).trim();
+          const side = String(getVal(row,['side'])).trim() || 'Both';
+          const eventsRaw = String(getVal(row,['events','functions','tags'])).trim();
+          const eventList = eventsRaw ? eventsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+          const matchedEvents = eventList.map(e=>{
+            const found = WEDDING_EVENTS.find(we=>we.toLowerCase()===e.toLowerCase());
+            return found || e;
+          }).filter(e=>WEDDING_EVENTS.includes(e));
+          const existingGuest = guests.find(g=>g.name.toLowerCase()===gname.toLowerCase());
+          if(existingGuest){
+            existingGuest.phone = phone || existingGuest.phone;
+            existingGuest.side = side;
+            existingGuest.events = Array.from(new Set([...(existingGuest.events||[]), ...matchedEvents]));
+          } else {
+            guests.push({id:uid(), name:gname, phone, side, events:matchedEvents});
+          }
+          guestsImported++;
+        });
+      }
+
+      saveData(); saveFunctions(); saveGuests(); render();
+      const importParts = [`${imported} vendor${imported===1?'':'s'}`];
+      if(paymentsImported) importParts.push(`${paymentsImported} payment(s)`);
+      if(functionsImported) importParts.push(`${functionsImported} catering function(s)`);
+      if(guestsImported) importParts.push(`${guestsImported} guest(s)`);
+      showToast(`Imported ${importParts.join(', ')}`);
     }catch(err){
       console.error(err);
       showToast('Could not read this file — check the format');
@@ -1430,14 +1870,19 @@ document.getElementById('btnTemplate').onclick = ()=>{
     {VendorName:'Royal Banquet Hall', Date:'2026-03-10', Amount:150000, Note:'Booking advance'},
     {VendorName:'Lens & Light Studio', Date:'2026-04-01', Amount:50000, Note:'Advance'}
   ]);
-  const guestSheet = XLSX.utils.json_to_sheet([
+  const cateringSheet = XLSX.utils.json_to_sheet([
     {Function:'Mehendi', GuestCount:150, RatePerPlate:700},
     {Function:'Sangeet', GuestCount:250, RatePerPlate:900},
     {Function:'Wedding day', GuestCount:400, RatePerPlate:1200}
   ]);
+  const guestListSheet = XLSX.utils.json_to_sheet([
+    {Name:'Asha Patel', Phone:'9876512345', Side:'Bride', Events:'Mehendi, Sangeet, Marriage, Reception'},
+    {Name:'Rohan Shah', Phone:'9876523456', Side:'Groom', Events:'Marriage, Reception'}
+  ]);
   XLSX.utils.book_append_sheet(wb, vendorSheet, 'Vendors');
   XLSX.utils.book_append_sheet(wb, paymentSheet, 'Payments');
-  XLSX.utils.book_append_sheet(wb, guestSheet, 'Guest List');
+  XLSX.utils.book_append_sheet(wb, cateringSheet, 'Catering Headcount');
+  XLSX.utils.book_append_sheet(wb, guestListSheet, 'Guest List');
   XLSX.writeFile(wb, 'Vivaah_Ledger_Template.xlsx');
   showToast('Template downloaded');
 };
@@ -1498,7 +1943,16 @@ document.getElementById('btnExport').onclick = ()=>{
     'Function Cost': Number(f.guests||0)*Number(f.rate||0)
   }));
   const functionSheet = XLSX.utils.json_to_sheet(functionRows.length? functionRows : [{'Function':'','Guest Count':'','Rate Per Plate':'','Function Cost':''}]);
-  XLSX.utils.book_append_sheet(wb, functionSheet, 'Guest List');
+  XLSX.utils.book_append_sheet(wb, functionSheet, 'Catering Headcount');
+
+  const guestListRows = guests.map(g=>({
+    'Name': g.name,
+    'Phone': g.phone||'',
+    'Side': g.side||'',
+    'Events': (g.events||[]).join(', ')
+  }));
+  const guestListSheet = XLSX.utils.json_to_sheet(guestListRows.length? guestListRows : [{'Name':'','Phone':'','Side':'','Events':''}]);
+  XLSX.utils.book_append_sheet(wb, guestListSheet, 'Guest List');
 
   const dateStr = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, `Vivaah_Ledger_Report_${dateStr}.xlsx`);
@@ -1507,11 +1961,116 @@ document.getElementById('btnExport').onclick = ()=>{
   showToast('Report exported to your Downloads');
 };
 
+/* ---------------- Voice activation for reminders ---------------- */
+let recognition = null;
+let isListening = false;
+
+function initVoiceControl(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    document.getElementById('voiceFab').style.display = 'none';
+    return;
+  }
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = ()=>{
+    isListening = true;
+    document.getElementById('voiceFab').classList.add('listening');
+    showVoiceCaption('Listening… try "add trial reminder, book sherwani"');
+  };
+  recognition.onend = ()=>{
+    isListening = false;
+    document.getElementById('voiceFab').classList.remove('listening');
+  };
+  recognition.onerror = (e)=>{
+    isListening = false;
+    document.getElementById('voiceFab').classList.remove('listening');
+    if(e.error === 'not-allowed'){
+      showVoiceCaption('Microphone access denied — allow it in your browser settings.');
+    } else if(e.error !== 'no-speech' && e.error !== 'aborted'){
+      showVoiceCaption('Could not hear that — try again.');
+    } else {
+      hideVoiceCaption();
+    }
+  };
+  recognition.onresult = (e)=>{
+    const transcript = e.results[0][0].transcript.trim();
+    handleVoiceCommand(transcript);
+  };
+}
+
+function showVoiceCaption(text){
+  const el = document.getElementById('voiceCaption');
+  el.textContent = text;
+  el.classList.add('show');
+}
+function hideVoiceCaption(){
+  document.getElementById('voiceCaption').classList.remove('show');
+}
+
+function handleVoiceCommand(transcript){
+  const text = transcript.toLowerCase();
+  showVoiceCaption(`Heard: "${transcript}"`);
+
+  // Determine target reminder list by keyword
+  let targetKey = null;
+  if(/trial/.test(text)) targetKey = 'trial';
+  else if(/cloth|dress|outfit|sherwani|lehenga|saree/.test(text)) targetKey = 'clothes';
+  else if(/guest/.test(text)) targetKey = 'guest';
+
+  // "show <list>" — just opens visual focus, no data change
+  if(/^show|^open|^go to/.test(text) && targetKey){
+    const card = document.querySelector(`[data-reminder="${targetKey}"]`);
+    if(card){
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      showVoiceCaption(`Showing ${capitalize(targetKey)} Reminder`);
+    }
+    return;
+  }
+
+  // "add/remind me <key> reminder [to/that] <text>"
+  if(targetKey){
+    let item = transcript;
+    // Strip common command phrasing to extract the actual reminder text
+    item = item.replace(/^(add( to)?|create|new|remind me( to)?|set)\s*/i, '');
+    item = item.replace(/(trial|clothes?|dress|outfit|sherwani|lehenga|saree|guest)\s*(reminder)?\s*(to|that|for|about)?\s*/i, '');
+    item = item.replace(/^[\s,]+|[\s,]+$/g, ''); // trim stray leading/trailing commas and spaces
+    item = item.replace(/^(to|for|that|about)\s+/i, ''); // drop a stray leftover connector word
+    item = item.trim();
+    if(!item){
+      showVoiceCaption(`Add what to ${capitalize(targetKey)} Reminder? Try again.`);
+      return;
+    }
+    addReminder(targetKey, item, '');
+    showVoiceCaption(`Added to ${capitalize(targetKey)} Reminder: "${item}"`);
+    return;
+  }
+
+  showVoiceCaption('Didn\'t catch a reminder type — say "trial", "clothes", or "guest".');
+}
+
+document.getElementById('voiceFab').onclick = ()=>{
+  if(!recognition){ showToast('Voice control isn\'t supported in this browser'); return; }
+  if(isListening){
+    recognition.stop();
+    return;
+  }
+  try{
+    recognition.start();
+  }catch(e){
+    showToast('Could not start microphone — try again');
+  }
+};
+
 /* ---------------- Init ---------------- */
 (async ()=>{
   await loadData();
   initGoogleAuth();
   await tryRestoreGoogleSession();
+  initVoiceControl();
 })();
 </script>
 </body>
