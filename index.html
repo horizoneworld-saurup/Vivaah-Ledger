@@ -390,24 +390,45 @@
     background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
     box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
   }
-  .guest-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
+  .guest-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px;}
   .guest-head h2{font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:700; color:var(--maroon-dark); margin:0;}
-  .guest-event-chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .guest-head-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .guest-event-chips{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
   .event-chip{
     font-size:11.5px; font-weight:700; padding:6px 12px; border-radius:20px; cursor:pointer;
     border:1px solid var(--line); background:var(--ivory); color:var(--ink-soft); transition:all .15s;
   }
   .event-chip.active{background:var(--maroon); color:var(--ivory); border-color:var(--maroon);}
   .event-chip .ec-count{opacity:0.75; margin-left:4px;}
+  .guest-summary-row{display:flex; gap:18px; flex-wrap:wrap; margin-bottom:14px; font-size:12px; color:var(--ink-soft);}
+  .guest-summary-row b{color:var(--maroon-dark); font-weight:700;}
   .guest-table-wrap{overflow-x:auto;}
   table.guest-table{width:100%; border-collapse:collapse; font-size:12.5px;}
   table.guest-table th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);
     font-weight:700; padding:9px 10px; border-bottom:2px solid var(--line); white-space:nowrap;
   }
+  table.guest-table th.num, table.guest-table td.num{text-align:right;}
   table.guest-table td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
-  table.guest-table td.gname{font-weight:600; white-space:normal; min-width:120px;}
-  table.guest-table input[type=checkbox]{accent-color:var(--sage); cursor:pointer;}
+  table.guest-table tr.guest-row{cursor:pointer; transition:background .12s;}
+  table.guest-table tr.guest-row:hover{background:#FCF8EF;}
+  table.guest-table td.gname{font-weight:600; white-space:normal; min-width:140px;}
+  table.guest-table td.invited-to{white-space:normal; font-size:11.5px; color:var(--ink-soft); max-width:220px;}
+  .guest-chev{display:inline-block; transition:transform .2s ease; color:var(--ink-soft);}
+  .guest-chev.open{transform:rotate(90deg);}
+  tr.guest-detail-row{display:none;}
+  tr.guest-detail-row.open{display:table-row;}
+  tr.guest-detail-row td{background:var(--ivory); padding:0; border-bottom:1px solid var(--line);}
+  .guest-detail-inner{padding:16px 20px 18px;}
+  .guest-events-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:10px;}
+  .guest-event-box{
+    background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+  }
+  .guest-event-box .geb-title{font-size:11.5px; font-weight:700; color:var(--maroon-dark); margin-bottom:8px;}
+  .geb-counts{display:flex; gap:10px;}
+  .geb-field{flex:1;}
+  .geb-field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:3px;}
+  .geb-field input{width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
   .guest-add-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
   .guest-add-row input[type=text]{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
   .guest-add-row select{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter'; background:#fff;}
@@ -439,13 +460,13 @@
   @media print{
     body{background:#fff;}
     .topbar-actions, .sync-banner, .toolbar .filters, .empty-state,
-    .row-actions, .icon-btn, .chev, #btnAddVendor, .catering-actions,
+    .row-actions, .icon-btn, .chev, .guest-chev, #btnAddVendor, .catering-actions,
     .add-payment-form, .pay-item .del, .footnote, .ticker-wrap, .voice-fab,
     .voice-caption, .reminder-add-row, .guest-add-row, .guest-del-btn,
-    #btnEditBranding { display:none !important; }
+    .guest-head-actions, #btnEditBranding { display:none !important; }
     .card, .ledger, .catering-card, .reminder-card, .guest-card{box-shadow:none; border:1px solid #ccc;}
     .reminder-list{max-height:none; overflow:visible;}
-    tr.detail-row{display:table-row !important;}
+    tr.detail-row, tr.guest-detail-row{display:table-row !important;}
     .wrap{max-width:100%; padding:0;}
     .dash{grid-template-columns:repeat(4,1fr);}
     a{color:inherit; text-decoration:none;}
@@ -595,26 +616,44 @@
     <div class="guest-head">
       <div>
         <h2>Guest list</h2>
-        <p style="margin:3px 0 0; font-size:12px; color:var(--ink-soft);">One list, tag each guest for whichever functions they're invited to.</p>
+        <p style="margin:3px 0 0; font-size:12px; color:var(--ink-soft);">One entry per family/invite — click a row to set how many adults &amp; kids are coming to each function.</p>
+      </div>
+      <div class="guest-head-actions">
+        <input type="file" id="guestFileInput" accept=".xlsx,.xls">
+        <button class="btn btn-ghost" id="btnGuestUpload">⭱ Upload guest Excel</button>
+        <button class="btn btn-ghost" id="btnGuestTemplate">⬇ Sample guest template</button>
+        <button class="btn btn-gold" id="btnGuestExport">⬇ Export guest list</button>
       </div>
     </div>
     <div class="guest-event-chips" id="guestEventChips"></div>
+    <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="guest-table-wrap">
       <table class="guest-table" id="guestTable">
-        <thead><tr id="guestTableHead"></tr></thead>
+        <thead>
+          <tr>
+            <th style="width:24px;"></th>
+            <th>Family / Guest name</th>
+            <th>Phone</th>
+            <th>Side</th>
+            <th>Invited to</th>
+            <th class="num">Adults</th>
+            <th class="num">Kids</th>
+            <th style="width:36px;"></th>
+          </tr>
+        </thead>
         <tbody id="guestTableBody"></tbody>
       </table>
-      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first guest below.</div>
+      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
     </div>
     <div class="guest-add-row">
-      <input type="text" id="newGuestName" placeholder="Guest name">
+      <input type="text" id="newGuestName" placeholder="Family / guest name">
       <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
       <select id="newGuestSide">
         <option value="Bride">Bride's side</option>
         <option value="Groom">Groom's side</option>
         <option value="Both">Both</option>
       </select>
-      <button class="btn btn-primary" id="btnAddGuest">+ Add guest</button>
+      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
     </div>
   </div>
 
@@ -1568,25 +1607,45 @@ document.getElementById('remindersGrid').addEventListener('click', (e)=>{
 });
 
 /* ---------------- Guest list ---------------- */
+let openGuestRowId = null;
+
+function guestEventCounts(g, ev){
+  const e = (g.events && g.events[ev]) ? g.events[ev] : null;
+  return {adults: e ? Number(e.adults||0) : 0, kids: e ? Number(e.kids||0) : 0};
+}
+function guestInvitedEvents(g){
+  return WEDDING_EVENTS.filter(ev=>{
+    const c = guestEventCounts(g, ev);
+    return c.adults>0 || c.kids>0;
+  });
+}
+function guestTotalAdults(g){ return WEDDING_EVENTS.reduce((s,ev)=>s+guestEventCounts(g,ev).adults, 0); }
+function guestTotalKids(g){ return WEDDING_EVENTS.reduce((s,ev)=>s+guestEventCounts(g,ev).kids, 0); }
+
 function renderGuests(){
-  // Event filter chips
+  // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
   const chipsEl = document.getElementById('guestEventChips');
   const allCount = guests.length;
   chipsEl.innerHTML = `<span class="event-chip ${activeEventFilter===''?'active':''}" data-event-filter="">All <span class="ec-count">${allCount}</span></span>` +
     WEDDING_EVENTS.map(ev=>{
-      const count = guests.filter(g=>(g.events||[]).includes(ev)).length;
+      const count = guests.filter(g=>{ const c=guestEventCounts(g,ev); return c.adults>0||c.kids>0; }).length;
       return `<span class="event-chip ${activeEventFilter===ev?'active':''}" data-event-filter="${escapeHtml(ev)}">${escapeHtml(ev)} <span class="ec-count">${count}</span></span>`;
     }).join('');
 
-  // Table head
-  const head = document.getElementById('guestTableHead');
-  head.innerHTML = '<th>Name</th><th>Phone</th><th>Side</th>' +
-    WEDDING_EVENTS.map(ev=>`<th>${escapeHtml(ev)}</th>`).join('') + '<th></th>';
+  // Overall summary row: total adults/kids invited across all events (sum of per-event counts, a person invited to 3 events counts 3x — reflects total guest-plates, matching the catering calculator's logic)
+  let totalAdults = 0, totalKids = 0;
+  WEDDING_EVENTS.forEach(ev=>{
+    guests.forEach(g=>{ const c=guestEventCounts(g,ev); totalAdults+=c.adults; totalKids+=c.kids; });
+  });
+  document.getElementById('guestSummaryRow').innerHTML =
+    `<span><b>${guests.length}</b> families/entries</span>
+     <span><b>${totalAdults}</b> total adult-plates</span>
+     <span><b>${totalKids}</b> total kid-plates</span>`;
 
   // Table body
   const body = document.getElementById('guestTableBody');
   const empty = document.getElementById('guestEmpty');
-  const filtered = activeEventFilter ? guests.filter(g=>(g.events||[]).includes(activeEventFilter)) : guests;
+  const filtered = activeEventFilter ? guests.filter(g=>{ const c=guestEventCounts(g,activeEventFilter); return c.adults>0||c.kids>0; }) : guests;
 
   if(filtered.length===0){
     body.innerHTML = '';
@@ -1597,15 +1656,49 @@ function renderGuests(){
   empty.style.display = 'none';
   document.getElementById('guestTable').style.display = 'table';
 
-  body.innerHTML = filtered.map(g=>`
-    <tr data-guest-id="${g.id}">
-      <td class="gname">${escapeHtml(g.name)}</td>
-      <td>${escapeHtml(g.phone||'—')}</td>
-      <td>${escapeHtml(g.side||'—')}</td>
-      ${WEDDING_EVENTS.map(ev=>`<td style="text-align:center;"><input type="checkbox" data-guest-event="${escapeHtml(ev)}" ${(g.events||[]).includes(ev)?'checked':''}></td>`).join('')}
-      <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
-    </tr>
-  `).join('');
+  body.innerHTML = filtered.map(g=>{
+    const invited = guestInvitedEvents(g);
+    const isOpen = openGuestRowId === g.id;
+    const detailRow = `
+      <tr class="guest-detail-row ${isOpen?'open':''}" data-guest-detail-for="${g.id}">
+        <td colspan="8">
+          <div class="guest-detail-inner">
+            <div class="guest-events-grid">
+              ${WEDDING_EVENTS.map(ev=>{
+                const c = guestEventCounts(g, ev);
+                return `
+                <div class="guest-event-box">
+                  <div class="geb-title">${escapeHtml(ev)}</div>
+                  <div class="geb-counts">
+                    <div class="geb-field">
+                      <label>Adults</label>
+                      <input type="number" min="0" value="${c.adults||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|adults">
+                    </div>
+                    <div class="geb-field">
+                      <label>Kids</label>
+                      <input type="number" min="0" value="${c.kids||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|kids">
+                    </div>
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    return `
+      <tr class="guest-row" data-guest-id="${g.id}">
+        <td><span class="guest-chev ${isOpen?'open':''}">›</span></td>
+        <td class="gname">${escapeHtml(g.name)}</td>
+        <td>${escapeHtml(g.phone||'—')}</td>
+        <td>${escapeHtml(g.side||'—')}</td>
+        <td class="invited-to">${invited.length ? escapeHtml(invited.join(', ')) : '<span style="color:var(--ink-soft);">Not yet set</span>'}</td>
+        <td class="num">${guestTotalAdults(g)}</td>
+        <td class="num">${guestTotalKids(g)}</td>
+        <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
+      </tr>
+      ${detailRow}
+    `;
+  }).join('');
 }
 
 document.getElementById('guestEventChips').addEventListener('click', (e)=>{
@@ -1620,38 +1713,165 @@ document.getElementById('btnAddGuest').onclick = ()=>{
   const phoneInput = document.getElementById('newGuestPhone');
   const sideInput = document.getElementById('newGuestSide');
   const name = nameInput.value.trim();
-  if(!name){ showToast('Enter a guest name first'); return; }
-  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:[]});
+  if(!name){ showToast('Enter a family/guest name first'); return; }
+  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:{}});
   nameInput.value=''; phoneInput.value='';
   saveGuests(); renderGuests();
-  showToast('Guest added');
+  showToast('Added — click the row to set adults & kids per function');
 };
 document.getElementById('newGuestName').addEventListener('keydown', (e)=>{
   if(e.key==='Enter') document.getElementById('btnAddGuest').click();
 });
 
 document.getElementById('guestTableBody').addEventListener('click', (e)=>{
-  const row = e.target.closest('tr[data-guest-id]');
-  if(!row) return;
-  const gid = row.dataset.guestId;
+  const delBtn = e.target.closest('[data-del-guest]');
+  if(delBtn){
+    const row = e.target.closest('tr.guest-row');
+    const gid = row.dataset.guestId;
+    guests = guests.filter(x=>x.id!==gid);
+    if(openGuestRowId===gid) openGuestRowId = null;
+    saveGuests(); renderGuests();
+    return;
+  }
+  const row = e.target.closest('tr.guest-row');
+  if(row){
+    const gid = row.dataset.guestId;
+    openGuestRowId = (openGuestRowId===gid) ? null : gid;
+    renderGuests();
+  }
+});
+
+document.getElementById('guestTableBody').addEventListener('change', (e)=>{
+  const key = e.target.dataset.guestCount;
+  if(!key) return;
+  const [gid, ev, field] = key.split('|');
   const g = guests.find(x=>x.id===gid);
   if(!g) return;
+  g.events = g.events || {};
+  g.events[ev] = g.events[ev] || {adults:0, kids:0};
+  g.events[ev][field] = Math.max(0, Number(e.target.value)||0);
+  // Clean up: if both adults and kids are 0, drop the event entry entirely (= not invited)
+  if(g.events[ev].adults<=0 && g.events[ev].kids<=0){
+    delete g.events[ev];
+  }
+  saveGuests();
+  renderGuests();
+});
 
-  if(e.target.matches('[data-guest-event]')){
-    const ev = e.target.dataset.guestEvent;
-    g.events = g.events || [];
-    if(e.target.checked){
-      if(!g.events.includes(ev)) g.events.push(ev);
-    } else {
-      g.events = g.events.filter(x=>x!==ev);
+/* ---------------- Guest list Excel upload/download ---------------- */
+document.getElementById('btnGuestTemplate').onclick = ()=>{
+  const wb = XLSX.utils.book_new();
+  const headerRow = {
+    'Family / Guest Name':'Asha Patel Family', 'Phone':'9876512345', 'Side':'Bride'
+  };
+  WEDDING_EVENTS.forEach(ev=>{
+    headerRow[ev+' Adults'] = '';
+    headerRow[ev+' Kids'] = '';
+  });
+  const example1 = {...headerRow};
+  example1['Mehendi Adults']=2; example1['Mehendi Kids']=1;
+  example1['Sangeet Adults']=2; example1['Sangeet Kids']=0;
+  example1['Marriage Adults']=2; example1['Marriage Kids']=2;
+  example1['Reception Adults']=2; example1['Reception Kids']=2;
+
+  const example2 = {'Family / Guest Name':'Rohan Shah Family', 'Phone':'9876523456', 'Side':'Groom'};
+  WEDDING_EVENTS.forEach(ev=>{ example2[ev+' Adults']=''; example2[ev+' Kids']=''; });
+  example2['Marriage Adults']=3; example2['Marriage Kids']=0;
+  example2['Reception Adults']=3; example2['Reception Kids']=1;
+
+  const sheet = XLSX.utils.json_to_sheet([example1, example2]);
+  XLSX.utils.book_append_sheet(wb, sheet, 'Guest List');
+  XLSX.writeFile(wb, 'Vivaah_Guest_List_Template.xlsx');
+  showToast('Guest list template downloaded');
+};
+
+document.getElementById('btnGuestExport').onclick = ()=>{
+  if(guests.length===0){ showToast('Add guests before exporting'); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = guests.map(g=>{
+    const row = {'Family / Guest Name':g.name, 'Phone':g.phone||'', 'Side':g.side||''};
+    WEDDING_EVENTS.forEach(ev=>{
+      const c = guestEventCounts(g, ev);
+      row[ev+' Adults'] = c.adults || '';
+      row[ev+' Kids'] = c.kids || '';
+    });
+    return row;
+  });
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, sheet, 'Guest List');
+  const dateStr = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `Vivaah_Guest_List_${dateStr}.xlsx`);
+  showToast('Guest list exported');
+};
+
+document.getElementById('btnGuestUpload').onclick = ()=>document.getElementById('guestFileInput').click();
+
+document.getElementById('guestFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheetName = wb.SheetNames.find(n=>/guest/i.test(n)) || wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:''});
+      if(rows.length===0){ showToast('No rows found in that sheet'); return; }
+
+      const norm = s => String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const getVal = (row, keys) => {
+        for(const k of Object.keys(row)){
+          if(keys.includes(norm(k))) return row[k];
+        }
+        return '';
+      };
+      // Build a normalized-key lookup so we can match "Mehendi Adults" style columns per event
+      const eventColLookup = {};
+      WEDDING_EVENTS.forEach(ev=>{
+        eventColLookup[ev] = {
+          adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
+          kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')]
+        };
+      });
+
+      let added = 0, updated = 0;
+      rows.forEach(row=>{
+        const name = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
+        if(!name) return;
+        const phone = String(getVal(row,['phone','phonenumber','mobile'])).trim();
+        const side = String(getVal(row,['side'])).trim() || 'Both';
+
+        const events = {};
+        WEDDING_EVENTS.forEach(ev=>{
+          const adults = Number(getVal(row, eventColLookup[ev].adultsKeys)) || 0;
+          const kids = Number(getVal(row, eventColLookup[ev].kidsKeys)) || 0;
+          if(adults>0 || kids>0){ events[ev] = {adults, kids}; }
+        });
+
+        const existing = guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+        if(existing){
+          existing.phone = phone || existing.phone;
+          existing.side = side;
+          existing.events = {...existing.events, ...events};
+          updated++;
+        } else {
+          guests.push({id:uid(), name, phone, side, events});
+          added++;
+        }
+      });
+
+      saveGuests(); renderGuests();
+      const parts = [];
+      if(added) parts.push(`${added} added`);
+      if(updated) parts.push(`${updated} updated`);
+      showToast(parts.length ? 'Guest list: '+parts.join(', ') : 'Nothing new to import');
+    }catch(err){
+      console.error(err);
+      showToast('Could not read that file — check the format');
     }
-    saveGuests();
-    renderGuests(); // refreshes chip counts; checkbox state preserved via re-render from data
-  }
-  if(e.target.closest('[data-del-guest]')){
-    guests = guests.filter(x=>x.id!==gid);
-    saveGuests(); renderGuests();
-  }
+    e.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
 });
 
 /* ---------------- Table interactions ---------------- */
@@ -1820,24 +2040,31 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
 
       let guestsImported = 0;
       if(guestListRows.length){
+        const guestEventColLookup = {};
+        WEDDING_EVENTS.forEach(ev=>{
+          guestEventColLookup[ev] = {
+            adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
+            kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')]
+          };
+        });
         guestListRows.forEach(row=>{
-          const gname = String(getVal(row,['name','guestname'])).trim();
+          const gname = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
           if(!gname) return;
           const phone = String(getVal(row,['phone','phonenumber','mobile'])).trim();
           const side = String(getVal(row,['side'])).trim() || 'Both';
-          const eventsRaw = String(getVal(row,['events','functions','tags'])).trim();
-          const eventList = eventsRaw ? eventsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
-          const matchedEvents = eventList.map(e=>{
-            const found = WEDDING_EVENTS.find(we=>we.toLowerCase()===e.toLowerCase());
-            return found || e;
-          }).filter(e=>WEDDING_EVENTS.includes(e));
+          const events = {};
+          WEDDING_EVENTS.forEach(ev=>{
+            const adults = Number(getVal(row, guestEventColLookup[ev].adultsKeys)) || 0;
+            const kids = Number(getVal(row, guestEventColLookup[ev].kidsKeys)) || 0;
+            if(adults>0 || kids>0){ events[ev] = {adults, kids}; }
+          });
           const existingGuest = guests.find(g=>g.name.toLowerCase()===gname.toLowerCase());
           if(existingGuest){
             existingGuest.phone = phone || existingGuest.phone;
             existingGuest.side = side;
-            existingGuest.events = Array.from(new Set([...(existingGuest.events||[]), ...matchedEvents]));
+            existingGuest.events = {...existingGuest.events, ...events};
           } else {
-            guests.push({id:uid(), name:gname, phone, side, events:matchedEvents});
+            guests.push({id:uid(), name:gname, phone, side, events});
           }
           guestsImported++;
         });
@@ -1875,10 +2102,16 @@ document.getElementById('btnTemplate').onclick = ()=>{
     {Function:'Sangeet', GuestCount:250, RatePerPlate:900},
     {Function:'Wedding day', GuestCount:400, RatePerPlate:1200}
   ]);
-  const guestListSheet = XLSX.utils.json_to_sheet([
-    {Name:'Asha Patel', Phone:'9876512345', Side:'Bride', Events:'Mehendi, Sangeet, Marriage, Reception'},
-    {Name:'Rohan Shah', Phone:'9876523456', Side:'Groom', Events:'Marriage, Reception'}
-  ]);
+  const guestTemplateRow1 = {'Family / Guest Name':'Asha Patel Family', Phone:'9876512345', Side:'Bride'};
+  const guestTemplateRow2 = {'Family / Guest Name':'Rohan Shah Family', Phone:'9876523456', Side:'Groom'};
+  WEDDING_EVENTS.forEach(ev=>{ guestTemplateRow1[ev+' Adults']=''; guestTemplateRow1[ev+' Kids']=''; guestTemplateRow2[ev+' Adults']=''; guestTemplateRow2[ev+' Kids']=''; });
+  guestTemplateRow1['Mehendi Adults']=2; guestTemplateRow1['Mehendi Kids']=1;
+  guestTemplateRow1['Sangeet Adults']=2; guestTemplateRow1['Sangeet Kids']=0;
+  guestTemplateRow1['Marriage Adults']=2; guestTemplateRow1['Marriage Kids']=2;
+  guestTemplateRow1['Reception Adults']=2; guestTemplateRow1['Reception Kids']=2;
+  guestTemplateRow2['Marriage Adults']=3; guestTemplateRow2['Marriage Kids']=0;
+  guestTemplateRow2['Reception Adults']=3; guestTemplateRow2['Reception Kids']=1;
+  const guestListSheet = XLSX.utils.json_to_sheet([guestTemplateRow1, guestTemplateRow2]);
   XLSX.utils.book_append_sheet(wb, vendorSheet, 'Vendors');
   XLSX.utils.book_append_sheet(wb, paymentSheet, 'Payments');
   XLSX.utils.book_append_sheet(wb, cateringSheet, 'Catering Headcount');
@@ -1945,13 +2178,16 @@ document.getElementById('btnExport').onclick = ()=>{
   const functionSheet = XLSX.utils.json_to_sheet(functionRows.length? functionRows : [{'Function':'','Guest Count':'','Rate Per Plate':'','Function Cost':''}]);
   XLSX.utils.book_append_sheet(wb, functionSheet, 'Catering Headcount');
 
-  const guestListRows = guests.map(g=>({
-    'Name': g.name,
-    'Phone': g.phone||'',
-    'Side': g.side||'',
-    'Events': (g.events||[]).join(', ')
-  }));
-  const guestListSheet = XLSX.utils.json_to_sheet(guestListRows.length? guestListRows : [{'Name':'','Phone':'','Side':'','Events':''}]);
+  const guestListRows = guests.map(g=>{
+    const row = {'Family / Guest Name':g.name, 'Phone':g.phone||'', 'Side':g.side||''};
+    WEDDING_EVENTS.forEach(ev=>{
+      const c = guestEventCounts(g, ev);
+      row[ev+' Adults'] = c.adults || '';
+      row[ev+' Kids'] = c.kids || '';
+    });
+    return row;
+  });
+  const guestListSheet = XLSX.utils.json_to_sheet(guestListRows.length? guestListRows : [{'Family / Guest Name':'', 'Phone':'', 'Side':''}]);
   XLSX.utils.book_append_sheet(wb, guestListSheet, 'Guest List');
 
   const dateStr = new Date().toISOString().slice(0,10);
