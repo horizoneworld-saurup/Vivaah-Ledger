@@ -429,6 +429,7 @@
   .geb-field{flex:1;}
   .geb-field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:3px;}
   .geb-field input{width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
+  .geb-hint{font-size:10.5px; color:var(--ink-soft); margin-top:6px; font-style:italic;}
   .guest-add-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
   .guest-add-row input[type=text]{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
   .guest-add-row select{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter'; background:#fff;}
@@ -637,6 +638,7 @@
             <th>Side</th>
             <th>Invited to</th>
             <th class="num">Adults</th>
+            <th class="num">Ladies</th>
             <th class="num">Kids</th>
             <th style="width:36px;"></th>
           </tr>
@@ -791,7 +793,8 @@ let lastExportAt = null;
 let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 
 /* Guest list & reminders state */
-const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grah Shanti', 'Mosalu', 'Mehendi', 'Sangeet', 'Marriage', 'Reception'];
+const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Marriage', 'Reception'];
+const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti-Mosalu', 'Sangeet', 'Reception']; // events needing a ladies sub-count out of adults
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
@@ -1611,7 +1614,11 @@ let openGuestRowId = null;
 
 function guestEventCounts(g, ev){
   const e = (g.events && g.events[ev]) ? g.events[ev] : null;
-  return {adults: e ? Number(e.adults||0) : 0, kids: e ? Number(e.kids||0) : 0};
+  return {
+    adults: e ? Number(e.adults||0) : 0,
+    kids: e ? Number(e.kids||0) : 0,
+    ladies: e ? Number(e.ladies||0) : 0
+  };
 }
 function guestInvitedEvents(g){
   return WEDDING_EVENTS.filter(ev=>{
@@ -1621,6 +1628,7 @@ function guestInvitedEvents(g){
 }
 function guestTotalAdults(g){ return WEDDING_EVENTS.reduce((s,ev)=>s+guestEventCounts(g,ev).adults, 0); }
 function guestTotalKids(g){ return WEDDING_EVENTS.reduce((s,ev)=>s+guestEventCounts(g,ev).kids, 0); }
+function guestTotalLadies(g){ return LADIES_TRACKED_EVENTS.reduce((s,ev)=>s+guestEventCounts(g,ev).ladies, 0); }
 
 function renderGuests(){
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
@@ -1632,15 +1640,20 @@ function renderGuests(){
       return `<span class="event-chip ${activeEventFilter===ev?'active':''}" data-event-filter="${escapeHtml(ev)}">${escapeHtml(ev)} <span class="ec-count">${count}</span></span>`;
     }).join('');
 
-  // Overall summary row: total adults/kids invited across all events (sum of per-event counts, a person invited to 3 events counts 3x — reflects total guest-plates, matching the catering calculator's logic)
-  let totalAdults = 0, totalKids = 0;
+  // Overall summary row: total adults/kids/ladies invited across all events (sum of per-event counts, a person invited to 3 events counts 3x — reflects total guest-plates, matching the catering calculator's logic)
+  let totalAdults = 0, totalKids = 0, totalLadies = 0;
   WEDDING_EVENTS.forEach(ev=>{
-    guests.forEach(g=>{ const c=guestEventCounts(g,ev); totalAdults+=c.adults; totalKids+=c.kids; });
+    guests.forEach(g=>{
+      const c=guestEventCounts(g,ev);
+      totalAdults+=c.adults; totalKids+=c.kids;
+      if(LADIES_TRACKED_EVENTS.includes(ev)) totalLadies+=c.ladies;
+    });
   });
   document.getElementById('guestSummaryRow').innerHTML =
     `<span><b>${guests.length}</b> families/entries</span>
      <span><b>${totalAdults}</b> total adult-plates</span>
-     <span><b>${totalKids}</b> total kid-plates</span>`;
+     <span><b>${totalKids}</b> total kid-plates</span>
+     <span><b>${totalLadies}</b> ladies (across ${LADIES_TRACKED_EVENTS.join(', ')})</span>`;
 
   // Table body
   const body = document.getElementById('guestTableBody');
@@ -1661,11 +1674,12 @@ function renderGuests(){
     const isOpen = openGuestRowId === g.id;
     const detailRow = `
       <tr class="guest-detail-row ${isOpen?'open':''}" data-guest-detail-for="${g.id}">
-        <td colspan="8">
+        <td colspan="9">
           <div class="guest-detail-inner">
             <div class="guest-events-grid">
               ${WEDDING_EVENTS.map(ev=>{
                 const c = guestEventCounts(g, ev);
+                const tracksLadies = LADIES_TRACKED_EVENTS.includes(ev);
                 return `
                 <div class="guest-event-box">
                   <div class="geb-title">${escapeHtml(ev)}</div>
@@ -1678,7 +1692,13 @@ function renderGuests(){
                       <label>Kids</label>
                       <input type="number" min="0" value="${c.kids||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|kids">
                     </div>
+                    ${tracksLadies ? `
+                    <div class="geb-field">
+                      <label>Ladies</label>
+                      <input type="number" min="0" max="${c.adults||0}" value="${c.ladies||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|ladies">
+                    </div>` : ''}
                   </div>
+                  ${tracksLadies ? `<div class="geb-hint">out of ${c.adults||0} adult${c.adults===1?'':'s'}, ${c.ladies||0} ${c.ladies===1?'lady':'ladies'}</div>` : ''}
                 </div>`;
               }).join('')}
             </div>
@@ -1693,6 +1713,7 @@ function renderGuests(){
         <td>${escapeHtml(g.side||'—')}</td>
         <td class="invited-to">${invited.length ? escapeHtml(invited.join(', ')) : '<span style="color:var(--ink-soft);">Not yet set</span>'}</td>
         <td class="num">${guestTotalAdults(g)}</td>
+        <td class="num">${guestTotalLadies(g)}</td>
         <td class="num">${guestTotalKids(g)}</td>
         <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
       </tr>
@@ -1748,8 +1769,13 @@ document.getElementById('guestTableBody').addEventListener('change', (e)=>{
   const g = guests.find(x=>x.id===gid);
   if(!g) return;
   g.events = g.events || {};
-  g.events[ev] = g.events[ev] || {adults:0, kids:0};
+  g.events[ev] = g.events[ev] || {adults:0, kids:0, ladies:0};
   g.events[ev][field] = Math.max(0, Number(e.target.value)||0);
+  // Ladies can never exceed that event's adult count, whichever field was just edited
+  if((g.events[ev].ladies||0) > g.events[ev].adults){
+    g.events[ev].ladies = g.events[ev].adults;
+    if(field==='ladies') showToast('Ladies count can\'t exceed adults — adjusted');
+  }
   // Clean up: if both adults and kids are 0, drop the event entry entirely (= not invited)
   if(g.events[ev].adults<=0 && g.events[ev].kids<=0){
     delete g.events[ev];
@@ -1761,23 +1787,25 @@ document.getElementById('guestTableBody').addEventListener('change', (e)=>{
 /* ---------------- Guest list Excel upload/download ---------------- */
 document.getElementById('btnGuestTemplate').onclick = ()=>{
   const wb = XLSX.utils.book_new();
-  const headerRow = {
-    'Family / Guest Name':'Asha Patel Family', 'Phone':'9876512345', 'Side':'Bride'
-  };
-  WEDDING_EVENTS.forEach(ev=>{
-    headerRow[ev+' Adults'] = '';
-    headerRow[ev+' Kids'] = '';
-  });
-  const example1 = {...headerRow};
+  function blankRow(name, phone, side){
+    const row = {'Family / Guest Name':name, 'Phone':phone, 'Side':side};
+    WEDDING_EVENTS.forEach(ev=>{
+      row[ev+' Adults'] = '';
+      row[ev+' Kids'] = '';
+      if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = '';
+    });
+    return row;
+  }
+  const example1 = blankRow('Asha Patel Family', '9876512345', 'Bride');
+  example1['Ganesh-Grahshanti-Mosalu Adults']=2; example1['Ganesh-Grahshanti-Mosalu Kids']=0; example1['Ganesh-Grahshanti-Mosalu Ladies']=1;
   example1['Mehendi Adults']=2; example1['Mehendi Kids']=1;
-  example1['Sangeet Adults']=2; example1['Sangeet Kids']=0;
+  example1['Sangeet Adults']=2; example1['Sangeet Kids']=0; example1['Sangeet Ladies']=1;
   example1['Marriage Adults']=2; example1['Marriage Kids']=2;
-  example1['Reception Adults']=2; example1['Reception Kids']=2;
+  example1['Reception Adults']=2; example1['Reception Kids']=2; example1['Reception Ladies']=1;
 
-  const example2 = {'Family / Guest Name':'Rohan Shah Family', 'Phone':'9876523456', 'Side':'Groom'};
-  WEDDING_EVENTS.forEach(ev=>{ example2[ev+' Adults']=''; example2[ev+' Kids']=''; });
+  const example2 = blankRow('Rohan Shah Family', '9876523456', 'Groom');
   example2['Marriage Adults']=3; example2['Marriage Kids']=0;
-  example2['Reception Adults']=3; example2['Reception Kids']=1;
+  example2['Reception Adults']=3; example2['Reception Kids']=1; example2['Reception Ladies']=2;
 
   const sheet = XLSX.utils.json_to_sheet([example1, example2]);
   XLSX.utils.book_append_sheet(wb, sheet, 'Guest List');
@@ -1794,6 +1822,7 @@ document.getElementById('btnGuestExport').onclick = ()=>{
       const c = guestEventCounts(g, ev);
       row[ev+' Adults'] = c.adults || '';
       row[ev+' Kids'] = c.kids || '';
+      if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies || '';
     });
     return row;
   });
@@ -1830,7 +1859,8 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
       WEDDING_EVENTS.forEach(ev=>{
         eventColLookup[ev] = {
           adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
-          kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')]
+          kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')],
+          ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')]
         };
       });
 
@@ -1845,7 +1875,9 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
         WEDDING_EVENTS.forEach(ev=>{
           const adults = Number(getVal(row, eventColLookup[ev].adultsKeys)) || 0;
           const kids = Number(getVal(row, eventColLookup[ev].kidsKeys)) || 0;
-          if(adults>0 || kids>0){ events[ev] = {adults, kids}; }
+          let ladies = LADIES_TRACKED_EVENTS.includes(ev) ? (Number(getVal(row, eventColLookup[ev].ladiesKeys)) || 0) : 0;
+          if(ladies > adults) ladies = adults; // safety cap, same rule as manual entry
+          if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
         });
 
         const existing = guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
@@ -2044,7 +2076,8 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
         WEDDING_EVENTS.forEach(ev=>{
           guestEventColLookup[ev] = {
             adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
-            kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')]
+            kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')],
+            ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')]
           };
         });
         guestListRows.forEach(row=>{
@@ -2056,7 +2089,9 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
           WEDDING_EVENTS.forEach(ev=>{
             const adults = Number(getVal(row, guestEventColLookup[ev].adultsKeys)) || 0;
             const kids = Number(getVal(row, guestEventColLookup[ev].kidsKeys)) || 0;
-            if(adults>0 || kids>0){ events[ev] = {adults, kids}; }
+            let ladies = LADIES_TRACKED_EVENTS.includes(ev) ? (Number(getVal(row, guestEventColLookup[ev].ladiesKeys)) || 0) : 0;
+            if(ladies > adults) ladies = adults;
+            if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
           });
           const existingGuest = guests.find(g=>g.name.toLowerCase()===gname.toLowerCase());
           if(existingGuest){
@@ -2104,13 +2139,18 @@ document.getElementById('btnTemplate').onclick = ()=>{
   ]);
   const guestTemplateRow1 = {'Family / Guest Name':'Asha Patel Family', Phone:'9876512345', Side:'Bride'};
   const guestTemplateRow2 = {'Family / Guest Name':'Rohan Shah Family', Phone:'9876523456', Side:'Groom'};
-  WEDDING_EVENTS.forEach(ev=>{ guestTemplateRow1[ev+' Adults']=''; guestTemplateRow1[ev+' Kids']=''; guestTemplateRow2[ev+' Adults']=''; guestTemplateRow2[ev+' Kids']=''; });
+  WEDDING_EVENTS.forEach(ev=>{
+    guestTemplateRow1[ev+' Adults']=''; guestTemplateRow1[ev+' Kids']='';
+    guestTemplateRow2[ev+' Adults']=''; guestTemplateRow2[ev+' Kids']='';
+    if(LADIES_TRACKED_EVENTS.includes(ev)){ guestTemplateRow1[ev+' Ladies']=''; guestTemplateRow2[ev+' Ladies']=''; }
+  });
+  guestTemplateRow1['Ganesh-Grahshanti-Mosalu Adults']=2; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Kids']=0; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Ladies']=1;
   guestTemplateRow1['Mehendi Adults']=2; guestTemplateRow1['Mehendi Kids']=1;
-  guestTemplateRow1['Sangeet Adults']=2; guestTemplateRow1['Sangeet Kids']=0;
+  guestTemplateRow1['Sangeet Adults']=2; guestTemplateRow1['Sangeet Kids']=0; guestTemplateRow1['Sangeet Ladies']=1;
   guestTemplateRow1['Marriage Adults']=2; guestTemplateRow1['Marriage Kids']=2;
-  guestTemplateRow1['Reception Adults']=2; guestTemplateRow1['Reception Kids']=2;
+  guestTemplateRow1['Reception Adults']=2; guestTemplateRow1['Reception Kids']=2; guestTemplateRow1['Reception Ladies']=1;
   guestTemplateRow2['Marriage Adults']=3; guestTemplateRow2['Marriage Kids']=0;
-  guestTemplateRow2['Reception Adults']=3; guestTemplateRow2['Reception Kids']=1;
+  guestTemplateRow2['Reception Adults']=3; guestTemplateRow2['Reception Kids']=1; guestTemplateRow2['Reception Ladies']=2;
   const guestListSheet = XLSX.utils.json_to_sheet([guestTemplateRow1, guestTemplateRow2]);
   XLSX.utils.book_append_sheet(wb, vendorSheet, 'Vendors');
   XLSX.utils.book_append_sheet(wb, paymentSheet, 'Payments');
@@ -2184,6 +2224,7 @@ document.getElementById('btnExport').onclick = ()=>{
       const c = guestEventCounts(g, ev);
       row[ev+' Adults'] = c.adults || '';
       row[ev+' Kids'] = c.kids || '';
+      if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies || '';
     });
     return row;
   });
