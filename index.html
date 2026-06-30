@@ -858,7 +858,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -2023,10 +2023,14 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
         };
       });
 
-      let added = 0, updated = 0;
-      rows.forEach(row=>{
+      let added = 0, updatedExisting = 0, mergedWithinFile = 0;
+      const seenInThisFile = {}; // normalized name -> row index within this file, to detect in-file duplicates
+      const duplicateNamesInFile = [];
+
+      rows.forEach((row, idx)=>{
         const name = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
         if(!name) return;
+        const nameKey = name.toLowerCase();
         const phone = String(getVal(row,['phone','phonenumber','mobile'])).trim();
         const side = String(getVal(row,['side'])).trim() || 'Both';
 
@@ -2039,12 +2043,19 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
           if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
         });
 
-        const existing = guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+        const wasInThisFileAlready = seenInThisFile.hasOwnProperty(nameKey);
+        if(wasInThisFileAlready){
+          duplicateNamesInFile.push(`"${name}" (row ${seenInThisFile[nameKey]+2} and row ${idx+2})`);
+        } else {
+          seenInThisFile[nameKey] = idx;
+        }
+
+        const existing = guests.find(g=>g.name.toLowerCase()===nameKey);
         if(existing){
           existing.phone = phone || existing.phone;
           existing.side = side;
           existing.events = {...existing.events, ...events};
-          updated++;
+          if(wasInThisFileAlready) mergedWithinFile++; else updatedExisting++;
         } else {
           guests.push({id:uid(), name, phone, side, events});
           added++;
@@ -2054,8 +2065,16 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
       saveGuests(); renderGuests();
       const parts = [];
       if(added) parts.push(`${added} added`);
-      if(updated) parts.push(`${updated} updated`);
-      showToast(parts.length ? 'Guest list: '+parts.join(', ') : 'Nothing new to import');
+      if(updatedExisting) parts.push(`${updatedExisting} matched & updated an existing guest`);
+      if(mergedWithinFile) parts.push(`${mergedWithinFile} duplicate name(s) within the file got merged`);
+      showToast(parts.length ? `Guest list: ${parts.join(', ')}` : 'Nothing new to import');
+
+      if(duplicateNamesInFile.length){
+        console.warn('Duplicate guest names found in uploaded file:', duplicateNamesInFile);
+        setTimeout(()=>{
+          showToast(`⚠ ${duplicateNamesInFile.length} duplicate name(s) in your file got merged — check rows: ${duplicateNamesInFile.slice(0,3).join('; ')}${duplicateNamesInFile.length>3?', …':''}`);
+        }, 2600);
+      }
     }catch(err){
       console.error(err);
       showToast('Could not read that file — check the format');
@@ -2268,9 +2287,12 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
             ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')]
           };
         });
-        guestListRows.forEach(row=>{
+        const seenGuestNamesInFile = {};
+        const dupGuestNamesInFile = [];
+        guestListRows.forEach((row, idx)=>{
           const gname = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
           if(!gname) return;
+          const gnameKey = gname.toLowerCase();
           const phone = String(getVal(row,['phone','phonenumber','mobile'])).trim();
           const side = String(getVal(row,['side'])).trim() || 'Both';
           const events = {};
@@ -2281,7 +2303,12 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
             if(ladies > adults) ladies = adults;
             if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
           });
-          const existingGuest = guests.find(g=>g.name.toLowerCase()===gname.toLowerCase());
+          if(seenGuestNamesInFile.hasOwnProperty(gnameKey)){
+            dupGuestNamesInFile.push(`"${gname}" (row ${seenGuestNamesInFile[gnameKey]+2} and row ${idx+2})`);
+          } else {
+            seenGuestNamesInFile[gnameKey] = idx;
+          }
+          const existingGuest = guests.find(g=>g.name.toLowerCase()===gnameKey);
           if(existingGuest){
             existingGuest.phone = phone || existingGuest.phone;
             existingGuest.side = side;
@@ -2291,6 +2318,9 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
           }
           guestsImported++;
         });
+        if(dupGuestNamesInFile.length){
+          console.warn('Duplicate guest names found in uploaded file:', dupGuestNamesInFile);
+        }
       }
 
       saveData(); saveFunctions(); saveGuests(); render();
