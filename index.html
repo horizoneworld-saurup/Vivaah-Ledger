@@ -2399,15 +2399,22 @@ document.getElementById('btnTemplate').onclick = ()=>{
   const guestTemplateRow1 = {'Family / Guest Name':'Asha Patel Family', Phone:'9876512345', Side:'Bride'};
   const guestTemplateRow2 = {'Family / Guest Name':'Rohan Shah Family', Phone:'9876523456', Side:'Groom'};
   WEDDING_EVENTS.forEach(ev=>{
-    guestTemplateRow1[ev+' Adults']=''; guestTemplateRow1[ev+' Kids']='';
-    guestTemplateRow2[ev+' Adults']=''; guestTemplateRow2[ev+' Kids']='';
+    guestTemplateRow1[ev+' Adults']='';
+    guestTemplateRow2[ev+' Adults']='';
+    if(WRITER_TRACKED_EVENTS.includes(ev)){
+      guestTemplateRow1[ev+' Writer']=''; guestTemplateRow2[ev+' Writer']='';
+    } else {
+      guestTemplateRow1[ev+' Kids']=''; guestTemplateRow2[ev+' Kids']='';
+    }
     if(LADIES_TRACKED_EVENTS.includes(ev)){ guestTemplateRow1[ev+' Ladies']=''; guestTemplateRow2[ev+' Ladies']=''; }
   });
+  guestTemplateRow1['Kankotri Adults']=2; guestTemplateRow1['Kankotri Writer']=1;
   guestTemplateRow1['Ganesh-Grahshanti-Mosalu Adults']=2; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Kids']=0; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Ladies']=1;
   guestTemplateRow1['Mehendi Adults']=2; guestTemplateRow1['Mehendi Kids']=1; guestTemplateRow1['Mehendi Ladies']=1;
   guestTemplateRow1['Sangeet Adults']=2; guestTemplateRow1['Sangeet Kids']=0;
   guestTemplateRow1['Marriage Adults']=2; guestTemplateRow1['Marriage Kids']=2;
   guestTemplateRow1['Reception Adults']=2; guestTemplateRow1['Reception Kids']=2;
+  guestTemplateRow2['Kankotri Adults']=3; guestTemplateRow2['Kankotri Writer']=0;
   guestTemplateRow2['Marriage Adults']=3; guestTemplateRow2['Marriage Kids']=0;
   guestTemplateRow2['Reception Adults']=3; guestTemplateRow2['Reception Kids']=1;
   const guestListSheet = XLSX.utils.json_to_sheet([guestTemplateRow1, guestTemplateRow2]);
@@ -2485,7 +2492,8 @@ document.getElementById('btnExport').onclick = ()=>{
     WEDDING_EVENTS.forEach(ev=>{
       const c = guestEventCounts(g, ev);
       row[ev+' Adults'] = c.adults || '';
-      row[ev+' Kids'] = c.kids || '';
+      if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = c.writer || '';
+      else row[ev+' Kids'] = c.kids || '';
       if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies || '';
     });
     return row;
