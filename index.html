@@ -853,6 +853,7 @@ let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 /* Guest list & reminders state */
 const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Marriage', 'Reception'];
 const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti-Mosalu', 'Mehendi']; // events needing a ladies sub-count out of adults (women-specific rituals)
+const WRITER_TRACKED_EVENTS = ['Kankotri']; // events tracking writer (calligrapher) count instead of kids
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
@@ -1756,18 +1757,22 @@ function guestEventCounts(g, ev){
   return {
     adults: e ? Number(e.adults||0) : 0,
     kids: e ? Number(e.kids||0) : 0,
-    ladies: e ? Number(e.ladies||0) : 0
+    ladies: e ? Number(e.ladies||0) : 0,
+    writer: e ? Number(e.writer||0) : 0
   };
 }
 function guestInvitedEvents(g){
   return WEDDING_EVENTS.filter(ev=>{
     const c = guestEventCounts(g, ev);
-    return c.adults>0 || c.kids>0;
+    // Kankotri uses Writer instead of Kids, so count as invited if adults>0 or writer>0
+    return WRITER_TRACKED_EVENTS.includes(ev) ? (c.adults>0 || c.writer>0) : (c.adults>0 || c.kids>0);
   });
 }
 function guestTotalAdults(g){ return Math.max(0, ...WEDDING_EVENTS.map(ev=>guestEventCounts(g,ev).adults), 0); }
-function guestTotalKids(g){ return Math.max(0, ...WEDDING_EVENTS.map(ev=>guestEventCounts(g,ev).kids), 0); }
+// Kids total excludes Kankotri since that event uses Writer instead
+function guestTotalKids(g){ return Math.max(0, ...WEDDING_EVENTS.filter(ev=>!WRITER_TRACKED_EVENTS.includes(ev)).map(ev=>guestEventCounts(g,ev).kids), 0); }
 function guestTotalLadies(g){ return Math.max(0, ...LADIES_TRACKED_EVENTS.map(ev=>guestEventCounts(g,ev).ladies), 0); }
+function guestTotalWriter(g){ return Math.max(0, ...WRITER_TRACKED_EVENTS.map(ev=>guestEventCounts(g,ev).writer), 0); }
 
 function renderGuests(){
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
@@ -1775,19 +1780,25 @@ function renderGuests(){
   const allCount = guests.length;
   chipsEl.innerHTML = `<span class="event-chip ${activeEventFilter===''?'active':''}" data-event-filter="">All <span class="ec-count">${allCount}</span></span>` +
     WEDDING_EVENTS.map(ev=>{
-      const count = guests.filter(g=>{ const c=guestEventCounts(g,ev); return c.adults>0||c.kids>0; }).length;
+      const isWriterEvent = WRITER_TRACKED_EVENTS.includes(ev);
+      const count = guests.filter(g=>{ const c=guestEventCounts(g,ev); return isWriterEvent ? (c.adults>0||c.writer>0) : (c.adults>0||c.kids>0); }).length;
       return `<span class="event-chip ${activeEventFilter===ev?'active':''}" data-event-filter="${escapeHtml(ev)}">${escapeHtml(ev)} <span class="ec-count">${count}</span></span>`;
     }).join('');
 
   // Summary row: when "All" is active, show real headcount per family (max across their events, not summed)
   // so the same people attending multiple functions aren't counted multiple times.
   // When a specific event tab is active, show that event's actual attending numbers only.
-  let totalAdults = 0, totalKids = 0, totalLadies = 0, summaryLabel = '';
+  let totalAdults = 0, totalKids = 0, totalLadies = 0, totalWriter = 0, summaryLabel = '';
+  const isWriterFilterActive = activeEventFilter && WRITER_TRACKED_EVENTS.includes(activeEventFilter);
+  const isLadiesFilterActive = activeEventFilter && LADIES_TRACKED_EVENTS.includes(activeEventFilter);
+
   if(activeEventFilter){
     guests.forEach(g=>{
       const c = guestEventCounts(g, activeEventFilter);
-      totalAdults += c.adults; totalKids += c.kids;
-      if(LADIES_TRACKED_EVENTS.includes(activeEventFilter)) totalLadies += c.ladies;
+      totalAdults += c.adults;
+      if(isWriterFilterActive) totalWriter += c.writer;
+      else totalKids += c.kids;
+      if(isLadiesFilterActive) totalLadies += c.ladies;
     });
     summaryLabel = `for ${activeEventFilter}`;
   } else {
@@ -1795,25 +1806,30 @@ function renderGuests(){
       totalAdults += guestTotalAdults(g);
       totalKids += guestTotalKids(g);
       totalLadies += guestTotalLadies(g);
+      totalWriter += guestTotalWriter(g);
     });
     summaryLabel = 'across all functions (each family counted once)';
   }
-  const ladiesTrackedHere = activeEventFilter ? LADIES_TRACKED_EVENTS.includes(activeEventFilter) : true;
   document.getElementById('guestSummaryRow').innerHTML =
     `<span><b>${guests.length}</b> families/entries</span>
      <span><b>${totalAdults}</b> adults</span>
-     <span><b>${totalKids}</b> kids</span>
-     ${ladiesTrackedHere ? `<span><b>${totalLadies}</b> ladies</span>` : ''}
+     ${isWriterFilterActive ? `<span><b>${totalWriter}</b> writers</span>` :
+       `<span><b>${totalKids}</b> kids</span>`}
+     ${(isLadiesFilterActive || !activeEventFilter) ? `<span><b>${totalLadies}</b> ladies</span>` : ''}
+     ${!activeEventFilter && totalWriter>0 ? `<span><b>${totalWriter}</b> writers (Kankotri)</span>` : ''}
      <span style="opacity:0.75;">${summaryLabel}</span>`;
 
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
-  document.getElementById('thKids').textContent = activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)';
+  document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
   document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
 
   // Table body
   const body = document.getElementById('guestTableBody');
   const empty = document.getElementById('guestEmpty');
-  const filtered = activeEventFilter ? guests.filter(g=>{ const c=guestEventCounts(g,activeEventFilter); return c.adults>0||c.kids>0; }) : guests;
+  const filtered = activeEventFilter ? guests.filter(g=>{
+    const c = guestEventCounts(g, activeEventFilter);
+    return isWriterFilterActive ? (c.adults>0||c.writer>0) : (c.adults>0||c.kids>0);
+  }) : guests;
 
   if(filtered.length===0){
     body.innerHTML = '';
@@ -1829,7 +1845,10 @@ function renderGuests(){
     const isOpen = openGuestRowId === g.id;
     // Column numbers reflect the active filter: a specific event's actual count when one tab is selected,
     // or the guest's overall max (their real party size) when viewing "All".
-    const rowCounts = activeEventFilter ? guestEventCounts(g, activeEventFilter) : {adults: guestTotalAdults(g), kids: guestTotalKids(g), ladies: guestTotalLadies(g)};
+    // For "All" view, the Kids column shows max-kids from non-Kankotri events (since Kankotri uses Writer).
+    const rawCounts = activeEventFilter ? guestEventCounts(g, activeEventFilter) : {adults: guestTotalAdults(g), kids: guestTotalKids(g), ladies: guestTotalLadies(g), writer: guestTotalWriter(g)};
+    // The second column (thKids/thWriter) shows writer count for Kankotri, kids otherwise
+    const secondColValue = isWriterFilterActive ? rawCounts.writer : rawCounts.kids;
     const showLadiesCol = activeEventFilter ? LADIES_TRACKED_EVENTS.includes(activeEventFilter) : true;
     const detailRow = `
       <tr class="guest-detail-row ${isOpen?'open':''}" data-guest-detail-for="${g.id}">
@@ -1839,6 +1858,7 @@ function renderGuests(){
               ${WEDDING_EVENTS.map(ev=>{
                 const c = guestEventCounts(g, ev);
                 const tracksLadies = LADIES_TRACKED_EVENTS.includes(ev);
+                const tracksWriter = WRITER_TRACKED_EVENTS.includes(ev);
                 return `
                 <div class="guest-event-box">
                   <div class="geb-title">${escapeHtml(ev)}</div>
@@ -1847,16 +1867,22 @@ function renderGuests(){
                       <label>Adults</label>
                       <input type="number" min="0" value="${c.adults||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|adults">
                     </div>
+                    ${tracksWriter ? `
+                    <div class="geb-field">
+                      <label>Writer</label>
+                      <input type="number" min="0" value="${c.writer||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|writer">
+                    </div>` : `
                     <div class="geb-field">
                       <label>Kids</label>
                       <input type="number" min="0" value="${c.kids||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|kids">
-                    </div>
+                    </div>`}
                     ${tracksLadies ? `
                     <div class="geb-field">
                       <label>Ladies</label>
                       <input type="number" min="0" max="${c.adults||0}" value="${c.ladies||''}" placeholder="0" data-guest-count="${g.id}|${escapeHtml(ev)}|ladies">
                     </div>` : ''}
                   </div>
+                  ${tracksWriter ? `<div class="geb-hint">Adults attending + ${c.writer||0} writer${c.writer===1?'':'s'} (calligraphers)</div>` : ''}
                   ${tracksLadies ? `<div class="geb-hint">out of ${c.adults||0} adult${c.adults===1?'':'s'}, ${c.ladies||0} ${c.ladies===1?'lady':'ladies'}</div>` : ''}
                 </div>`;
               }).join('')}
@@ -1871,9 +1897,9 @@ function renderGuests(){
         <td>${escapeHtml(g.phone||'—')}</td>
         <td>${escapeHtml(g.side||'—')}</td>
         <td class="invited-to">${invited.length ? escapeHtml(invited.join(', ')) : '<span style="color:var(--ink-soft);">Not yet set</span>'}</td>
-        <td class="num">${rowCounts.adults}</td>
-        <td class="num">${showLadiesCol ? rowCounts.ladies : '—'}</td>
-        <td class="num">${rowCounts.kids}</td>
+        <td class="num">${rawCounts.adults}</td>
+        <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
+        <td class="num">${secondColValue}</td>
         <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
       </tr>
       ${detailRow}
@@ -1928,17 +1954,18 @@ document.getElementById('guestTableBody').addEventListener('change', (e)=>{
   const g = guests.find(x=>x.id===gid);
   if(!g) return;
   g.events = g.events || {};
-  g.events[ev] = g.events[ev] || {adults:0, kids:0, ladies:0};
+  g.events[ev] = g.events[ev] || {adults:0, kids:0, ladies:0, writer:0};
   g.events[ev][field] = Math.max(0, Number(e.target.value)||0);
   // Ladies can never exceed that event's adult count, whichever field was just edited
   if((g.events[ev].ladies||0) > g.events[ev].adults){
     g.events[ev].ladies = g.events[ev].adults;
     if(field==='ladies') showToast('Ladies count can\'t exceed adults — adjusted');
   }
-  // Clean up: if both adults and kids are 0, drop the event entry entirely (= not invited)
-  if(g.events[ev].adults<=0 && g.events[ev].kids<=0){
-    delete g.events[ev];
-  }
+  // Clean up: drop the event entry if the meaningful fields are all zero (= not invited)
+  // Kankotri uses Writer instead of Kids, so check accordingly
+  const isWriterEv = WRITER_TRACKED_EVENTS.includes(ev);
+  const emptyEntry = isWriterEv ? (g.events[ev].adults<=0 && g.events[ev].writer<=0) : (g.events[ev].adults<=0 && g.events[ev].kids<=0);
+  if(emptyEntry){ delete g.events[ev]; }
   saveGuests();
   renderGuests();
 });
@@ -1950,12 +1977,15 @@ document.getElementById('btnGuestTemplate').onclick = ()=>{
     const row = {'Family / Guest Name':name, 'Phone':phone, 'Side':side};
     WEDDING_EVENTS.forEach(ev=>{
       row[ev+' Adults'] = '';
-      row[ev+' Kids'] = '';
+      // Kankotri tracks Writer instead of Kids
+      if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = '';
+      else row[ev+' Kids'] = '';
       if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = '';
     });
     return row;
   }
   const example1 = blankRow('Asha Patel Family', '9876512345', 'Bride');
+  example1['Kankotri Adults']=2; example1['Kankotri Writer']=1;
   example1['Ganesh-Grahshanti-Mosalu Adults']=2; example1['Ganesh-Grahshanti-Mosalu Kids']=0; example1['Ganesh-Grahshanti-Mosalu Ladies']=1;
   example1['Mehendi Adults']=2; example1['Mehendi Kids']=1; example1['Mehendi Ladies']=1;
   example1['Sangeet Adults']=2; example1['Sangeet Kids']=0;
@@ -1963,6 +1993,7 @@ document.getElementById('btnGuestTemplate').onclick = ()=>{
   example1['Reception Adults']=2; example1['Reception Kids']=2;
 
   const example2 = blankRow('Rohan Shah Family', '9876523456', 'Groom');
+  example2['Kankotri Adults']=3; example2['Kankotri Writer']=0;
   example2['Marriage Adults']=3; example2['Marriage Kids']=0;
   example2['Reception Adults']=3; example2['Reception Kids']=1;
 
@@ -1980,7 +2011,8 @@ document.getElementById('btnGuestExport').onclick = ()=>{
     WEDDING_EVENTS.forEach(ev=>{
       const c = guestEventCounts(g, ev);
       row[ev+' Adults'] = c.adults || '';
-      row[ev+' Kids'] = c.kids || '';
+      if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = c.writer || '';
+      else row[ev+' Kids'] = c.kids || '';
       if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies || '';
     });
     return row;
@@ -2019,7 +2051,8 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
         eventColLookup[ev] = {
           adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
           kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')],
-          ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')]
+          ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')],
+          writerKeys: [norm(ev+' writer'), norm(ev+'writer'), norm(ev+' writers'), norm(ev+'writers')]
         };
       });
 
@@ -2037,10 +2070,13 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
         const events = {};
         WEDDING_EVENTS.forEach(ev=>{
           const adults = Number(getVal(row, eventColLookup[ev].adultsKeys)) || 0;
-          const kids = Number(getVal(row, eventColLookup[ev].kidsKeys)) || 0;
+          const isWriterEv = WRITER_TRACKED_EVENTS.includes(ev);
+          const kids = isWriterEv ? 0 : (Number(getVal(row, eventColLookup[ev].kidsKeys)) || 0);
+          const writer = isWriterEv ? (Number(getVal(row, eventColLookup[ev].writerKeys)) || 0) : 0;
           let ladies = LADIES_TRACKED_EVENTS.includes(ev) ? (Number(getVal(row, eventColLookup[ev].ladiesKeys)) || 0) : 0;
-          if(ladies > adults) ladies = adults; // safety cap, same rule as manual entry
-          if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
+          if(ladies > adults) ladies = adults;
+          const hasEntry = isWriterEv ? (adults>0 || writer>0) : (adults>0 || kids>0);
+          if(hasEntry){ events[ev] = {adults, kids, ladies, writer}; }
         });
 
         const wasInThisFileAlready = seenInThisFile.hasOwnProperty(nameKey);
@@ -2284,7 +2320,8 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
           guestEventColLookup[ev] = {
             adultsKeys: [norm(ev+' adults'), norm(ev+'adults')],
             kidsKeys: [norm(ev+' kids'), norm(ev+'kids'), norm(ev+' children'), norm(ev+'children')],
-            ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')]
+            ladiesKeys: [norm(ev+' ladies'), norm(ev+'ladies'), norm(ev+' lady'), norm(ev+'lady')],
+            writerKeys: [norm(ev+' writer'), norm(ev+'writer'), norm(ev+' writers'), norm(ev+'writers')]
           };
         });
         const seenGuestNamesInFile = {};
@@ -2298,10 +2335,13 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
           const events = {};
           WEDDING_EVENTS.forEach(ev=>{
             const adults = Number(getVal(row, guestEventColLookup[ev].adultsKeys)) || 0;
-            const kids = Number(getVal(row, guestEventColLookup[ev].kidsKeys)) || 0;
+            const isWriterEv = WRITER_TRACKED_EVENTS.includes(ev);
+            const kids = isWriterEv ? 0 : (Number(getVal(row, guestEventColLookup[ev].kidsKeys)) || 0);
+            const writer = isWriterEv ? (Number(getVal(row, guestEventColLookup[ev].writerKeys)) || 0) : 0;
             let ladies = LADIES_TRACKED_EVENTS.includes(ev) ? (Number(getVal(row, guestEventColLookup[ev].ladiesKeys)) || 0) : 0;
             if(ladies > adults) ladies = adults;
-            if(adults>0 || kids>0){ events[ev] = {adults, kids, ladies}; }
+            const hasEntry = isWriterEv ? (adults>0 || writer>0) : (adults>0 || kids>0);
+            if(hasEntry){ events[ev] = {adults, kids, ladies, writer}; }
           });
           if(seenGuestNamesInFile.hasOwnProperty(gnameKey)){
             dupGuestNamesInFile.push(`"${gname}" (row ${seenGuestNamesInFile[gnameKey]+2} and row ${idx+2})`);
