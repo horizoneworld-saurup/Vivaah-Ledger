@@ -501,10 +501,151 @@
     .print-header h1{font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--maroon-dark); margin:0;}
     .print-header .meta{font-size:12px; color:var(--ink-soft); margin-top:4px;}
   }
-  .print-header{display:none;}
+  .print-header{display:none;}  /* ---------- Role badge ---------- */
+  .role-badge{
+    display:inline-flex; align-items:center; padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:700;
+    letter-spacing:0.04em; text-transform:uppercase; border:1px solid var(--line);
+  }
+  .role-badge.role-admin{background:#FFF0E6; color:#B5562F; border-color:#E8C09A;}
+  .role-badge.role-editor{background:#EEF6EE; color:#4A7A4A; border-color:#B5D4B5;}
+  .role-badge.role-viewer{background:var(--ivory-deep); color:var(--ink-soft); border-color:var(--line);}
+
+  /* ---------- Role permission classes ---------- */
+  /* These are set on <body> by JS based on current role */
+  body.role-viewer .editor-only,
+  body.role-viewer .admin-only,
+  body.role-editor .admin-only { display:none !important; }
+
+  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button),
+  body.role-viewer input:not(#lockRemember):not([data-lock-role]),
+  body.role-viewer select,
+  body.role-viewer textarea { pointer-events:none; opacity:0.6; }
+  body.role-viewer .guest-row { cursor:default; }
+  body.role-viewer .vendor-row { cursor:default; }
+
+  /* ---------- Lock screen ---------- */
+  .lock-overlay{
+    position:fixed; inset:0; z-index:999;
+    background:linear-gradient(135deg, var(--maroon-dark) 0%, #2A0A14 60%, #1A0A00 100%);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .lock-overlay.hidden{display:none;}
+  .lock-box{
+    background:rgba(251,246,238,0.97); border-radius:24px; padding:36px 32px 28px;
+    width:100%; max-width:340px; text-align:center;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);
+    border:1px solid rgba(212,162,76,0.3);
+  }
+  .lock-logo{ margin-bottom:14px; }
+  .lock-title{
+    font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700;
+    color:var(--maroon-dark); margin:0 0 4px;
+  }
+  .lock-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+  .lock-role-tabs{
+    display:flex; gap:6px; justify-content:center; margin-bottom:22px;
+  }
+  .lock-tab{
+    flex:1; padding:8px 4px; border-radius:9px; border:1px solid var(--line); background:#fff;
+    font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .15s;
+  }
+  .lock-tab.active{background:var(--maroon); color:var(--ivory); border-color:var(--maroon);}
+  .lock-pin-dots{
+    display:flex; justify-content:center; gap:14px; margin-bottom:22px;
+  }
+  .pin-dot{
+    width:14px; height:14px; border-radius:50%; border:2px solid var(--line); background:#fff;
+    transition:background .15s, border-color .15s;
+  }
+  .pin-dot.filled{background:var(--maroon); border-color:var(--maroon);}
+  .pin-dot.error{background:var(--rust); border-color:var(--rust);}
+  .lock-keypad{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px;
+  }
+  .key-btn{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    font-size:20px; font-weight:600; color:var(--ink); padding:14px 0; cursor:pointer;
+    transition:background .12s, transform .1s; font-family:'Cormorant Garamond',serif;
+  }
+  .key-btn:hover{background:var(--ivory-deep);}
+  .key-btn:active{transform:scale(0.94); background:var(--ivory-deep);}
+  .key-clear{font-size:16px; color:var(--rust);}
+  .key-enter{background:var(--maroon); color:#fff; border-color:var(--maroon);}
+  .key-enter:hover{background:var(--maroon-dark);}
+  .lock-remember{font-size:12px; color:var(--ink-soft); margin-bottom:10px;}
+  .lock-remember input{accent-color:var(--maroon); cursor:pointer;}
+  .lock-error{
+    font-size:12.5px; font-weight:600; color:var(--rust); min-height:18px;
+    transition:opacity .2s;
+  }
 </style>
 </head>
 <body>
+
+<!-- ========== LOCK SCREEN ========== -->
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-box">
+    <div class="lock-logo">
+      <svg viewBox="0 0 48 48" fill="none" style="width:52px;height:52px;">
+        <circle cx="24" cy="24" r="22" stroke="#D4A24C" stroke-width="1.5"/>
+        <path d="M24 8 C30 14, 30 20, 24 24 C18 20, 18 14, 24 8 Z" fill="#5C1A2B"/>
+        <path d="M24 24 C30 28, 30 34, 24 40 C18 34, 18 28, 24 24 Z" fill="#D4A24C"/>
+        <circle cx="24" cy="24" r="2.4" fill="#FBF6EE"/>
+      </svg>
+    </div>
+    <h2 class="lock-title">Vivaah Ledger</h2>
+    <p class="lock-sub">Enter your PIN to continue</p>
+    <div class="lock-role-tabs">
+      <button class="lock-tab active" data-lock-role="admin">Admin</button>
+      <button class="lock-tab" data-lock-role="editor">Editor</button>
+      <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+    </div>
+    <div class="lock-pin-dots" id="lockPinDots">
+      <span class="pin-dot" id="dot0"></span>
+      <span class="pin-dot" id="dot1"></span>
+      <span class="pin-dot" id="dot2"></span>
+      <span class="pin-dot" id="dot3"></span>
+    </div>
+    <div class="lock-keypad">
+      <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button>
+      <button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button><button class="key-btn" data-key="6">6</button>
+      <button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button>
+      <button class="key-btn key-clear" data-key="clear">⌫</button><button class="key-btn" data-key="0">0</button><button class="key-btn key-enter" data-key="enter">✓</button>
+    </div>
+    <div class="lock-remember">
+      <label><input type="checkbox" id="lockRemember"> Stay signed in on this device</label>
+    </div>
+    <div class="lock-error" id="lockError"></div>
+  </div>
+</div>
+
+<!-- ========== ADMIN SETTINGS MODAL ========== -->
+<div class="modal-overlay" id="adminSettingsOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h3>Admin settings</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;">Change PINs for each role. Leave blank to keep the current PIN.</p>
+    <div class="field">
+      <label>Admin PIN (4 digits)</label>
+      <input type="password" id="newAdminPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Editor PIN (4 digits)</label>
+      <input type="password" id="newEditorPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>Viewer PIN (4 digits)</label>
+      <input type="password" id="newViewerPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <div style="background:var(--ivory-deep); border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;">
+      ⚠ Share PINs carefully. Default PINs are Admin: 1234 · Editor: 5678 · Viewer: 9999
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="adminSettingsCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="adminSettingsSaveBtn">Save PINs</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div class="topbar">
@@ -525,13 +666,16 @@
       <button class="icon-btn" id="btnEditBranding" title="Edit logo &amp; header">✎</button>
     </div>
     <div class="topbar-actions">
+      <span class="role-badge" id="roleBadge"></span>
       <input type="file" id="fileInput" accept=".xlsx,.xls">
-      <button class="btn btn-gold" id="btnGoogleSignIn">⛁ Sign in with Google</button>
+      <button class="btn btn-ghost" id="btnGoogleSignIn">⛁ Sign in with Google</button>
       <button class="btn btn-ghost" id="btnUpload">⭱ Upload Excel</button>
       <button class="btn btn-ghost" id="btnTemplate">⬇ Sample template</button>
       <button class="btn btn-ghost" id="btnPrint">🖺 Print / Save PDF</button>
       <button class="btn btn-ghost" id="btnExport">⬇ Export report</button>
+      <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
       <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
+      <button class="btn btn-ghost" id="btnSignOutRole" title="Sign out / switch role">↩ Sign out</button>
     </div>
   </div>
 
@@ -759,7 +903,7 @@
       <label>Initial advance paid (₹) — optional</label>
       <input type="number" id="vInitialPaid" placeholder="0" min="0">
     </div>
-    <div class="field featured-toggle-field">
+    <div class="field featured-toggle-field admin-only">
       <label class="toggle-row">
         <input type="checkbox" id="vFeatured">
         <span>Feature in scrolling advertisement banner</span>
@@ -842,6 +986,196 @@
 <div class="voice-caption" id="voiceCaption"></div>
 
 <script>
+/* ================================================================
+   AUTH MODULE — PIN-based role access (Admin / Editor / Viewer)
+   PINs are SHA-256 hashed before storage, never saved as plain text.
+   Default PINs:  Admin 1234 · Editor 5678 · Viewer 9999
+   ================================================================ */
+const DEFAULT_PINS = {admin:'1234', editor:'5678', viewer:'9999'};
+let currentRole = null; // 'admin' | 'editor' | 'viewer'
+let lockPinEntry = '';
+let lockSelectedRole = 'admin';
+
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function getStoredHash(role){
+  try{
+    const stored = await storageGet('pin-hash-'+role);
+    if(stored) return stored;
+  }catch(e){}
+  // Fall back to default
+  return await sha256(DEFAULT_PINS[role]);
+}
+
+async function checkPin(role, pin){
+  const hash = await sha256(pin);
+  const storedHash = await getStoredHash(role);
+  return hash === storedHash;
+}
+
+async function savePin(role, pin){
+  const hash = await sha256(pin);
+  await storageSet('pin-hash-'+role, hash);
+}
+
+/* ---------- Lock screen logic ---------- */
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const dot = document.getElementById('dot'+i);
+    dot.className = 'pin-dot' + (i < lockPinEntry.length ? ' filled' : '');
+  }
+}
+
+function lockError(msg){
+  document.getElementById('lockError').textContent = msg;
+  for(let i=0;i<4;i++) document.getElementById('dot'+i).className = 'pin-dot error';
+  setTimeout(()=>{
+    for(let i=0;i<4;i++) document.getElementById('dot'+i).className = 'pin-dot';
+    document.getElementById('lockError').textContent = '';
+  }, 700);
+  lockPinEntry = '';
+}
+
+async function tryUnlock(){
+  if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
+  const ok = await checkPin(lockSelectedRole, lockPinEntry);
+  if(ok){
+    setRole(lockSelectedRole);
+    const remember = document.getElementById('lockRemember').checked;
+    if(remember) localStorage.setItem('vivaah-role', lockSelectedRole);
+    sessionStorage.setItem('vivaah-role', lockSelectedRole);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    if(!vendors.length && !guests.length) loadData();
+  } else {
+    lockError('Wrong PIN — try again');
+  }
+}
+
+function setRole(role){
+  currentRole = role;
+  document.body.className = document.body.className.replace(/role-\w+/g,'').trim() + ' role-' + role;
+  const badge = document.getElementById('roleBadge');
+  const labels = {admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
+  badge.textContent = labels[role] || role;
+  badge.className = 'role-badge role-' + role;
+  // Show/hide admin-only and editor-only elements
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display = role==='admin' ? '' : 'none');
+  document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (role==='admin'||role==='editor') ? '' : 'none');
+  applyRoleRestrictions();
+}
+
+function applyRoleRestrictions(){
+  // For viewer: make all interactive elements non-functional with a visual indication
+  const isViewer = currentRole === 'viewer';
+  document.querySelectorAll(
+    '#btnAddVendor, #btnUpload, #fileInput, #btnGuestUpload, #guestFileInput, '+
+    '#btnAddGuest, #newGuestName, #newGuestPhone, #newGuestSide, '+
+    '#searchInput, .reminder-add-row button, .reminder-add-row input, '+
+    '.catering-actions button, #btnAddFunction'
+  ).forEach(el=>{
+    el.disabled = isViewer;
+    el.style.opacity = isViewer ? '0.5' : '';
+    el.style.cursor = isViewer ? 'not-allowed' : '';
+  });
+  // For editor: block ad-vendor related actions (the featured toggle/logo in modal is inside admin-only class)
+  if(currentRole === 'editor'){
+    // Remove delete buttons from featured (ad) vendors in the table
+    // This is handled at render time — renderTable checks currentRole
+  }
+}
+
+/* Lock screen keypad */
+document.querySelectorAll('.key-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.key;
+    if(key === 'clear'){ lockPinEntry = lockPinEntry.slice(0,-1); updatePinDots(); }
+    else if(key === 'enter'){ tryUnlock(); }
+    else if(lockPinEntry.length < 4){ lockPinEntry += key; updatePinDots(); if(lockPinEntry.length===4) tryUnlock(); }
+  });
+});
+// Keyboard support for lock screen
+document.addEventListener('keydown', e=>{
+  if(document.getElementById('lockOverlay').classList.contains('hidden')) return;
+  if(e.key>='0' && e.key<='9' && lockPinEntry.length<4){ lockPinEntry+=e.key; updatePinDots(); if(lockPinEntry.length===4) tryUnlock(); }
+  else if(e.key==='Backspace'){ lockPinEntry=lockPinEntry.slice(0,-1); updatePinDots(); }
+  else if(e.key==='Enter'){ tryUnlock(); }
+});
+document.querySelectorAll('.lock-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    lockSelectedRole = tab.dataset.lockRole;
+    lockPinEntry = '';
+    updatePinDots();
+    document.getElementById('lockError').textContent = '';
+    document.querySelectorAll('.lock-tab').forEach(t=>t.classList.toggle('active', t===tab));
+  });
+});
+
+/* Sign out */
+document.getElementById('btnSignOutRole').onclick = ()=>{
+  currentRole = null;
+  localStorage.removeItem('vivaah-role');
+  sessionStorage.removeItem('vivaah-role');
+  lockPinEntry = '';
+  updatePinDots();
+  document.getElementById('lockError').textContent = '';
+  document.getElementById('lockOverlay').classList.remove('hidden');
+};
+
+/* Admin settings panel */
+document.getElementById('btnAdminSettings').onclick = ()=>{
+  ['Admin','Editor','Viewer'].forEach(r=>{
+    document.getElementById('new'+r+'Pin').value = '';
+  });
+  document.getElementById('adminSettingsOverlay').classList.add('show');
+};
+document.getElementById('adminSettingsCancelBtn').onclick = ()=>{
+  document.getElementById('adminSettingsOverlay').classList.remove('show');
+};
+document.getElementById('adminSettingsOverlay').addEventListener('click', e=>{
+  if(e.target.id==='adminSettingsOverlay') document.getElementById('adminSettingsOverlay').classList.remove('show');
+});
+document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
+  const roles = ['admin','editor','viewer'];
+  let changed = 0;
+  for(const role of roles){
+    const cap = role.charAt(0).toUpperCase()+role.slice(1);
+    const val = document.getElementById('new'+cap+'Pin').value.trim();
+    if(val){
+      if(!/^\d{4}$/.test(val)){ showToast('PINs must be exactly 4 digits'); return; }
+      await savePin(role, val);
+      changed++;
+    }
+  }
+  document.getElementById('adminSettingsOverlay').classList.remove('show');
+  showToast(changed ? `${changed} PIN${changed===1?'':'s'} updated` : 'No changes made');
+};
+
+/* ---------- Session restore + initial lock check ---------- */
+async function initAuth(){
+  // Check session storage first (survives refresh in same tab)
+  const sessionRole = sessionStorage.getItem('vivaah-role');
+  if(sessionRole && ['admin','editor','viewer'].includes(sessionRole)){
+    setRole(sessionRole);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    await loadData();
+    return;
+  }
+  // Check local storage "remember me"
+  const rememberedRole = localStorage.getItem('vivaah-role');
+  if(rememberedRole && ['admin','editor','viewer'].includes(rememberedRole)){
+    setRole(rememberedRole);
+    sessionStorage.setItem('vivaah-role', rememberedRole);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    await loadData();
+    return;
+  }
+  // Show lock screen — data loads after successful unlock
+}
+
+/* ================================================================ */
 /* ---------------- State ---------------- */
 let vendors = [];
 let editingVendorId = null;
@@ -1488,8 +1822,12 @@ function renderTable(){
         <td><span class="status-tag ${status}">${statusLabel}</span></td>
         <td>
           <div class="row-actions">
-            <button class="icon-btn" data-edit="${v.id}" title="Edit">✎</button>
-            <button class="icon-btn danger" data-remove="${v.id}" title="Delete">🗑</button>
+            ${currentRole === 'viewer' ? '' :
+              (currentRole === 'editor' && v.featured) ?
+                `<span style="font-size:11px;color:var(--ink-soft);padding:4px 6px;">Ad vendor — Admin only</span>` :
+                `<button class="icon-btn" data-edit="${v.id}" title="Edit">✎</button>
+                 <button class="icon-btn danger" data-remove="${v.id}" title="Delete">🗑</button>`
+            }
           </div>
         </td>
       </tr>
@@ -2614,10 +2952,10 @@ document.getElementById('voiceFab').onclick = ()=>{
 
 /* ---------------- Init ---------------- */
 (async ()=>{
-  await loadData();
   initGoogleAuth();
-  await tryRestoreGoogleSession();
   initVoiceControl();
+  await initAuth(); // shows lock screen or restores session, then calls loadData
+  await tryRestoreGoogleSession();
 })();
 </script>
 </body>
