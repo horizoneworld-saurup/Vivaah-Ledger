@@ -1193,7 +1193,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1276,6 +1276,7 @@ async function saveFunctions(){
 }
 async function saveBranding(){
   await storageSet('wedding-branding', JSON.stringify(branding));
+  queueCloudSave();
 }
 async function saveGuests(){
   await storageSet('wedding-guests', JSON.stringify(guests));
@@ -1306,7 +1307,8 @@ async function saveSyncMeta(){
 
 /* ---------------- Google Sheets Sync ---------------- */
 const SHEET_NAME = 'Vivaah Ledger Data';
-const SHEET_DATA_RANGE = 'Data!A1';
+const SHEET_DATA_RANGE = 'Data!A1';   // main data (vendors, guests, functions, reminders, branding text)
+const SHEET_LOGO_RANGE = 'Data!B1';   // logos only (compressed base64, separate cell to stay under 50k char limit)
 
 function setSyncStatus(state, text){
   const banner = document.getElementById('syncBanner');
@@ -1355,10 +1357,39 @@ async function tryRestoreGoogleSession(){
         googleAccessToken = parsed.token;
         await onSignedIn();
         return;
+      } else if(parsed.token && googleTokenClient){
+        // Token expired — attempt a silent refresh (no popup if user already consented)
+        setSyncStatus('saving', 'Refreshing Google session…');
+        googleTokenClient.requestAccessToken({prompt:''});
+        return; // callback in initTokenClient will call onSignedIn() if successful
       }
     }
   }catch(e){}
   setSyncStatus(null, '');
+}
+
+/* ---------- Guest compression helpers (keeps 200+ guests under 50K cell limit) ---------- */
+function compressGuests(guestArr){
+  return guestArr.map(g=>{
+    const evArr = WEDDING_EVENTS.map(ev=>{
+      const e = g.events && g.events[ev];
+      return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
+    });
+    return [g.id, g.name, g.phone||'', g.side||'', evArr];
+  });
+}
+function expandGuests(compressed){
+  return (compressed||[]).map(arr=>{
+    if(!Array.isArray(arr)) return arr; // already expanded (legacy format)
+    const [id,name,phone,side,evArr] = arr;
+    const events={};
+    (evArr||[]).forEach((e,i)=>{
+      if(e && (e[0]>0||e[1]>0||e[3]>0)){
+        events[WEDDING_EVENTS[i]] = {adults:e[0]||0, kids:e[1]||0, ladies:e[2]||0, writer:e[3]||0};
+      }
+    });
+    return {id, name, phone, side, events};
+  });
 }
 
 document.getElementById('btnGoogleSignIn').onclick = ()=>{
@@ -1425,41 +1456,66 @@ async function onSignedIn(){
     sheetId = cachedId || await findOrCreateSheet();
     await storageSet('wedding-sheet-id', sheetId);
 
-    // Pull cloud data — cloud is treated as source of truth once connected,
-    // except for logos, which are device-local and never stored in the cloud (see pushToSheet).
     const cloudData = await pullFromSheet();
     if(cloudData){
-      const localLogoByName = {};
-      vendors.forEach(v=>{ if(v.logo) localLogoByName[v.name.toLowerCase()] = v.logo; });
+      // Restore logos from the cloud's dedicated logos cell (_logos)
+      // Fall back to any locally-stored logos if the cloud doesn't have them yet
+      const cloudLogos = cloudData._logos || {};
+      const localLogoById = {};
+      vendors.forEach(v=>{ if(v.logo) localLogoById[v.id] = v.logo; });
+
       vendors = (cloudData.vendors || vendors).map(v=>({
         ...v,
-        logo: localLogoByName[v.name.toLowerCase()] || ''
+        // Prefer cloud logo (by vendor ID), fall back to local logo
+        logo: cloudLogos.vendorLogos && cloudLogos.vendorLogos[v.id]
+              ? cloudLogos.vendorLogos[v.id]
+              : (localLogoById[v.id] || '')
       }));
       functions = cloudData.functions && cloudData.functions.length ? cloudData.functions : functions;
       guests = cloudData.guests || guests;
       reminders = cloudData.reminders || reminders;
-      const localBrandingLogo = branding.logo;
-      branding = {...(cloudData.branding || branding), logo: localBrandingLogo};
+      // Branding: prefer cloud logo, fall back to local
+      const cloudBrandingLogo = cloudLogos.brandingLogo || '';
+      branding = {
+        ...(cloudData.branding || branding),
+        logo: cloudBrandingLogo || branding.logo || ''
+      };
       applyBranding();
     } else {
-      // First-ever connection with an empty sheet — push current local data up
+      // First-ever connection — push current local data up to the sheet
       await pushToSheet();
     }
     setSyncStatus('ok', 'Synced just now');
     render();
   }catch(e){
     console.error(e);
-    setSyncStatus('error', 'Connection issue — saved locally only');
+    setSyncStatus('error', 'Connection issue — data saved locally');
     showToast('Could not connect to Google Sheets: '+e.message);
   }
 }
 
 async function pullFromSheet(){
   try{
-    const res = await sheetsApi(`/${sheetId}/values/${encodeURIComponent(SHEET_DATA_RANGE)}`);
-    const raw = res.values && res.values[0] && res.values[0][0];
-    if(!raw) return null;
-    return JSON.parse(raw);
+    const res = await sheetsApi(`/${sheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_DATA_RANGE)}&ranges=${encodeURIComponent(SHEET_LOGO_RANGE)}&ranges=${encodeURIComponent('Data!C1')}`);
+    const vr = res.valueRanges || [];
+    const mainRaw  = vr[0]&&vr[0].values&&vr[0].values[0]&&vr[0].values[0][0];
+    const logoRaw  = vr[1]&&vr[1].values&&vr[1].values[0]&&vr[1].values[0][0];
+    const guestRaw = vr[2]&&vr[2].values&&vr[2].values[0]&&vr[2].values[0][0];
+    if(!mainRaw) return null;
+    const mainData = JSON.parse(mainRaw);
+    let logoData = null;
+    if(logoRaw){ try{ logoData = JSON.parse(logoRaw); }catch(e){} }
+    // Guests: prefer the dedicated C1 cell (compressed format), fall back to legacy A1 embedded guests
+    let cloudGuests = [];
+    if(guestRaw){
+      try{
+        const compressed = JSON.parse(guestRaw);
+        cloudGuests = expandGuests(compressed);
+      }catch(e){ cloudGuests = mainData.guests || []; }
+    } else {
+      cloudGuests = mainData.guests || [];
+    }
+    return {...mainData, guests: cloudGuests, _logos: logoData};
   }catch(e){
     console.error('pull failed', e);
     return null;
@@ -1468,20 +1524,39 @@ async function pullFromSheet(){
 
 async function pushToSheet(){
   if(!googleAccessToken || !sheetId) return;
-  // Logos are base64 images and can easily exceed Google Sheets' 50,000-character cell limit,
-  // so they're kept local-only (per device) and excluded from the synced payload.
+  // A1 — main data (vendors, functions, reminders, branding text) — logos excluded (in B1)
   const vendorsForSync = vendors.map(({logo, ...rest})=>rest);
   const brandingForSync = {...branding, logo: ''};
-  const payload = JSON.stringify({vendors: vendorsForSync, functions, guests, reminders, branding: brandingForSync, savedAt: new Date().toISOString()});
+  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, savedAt: new Date().toISOString()});
+  // B1 — logos only (compressed base64, separate cell)
+  const logosPayload = JSON.stringify({
+    vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
+    brandingLogo: branding.logo || ''
+  });
+  // C1 — guests compressed (replaces full event-name keys with array indices to reduce size by 4x)
+  const guestPayload = JSON.stringify(compressGuests(guests));
   try{
-    await sheetsApi(`/${sheetId}/values/${encodeURIComponent(SHEET_DATA_RANGE)}?valueInputOption=RAW`, {
-      method:'PUT',
-      body: JSON.stringify({range: SHEET_DATA_RANGE, values:[[payload]]})
+    await sheetsApi(`/${sheetId}/values:batchUpdate`, {
+      method:'POST',
+      body: JSON.stringify({
+        valueInputOption:'RAW',
+        data:[
+          {range: SHEET_DATA_RANGE, values:[[mainPayload]]},
+          {range: SHEET_LOGO_RANGE,  values:[[logosPayload]]},
+          {range: 'Data!C1',         values:[[guestPayload]]}
+        ]
+      })
     });
     setSyncStatus('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     console.error('push failed', e);
-    setSyncStatus('error', 'Sync failed — saved locally only');
+    if(e.message && (e.message.includes('401') || e.message.includes('403'))){
+      googleAccessToken = null;
+      await storageSet('google-token-cache', '');
+      setSyncStatus('error', 'Google session expired — please sign in again');
+    } else {
+      setSyncStatus('error', 'Sync failed — data saved locally');
+    }
   }
 }
 
@@ -1885,15 +1960,37 @@ document.getElementById('vendorModalOverlay').addEventListener('click', e=>{
 });
 document.getElementById('vFeatured').addEventListener('change', toggleFeaturedFields);
 
+/* ---------------- Logo compression ---------------- */
+// Compress any uploaded image to a small JPEG (max 80x80px, quality 0.5)
+// so it stays well under the Google Sheets 50k-char cell limit for syncing.
+// Output: base64 data URL string, or null on failure.
+function compressImage(dataUrl, maxSize=80, quality=0.5){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      const ratio = Math.min(maxSize/img.width, maxSize/img.height, 1);
+      canvas.width = Math.round(img.width*ratio);
+      canvas.height = Math.round(img.height*ratio);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      try{ resolve(canvas.toDataURL('image/jpeg', quality)); }
+      catch(e){ resolve(dataUrl); } // fallback: return uncompressed if canvas fails (e.g. CORS)
+    };
+    img.onerror = ()=>resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 document.getElementById('btnPickVendorLogo').onclick = ()=>document.getElementById('vendorLogoFileInput').click();
 document.getElementById('vendorLogoFileInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   if(!file.type.startsWith('image/')){ showToast('Please choose an image file'); return; }
-  if(file.size > 600*1024){ showToast('Image is large — try one under 300KB so saving stays smooth'); }
   const reader = new FileReader();
-  reader.onload = (evt)=>{
-    pendingVendorLogo = evt.target.result;
+  reader.onload = async (evt)=>{
+    const compressed = await compressImage(evt.target.result);
+    pendingVendorLogo = compressed;
     refreshVendorLogoPreview(pendingVendorLogo);
   };
   reader.readAsDataURL(file);
@@ -1975,12 +2072,10 @@ document.getElementById('logoFileInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
   if(!file.type.startsWith('image/')){ showToast('Please choose an image file'); return; }
-  if(file.size > 600*1024){
-    showToast('Image is large — try one under 300KB so saving stays smooth');
-  }
   const reader = new FileReader();
-  reader.onload = (evt)=>{
-    pendingLogoData = evt.target.result;
+  reader.onload = async (evt)=>{
+    const compressed = await compressImage(evt.target.result);
+    pendingLogoData = compressed;
     refreshLogoPreview(pendingLogoData);
   };
   reader.readAsDataURL(file);
