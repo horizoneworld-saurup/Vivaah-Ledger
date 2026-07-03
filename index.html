@@ -599,6 +599,7 @@
       <button class="lock-tab active" data-lock-role="admin">Admin</button>
       <button class="lock-tab" data-lock-role="editor">Editor</button>
       <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+      <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only">⚙</button>
     </div>
     <div class="lock-pin-dots" id="lockPinDots">
       <span class="pin-dot" id="dot0"></span>
@@ -992,6 +993,39 @@
    Default PINs:  Admin 1234 · Editor 5678 · Viewer 9999
    ================================================================ */
 const DEFAULT_PINS = {admin:'1234', editor:'5678', viewer:'9999'};
+
+/* ================================================================
+   PLATFORM VENDORS — Paid advertisers baked into every customer copy.
+   ---------------------------------------------------------------
+   Edit this list BEFORE delivering the file to a customer.
+   These vendors always appear in the scrolling ticker, cannot be
+   deleted or edited by the customer (any role), and do NOT appear
+   in their vendor ledger or budget calculations.
+   ---------------------------------------------------------------
+   To add a vendor: copy one object, fill in the fields.
+   To remove: delete that object from the array.
+   logo: paste a small base64 image string, or leave '' for initial avatar.
+   ================================================================ */
+const PLATFORM_VENDORS = [
+  /* Example — delete this and add your real paid vendors before delivery:
+  {
+    id: 'pv_example1',
+    name: 'Sharma Caterers',
+    category: 'Catering',
+    phone: '9876543210',
+    website: 'https://sharmacaterers.com',
+    tagline: 'Premium wedding catering since 1995',
+    logo: ''
+  },
+  */
+];
+
+/* ================================================================
+   OWNER PIN — Secret PIN that unlocks the Owner panel.
+   Change this to something only you know before delivering the file.
+   The customer's Admin PIN (set separately) does NOT grant Owner access.
+   ================================================================ */
+const OWNER_PIN = '0000'; // ← CHANGE THIS before delivery
 let currentRole = null; // 'admin' | 'editor' | 'viewer'
 let lockPinEntry = '';
 let lockSelectedRole = 'admin';
@@ -1193,7 +1227,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
