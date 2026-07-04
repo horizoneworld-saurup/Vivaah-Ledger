@@ -506,15 +506,18 @@
     display:inline-flex; align-items:center; padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:700;
     letter-spacing:0.04em; text-transform:uppercase; border:1px solid var(--line);
   }
+  .role-badge.role-owner{background:#F0E8FF; color:#5C1A8A; border-color:#C4A0E8;}
   .role-badge.role-admin{background:#FFF0E6; color:#B5562F; border-color:#E8C09A;}
   .role-badge.role-editor{background:#EEF6EE; color:#4A7A4A; border-color:#B5D4B5;}
   .role-badge.role-viewer{background:var(--ivory-deep); color:var(--ink-soft); border-color:var(--line);}
 
   /* ---------- Role permission classes ---------- */
-  /* These are set on <body> by JS based on current role */
   body.role-viewer .editor-only,
   body.role-viewer .admin-only,
-  body.role-editor .admin-only { display:none !important; }
+  body.role-viewer .owner-only,
+  body.role-editor .admin-only,
+  body.role-editor .owner-only,
+  body.role-admin .owner-only { display:none !important; }
 
   body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button),
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
@@ -578,6 +581,17 @@
     font-size:12.5px; font-weight:600; color:var(--rust); min-height:18px;
     transition:opacity .2s;
   }
+  /* ---------- Platform vendor list items ---------- */
+  .pv-item{
+    display:flex; align-items:center; gap:12px; background:#fff;
+    border:1px solid var(--line); border-radius:10px; padding:10px 14px;
+  }
+  .pv-logo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex-shrink:0;}
+  .pv-logo-fallback{width:36px;height:36px;border-radius:50%;background:var(--ivory-deep);border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--maroon);}
+  .pv-info{flex:1;min-width:0;}
+  .pv-name{font-weight:700;font-size:13.5px;color:var(--ink);}
+  .pv-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .pv-actions{display:flex;gap:6px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -647,6 +661,57 @@
   </div>
 </div>
 
+<!-- ========== OWNER PANEL MODAL ========== -->
+<div class="modal-overlay" id="ownerPanelOverlay">
+  <div class="modal" style="max-width:640px;">
+    <h3>🔑 Owner Panel — Platform Vendor Management</h3>
+    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">Paid advertisers added here appear in the ticker for ALL customers. They cannot be removed by any customer role. Changes are saved inside this file — download the updated file to deliver to customers.</p>
+    <div id="platformVendorList" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;margin-bottom:14px;"></div>
+    <button class="btn btn-ghost" id="btnAddPlatformVendor" style="width:100%;justify-content:center;">+ Add paid vendor</button>
+    <div class="modal-actions" style="margin-top:20px;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <button class="btn btn-ghost" id="ownerPanelCancelBtn">Close</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-gold" id="btnDownloadUpdatedFile">⬇ Download updated file for customer</button>
+      </div>
+    </div>
+    <div style="background:var(--ivory-deep);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-top:12px;">
+      ℹ Your owner PIN is: <b id="ownerPinDisplay"></b> — Change it by editing <code>OWNER_PIN</code> in the file's source before delivery. Customer Admin/Editor/Viewer PINs are managed separately under ⚙ Admin.
+    </div>
+  </div>
+</div>
+
+<!-- ========== ADD/EDIT PLATFORM VENDOR MODAL ========== -->
+<div class="modal-overlay" id="platformVendorModalOverlay">
+  <div class="modal" style="max-width:420px;">
+    <h3 id="pvModalTitle">Add platform vendor</h3>
+    <div class="field"><label>Vendor name</label><input type="text" id="pvName" placeholder="e.g. Sharma Caterers"></div>
+    <div class="field-row">
+      <div class="field"><label>Category</label><input type="text" id="pvCategory" placeholder="Catering, Decor…"></div>
+      <div class="field"><label>Phone</label><input type="text" id="pvPhone" placeholder="Optional"></div>
+    </div>
+    <div class="field"><label>Website / booking link</label><input type="text" id="pvWebsite" placeholder="https://example.com"></div>
+    <div class="field"><label>Banner tagline (max 60 chars)</label><input type="text" id="pvTagline" placeholder="e.g. 20% off for early bookings" maxlength="60"></div>
+    <div class="field">
+      <label>Logo</label>
+      <div class="branding-logo-row">
+        <span class="logo-preview" id="pvLogoPreviewSlot">
+          <span id="pvLogoPlaceholder" style="font-size:22px;opacity:0.4;">🏷️</span>
+          <img id="pvLogoPreview" alt="" style="display:none;object-fit:cover;border-radius:50%;width:100%;height:100%;">
+        </span>
+        <div class="branding-logo-actions">
+          <input type="file" id="pvLogoFileInput" accept="image/*">
+          <button class="btn btn-ghost" id="btnPickPvLogo" type="button">Upload logo</button>
+          <button class="btn btn-ghost" id="btnClearPvLogo" type="button">Remove</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="pvModalCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="pvModalSaveBtn">Save vendor</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div class="topbar">
@@ -675,6 +740,7 @@
       <button class="btn btn-ghost" id="btnPrint">🖺 Print / Save PDF</button>
       <button class="btn btn-ghost" id="btnExport">⬇ Export report</button>
       <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
+      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" title="Platform vendor management" style="background:#F0E8FF; border-color:#C4A0E8; color:#5C1A8A;">🔑 Owner Panel</button>
       <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
       <button class="btn btn-ghost" id="btnSignOutRole" title="Sign out / switch role">↩ Sign out</button>
     </div>
@@ -1075,6 +1141,20 @@ function lockError(msg){
 
 async function tryUnlock(){
   if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
+  // Owner PIN is hardcoded in the file — compare directly (no stored hash needed)
+  if(lockSelectedRole === 'owner'){
+    if(lockPinEntry === OWNER_PIN){
+      setRole('owner');
+      const remember = document.getElementById('lockRemember').checked;
+      if(remember) localStorage.setItem('vivaah-role', 'owner');
+      sessionStorage.setItem('vivaah-role', 'owner');
+      document.getElementById('lockOverlay').classList.add('hidden');
+      if(!vendors.length && !guests.length) loadData();
+    } else {
+      lockError('Wrong owner PIN');
+    }
+    return;
+  }
   const ok = await checkPin(lockSelectedRole, lockPinEntry);
   if(ok){
     setRole(lockSelectedRole);
@@ -1092,12 +1172,15 @@ function setRole(role){
   currentRole = role;
   document.body.className = document.body.className.replace(/role-\w+/g,'').trim() + ' role-' + role;
   const badge = document.getElementById('roleBadge');
-  const labels = {admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
+  const labels = {owner:'🔑 Owner', admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
   badge.textContent = labels[role] || role;
   badge.className = 'role-badge role-' + role;
-  // Show/hide admin-only and editor-only elements
-  document.querySelectorAll('.admin-only').forEach(el=>el.style.display = role==='admin' ? '' : 'none');
-  document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (role==='admin'||role==='editor') ? '' : 'none');
+  // Owner gets full admin access + owner panel button
+  const isOwner = role === 'owner';
+  const isAdmin = role === 'admin' || isOwner;
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
+  document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
+  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
   applyRoleRestrictions();
 }
 
@@ -1185,6 +1268,155 @@ document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
   }
   document.getElementById('adminSettingsOverlay').classList.remove('show');
   showToast(changed ? `${changed} PIN${changed===1?'':'s'} updated` : 'No changes made');
+};
+
+/* ================================================================
+   OWNER PANEL — Platform vendor management (owner role only)
+   ================================================================ */
+let platformVendors = [...PLATFORM_VENDORS]; // runtime-editable copy
+let editingPvId = null;
+let pendingPvLogo = undefined;
+
+function openOwnerPanel(){
+  document.getElementById('ownerPinDisplay').textContent = OWNER_PIN;
+  renderPlatformVendorList();
+  document.getElementById('ownerPanelOverlay').classList.add('show');
+}
+document.getElementById('btnOwnerPanel').onclick = openOwnerPanel;
+document.getElementById('ownerPanelCancelBtn').onclick = ()=>document.getElementById('ownerPanelOverlay').classList.remove('show');
+document.getElementById('ownerPanelOverlay').addEventListener('click', e=>{
+  if(e.target.id==='ownerPanelOverlay') document.getElementById('ownerPanelOverlay').classList.remove('show');
+});
+
+function renderPlatformVendorList(){
+  const list = document.getElementById('platformVendorList');
+  if(platformVendors.length===0){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-soft);font-size:13px;">No paid vendors yet — add your first one below.</div>';
+    return;
+  }
+  list.innerHTML = platformVendors.map(v=>{
+    const initial = (v.name||'?').trim().charAt(0).toUpperCase();
+    const logoHtml = v.logo
+      ? `<img class="pv-logo" src="${v.logo}" alt="">`
+      : `<span class="pv-logo-fallback">${escapeHtml(initial)}</span>`;
+    return `<div class="pv-item" data-pv-id="${v.id}">
+      ${logoHtml}
+      <div class="pv-info">
+        <div class="pv-name">${escapeHtml(v.name)}</div>
+        <div class="pv-meta">${escapeHtml(v.category||'')}${v.phone?' · '+escapeHtml(v.phone):''}${v.website?' · <a href="'+escapeHtml(v.website)+'" target="_blank" rel="noopener" style="color:var(--maroon);">website</a>':''}</div>
+        ${v.tagline?`<div class="pv-meta" style="font-style:italic;">${escapeHtml(v.tagline)}</div>`:''}
+      </div>
+      <div class="pv-actions">
+        <button class="icon-btn" data-edit-pv="${v.id}" title="Edit">✎</button>
+        <button class="icon-btn danger" data-del-pv="${v.id}" title="Remove">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  renderTicker(); // Update ticker immediately
+}
+
+document.getElementById('platformVendorList').addEventListener('click', e=>{
+  const editBtn = e.target.closest('[data-edit-pv]');
+  const delBtn = e.target.closest('[data-del-pv]');
+  if(editBtn){
+    const v = platformVendors.find(x=>x.id===editBtn.dataset.editPv);
+    openPvModal(v);
+  }
+  if(delBtn){
+    const vid = delBtn.dataset.delPv;
+    const v = platformVendors.find(x=>x.id===vid);
+    if(v && confirm(`Remove "${v.name}" from the platform ad list? This only affects this session — download the updated file to make it permanent.`)){
+      platformVendors = platformVendors.filter(x=>x.id!==vid);
+      renderPlatformVendorList();
+    }
+  }
+});
+
+document.getElementById('btnAddPlatformVendor').onclick = ()=>openPvModal(null);
+
+function openPvModal(v){
+  editingPvId = v ? v.id : null;
+  pendingPvLogo = undefined;
+  document.getElementById('pvModalTitle').textContent = v ? 'Edit platform vendor' : 'Add platform vendor';
+  document.getElementById('pvName').value = v ? v.name : '';
+  document.getElementById('pvCategory').value = v ? (v.category||'') : '';
+  document.getElementById('pvPhone').value = v ? (v.phone||'') : '';
+  document.getElementById('pvWebsite').value = v ? (v.website||'') : '';
+  document.getElementById('pvTagline').value = v ? (v.tagline||'') : '';
+  refreshPvLogoPreview(v ? (v.logo||null) : null);
+  document.getElementById('platformVendorModalOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('pvName').focus(), 50);
+}
+function closePvModal(){
+  document.getElementById('platformVendorModalOverlay').classList.remove('show');
+  editingPvId = null;
+}
+document.getElementById('pvModalCancelBtn').onclick = closePvModal;
+document.getElementById('platformVendorModalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='platformVendorModalOverlay') closePvModal();
+});
+
+function refreshPvLogoPreview(dataUrl){
+  const img = document.getElementById('pvLogoPreview');
+  const ph = document.getElementById('pvLogoPlaceholder');
+  if(dataUrl){ img.src=dataUrl; img.style.display='block'; ph.style.display='none'; }
+  else { img.style.display='none'; ph.style.display='block'; }
+}
+document.getElementById('btnPickPvLogo').onclick = ()=>document.getElementById('pvLogoFileInput').click();
+document.getElementById('pvLogoFileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ showToast('Please choose an image file'); return; }
+  const reader = new FileReader();
+  reader.onload = evt=>{ pendingPvLogo = evt.target.result; refreshPvLogoPreview(pendingPvLogo); };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+document.getElementById('btnClearPvLogo').onclick = ()=>{ pendingPvLogo = null; refreshPvLogoPreview(null); };
+
+document.getElementById('pvModalSaveBtn').onclick = ()=>{
+  const name = document.getElementById('pvName').value.trim();
+  if(!name){ showToast('Enter a vendor name'); return; }
+  let website = document.getElementById('pvWebsite').value.trim();
+  if(website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
+  if(editingPvId){
+    const v = platformVendors.find(x=>x.id===editingPvId);
+    if(v){
+      v.name=name; v.category=document.getElementById('pvCategory').value.trim();
+      v.phone=document.getElementById('pvPhone').value.trim();
+      v.website=website; v.tagline=document.getElementById('pvTagline').value.trim();
+      if(pendingPvLogo!==undefined) v.logo = pendingPvLogo||'';
+    }
+  } else {
+    platformVendors.push({
+      id:'pv_'+Date.now(), name, category:document.getElementById('pvCategory').value.trim(),
+      phone:document.getElementById('pvPhone').value.trim(), website,
+      tagline:document.getElementById('pvTagline').value.trim(),
+      logo: pendingPvLogo||''
+    });
+  }
+  closePvModal();
+  renderPlatformVendorList();
+  showToast('Platform vendor saved — download updated file to make permanent');
+};
+
+/* ---------- Download updated file with baked-in platform vendors ---------- */
+document.getElementById('btnDownloadUpdatedFile').onclick = ()=>{
+  const fs = require ? null : null; // browser only
+  const html = document.documentElement.outerHTML;
+  // Replace the PLATFORM_VENDORS constant with the current runtime list
+  const pvJson = JSON.stringify(platformVendors, null, 2);
+  const updated = html.replace(
+    /const PLATFORM_VENDORS = \[[\s\S]*?\];/,
+    `const PLATFORM_VENDORS = ${pvJson};`
+  );
+  const blob = new Blob([updated], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'vivaah-ledger-customer.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('Updated file downloaded — this copy has your paid vendors baked in');
 };
 
 /* ---------- Session restore + initial lock check ---------- */
