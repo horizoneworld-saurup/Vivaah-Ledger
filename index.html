@@ -581,17 +581,156 @@
     font-size:12.5px; font-weight:600; color:var(--rust); min-height:18px;
     transition:opacity .2s;
   }
-  /* ---------- Platform vendor list items ---------- */
-  .pv-item{
-    display:flex; align-items:center; gap:12px; background:#fff;
-    border:1px solid var(--line); border-radius:10px; padding:10px 14px;
+  /* ---------- Event timeline ---------- */
+  .timeline-section{margin-bottom:30px;}
+  .timeline-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+  .timeline-section-head h2{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--maroon-dark);margin:0;}
+  .timeline-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+  .timeline-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
+    box-shadow:var(--card-shadow);overflow:hidden;
   }
-  .pv-logo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex-shrink:0;}
-  .pv-logo-fallback{width:36px;height:36px;border-radius:50%;background:var(--ivory-deep);border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--maroon);}
-  .pv-info{flex:1;min-width:0;}
-  .pv-name{font-weight:700;font-size:13.5px;color:var(--ink);}
-  .pv-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
-  .pv-actions{display:flex;gap:6px;flex-shrink:0;}
+  .timeline-card-head{
+    background:var(--maroon-dark);color:var(--ivory);padding:12px 16px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .timeline-card-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:0;}
+  .timeline-card-head .tch-date{font-size:12px;opacity:0.8;}
+  .timeline-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .timeline-field{display:flex;flex-direction:column;gap:4px;}
+  .timeline-field label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);font-weight:700;}
+  .timeline-field input,.timeline-field select,.timeline-field textarea{
+    padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;font-family:'Inter';outline:none;
+  }
+  .timeline-field input:focus,.timeline-field select:focus,.timeline-field textarea:focus{border-color:var(--gold);}
+  .timeline-field textarea{min-height:48px;resize:vertical;}
+  .timeline-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .timeline-dress-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .dress-swatch{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.15);vertical-align:middle;margin-right:4px;}
+  .menu-upload-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .menu-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--line);}
+  .menu-thumb-pdf{width:36px;height:36px;border-radius:6px;background:var(--ivory-deep);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--rust);}
+
+  /* ---------- Accommodation summary ---------- */
+  .accom-summary{
+    background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
+    box-shadow:var(--card-shadow);padding:18px 22px;margin-bottom:20px;
+  }
+  .accom-summary h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--maroon-dark);margin:0 0 12px;}
+  .accom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+  .accom-stat .v{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:22px;color:var(--ink);}
+  .accom-stat .l{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);margin-top:2px;}
+
+  /* ---------- Enhanced reminder items ---------- */
+  .r-vendor{font-size:10.5px;color:var(--gold);font-weight:600;}
+  .r-person{font-size:10.5px;color:var(--maroon);font-weight:600;}
+  .reminder-add-extended{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .reminder-add-extended .r-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .reminder-add-extended input[type=text],.reminder-add-extended select{
+    padding:7px 9px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';flex:1;min-width:100px;
+  }
+
+  /* ---------- Print layouts ---------- */
+  @media print{
+    .print-section-break{page-break-before:always;}
+    .timeline-card-head{background:#5C1A2B!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  .print-menu-wrap{display:none;}
+  @media print{ .print-menu-wrap{display:block;} }
+  /* ---------- Event timeline ---------- */
+  .event-timeline-card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
+    box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
+  }
+  .event-timeline-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
+  .event-timeline-head h2{font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:700; color:var(--maroon-dark); margin:0;}
+  .event-cards-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px;}
+  .event-detail-card{
+    border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  }
+  .event-detail-head{
+    background:var(--maroon); color:var(--ivory); padding:10px 14px;
+    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  }
+  .event-detail-head h4{margin:0; font-size:14px; font-weight:700; letter-spacing:0.01em;}
+  .event-detail-head .ed-date{font-size:11.5px; opacity:0.8;}
+  .event-detail-body{padding:14px; display:none; flex-direction:column; gap:10px;}
+  .event-detail-body.open{display:flex;}
+  .ed-field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .ed-field label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;}
+  .ed-field input, .ed-field select{width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
+  .ed-field input:focus, .ed-field select:focus{border-color:var(--gold); outline:none;}
+  .ed-dress-section{background:var(--ivory-deep); border-radius:9px; padding:10px 12px;}
+  .ed-dress-section h5{margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:700;}
+  .ed-menu-section{border-top:1px solid var(--line); padding-top:10px;}
+  .ed-menu-preview{margin-top:8px; border-radius:8px; overflow:hidden; border:1px solid var(--line); max-height:160px; display:flex; align-items:center; justify-content:center; background:var(--ivory-deep);}
+  .ed-menu-preview img{max-width:100%; max-height:160px; object-fit:contain;}
+  .ed-menu-preview.has-pdf{padding:14px; font-size:12.5px; font-weight:600; color:var(--maroon-dark); flex-direction:column; gap:6px;}
+  .ed-menu-actions{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+
+  /* ---------- Guest accommodation ---------- */
+  .accom-summary{display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 16px; font-size:12.5px;}
+  .accom-chip{background:var(--ivory-deep); border:1px solid var(--line); border-radius:20px; padding:5px 12px; font-weight:600; color:var(--ink-soft);}
+  .accom-chip.highlight{background:#FFF0E6; color:var(--rust); border-color:var(--rust);}
+  .guest-expand-detail{
+    background:var(--ivory); border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; margin-top:8px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;
+  }
+  .gx-field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;}
+  .gx-field input, .gx-field select{width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line); font-size:12px; font-family:'Inter';}
+  .gx-field input[type=checkbox]{width:auto; margin-right:6px;}
+
+  /* ---------- Enhanced reminders (vendor + person link) ---------- */
+  .reminder-item .r-vendor{font-size:10.5px; color:var(--maroon-dark); font-weight:600; margin-top:2px;}
+  .reminder-item .r-person{font-size:10.5px; color:var(--ink-soft);}
+  .reminder-add-extended{display:flex; flex-direction:column; gap:6px; margin-top:auto;}
+  .reminder-add-extended .row1,.reminder-add-extended .row2{display:flex; gap:6px; flex-wrap:wrap;}
+  .reminder-add-extended input[type=text]{flex:1; min-width:120px; padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12px; font-family:'Inter';}
+  .reminder-add-extended input[type=date]{padding:7px 8px; border-radius:8px; border:1px solid var(--line); font-size:11.5px; font-family:'Inter';}
+  .reminder-add-extended select{padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12px; font-family:'Inter'; background:#fff; flex:1; min-width:120px;}
+  .reminder-add-extended button{background:var(--maroon); color:var(--ivory); border:none; border-radius:8px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:13px;}
+
+  /* ---------- Print panel ---------- */
+  .print-panel-overlay{
+    position:fixed; inset:0; background:rgba(42,31,26,0.45); display:none;
+    align-items:center; justify-content:center; z-index:50; padding:20px;
+  }
+  .print-panel-overlay.show{display:flex;}
+  .print-panel{
+    background:var(--ivory); border-radius:var(--r-lg); padding:28px; width:100%; max-width:440px;
+    box-shadow:0 24px 60px -10px rgba(42,31,26,0.35); border:1px solid var(--line);
+  }
+  .print-panel h3{font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--maroon-dark); margin:0 0 6px;}
+  .print-panel p{font-size:12.5px; color:var(--ink-soft); margin:0 0 20px;}
+  .print-options{display:flex; flex-direction:column; gap:10px;}
+  .print-option-btn{
+    display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; text-align:left;
+    transition:background .12s, border-color .12s; font-family:'Inter';
+  }
+  .print-option-btn:hover{background:var(--ivory-deep); border-color:var(--gold);}
+  .print-option-btn .po-icon{font-size:20px; flex-shrink:0;}
+  .print-option-btn .po-label{font-size:13.5px; font-weight:600; color:var(--ink);}
+  .print-option-btn .po-sub{font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
+
+  /* ---------- Print-only overrides for different print modes ---------- */
+  @media print{
+    .print-section-vendors .guest-card,
+    .print-section-vendors .catering-card,
+    .print-section-vendors .reminders-grid,
+    .print-section-vendors .event-timeline-card{ display:none !important; }
+    .print-section-guests .ledger,
+    .print-section-guests .catering-card,
+    .print-section-guests .reminders-grid,
+    .print-section-guests .event-timeline-card{ display:none !important; }
+    .print-section-event .ledger,
+    .print-section-event .guest-card,
+    .print-section-event .catering-card,
+    .print-section-event .reminders-grid{ display:none !important; }
+    .print-section-event .event-detail-body{ display:flex !important; }
+    .event-detail-body{ display:flex !important; }
+    .guest-expand-detail{ display:grid !important; }
+  }
 </style>
 </head>
 <body>
@@ -712,6 +851,39 @@
   </div>
 </div>
 
+<!-- ========== PRINT PANEL MODAL ========== -->
+<div class="print-panel-overlay" id="printPanelOverlay">
+  <div class="print-panel">
+    <h3>🖺 Print / Save PDF</h3>
+    <p>Choose what to print. Your browser's print dialog will open — select "Save as PDF" to get a PDF file.</p>
+    <div class="print-options">
+      <button class="print-option-btn" id="printOptAll">
+        <span class="po-icon">📋</span>
+        <div><div class="po-label">Print everything</div><div class="po-sub">Full report — vendors, guests, timeline, reminders</div></div>
+      </button>
+      <button class="print-option-btn" id="printOptVendors">
+        <span class="po-icon">🏢</span>
+        <div><div class="po-label">Vendor list only</div><div class="po-sub">All vendors with payment status and balances</div></div>
+      </button>
+      <button class="print-option-btn" id="printOptGuests">
+        <span class="po-icon">👥</span>
+        <div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div>
+      </button>
+      <button class="print-option-btn" id="printOptFunctionWise">
+        <span class="po-icon">📅</span>
+        <div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div>
+      </button>
+      <button class="print-option-btn" id="printOptTimeline">
+        <span class="po-icon">🗓️</span>
+        <div><div class="po-label">Event timeline only</div><div class="po-sub">Dates, venues, dress codes, and menus per function</div></div>
+      </button>
+    </div>
+    <div style="margin-top:18px; text-align:right;">
+      <button class="btn btn-ghost" id="printPanelCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="wrap">
 
   <div class="topbar">
@@ -789,6 +961,21 @@
     </div>
   </div>
 
+  <!-- ===== EVENT TIMELINE ===== -->
+  <div class="timeline-section">
+    <div class="timeline-section-head">
+      <div>
+        <h2>Event timeline &amp; details</h2>
+        <p style="margin:3px 0 0;font-size:12px;color:var(--ink-soft);">Date, timing, venue, dress codes, and catering menu for each function.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost" id="btnPrintFunctionWise">🖺 Print function-wise guest lists</button>
+        <button class="btn btn-ghost" id="btnPrintAll">🖺 Print everything</button>
+      </div>
+    </div>
+    <div class="timeline-grid" id="timelineGrid"></div>
+  </div>
+
   <div class="reminders-grid" id="remindersGrid">
     <div class="reminder-card" data-reminder="trial">
       <div class="reminder-head">
@@ -796,10 +983,16 @@
         <span class="reminder-count" id="countTrial">0</span>
       </div>
       <ul class="reminder-list" id="listTrial"></ul>
-      <div class="reminder-add-row">
-        <input type="text" id="inputTrial" placeholder="e.g. Bridal trial — 3pm">
-        <input type="date" id="dateTrial">
-        <button data-add-reminder="trial">+</button>
+      <div class="reminder-add-extended">
+        <div class="r-row">
+          <input type="text" id="inputTrial" placeholder="Trial detail (e.g. Bridal trial 3pm)">
+          <input type="date" id="dateTrial">
+        </div>
+        <div class="r-row">
+          <input type="text" id="trialPerson" placeholder="For whom (e.g. Bride, Groom)">
+          <select id="trialVendor"><option value="">Link to vendor…</option></select>
+        </div>
+        <button data-add-reminder="trial" class="btn btn-primary" style="align-self:flex-end;">+ Add</button>
       </div>
     </div>
     <div class="reminder-card" data-reminder="clothes">
@@ -808,10 +1001,16 @@
         <span class="reminder-count" id="countClothes">0</span>
       </div>
       <ul class="reminder-list" id="listClothes"></ul>
-      <div class="reminder-add-row">
-        <input type="text" id="inputClothes" placeholder="e.g. Pick up groom's sherwani">
-        <input type="date" id="dateClothes">
-        <button data-add-reminder="clothes">+</button>
+      <div class="reminder-add-extended">
+        <div class="r-row">
+          <input type="text" id="inputClothes" placeholder="Item (e.g. Pick up sherwani)">
+          <input type="date" id="dateClothes">
+        </div>
+        <div class="r-row">
+          <input type="text" id="clothesPerson" placeholder="For whom (e.g. Groom)">
+          <select id="clothesVendor"><option value="">Link to vendor…</option></select>
+        </div>
+        <button data-add-reminder="clothes" class="btn btn-primary" style="align-self:flex-end;">+ Add</button>
       </div>
     </div>
     <div class="reminder-card" data-reminder="guest">
@@ -865,6 +1064,21 @@
     </div>
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
+    <div class="accom-summary" id="accomSummary"></div>
+    <!-- Kankotri dedicated upload/download -->
+    <div class="kankotri-bar">
+      <div>
+        <div class="kankotri-bar-title">𖥸 Kankotri</div>
+        <div class="kankotri-bar-sub">Dedicated upload/download for Kankotri invitation list (Adults + Writers)</div>
+      </div>
+      <div class="kankotri-bar-actions">
+        <input type="file" id="kankotriFileInput" accept=".xlsx,.xls">
+        <button class="btn btn-ivory" id="btnKankotriUpload">⭱ Upload Kankotri</button>
+        <button class="btn btn-ivory" id="btnKankotriTemplate">⬇ Template</button>
+        <button class="btn btn-ivory" id="btnKankotriExport">⬇ Export Kankotri</button>
+        <button class="btn btn-ivory" id="btnPrintKankotri">🖺 Print Kankotri</button>
+      </div>
+    </div>
     <div class="guest-table-wrap">
       <table class="guest-table" id="guestTable">
         <thead>
@@ -1457,9 +1671,10 @@ const WRITER_TRACKED_EVENTS = ['Kankotri']; // events tracking writer (calligrap
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
+let eventTimeline = {}; // keyed by event name: {date,startTime,venue,brideDressCode,groomDressCode,cateringVendorId,menuFileType,menuData}
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1526,6 +1741,10 @@ async function loadData(){
     const r = await storageGet('wedding-reminders');
     if(r){ reminders = {...reminders, ...JSON.parse(r)}; }
   }catch(e){ /* keep defaults */ }
+  try{
+    const t = await storageGet('wedding-timeline');
+    if(t){ eventTimeline = JSON.parse(t); }
+  }catch(e){ eventTimeline = {}; }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
   }
@@ -1542,6 +1761,10 @@ async function saveFunctions(){
 }
 async function saveBranding(){
   await storageSet('wedding-branding', JSON.stringify(branding));
+  queueCloudSave();
+}
+async function saveTimeline(){
+  await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
   queueCloudSave();
 }
 async function saveGuests(){
@@ -1740,6 +1963,7 @@ async function onSignedIn(){
       functions = cloudData.functions && cloudData.functions.length ? cloudData.functions : functions;
       guests = cloudData.guests || guests;
       reminders = cloudData.reminders || reminders;
+      eventTimeline = cloudData.eventTimeline || eventTimeline;
       // Branding: prefer cloud logo, fall back to local
       const cloudBrandingLogo = cloudLogos.brandingLogo || '';
       branding = {
@@ -1793,7 +2017,10 @@ async function pushToSheet(){
   // A1 — main data (vendors, functions, reminders, branding text) — logos excluded (in B1)
   const vendorsForSync = vendors.map(({logo, ...rest})=>rest);
   const brandingForSync = {...branding, logo: ''};
-  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, savedAt: new Date().toISOString()});
+  const timelineForSync = Object.fromEntries(
+    Object.entries(eventTimeline).map(([ev, t])=>([ev, {...t, menuData:''}]))
+  ); // exclude menu files (base64) from sync payload — too large
+  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, eventTimeline: timelineForSync, savedAt: new Date().toISOString()});
   // B1 — logos only (compressed base64, separate cell)
   const logosPayload = JSON.stringify({
     vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
@@ -1852,7 +2079,306 @@ function render(){
   renderTicker();
   renderReminders();
   renderGuests();
+  renderTimeline();
 }
+
+/* ---------------- Event timeline ---------------- */
+function renderTimeline(){
+  const grid = document.getElementById('timelineGrid');
+  if(!grid) return;
+  // Populate caterer vendor dropdowns and update vendor selects in reminders
+  const cateringVendors = vendors.filter(v=>/cater/i.test(v.category||''));
+  // Update reminder vendor selects
+  ['Trial','Clothes'].forEach(cap=>{
+    const sel = document.getElementById(cap.toLowerCase()+'Vendor');
+    if(!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Link to vendor…</option>' +
+      vendors.map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+    sel.value = cur;
+  });
+
+  grid.innerHTML = WEDDING_EVENTS.map(ev=>{
+    const t = eventTimeline[ev] || {};
+    const isOpen = t._open || false;
+    const dateDisplay = t.date ? new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : 'Date not set';
+    const hasMenu = t.menuData && t.menuFileName;
+    return `
+    <div class="event-detail-card" data-ev="${escapeHtml(ev)}">
+      <div class="event-detail-head" data-ev-toggle="${escapeHtml(ev)}">
+        <h4>${escapeHtml(ev)}</h4>
+        <span class="ed-date">${dateDisplay}${t.startTime?' · '+escapeHtml(t.startTime):''}</span>
+      </div>
+      <div class="event-detail-body ${isOpen?'open':''}" id="edb-${escapeHtml(ev).replace(/[^a-z0-9]/gi,'_')}">
+        <div class="ed-field-row">
+          <div class="ed-field">
+            <label>Date</label>
+            <input type="date" data-tl-field="date" data-tl-ev="${escapeHtml(ev)}" value="${t.date||''}">
+          </div>
+          <div class="ed-field">
+            <label>Start time</label>
+            <input type="time" data-tl-field="startTime" data-tl-ev="${escapeHtml(ev)}" value="${t.startTime||''}">
+          </div>
+        </div>
+        <div class="ed-field">
+          <label>Venue / location</label>
+          <input type="text" data-tl-field="venue" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.venue||'')}" placeholder="e.g. Royal Banquet Hall, Ahmedabad">
+        </div>
+        <div class="ed-dress-section">
+          <h5>Dress code</h5>
+          <div class="ed-field-row">
+            <div class="ed-field">
+              <label>👰 Bride</label>
+              <input type="text" data-tl-field="brideDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.brideDressCode||'')}" placeholder="e.g. Red lehenga">
+            </div>
+            <div class="ed-field">
+              <label>🤵 Groom</label>
+              <input type="text" data-tl-field="groomDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.groomDressCode||'')}" placeholder="e.g. Ivory sherwani">
+            </div>
+          </div>
+        </div>
+        <div class="ed-menu-section">
+          <div class="ed-field">
+            <label>Caterer</label>
+            <select data-tl-field="cateringVendorId" data-tl-ev="${escapeHtml(ev)}">
+              <option value="">Select caterer…</option>
+              ${vendors.map(v=>`<option value="${v.id}"${t.cateringVendorId===v.id?' selected':''}>${escapeHtml(v.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ed-field" style="margin-top:8px;">
+            <label>Catering menu (PDF or image)</label>
+            <div class="ed-menu-actions">
+              <input type="file" id="menuFile_${escapeHtml(ev).replace(/[^a-z0-9]/gi,'_')}" accept="image/*,application/pdf" style="display:none;">
+              <button class="btn btn-ghost" data-menu-pick="${escapeHtml(ev)}">📎 Upload menu</button>
+              ${hasMenu ? `<button class="btn btn-ghost" data-menu-view="${escapeHtml(ev)}">👁 View</button>
+              <button class="btn btn-ghost" data-menu-clear="${escapeHtml(ev)}" style="color:var(--rust);">✕ Remove</button>` : ''}
+            </div>
+            ${hasMenu ? `<div class="ed-menu-preview ${t.menuFileType==='pdf'?'has-pdf':''}">
+              ${t.menuFileType==='pdf' ?
+                `📄 <span>${escapeHtml(t.menuFileName)}</span>` :
+                `<img src="${t.menuData}" alt="Menu">`
+              }
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Timeline event delegation
+document.addEventListener('click', e=>{
+  const toggle = e.target.closest('[data-ev-toggle]');
+  if(toggle){
+    const ev = toggle.dataset.evToggle;
+    eventTimeline[ev] = eventTimeline[ev] || {};
+    eventTimeline[ev]._open = !eventTimeline[ev]._open;
+    renderTimeline(); return;
+  }
+  const menuPick = e.target.closest('[data-menu-pick]');
+  if(menuPick){
+    const ev = menuPick.dataset.menuPick;
+    const fileInput = document.getElementById('menuFile_'+ev.replace(/[^a-z0-9]/gi,'_'));
+    if(fileInput) fileInput.click(); return;
+  }
+  const menuView = e.target.closest('[data-menu-view]');
+  if(menuView){
+    const ev = menuView.dataset.menuView;
+    const t = eventTimeline[ev] || {};
+    if(t.menuData){
+      const win = window.open('');
+      if(t.menuFileType==='pdf'){
+        win.document.write(`<iframe src="${t.menuData}" style="width:100%;height:100vh;border:0;"></iframe>`);
+      } else {
+        win.document.write(`<img src="${t.menuData}" style="max-width:100%;">`);
+      }
+    }
+    return;
+  }
+  const menuClear = e.target.closest('[data-menu-clear]');
+  if(menuClear){
+    const ev = menuClear.dataset.menuClear;
+    eventTimeline[ev] = eventTimeline[ev] || {};
+    delete eventTimeline[ev].menuData;
+    delete eventTimeline[ev].menuFileName;
+    delete eventTimeline[ev].menuFileType;
+    saveTimeline(); renderTimeline(); return;
+  }
+});
+
+// Timeline field changes
+document.addEventListener('change', e=>{
+  const field = e.target.dataset.tlField;
+  const ev = e.target.dataset.tlEv;
+  if(!field || !ev) return;
+  eventTimeline[ev] = eventTimeline[ev] || {};
+  eventTimeline[ev][field] = e.target.value;
+  saveTimeline();
+  if(field==='date'||field==='startTime') renderTimeline(); // update header date display
+});
+
+// Menu file uploads
+document.addEventListener('change', e=>{
+  if(!e.target.id || !e.target.id.startsWith('menuFile_')) return;
+  const file = e.target.files[0];
+  if(!file) return;
+  const evKey = e.target.id.replace('menuFile_','').replace(/_/g,' ');
+  const ev = WEDDING_EVENTS.find(ev=>ev.replace(/[^a-z0-9]/gi,'_')===e.target.id.replace('menuFile_','')) || evKey;
+  if(file.size > 3*1024*1024){ showToast('File too large — keep menus under 3MB'); return; }
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    eventTimeline[ev] = eventTimeline[ev] || {};
+    eventTimeline[ev].menuData = evt.target.result;
+    eventTimeline[ev].menuFileName = file.name;
+    eventTimeline[ev].menuFileType = file.type.includes('pdf') ? 'pdf' : 'image';
+    saveTimeline(); renderTimeline();
+    showToast('Menu uploaded for '+ev);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+/* ---------------- Print panel ---------------- */
+document.getElementById('btnPrint').onclick = ()=>openPrintPanel();
+document.getElementById('btnPrintFunctionWise').onclick = ()=>openPrintPanel();
+document.getElementById('btnPrintAll').onclick = ()=>printAll();
+
+function openPrintPanel(){
+  const panel = document.getElementById('printPanelOverlay');
+  if(panel) panel.classList.add('show');
+  else printAll();
+}
+
+document.getElementById('printPanelCloseBtn').onclick = ()=>{
+  document.getElementById('printPanelOverlay').classList.remove('show');
+};
+document.getElementById('printPanelOverlay').addEventListener('click', e=>{
+  if(e.target.id==='printPanelOverlay') document.getElementById('printPanelOverlay').classList.remove('show');
+});
+
+function setPrintDate(){
+  document.getElementById('printDate').textContent = 'Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+}
+function closePrintPanel(){
+  document.getElementById('printPanelOverlay').classList.remove('show');
+}
+
+// Print everything
+document.getElementById('printOptAll').onclick = ()=>{
+  closePrintPanel(); setPrintDate();
+  document.querySelectorAll('tr.detail-row, tr.guest-detail-row').forEach(r=>r.classList.add('open'));
+  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
+  document.body.dataset.printMode = 'all';
+  window.print();
+  delete document.body.dataset.printMode;
+};
+
+// Vendor list only — hide guest card, timeline, reminders, catering during print
+document.getElementById('printOptVendors').onclick = ()=>{
+  closePrintPanel(); setPrintDate();
+  document.querySelectorAll('tr.detail-row').forEach(r=>r.classList.add('open'));
+  document.body.dataset.printMode = 'vendors';
+  window.print();
+  delete document.body.dataset.printMode;
+};
+
+// Complete guest list — hide vendor ledger, timeline, reminders during print
+document.getElementById('printOptGuests').onclick = ()=>{
+  closePrintPanel(); setPrintDate();
+  document.querySelectorAll('tr.guest-detail-row').forEach(r=>r.classList.add('open'));
+  document.body.dataset.printMode = 'guests';
+  window.print();
+  delete document.body.dataset.printMode;
+};
+
+// Function-wise guest lists — print each event's guests as separate sections
+document.getElementById('printOptFunctionWise').onclick = ()=>{
+  closePrintPanel(); setPrintDate();
+  document.body.dataset.printMode = 'function-wise';
+  // Build a temporary print-only div with one section per event
+  const prevFilter = activeEventFilter;
+  const printDiv = document.createElement('div');
+  printDiv.id = 'functionWisePrint';
+  printDiv.style.cssText = 'display:none;';
+  printDiv.innerHTML = WEDDING_EVENTS.map(ev=>{
+    const t = eventTimeline[ev] || {};
+    const evGuests = guests.filter(g=>{ const c=guestEventCounts(g,ev); return WRITER_TRACKED_EVENTS.includes(ev)?(c.adults>0||c.writer>0):(c.adults>0||c.kids>0); });
+    const total = evGuests.reduce((s,g)=>{ const c=guestEventCounts(g,ev); return s+c.adults+(WRITER_TRACKED_EVENTS.includes(ev)?c.writer:c.kids); },0);
+    return `<div class="fw-section" style="page-break-after:always;padding:20px 0;">
+      <h2 style="font-family:'Cormorant Garamond',serif;color:#3E0F1C;margin:0 0 4px;">${escapeHtml(ev)}</h2>
+      <div style="font-size:12px;color:#6b5d52;margin-bottom:12px;">
+        ${t.date?new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}):''} 
+        ${t.startTime?'· '+escapeHtml(t.startTime):''} 
+        ${t.venue?'· '+escapeHtml(t.venue):''}
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="border-bottom:2px solid #E3D7C2;">
+          <th style="text-align:left;padding:6px 8px;">Family</th>
+          <th style="text-align:left;padding:6px 8px;">Phone</th>
+          <th style="text-align:left;padding:6px 8px;">Side</th>
+          <th style="text-align:right;padding:6px 8px;">Adults</th>
+          <th style="text-align:right;padding:6px 8px;">${WRITER_TRACKED_EVENTS.includes(ev)?'Writers':'Kids'}</th>
+          ${LADIES_TRACKED_EVENTS.includes(ev)?'<th style="text-align:right;padding:6px 8px;">Ladies</th>':''}
+        </tr></thead>
+        <tbody>${evGuests.map((g,i)=>{
+          const c=guestEventCounts(g,ev);
+          return `<tr style="border-bottom:1px solid #E3D7C2;background:${i%2?'#F3EBDB':'#fff'};">
+            <td style="padding:6px 8px;font-weight:600;">${escapeHtml(g.name)}</td>
+            <td style="padding:6px 8px;">${escapeHtml(g.phone||'—')}</td>
+            <td style="padding:6px 8px;">${escapeHtml(g.side||'—')}</td>
+            <td style="padding:6px 8px;text-align:right;">${c.adults}</td>
+            <td style="padding:6px 8px;text-align:right;">${WRITER_TRACKED_EVENTS.includes(ev)?c.writer:c.kids}</td>
+            ${LADIES_TRACKED_EVENTS.includes(ev)?`<td style="padding:6px 8px;text-align:right;">${c.ladies}</td>`:''}
+          </tr>`;
+        }).join('')}</tbody>
+        <tfoot><tr style="border-top:2px solid #5C1A2B;font-weight:700;">
+          <td colspan="3" style="padding:6px 8px;">Total — ${evGuests.length} families</td>
+          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).adults,0)}</td>
+          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+(WRITER_TRACKED_EVENTS.includes(ev)?guestEventCounts(g,ev).writer:guestEventCounts(g,ev).kids),0)}</td>
+          ${LADIES_TRACKED_EVENTS.includes(ev)?`<td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).ladies,0)}</td>`:''}
+        </tr></tfoot>
+      </table>
+    </div>`;
+  }).join('');
+  document.body.appendChild(printDiv);
+  // Temporarily show the print div and hide the main wrap
+  const mainWrap = document.querySelector('.wrap');
+  mainWrap.style.display = 'none';
+  printDiv.style.display = 'block';
+  window.print();
+  mainWrap.style.display = '';
+  printDiv.remove();
+  delete document.body.dataset.printMode;
+};
+
+// Timeline only
+document.getElementById('printOptTimeline').onclick = ()=>{
+  closePrintPanel(); setPrintDate();
+  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
+  document.body.dataset.printMode = 'timeline';
+  window.print();
+  delete document.body.dataset.printMode;
+  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.remove('open'));
+};
+
+function printFunctionGuests(ev){
+  setPrintDate();
+  const prevFilter = activeEventFilter;
+  activeEventFilter = ev;
+  renderGuests();
+  document.querySelectorAll('tr.guest-detail-row').forEach(r=>r.classList.add('open'));
+  window.print();
+  activeEventFilter = prevFilter;
+  renderGuests();
+}
+
+function printAll(){
+  setPrintDate();
+  document.querySelectorAll('tr.detail-row, tr.guest-detail-row').forEach(r=>r.classList.add('open'));
+  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
+  window.print();
+}
+
 
 function renderStats(){
   const totalBudget = vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
@@ -2389,14 +2915,23 @@ function renderReminders(){
       if(a.done !== b.done) return a.done ? 1 : -1;
       return (a.date||'9999').localeCompare(b.date||'9999');
     });
-    ul.innerHTML = sorted.map(item=>`
+    ul.innerHTML = sorted.map(item=>{
+      const vendorName = item.vendorId ? (vendors.find(v=>v.id===item.vendorId)||{}).name : '';
+      const meta = [
+        item.forPerson ? `👤 ${escapeHtml(item.forPerson)}` : '',
+        vendorName ? `🏪 ${escapeHtml(vendorName)}` : ''
+      ].filter(Boolean).join(' · ');
+      return `
       <li class="reminder-item ${item.done?'done':''}" data-reminder-key="${key}" data-reminder-id="${item.id}">
         <input type="checkbox" ${item.done?'checked':''} data-toggle-reminder>
-        <span class="r-text">${escapeHtml(item.text)}</span>
+        <span class="r-body">
+          <span class="r-text">${escapeHtml(item.text)}</span>
+          ${meta ? `<span class="r-vendor">${meta}</span>` : ''}
+        </span>
         ${item.date ? `<span class="r-date">${formatShortDate(item.date)}</span>` : ''}
         <button class="r-del" data-del-reminder title="Remove">✕</button>
-      </li>
-    `).join('');
+      </li>`;
+    }).join('');
   });
 }
 function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -2406,10 +2941,10 @@ function formatShortDate(dateStr){
   return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
 }
 
-function addReminder(key, text, date){
+function addReminder(key, text, date, vendorId, forPerson){
   if(!text || !text.trim()) return false;
   reminders[key] = reminders[key] || [];
-  reminders[key].push({id:uid(), text:text.trim(), date:date||'', done:false});
+  reminders[key].push({id:uid(), text:text.trim(), date:date||'', done:false, vendorId:vendorId||'', forPerson:forPerson||''});
   saveReminders(); renderReminders();
   return true;
 }
@@ -2419,9 +2954,15 @@ REMINDER_KEYS.forEach(key=>{
   document.querySelector(`[data-add-reminder="${key}"]`).onclick = ()=>{
     const textInput = document.getElementById('input'+cap);
     const dateInput = document.getElementById('date'+cap);
-    if(addReminder(key, textInput.value, dateInput.value)){
+    const personInput = document.getElementById(key+'Person');
+    const vendorSel = document.getElementById(key+'Vendor');
+    const vendorId = vendorSel ? vendorSel.value : '';
+    const forPerson = personInput ? personInput.value.trim() : '';
+    if(addReminder(key, textInput.value, dateInput.value, vendorId, forPerson)){
       textInput.value = '';
       dateInput.value = '';
+      if(personInput) personInput.value = '';
+      if(vendorSel) vendorSel.value = '';
     } else {
       showToast('Type something to add');
     }
@@ -2518,6 +3059,27 @@ function renderGuests(){
      ${!activeEventFilter && totalWriter>0 ? `<span><b>${totalWriter}</b> writers (Kankotri)</span>` : ''}
      <span style="opacity:0.75;">${summaryLabel}</span>`;
 
+  // Accommodation summary — only shown on "All" view
+  const accomEl = document.getElementById('accomSummary');
+  if(!activeEventFilter){
+    const outsideAhmedabad = guests.filter(g=>g.city && g.city.trim().toLowerCase()!=='ahmedabad').length;
+    const outsideGujarat = guests.filter(g=>g.state && g.state.trim().toLowerCase()!=='gujarat').length;
+    const outsideIndia = guests.filter(g=>g.country && g.country.trim().toLowerCase()!=='india').length;
+    const needAccom = guests.filter(g=>g.needsAccommodation);
+    const totalRooms = needAccom.reduce((s,g)=>s+Number(g.rooms||0),0);
+    const totalBeds = needAccom.reduce((s,g)=>s+Number(g.beds||0),0);
+    accomEl.innerHTML = `
+      <span class="accom-chip">🏙️ Outside Ahmedabad: <b>${outsideAhmedabad}</b></span>
+      <span class="accom-chip">📍 Outside Gujarat: <b>${outsideGujarat}</b></span>
+      <span class="accom-chip">✈️ International: <b>${outsideIndia}</b></span>
+      ${needAccom.length>0 ? `
+      <span class="accom-chip highlight">🏨 Need accommodation: <b>${needAccom.length}</b> families</span>
+      <span class="accom-chip highlight">🛏️ Rooms: <b>${totalRooms}</b> · Beds: <b>${totalBeds}</b></span>` : ''}
+    `;
+  } else {
+    accomEl.innerHTML = '';
+  }
+
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
   document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
   document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
@@ -2585,6 +3147,36 @@ function renderGuests(){
                   ${tracksLadies ? `<div class="geb-hint">out of ${c.adults||0} adult${c.adults===1?'':'s'}, ${c.ladies||0} ${c.ladies===1?'lady':'ladies'}</div>` : ''}
                 </div>`;
               }).join('')}
+            </div>
+            <!-- Accommodation & origin -->
+            <div class="guest-expand-detail">
+              <div class="gx-field">
+                <label>City</label>
+                <input type="text" value="${escapeHtml(g.city||'')}" placeholder="e.g. Ahmedabad" data-gx="${g.id}|city">
+              </div>
+              <div class="gx-field">
+                <label>State</label>
+                <input type="text" value="${escapeHtml(g.state||'')}" placeholder="e.g. Gujarat" data-gx="${g.id}|state">
+              </div>
+              <div class="gx-field">
+                <label>Country</label>
+                <input type="text" value="${escapeHtml(g.country||'India')}" placeholder="India" data-gx="${g.id}|country">
+              </div>
+              <div class="gx-field" style="align-self:end;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                  <input type="checkbox" ${g.needsAccommodation?'checked':''} data-gx="${g.id}|needsAccommodation">
+                  Needs accommodation
+                </label>
+              </div>
+              ${g.needsAccommodation ? `
+              <div class="gx-field">
+                <label>Rooms needed</label>
+                <input type="number" min="0" value="${g.rooms||''}" placeholder="0" data-gx="${g.id}|rooms">
+              </div>
+              <div class="gx-field">
+                <label>Beds needed</label>
+                <input type="number" min="0" value="${g.beds||''}" placeholder="0" data-gx="${g.id}|beds">
+              </div>` : ''}
             </div>
           </div>
         </td>
