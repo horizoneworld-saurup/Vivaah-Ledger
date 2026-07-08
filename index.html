@@ -682,7 +682,42 @@
   .pv-info{flex:1;min-width:0;}
   .pv-name{font-weight:700;font-size:13.5px;color:var(--ink);}
   .pv-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
-  .pv-actions{display:flex;gap:6px;flex-shrink:0;}
+  .pv-actions{display:flex;gap:6px;flex-shrink:0;}  /* ---------- Global search ---------- */
+  .global-search-wrap{position:relative; margin-bottom:20px;}
+  .global-search-inner{
+    display:flex; align-items:center; gap:10px; background:#fff;
+    border:1.5px solid var(--line); border-radius:12px; padding:10px 14px;
+    box-shadow:var(--card-shadow); transition:border-color .15s;
+  }
+  .global-search-inner:focus-within{border-color:var(--gold);}
+  .gs-icon{font-size:16px; flex-shrink:0; opacity:0.5;}
+  #globalSearchInput{
+    flex:1; border:none; outline:none; font-family:'Inter'; font-size:14px;
+    color:var(--ink); background:transparent;
+  }
+  #globalSearchInput::placeholder{color:var(--ink-soft);}
+  .gs-clear{background:none; border:none; cursor:pointer; color:var(--ink-soft); font-size:14px; padding:0;}
+  .gs-clear:hover{color:var(--rust);}
+  .global-search-results{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:40;
+    background:#fff; border:1px solid var(--line); border-radius:14px;
+    box-shadow:0 12px 40px -8px rgba(42,31,26,0.25); max-height:420px; overflow-y:auto;
+  }
+  .gs-section-head{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--ink-soft); padding:10px 14px 4px; border-top:1px solid var(--line);
+  }
+  .gs-section-head:first-child{border-top:none;}
+  .gs-item{
+    display:flex; align-items:center; gap:12px; padding:10px 14px; cursor:pointer;
+    transition:background .1s;
+  }
+  .gs-item:hover{background:var(--ivory-deep);}
+  .gs-item-icon{font-size:16px; flex-shrink:0; width:22px; text-align:center;}
+  .gs-item-name{font-weight:600; font-size:13.5px; color:var(--ink);}
+  .gs-item-meta{font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
+  .gs-highlight{background:rgba(212,162,76,0.35); border-radius:3px; padding:0 1px;}
+  .gs-empty{padding:20px; text-align:center; color:var(--ink-soft); font-size:13px;}
 </style>
 </head>
 <body>
@@ -704,6 +739,7 @@
       <button class="lock-tab active" data-lock-role="admin">Admin</button>
       <button class="lock-tab" data-lock-role="editor">Editor</button>
       <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+      <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only" style="border-color:#C4A0E8;color:#5C1A8A;">🔑</button>
     </div>
     <div class="lock-pin-dots" id="lockPinDots">
       <span class="pin-dot" id="dot0"></span>
@@ -727,22 +763,26 @@
 <!-- ========== ADMIN SETTINGS MODAL ========== -->
 <div class="modal-overlay" id="adminSettingsOverlay">
   <div class="modal" style="max-width:380px;">
-    <h3>Admin settings</h3>
-    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;">Change PINs for each role. Leave blank to keep the current PIN.</p>
+    <h3>Admin settings — Change PINs</h3>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;">Leave blank to keep the current PIN. Owner PIN change takes effect immediately in this session only — update <code>OWNER_PIN</code> in the file source to make it permanent.</p>
     <div class="field">
-      <label>Admin PIN (4 digits)</label>
+      <label>🔑 Owner PIN (4 digits)</label>
+      <input type="password" id="newOwnerPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>👑 Admin PIN (4 digits)</label>
       <input type="password" id="newAdminPin" maxlength="4" placeholder="••••" inputmode="numeric">
     </div>
     <div class="field">
-      <label>Editor PIN (4 digits)</label>
+      <label>✎ Editor PIN (4 digits)</label>
       <input type="password" id="newEditorPin" maxlength="4" placeholder="••••" inputmode="numeric">
     </div>
     <div class="field">
-      <label>Viewer PIN (4 digits)</label>
+      <label>👁 Viewer PIN (4 digits)</label>
       <input type="password" id="newViewerPin" maxlength="4" placeholder="••••" inputmode="numeric">
     </div>
     <div style="background:var(--ivory-deep); border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;">
-      ⚠ Share PINs carefully. Default PINs are Admin: 1234 · Editor: 5678 · Viewer: 9999
+      ⚠ Defaults — Owner: 0000 · Admin: 1234 · Editor: 5678 · Viewer: 9999
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="adminSettingsCancelBtn">Cancel</button>
@@ -849,6 +889,16 @@
       <button class="btn btn-ghost btn-tiny" id="btnOpenSheet" style="display:none;">Open Google Sheet ↗</button>
       <button class="btn btn-ghost btn-tiny" id="btnSignOut" style="display:none;">Sign out</button>
     </span>
+  </div>
+
+  <!-- Global search bar -->
+  <div class="global-search-wrap" id="globalSearchWrap">
+    <div class="global-search-inner">
+      <span class="gs-icon">🔍</span>
+      <input type="text" id="globalSearchInput" placeholder="Search vendors and guests…" autocomplete="off">
+      <button class="gs-clear" id="globalSearchClear" style="display:none;">✕</button>
+    </div>
+    <div class="global-search-results" id="globalSearchResults" style="display:none;"></div>
   </div>
 
   <div class="print-header">
@@ -1252,13 +1302,17 @@ function lockError(msg){
 
 async function tryUnlock(){
   if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
-  // Owner PIN is hardcoded — compare directly (not hashed storage)
   if(lockSelectedRole === 'owner'){
-    if(lockPinEntry === OWNER_PIN){
+    // Check stored hash first (set via admin settings), then fall back to hardcoded constant
+    const storedOwnerHash = await storageGet('pin-hash-owner').catch(()=>null);
+    let ok = false;
+    if(storedOwnerHash){ ok = (await sha256(lockPinEntry)) === storedOwnerHash; }
+    else { ok = lockPinEntry === OWNER_PIN; }
+    if(ok){
       setRole('owner');
       const remember = document.getElementById('lockRemember').checked;
-      if(remember) localStorage.setItem('vivaah-role', 'owner');
-      sessionStorage.setItem('vivaah-role', 'owner');
+      if(remember) localStorage.setItem('vivaah-role','owner');
+      sessionStorage.setItem('vivaah-role','owner');
       document.getElementById('lockOverlay').classList.add('hidden');
       if(!vendors.length && !guests.length) loadData();
     } else { lockError('Wrong owner PIN'); }
@@ -1345,7 +1399,7 @@ document.getElementById('btnSignOutRole').onclick = ()=>{
 
 /* Admin settings panel */
 document.getElementById('btnAdminSettings').onclick = ()=>{
-  ['Admin','Editor','Viewer'].forEach(r=>{
+  ['Owner','Admin','Editor','Viewer'].forEach(r=>{
     document.getElementById('new'+r+'Pin').value = '';
   });
   document.getElementById('adminSettingsOverlay').classList.add('show');
@@ -1357,8 +1411,16 @@ document.getElementById('adminSettingsOverlay').addEventListener('click', e=>{
   if(e.target.id==='adminSettingsOverlay') document.getElementById('adminSettingsOverlay').classList.remove('show');
 });
 document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
-  const roles = ['admin','editor','viewer'];
+  // Owner PIN is a runtime-only change (hardcoded OWNER_PIN const can't be changed at runtime,
+  // but we store a hashed override that tryUnlock checks first)
+  const ownerVal = document.getElementById('newOwnerPin').value.trim();
   let changed = 0;
+  if(ownerVal){
+    if(!/^\d{4}$/.test(ownerVal)){ showToast('PINs must be exactly 4 digits'); return; }
+    await storageSet('pin-hash-owner', await sha256(ownerVal));
+    changed++;
+  }
+  const roles = ['admin','editor','viewer'];
   for(const role of roles){
     const cap = role.charAt(0).toUpperCase()+role.slice(1);
     const val = document.getElementById('new'+cap+'Pin').value.trim();
@@ -1410,7 +1472,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1671,46 +1733,50 @@ async function findOrCreateSheet(){
 }
 
 async function onSignedIn(){
-  setSyncStatus('saving', 'Connecting…');
+  setSyncStatus('saving','Connecting…');
   try{
     let cachedId = await storageGet('wedding-sheet-id');
     sheetId = cachedId || await findOrCreateSheet();
     await storageSet('wedding-sheet-id', sheetId);
-
     const cloudData = await pullFromSheet();
     if(cloudData){
-      // Restore logos from the cloud's dedicated logos cell (_logos)
-      // Fall back to any locally-stored logos if the cloud doesn't have them yet
+      // Logos: prefer cloud (by ID), fall back to local
       const cloudLogos = cloudData._logos || {};
       const localLogoById = {};
-      vendors.forEach(v=>{ if(v.logo) localLogoById[v.id] = v.logo; });
-
-      vendors = (cloudData.vendors || vendors).map(v=>({
+      vendors.forEach(v=>{ if(v.logo) localLogoById[v.id]=v.logo; });
+      vendors = (cloudData.vendors||vendors).map(v=>({
         ...v,
-        // Prefer cloud logo (by vendor ID), fall back to local logo
-        logo: cloudLogos.vendorLogos && cloudLogos.vendorLogos[v.id]
+        logo: (cloudLogos.vendorLogos&&cloudLogos.vendorLogos[v.id])
               ? cloudLogos.vendorLogos[v.id]
-              : (localLogoById[v.id] || '')
+              : (localLogoById[v.id]||'')
       }));
-      functions = cloudData.functions && cloudData.functions.length ? cloudData.functions : functions;
-      guests = cloudData.guests || guests;
-      reminders = cloudData.reminders || reminders;
-      // Branding: prefer cloud logo, fall back to local
-      const cloudBrandingLogo = cloudLogos.brandingLogo || '';
+      functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
+      guests = cloudData.guests||guests;
+      reminders = cloudData.reminders||reminders;
+      // Branding logo: prefer cloud, fall back to local
       branding = {
-        ...(cloudData.branding || branding),
-        logo: cloudBrandingLogo || branding.logo || ''
+        ...(cloudData.branding||branding),
+        logo: (cloudLogos.brandingLogo||branding.logo||'')
       };
+      // Timeline: merge cloud data but keep local menu images (too large for cloud)
+      if(cloudData.timeline){
+        Object.entries(cloudData.timeline).forEach(([ev,t])=>{
+          const localMenu = eventTimeline[ev]
+            ? {menuData:eventTimeline[ev].menuData, menuFileName:eventTimeline[ev].menuFileName, menuFileType:eventTimeline[ev].menuFileType}
+            : {};
+          eventTimeline[ev] = {...t, ...localMenu};
+        });
+      }
       applyBranding();
     } else {
-      // First-ever connection — push current local data up to the sheet
       await pushToSheet();
     }
-    setSyncStatus('ok', 'Synced just now');
+    setSyncStatus('ok','Synced just now');
     render();
+    renderTimeline();
   }catch(e){
     console.error(e);
-    setSyncStatus('error', 'Connection issue — data saved locally');
+    setSyncStatus('error','Connection issue — data saved locally');
     showToast('Could not connect to Google Sheets: '+e.message);
   }
 }
@@ -1745,38 +1811,45 @@ async function pullFromSheet(){
 
 async function pushToSheet(){
   if(!googleAccessToken || !sheetId) return;
-  // A1 — main data (vendors, functions, reminders, branding text) — logos excluded (in B1)
-  const vendorsForSync = vendors.map(({logo, ...rest})=>rest);
-  const brandingForSync = {...branding, logo: ''};
-  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, savedAt: new Date().toISOString()});
-  // B1 — logos only (compressed base64, separate cell)
-  const logosPayload = JSON.stringify({
-    vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
-    brandingLogo: branding.logo || ''
+  const vendorsForSync = vendors.map(({logo,...rest})=>rest);
+  const brandingForSync = {...branding, logo:''};
+  const timelineForSync = Object.fromEntries(
+    Object.entries(eventTimeline).map(([ev,t])=>{
+      const {menuData,_open,...rest} = t||{};
+      return [ev, rest];
+    })
+  );
+  const mainPayload = JSON.stringify({
+    vendors:vendorsForSync, functions, reminders,
+    branding:brandingForSync, timeline:timelineForSync,
+    savedAt:new Date().toISOString()
   });
-  // C1 — guests compressed (replaces full event-name keys with array indices to reduce size by 4x)
+  const logosPayload = JSON.stringify({
+    vendorLogos:Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id,v.logo])),
+    brandingLogo:branding.logo||''
+  });
   const guestPayload = JSON.stringify(compressGuests(guests));
   try{
-    await sheetsApi(`/${sheetId}/values:batchUpdate`, {
+    await sheetsApi(`/${sheetId}/values:batchUpdate`,{
       method:'POST',
-      body: JSON.stringify({
+      body:JSON.stringify({
         valueInputOption:'RAW',
         data:[
-          {range: SHEET_DATA_RANGE, values:[[mainPayload]]},
-          {range: SHEET_LOGO_RANGE,  values:[[logosPayload]]},
-          {range: 'Data!C1',         values:[[guestPayload]]}
+          {range:SHEET_DATA_RANGE, values:[[mainPayload]]},
+          {range:SHEET_LOGO_RANGE, values:[[logosPayload]]},
+          {range:'Data!C1',        values:[[guestPayload]]}
         ]
       })
     });
-    setSyncStatus('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
-    console.error('push failed', e);
-    if(e.message && (e.message.includes('401') || e.message.includes('403'))){
-      googleAccessToken = null;
-      await storageSet('google-token-cache', '');
-      setSyncStatus('error', 'Google session expired — please sign in again');
+    console.error('push failed',e);
+    if(e.message&&(e.message.includes('401')||e.message.includes('403'))){
+      googleAccessToken=null;
+      await storageSet('google-token-cache','');
+      setSyncStatus('error','Google session expired — please sign in again');
     } else {
-      setSyncStatus('error', 'Sync failed — data saved locally');
+      setSyncStatus('error','Sync failed — data saved locally');
     }
   }
 }
@@ -3635,194 +3708,6 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   printArea.remove();
 };
 
-/* ================================================================
-   ITEMS 5 & 6: Timeline + Accommodation in sync & Excel
-   ================================================================ */
-
-/* 5. Add eventTimeline to Google Sheets sync —
-   already included in pushToSheet via queueCloudSave() which is called by
-   saveTimeline(). But we must make sure the onSignedIn pull also restores it. */
-// Patch: extend the existing saveSyncMeta to also save timeline locally,
-// and patch loadData to load timeline from storage on init. */
-const _origLoadData = loadData;
-async function loadData(){
-  await _origLoadData();
-  try{
-    const tl = await storageGet('wedding-timeline');
-    if(tl){ Object.assign(eventTimeline, JSON.parse(tl)); }
-  }catch(e){}
-  renderTimeline();
-}
-
-/* Make pushToSheet include eventTimeline in the main payload.
-   We do this by patching the payload construction. */
-const _origPushToSheet = pushToSheet;
-async function pushToSheet(){
-  // Store timeline locally (already done by saveTimeline),
-  // then include it in the main Sheets payload by temporarily
-  // merging it into the main data push.
-  // We override the function body fully here:
-  if(!googleAccessToken || !sheetId) return;
-  const vendorsForSync = vendors.map(({logo,...rest})=>rest);
-  const brandingForSync = {...branding, logo:''};
-  // Strip menu data from timeline for sync (too large as base64 images)
-  const timelineForSync = Object.fromEntries(
-    Object.entries(eventTimeline).map(([ev, t])=>{
-      const {menuData, _open, ...rest} = t||{};
-      return [ev, rest];
-    })
-  );
-  const mainPayload = JSON.stringify({
-    vendors: vendorsForSync, functions, reminders, branding: brandingForSync,
-    timeline: timelineForSync, savedAt: new Date().toISOString()
-  });
-  const logosPayload = JSON.stringify({
-    vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
-    brandingLogo: branding.logo||''
-  });
-  const guestPayload = JSON.stringify(compressGuests(guests));
-  try{
-    await sheetsApi(`/${sheetId}/values:batchUpdate`,{
-      method:'POST',
-      body: JSON.stringify({
-        valueInputOption:'RAW',
-        data:[
-          {range: SHEET_DATA_RANGE, values:[[mainPayload]]},
-          {range: SHEET_LOGO_RANGE, values:[[logosPayload]]},
-          {range: 'Data!C1', values:[[guestPayload]]}
-        ]
-      })
-    });
-    setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
-  }catch(e){
-    console.error('push failed',e);
-    if(e.message&&(e.message.includes('401')||e.message.includes('403'))){
-      googleAccessToken=null;
-      await storageSet('google-token-cache','');
-      setSyncStatus('error','Google session expired — please sign in again');
-    } else {
-      setSyncStatus('error','Sync failed — data saved locally');
-    }
-  }
-}
-
-/* Also patch onSignedIn to restore timeline from cloud pull */
-const _origOnSignedIn = onSignedIn;
-async function onSignedIn(){
-  setSyncStatus('saving','Connecting…');
-  try{
-    let cachedId = await storageGet('wedding-sheet-id');
-    sheetId = cachedId || await findOrCreateSheet();
-    await storageSet('wedding-sheet-id', sheetId);
-    const cloudData = await pullFromSheet();
-    if(cloudData){
-      const localLogoByName = {};
-      vendors.forEach(v=>{ if(v.logo) localLogoByName[v.name.toLowerCase()]=v.logo; });
-      vendors = (cloudData.vendors||vendors).map(v=>({...v, logo:localLogoByName[v.name.toLowerCase()]||''}));
-      functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
-      guests = cloudData.guests||guests;
-      reminders = cloudData.reminders||reminders;
-      // Restore timeline — keep local menu images (too large for cloud)
-      if(cloudData.timeline){
-        Object.entries(cloudData.timeline).forEach(([ev,t])=>{
-          const localMenu = eventTimeline[ev] ? {menuData:eventTimeline[ev].menuData, menuFileName:eventTimeline[ev].menuFileName, menuFileType:eventTimeline[ev].menuFileType} : {};
-          eventTimeline[ev] = {...t, ...localMenu};
-        });
-      }
-      const localBrandingLogo = branding.logo;
-      branding = {...(cloudData.branding||branding), logo:localBrandingLogo};
-      applyBranding();
-    } else {
-      await pushToSheet();
-    }
-    setSyncStatus('ok','Synced just now');
-    render();
-  }catch(e){
-    console.error(e);
-    setSyncStatus('error','Connection issue — saved locally only');
-    showToast('Could not connect to Google Sheets: '+e.message);
-  }
-}
-
-/* 6. Add accommodation columns to guest Excel export/import */
-/* Patch guest export to include City, State, Country, Accommodation, Rooms, Beds */
-const _origGuestExport = document.getElementById('btnGuestExport').onclick;
-document.getElementById('btnGuestExport').onclick = ()=>{
-  if(guests.length===0){ showToast('Add guests before exporting'); return; }
-  const wb = XLSX.utils.book_new();
-  const rows = guests.map(g=>{
-    const row = {'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'',
-      'City':g.city||'','State':g.state||'','Country':g.country||'India',
-      'Needs Accommodation':g.needsAccommodation?'Yes':'No',
-      'Rooms':g.rooms||'','Beds':g.beds||''};
-    WEDDING_EVENTS.forEach(ev=>{
-      const c = guestEventCounts(g,ev);
-      row[ev+' Adults'] = c.adults||'';
-      if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = c.writer||'';
-      else row[ev+' Kids'] = c.kids||'';
-      if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies||'';
-    });
-    return row;
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Guest List');
-  XLSX.writeFile(wb,`Vivaah_Guest_List_${new Date().toISOString().slice(0,10)}.xlsx`);
-  showToast('Guest list exported');
-};
-
-/* Patch the guest file upload to also read accommodation columns.
-   We hook into the existing guestFileInput change event via a wrapper. */
-const guestFileInputEl = document.getElementById('guestFileInput');
-const _origGuestFileHandler = guestFileInputEl.onchange;
-guestFileInputEl.addEventListener('change', e=>{
-  // The main handler already runs via the existing addEventListener.
-  // We can't easily patch it, so we process the accommodation columns
-  // in a second pass after the main handler fires.
-  // Instead we replace the handler cleanly:
-}, false);
-
-// Actually the cleanest fix is to directly patch the data inside the existing
-// guestFileInput change handler. Let's override it entirely by removing and re-adding:
-const oldGuestFileListeners = []; // can't remove anonymous listeners in old browsers
-// Instead, we add a second pass via a MutationObserver or simply add a 'change' listener
-// that runs AFTER the main one and patches accommodation fields.
-// Since JS event listeners fire in registration order, we add ours after the existing one.
-document.getElementById('guestFileInput').addEventListener('change', function accomPatch(e){
-  // This fires after the main upload handler. We re-read the file to extract accommodation.
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = evt=>{
-    try{
-      const data = new Uint8Array(evt.target.result);
-      const wb = XLSX.read(data,{type:'array'});
-      const sheetName = wb.SheetNames.find(n=>/guest/i.test(n))||wb.SheetNames[0];
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:''});
-      const norm = s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-      const getVal = (row,keys)=>{for(const k of Object.keys(row)){if(keys.includes(norm(k)))return row[k];}return '';};
-      rows.forEach(row=>{
-        const name = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
-        if(!name) return;
-        const g = guests.find(x=>x.name.toLowerCase()===name.toLowerCase());
-        if(!g) return;
-        const city = String(getVal(row,['city'])).trim();
-        const state = String(getVal(row,['state'])).trim();
-        const country = String(getVal(row,['country'])).trim();
-        const accomRaw = String(getVal(row,['needsaccommodation','accommodation','accom'])).trim().toLowerCase();
-        const needsAccommodation = accomRaw==='yes'||accomRaw==='true'||accomRaw==='1';
-        const rooms = Number(getVal(row,['rooms']))||0;
-        const beds = Number(getVal(row,['beds']))||0;
-        if(city) g.city = city;
-        if(state) g.state = state;
-        if(country) g.country = country;
-        if(accomRaw) g.needsAccommodation = needsAccommodation;
-        if(rooms) g.rooms = rooms;
-        if(beds) g.beds = beds;
-      });
-      saveGuests(); renderGuests();
-    }catch(err){ console.error('accom patch failed',err); }
-  };
-  reader.readAsArrayBuffer(file);
-});
-
 /* ---------------- Init ---------------- */
 (async ()=>{
   initGoogleAuth();
@@ -3830,6 +3715,81 @@ document.getElementById('guestFileInput').addEventListener('change', function ac
   await initAuth();
   await tryRestoreGoogleSession();
 })();
+
+/* ================================================================
+   GLOBAL SEARCH — vendors + guests
+   ================================================================ */
+function highlight(text, query){
+  if(!query) return escapeHtml(text);
+  const re = new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')', 'gi');
+  return escapeHtml(text).replace(re,'<mark class="gs-highlight">$1</mark>');
+}
+
+(function initGlobalSearch(){
+  const gsInput = document.getElementById('globalSearchInput');
+  const gsResults = document.getElementById('globalSearchResults');
+  const gsClear = document.getElementById('globalSearchClear');
+  if(!gsInput) return;
+
+  gsInput.addEventListener('input', ()=>{
+    const q = gsInput.value.trim();
+    gsClear.style.display = q ? 'block' : 'none';
+    if(q.length < 2){ gsResults.style.display='none'; return; }
+    runGlobalSearch(q, gsInput, gsResults);
+  });
+  gsClear.onclick = ()=>{
+    gsInput.value=''; gsResults.style.display='none'; gsClear.style.display='none'; gsInput.focus();
+  };
+  document.addEventListener('click', e=>{
+    if(!document.getElementById('globalSearchWrap').contains(e.target)) gsResults.style.display='none';
+  });
+  gsResults.addEventListener('click', e=>{
+    const item = e.target.closest('.gs-item'); if(!item) return;
+    const {gsType:type, gsId:id} = item.dataset;
+    gsResults.style.display='none'; gsInput.value=''; gsClear.style.display='none';
+    if(type==='vendor'){
+      openRowId=id; renderTable();
+      document.querySelector('.ledger')?.scrollIntoView({behavior:'smooth',block:'start'});
+    } else if(type==='guest'){
+      openGuestRowId=id; activeEventFilter=''; renderGuests();
+      document.querySelector('.guest-card')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }
+  });
+})();
+
+function runGlobalSearch(q, gsInput, gsResults){
+  const ql = q.toLowerCase();
+  const vendorHits = vendors.filter(v=>
+    v.name.toLowerCase().includes(ql)||(v.category||'').toLowerCase().includes(ql)||
+    (v.contact||'').toLowerCase().includes(ql)||(v.phone||'').toLowerCase().includes(ql)
+  ).slice(0,8);
+  const guestHits = guests.filter(g=>
+    g.name.toLowerCase().includes(ql)||(g.phone||'').toLowerCase().includes(ql)||
+    (g.city||'').toLowerCase().includes(ql)||(g.state||'').toLowerCase().includes(ql)
+  ).slice(0,8);
+  if(!vendorHits.length && !guestHits.length){
+    gsResults.innerHTML='<div class="gs-empty">No results for "'+escapeHtml(q)+'"</div>';
+    gsResults.style.display='block'; return;
+  }
+  let html='';
+  if(vendorHits.length){
+    html+='<div class="gs-section-head">Vendors</div>';
+    html+=vendorHits.map(v=>`<div class="gs-item" data-gs-type="vendor" data-gs-id="${v.id}">
+      <span class="gs-item-icon">🏢</span>
+      <div><div class="gs-item-name">${highlight(v.name,q)}</div>
+      <div class="gs-item-meta">${escapeHtml(v.category||'')} · Paid ${fmt(vendorPaid(v))} · Outstanding ${fmt(vendorOutstanding(v))}</div></div>
+    </div>`).join('');
+  }
+  if(guestHits.length){
+    html+='<div class="gs-section-head">Guests</div>';
+    html+=guestHits.map(g=>`<div class="gs-item" data-gs-type="guest" data-gs-id="${g.id}">
+      <span class="gs-item-icon">👤</span>
+      <div><div class="gs-item-name">${highlight(g.name,q)}</div>
+      <div class="gs-item-meta">${g.phone?escapeHtml(g.phone)+' · ':''}${g.city?escapeHtml(g.city)+', ':''}${guestInvitedEvents(g).length} events</div></div>
+    </div>`).join('');
+  }
+  gsResults.innerHTML=html; gsResults.style.display='block';
+}
 </script>
 </body>
 </html>
