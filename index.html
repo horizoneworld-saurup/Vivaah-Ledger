@@ -506,18 +506,15 @@
     display:inline-flex; align-items:center; padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:700;
     letter-spacing:0.04em; text-transform:uppercase; border:1px solid var(--line);
   }
-  .role-badge.role-owner{background:#F0E8FF; color:#5C1A8A; border-color:#C4A0E8;}
   .role-badge.role-admin{background:#FFF0E6; color:#B5562F; border-color:#E8C09A;}
   .role-badge.role-editor{background:#EEF6EE; color:#4A7A4A; border-color:#B5D4B5;}
   .role-badge.role-viewer{background:var(--ivory-deep); color:var(--ink-soft); border-color:var(--line);}
 
   /* ---------- Role permission classes ---------- */
+  /* These are set on <body> by JS based on current role */
   body.role-viewer .editor-only,
   body.role-viewer .admin-only,
-  body.role-viewer .owner-only,
-  body.role-editor .admin-only,
-  body.role-editor .owner-only,
-  body.role-admin .owner-only { display:none !important; }
+  body.role-editor .admin-only { display:none !important; }
 
   body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button),
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
@@ -580,157 +577,112 @@
   .lock-error{
     font-size:12.5px; font-weight:600; color:var(--rust); min-height:18px;
     transition:opacity .2s;
-  }
-  /* ---------- Event timeline ---------- */
-  .timeline-section{margin-bottom:30px;}
-  .timeline-section-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
-  .timeline-section-head h2{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--maroon-dark);margin:0;}
-  .timeline-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
-  .timeline-card{
-    background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
-    box-shadow:var(--card-shadow);overflow:hidden;
-  }
-  .timeline-card-head{
-    background:var(--maroon-dark);color:var(--ivory);padding:12px 16px;
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .timeline-card-head h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;margin:0;}
-  .timeline-card-head .tch-date{font-size:12px;opacity:0.8;}
-  .timeline-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
-  .timeline-field{display:flex;flex-direction:column;gap:4px;}
-  .timeline-field label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);font-weight:700;}
-  .timeline-field input,.timeline-field select,.timeline-field textarea{
-    padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;font-family:'Inter';outline:none;
-  }
-  .timeline-field input:focus,.timeline-field select:focus,.timeline-field textarea:focus{border-color:var(--gold);}
-  .timeline-field textarea{min-height:48px;resize:vertical;}
-  .timeline-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .timeline-dress-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .dress-swatch{display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.15);vertical-align:middle;margin-right:4px;}
-  .menu-upload-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-  .menu-thumb{width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--line);}
-  .menu-thumb-pdf{width:36px;height:36px;border-radius:6px;background:var(--ivory-deep);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--rust);}
+  }  /* --- Role badge --- */
+  .role-badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid var(--line);}
+  .role-badge.role-owner{background:#F0E8FF;color:#5C1A8A;border-color:#C4A0E8;}
+  .role-badge.role-admin{background:#FFF0E6;color:#B5562F;border-color:#E8C09A;}
+  .role-badge.role-editor{background:#EEF6EE;color:#4A7A4A;border-color:#B5D4B5;}
+  .role-badge.role-viewer{background:var(--ivory-deep);color:var(--ink-soft);border-color:var(--line);}
+  body.role-viewer .editor-only,body.role-viewer .admin-only,body.role-viewer .owner-only,
+  body.role-editor .admin-only,body.role-editor .owner-only,
+  body.role-admin .owner-only{display:none!important;}
 
-  /* ---------- Accommodation summary ---------- */
-  .accom-summary{
-    background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);
-    box-shadow:var(--card-shadow);padding:18px 22px;margin-bottom:20px;
-  }
-  .accom-summary h3{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--maroon-dark);margin:0 0 12px;}
-  .accom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
-  .accom-stat .v{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:22px;color:var(--ink);}
-  .accom-stat .l{font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);margin-top:2px;}
+  /* --- Lock screen --- */
+  .lock-overlay{position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,var(--maroon-dark) 0%,#2A0A14 60%,#1A0A00 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+  .lock-overlay.hidden{display:none;}
+  .lock-box{background:rgba(251,246,238,0.97);border-radius:24px;padding:36px 32px 28px;width:100%;max-width:340px;text-align:center;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);border:1px solid rgba(212,162,76,0.3);}
+  .lock-logo{margin-bottom:14px;}
+  .lock-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--maroon-dark);margin:0 0 4px;}
+  .lock-sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;}
+  .lock-role-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:22px;}
+  .lock-tab{flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+  .lock-tab.active{background:var(--maroon);color:var(--ivory);border-color:var(--maroon);}
+  .lock-pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;transition:background .15s,border-color .15s;}
+  .pin-dot.filled{background:var(--maroon);border-color:var(--maroon);}
+  .pin-dot.error{background:var(--rust);border-color:var(--rust);}
+  .lock-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  .key-btn{background:#fff;border:1px solid var(--line);border-radius:12px;font-size:20px;font-weight:600;color:var(--ink);padding:14px 0;cursor:pointer;transition:background .12s,transform .1s;font-family:'Cormorant Garamond',serif;}
+  .key-btn:hover{background:var(--ivory-deep);}
+  .key-btn:active{transform:scale(0.94);}
+  .key-clear{font-size:16px;color:var(--rust);}
+  .key-enter{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+  .key-enter:hover{background:var(--maroon-dark);}
+  .lock-remember{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .lock-remember input{accent-color:var(--maroon);cursor:pointer;}
+  .lock-error{font-size:12.5px;font-weight:600;color:var(--rust);min-height:18px;}
 
-  /* ---------- Enhanced reminder items ---------- */
-  .r-vendor{font-size:10.5px;color:var(--gold);font-weight:600;}
-  .r-person{font-size:10.5px;color:var(--maroon);font-weight:600;}
-  .reminder-add-extended{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
-  .reminder-add-extended .r-row{display:flex;gap:6px;flex-wrap:wrap;}
-  .reminder-add-extended input[type=text],.reminder-add-extended select{
-    padding:7px 9px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';flex:1;min-width:100px;
-  }
-
-  /* ---------- Print layouts ---------- */
-  @media print{
-    .print-section-break{page-break-before:always;}
-    .timeline-card-head{background:#5C1A2B!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  }
-  .print-menu-wrap{display:none;}
-  @media print{ .print-menu-wrap{display:block;} }
-  /* ---------- Event timeline ---------- */
-  .event-timeline-card{
-    background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
-    box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
-  }
-  .event-timeline-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;}
-  .event-timeline-head h2{font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:700; color:var(--maroon-dark); margin:0;}
-  .event-cards-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px;}
-  .event-detail-card{
-    border:1px solid var(--line); border-radius:14px; overflow:hidden;
-  }
-  .event-detail-head{
-    background:var(--maroon); color:var(--ivory); padding:10px 14px;
-    display:flex; align-items:center; justify-content:space-between; cursor:pointer;
-  }
-  .event-detail-head h4{margin:0; font-size:14px; font-weight:700; letter-spacing:0.01em;}
-  .event-detail-head .ed-date{font-size:11.5px; opacity:0.8;}
-  .event-detail-body{padding:14px; display:none; flex-direction:column; gap:10px;}
+  /* --- Event timeline --- */
+  .event-timeline-card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:22px 24px;margin-bottom:30px;}
+  .event-timeline-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .event-timeline-head h2{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--maroon-dark);margin:0;}
+  .event-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+  .event-detail-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .event-detail-head{background:var(--maroon);color:var(--ivory);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;}
+  .event-detail-head h4{margin:0;font-size:14px;font-weight:700;}
+  .event-detail-head .ed-date{font-size:11.5px;opacity:0.8;}
+  .event-detail-body{padding:14px;display:none;flex-direction:column;gap:10px;}
   .event-detail-body.open{display:flex;}
-  .ed-field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .ed-field label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;}
-  .ed-field input, .ed-field select{width:100%; padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
-  .ed-field input:focus, .ed-field select:focus{border-color:var(--gold); outline:none;}
-  .ed-dress-section{background:var(--ivory-deep); border-radius:9px; padding:10px 12px;}
-  .ed-dress-section h5{margin:0 0 8px; font-size:11px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); font-weight:700;}
-  .ed-menu-section{border-top:1px solid var(--line); padding-top:10px;}
-  .ed-menu-preview{margin-top:8px; border-radius:8px; overflow:hidden; border:1px solid var(--line); max-height:160px; display:flex; align-items:center; justify-content:center; background:var(--ivory-deep);}
-  .ed-menu-preview img{max-width:100%; max-height:160px; object-fit:contain;}
-  .ed-menu-preview.has-pdf{padding:14px; font-size:12.5px; font-weight:600; color:var(--maroon-dark); flex-direction:column; gap:6px;}
-  .ed-menu-actions{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+  .ed-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ed-field label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);font-weight:700;margin-bottom:4px;}
+  .ed-field input,.ed-field select,.ed-field textarea{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--line);font-size:12.5px;font-family:'Inter';box-sizing:border-box;}
+  .ed-field input:focus,.ed-field select:focus,.ed-field textarea:focus{border-color:var(--gold);outline:none;}
+  .ed-dress-section{background:var(--ivory-deep);border-radius:9px;padding:10px 12px;}
+  .ed-dress-section h5{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);font-weight:700;}
+  .ed-menu-section{border-top:1px solid var(--line);padding-top:10px;}
+  .ed-menu-preview{margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid var(--line);max-height:120px;display:flex;align-items:center;justify-content:center;background:var(--ivory-deep);}
+  .ed-menu-preview img{max-width:100%;max-height:120px;object-fit:contain;}
+  .ed-menu-preview.pdf-preview{padding:10px;font-size:12.5px;font-weight:600;color:var(--maroon-dark);flex-direction:column;gap:4px;text-align:center;}
+  .ed-menu-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
 
-  /* ---------- Guest accommodation ---------- */
-  .accom-summary{display:flex; gap:14px; flex-wrap:wrap; margin:8px 0 16px; font-size:12.5px;}
-  .accom-chip{background:var(--ivory-deep); border:1px solid var(--line); border-radius:20px; padding:5px 12px; font-weight:600; color:var(--ink-soft);}
-  .accom-chip.highlight{background:#FFF0E6; color:var(--rust); border-color:var(--rust);}
-  .guest-expand-detail{
-    background:var(--ivory); border:1px solid var(--line); border-radius:10px;
-    padding:12px 14px; margin-top:8px; display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;
-  }
-  .gx-field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); font-weight:700; margin-bottom:4px;}
-  .gx-field input, .gx-field select{width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line); font-size:12px; font-family:'Inter';}
-  .gx-field input[type=checkbox]{width:auto; margin-right:6px;}
+  /* --- Guest accommodation --- */
+  .accom-summary{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px;}
+  .accom-chip{background:var(--ivory-deep);border:1px solid var(--line);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--ink-soft);}
+  .accom-chip.alert{background:#FFF0E6;color:var(--rust);border-color:#E8C09A;}
+  .kankotri-bar{background:linear-gradient(90deg,var(--maroon-dark),#5C1A2B);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .kankotri-bar-title{color:var(--ivory);font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;}
+  .kankotri-bar-sub{color:rgba(251,246,238,0.7);font-size:11.5px;margin-top:2px;}
+  .kankotri-bar-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-ivory{display:inline-flex;align-items:center;gap:6px;font-family:'Inter';font-weight:600;font-size:12.5px;padding:7px 13px;border-radius:8px;border:1px solid rgba(251,246,238,0.35);background:rgba(251,246,238,0.12);color:var(--ivory);cursor:pointer;transition:background .15s;}
+  .btn-ivory:hover{background:rgba(251,246,238,0.25);}
+  .guest-expand-detail{background:var(--ivory);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+  .gx-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);font-weight:700;margin-bottom:4px;}
+  .gx-field input,.gx-field select{width:100%;padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px;font-family:'Inter';box-sizing:border-box;}
+  .gx-field-full{grid-column:1/-1;}
+  .gx-check{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
+  .gx-check input{accent-color:var(--maroon);cursor:pointer;}
 
-  /* ---------- Enhanced reminders (vendor + person link) ---------- */
-  .reminder-item .r-vendor{font-size:10.5px; color:var(--maroon-dark); font-weight:600; margin-top:2px;}
-  .reminder-item .r-person{font-size:10.5px; color:var(--ink-soft);}
-  .reminder-add-extended{display:flex; flex-direction:column; gap:6px; margin-top:auto;}
-  .reminder-add-extended .row1,.reminder-add-extended .row2{display:flex; gap:6px; flex-wrap:wrap;}
-  .reminder-add-extended input[type=text]{flex:1; min-width:120px; padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12px; font-family:'Inter';}
-  .reminder-add-extended input[type=date]{padding:7px 8px; border-radius:8px; border:1px solid var(--line); font-size:11.5px; font-family:'Inter';}
-  .reminder-add-extended select{padding:7px 9px; border-radius:8px; border:1px solid var(--line); font-size:12px; font-family:'Inter'; background:#fff; flex:1; min-width:120px;}
-  .reminder-add-extended button{background:var(--maroon); color:var(--ivory); border:none; border-radius:8px; padding:7px 12px; font-weight:700; cursor:pointer; font-size:13px;}
+  /* --- Enhanced reminders (vendor + person) --- */
+  .reminder-add-extended{display:flex;flex-direction:column;gap:6px;margin-top:auto;}
+  .rem-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .rem-row input[type=text]{flex:1;min-width:100px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';}
+  .rem-row input[type=date]{padding:7px 8px;border-radius:8px;border:1px solid var(--line);font-size:11.5px;font-family:'Inter';}
+  .rem-row select{flex:1;min-width:110px;padding:7px 9px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;}
+  .rem-row button{background:var(--maroon);color:var(--ivory);border:none;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer;font-size:13px;}
+  .r-vendor-tag{font-size:10.5px;color:var(--maroon-dark);font-weight:600;margin-top:2px;}
+  .r-person-tag{font-size:10.5px;color:var(--ink-soft);}
 
-  /* ---------- Print panel ---------- */
-  .print-panel-overlay{
-    position:fixed; inset:0; background:rgba(42,31,26,0.45); display:none;
-    align-items:center; justify-content:center; z-index:50; padding:20px;
-  }
+  /* --- Print panel --- */
+  .print-panel-overlay{position:fixed;inset:0;background:rgba(42,31,26,0.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
   .print-panel-overlay.show{display:flex;}
-  .print-panel{
-    background:var(--ivory); border-radius:var(--r-lg); padding:28px; width:100%; max-width:440px;
-    box-shadow:0 24px 60px -10px rgba(42,31,26,0.35); border:1px solid var(--line);
-  }
-  .print-panel h3{font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--maroon-dark); margin:0 0 6px;}
-  .print-panel p{font-size:12.5px; color:var(--ink-soft); margin:0 0 20px;}
-  .print-options{display:flex; flex-direction:column; gap:10px;}
-  .print-option-btn{
-    display:flex; align-items:center; gap:12px; padding:13px 16px; border-radius:12px;
-    border:1px solid var(--line); background:#fff; cursor:pointer; text-align:left;
-    transition:background .12s, border-color .12s; font-family:'Inter';
-  }
-  .print-option-btn:hover{background:var(--ivory-deep); border-color:var(--gold);}
-  .print-option-btn .po-icon{font-size:20px; flex-shrink:0;}
-  .print-option-btn .po-label{font-size:13.5px; font-weight:600; color:var(--ink);}
-  .print-option-btn .po-sub{font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
+  .print-panel{background:var(--ivory);border-radius:var(--r-lg);padding:28px;width:100%;max-width:440px;box-shadow:0 24px 60px -10px rgba(42,31,26,0.35);border:1px solid var(--line);}
+  .print-panel h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--maroon-dark);margin:0 0 6px;}
+  .print-panel p{font-size:12.5px;color:var(--ink-soft);margin:0 0 20px;}
+  .print-options{display:flex;flex-direction:column;gap:10px;}
+  .print-option-btn{display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;text-align:left;transition:background .12s,border-color .12s;font-family:'Inter';width:100%;}
+  .print-option-btn:hover{background:var(--ivory-deep);border-color:var(--gold);}
+  .po-icon{font-size:20px;flex-shrink:0;}
+  .po-label{font-size:13.5px;font-weight:600;color:var(--ink);}
+  .po-sub{font-size:11.5px;color:var(--ink-soft);margin-top:1px;}
 
-  /* ---------- Print-only overrides for different print modes ---------- */
-  @media print{
-    .print-section-vendors .guest-card,
-    .print-section-vendors .catering-card,
-    .print-section-vendors .reminders-grid,
-    .print-section-vendors .event-timeline-card{ display:none !important; }
-    .print-section-guests .ledger,
-    .print-section-guests .catering-card,
-    .print-section-guests .reminders-grid,
-    .print-section-guests .event-timeline-card{ display:none !important; }
-    .print-section-event .ledger,
-    .print-section-event .guest-card,
-    .print-section-event .catering-card,
-    .print-section-event .reminders-grid{ display:none !important; }
-    .print-section-event .event-detail-body{ display:flex !important; }
-    .event-detail-body{ display:flex !important; }
-    .guest-expand-detail{ display:grid !important; }
-  }
+  /* --- Platform vendor list (owner panel) --- */
+  .pv-item{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;}
+  .pv-logo{width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--line);flex-shrink:0;}
+  .pv-logo-fallback{width:36px;height:36px;border-radius:50%;background:var(--ivory-deep);border:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--maroon);}
+  .pv-info{flex:1;min-width:0;}
+  .pv-name{font-weight:700;font-size:13.5px;color:var(--ink);}
+  .pv-meta{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .pv-actions{display:flex;gap:6px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -752,7 +704,6 @@
       <button class="lock-tab active" data-lock-role="admin">Admin</button>
       <button class="lock-tab" data-lock-role="editor">Editor</button>
       <button class="lock-tab" data-lock-role="viewer">Viewer</button>
-      <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only">⚙</button>
     </div>
     <div class="lock-pin-dots" id="lockPinDots">
       <span class="pin-dot" id="dot0"></span>
@@ -800,26 +751,22 @@
   </div>
 </div>
 
-<!-- ========== OWNER PANEL MODAL ========== -->
+<!-- OWNER PANEL -->
 <div class="modal-overlay" id="ownerPanelOverlay">
   <div class="modal" style="max-width:640px;">
-    <h3>🔑 Owner Panel — Platform Vendor Management</h3>
-    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">Paid advertisers added here appear in the ticker for ALL customers. They cannot be removed by any customer role. Changes are saved inside this file — download the updated file to deliver to customers.</p>
-    <div id="platformVendorList" style="display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto;margin-bottom:14px;"></div>
+    <h3>🔑 Owner Panel — Platform Vendors</h3>
+    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">These paid vendors appear in every customer's ticker and cannot be removed by customers. Download the updated file to deliver to a customer.</p>
+    <div id="platformVendorList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
     <button class="btn btn-ghost" id="btnAddPlatformVendor" style="width:100%;justify-content:center;">+ Add paid vendor</button>
-    <div class="modal-actions" style="margin-top:20px;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div class="modal-actions" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
       <button class="btn btn-ghost" id="ownerPanelCancelBtn">Close</button>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-gold" id="btnDownloadUpdatedFile">⬇ Download updated file for customer</button>
-      </div>
+      <button class="btn btn-gold" id="btnDownloadUpdatedFile">⬇ Download updated file for customer</button>
     </div>
-    <div style="background:var(--ivory-deep);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-top:12px;">
-      ℹ Your owner PIN is: <b id="ownerPinDisplay"></b> — Change it by editing <code>OWNER_PIN</code> in the file's source before delivery. Customer Admin/Editor/Viewer PINs are managed separately under ⚙ Admin.
-    </div>
+    <div style="background:var(--ivory-deep);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-top:12px;">ℹ Owner PIN is: <b id="ownerPinDisplay"></b> — edit <code>OWNER_PIN</code> in the source before delivery.</div>
   </div>
 </div>
 
-<!-- ========== ADD/EDIT PLATFORM VENDOR MODAL ========== -->
+<!-- ADD/EDIT PLATFORM VENDOR -->
 <div class="modal-overlay" id="platformVendorModalOverlay">
   <div class="modal" style="max-width:420px;">
     <h3 id="pvModalTitle">Add platform vendor</h3>
@@ -828,15 +775,12 @@
       <div class="field"><label>Category</label><input type="text" id="pvCategory" placeholder="Catering, Decor…"></div>
       <div class="field"><label>Phone</label><input type="text" id="pvPhone" placeholder="Optional"></div>
     </div>
-    <div class="field"><label>Website / booking link</label><input type="text" id="pvWebsite" placeholder="https://example.com"></div>
-    <div class="field"><label>Banner tagline (max 60 chars)</label><input type="text" id="pvTagline" placeholder="e.g. 20% off for early bookings" maxlength="60"></div>
+    <div class="field"><label>Website</label><input type="text" id="pvWebsite" placeholder="https://example.com"></div>
+    <div class="field"><label>Tagline (max 60 chars)</label><input type="text" id="pvTagline" placeholder="e.g. 20% off for early bookings" maxlength="60"></div>
     <div class="field">
       <label>Logo</label>
       <div class="branding-logo-row">
-        <span class="logo-preview" id="pvLogoPreviewSlot">
-          <span id="pvLogoPlaceholder" style="font-size:22px;opacity:0.4;">🏷️</span>
-          <img id="pvLogoPreview" alt="" style="display:none;object-fit:cover;border-radius:50%;width:100%;height:100%;">
-        </span>
+        <span class="logo-preview" id="pvLogoPreviewSlot"><span id="pvLogoPlaceholder" style="font-size:22px;opacity:0.4;">🏷️</span><img id="pvLogoPreview" alt="" style="display:none;object-fit:cover;border-radius:50%;width:100%;height:100%;"></span>
         <div class="branding-logo-actions">
           <input type="file" id="pvLogoFileInput" accept="image/*">
           <button class="btn btn-ghost" id="btnPickPvLogo" type="button">Upload logo</button>
@@ -844,43 +788,23 @@
         </div>
       </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="pvModalCancelBtn">Cancel</button>
-      <button class="btn btn-primary" id="pvModalSaveBtn">Save vendor</button>
-    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="pvModalCancelBtn">Cancel</button><button class="btn btn-primary" id="pvModalSaveBtn">Save</button></div>
   </div>
 </div>
 
-<!-- ========== PRINT PANEL MODAL ========== -->
+<!-- PRINT PANEL -->
 <div class="print-panel-overlay" id="printPanelOverlay">
   <div class="print-panel">
     <h3>🖺 Print / Save PDF</h3>
-    <p>Choose what to print. Your browser's print dialog will open — select "Save as PDF" to get a PDF file.</p>
+    <p>Choose what to print — then select "Save as PDF" in the print dialog.</p>
     <div class="print-options">
-      <button class="print-option-btn" id="printOptAll">
-        <span class="po-icon">📋</span>
-        <div><div class="po-label">Print everything</div><div class="po-sub">Full report — vendors, guests, timeline, reminders</div></div>
-      </button>
-      <button class="print-option-btn" id="printOptVendors">
-        <span class="po-icon">🏢</span>
-        <div><div class="po-label">Vendor list only</div><div class="po-sub">All vendors with payment status and balances</div></div>
-      </button>
-      <button class="print-option-btn" id="printOptGuests">
-        <span class="po-icon">👥</span>
-        <div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div>
-      </button>
-      <button class="print-option-btn" id="printOptFunctionWise">
-        <span class="po-icon">📅</span>
-        <div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div>
-      </button>
-      <button class="print-option-btn" id="printOptTimeline">
-        <span class="po-icon">🗓️</span>
-        <div><div class="po-label">Event timeline only</div><div class="po-sub">Dates, venues, dress codes, and menus per function</div></div>
-      </button>
+      <button class="print-option-btn" id="printOptAll"><span class="po-icon">📋</span><div><div class="po-label">Print everything</div><div class="po-sub">Full report — vendors, guests, timeline, reminders</div></div></button>
+      <button class="print-option-btn" id="printOptVendors"><span class="po-icon">🏢</span><div><div class="po-label">Vendor list only</div><div class="po-sub">All vendors with payment status and balances</div></div></button>
+      <button class="print-option-btn" id="printOptGuests"><span class="po-icon">👥</span><div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div></button>
+      <button class="print-option-btn" id="printOptFunctionWise"><span class="po-icon">📅</span><div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div></button>
+      <button class="print-option-btn" id="printOptTimeline"><span class="po-icon">🗓️</span><div><div class="po-label">Event timeline only</div><div class="po-sub">Dates, venues, dress codes, menus per function</div></div></button>
     </div>
-    <div style="margin-top:18px; text-align:right;">
-      <button class="btn btn-ghost" id="printPanelCloseBtn">Close</button>
-    </div>
+    <div style="margin-top:18px;text-align:right;"><button class="btn btn-ghost" id="printPanelCloseBtn">Close</button></div>
   </div>
 </div>
 
@@ -909,12 +833,12 @@
       <button class="btn btn-ghost" id="btnGoogleSignIn">⛁ Sign in with Google</button>
       <button class="btn btn-ghost" id="btnUpload">⭱ Upload Excel</button>
       <button class="btn btn-ghost" id="btnTemplate">⬇ Sample template</button>
-      <button class="btn btn-ghost" id="btnPrint">🖺 Print / Save PDF</button>
+      <button class="btn btn-ghost" id="btnPrint">🖺 Print / PDF</button>
       <button class="btn btn-ghost" id="btnExport">⬇ Export report</button>
       <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
-      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" title="Platform vendor management" style="background:#F0E8FF; border-color:#C4A0E8; color:#5C1A8A;">🔑 Owner Panel</button>
+      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;">🔑 Owner Panel</button>
       <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
-      <button class="btn btn-ghost" id="btnSignOutRole" title="Sign out / switch role">↩ Sign out</button>
+      <button class="btn btn-ghost" id="btnSignOutRole">↩ Sign out</button>
     </div>
   </div>
 
@@ -961,63 +885,48 @@
     </div>
   </div>
 
-  <!-- ===== EVENT TIMELINE ===== -->
-  <div class="timeline-section">
-    <div class="timeline-section-head">
-      <div>
-        <h2>Event timeline &amp; details</h2>
-        <p style="margin:3px 0 0;font-size:12px;color:var(--ink-soft);">Date, timing, venue, dress codes, and catering menu for each function.</p>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-ghost" id="btnPrintFunctionWise">🖺 Print function-wise guest lists</button>
-        <button class="btn btn-ghost" id="btnPrintAll">🖺 Print everything</button>
-      </div>
+  <!-- EVENT TIMELINE -->
+  <div class="event-timeline-card">
+    <div class="event-timeline-head">
+      <h2>Event timeline</h2>
+      <button class="btn btn-ghost" id="btnPrintTimeline">🖺 Print timeline</button>
     </div>
-    <div class="timeline-grid" id="timelineGrid"></div>
+    <div class="event-cards-grid" id="timelineGrid"></div>
   </div>
 
   <div class="reminders-grid" id="remindersGrid">
     <div class="reminder-card" data-reminder="trial">
-      <div class="reminder-head">
-        <h3>🥻 Trial Reminder</h3>
-        <span class="reminder-count" id="countTrial">0</span>
-      </div>
+      <div class="reminder-head"><h3>🥻 Trial Reminder</h3><span class="reminder-count" id="countTrial">0</span></div>
       <ul class="reminder-list" id="listTrial"></ul>
       <div class="reminder-add-extended">
-        <div class="r-row">
-          <input type="text" id="inputTrial" placeholder="Trial detail (e.g. Bridal trial 3pm)">
+        <div class="rem-row">
+          <input type="text" id="inputTrial" placeholder="e.g. Bridal trial — 3pm">
           <input type="date" id="dateTrial">
         </div>
-        <div class="r-row">
-          <input type="text" id="trialPerson" placeholder="For whom (e.g. Bride, Groom)">
+        <div class="rem-row">
+          <input type="text" id="trialPerson" placeholder="For whom (e.g. Bride, Mum)">
           <select id="trialVendor"><option value="">Link to vendor…</option></select>
+          <button data-add-reminder="trial">+</button>
         </div>
-        <button data-add-reminder="trial" class="btn btn-primary" style="align-self:flex-end;">+ Add</button>
       </div>
     </div>
     <div class="reminder-card" data-reminder="clothes">
-      <div class="reminder-head">
-        <h3>👗 Clothes Reminder</h3>
-        <span class="reminder-count" id="countClothes">0</span>
-      </div>
+      <div class="reminder-head"><h3>👗 Clothes Reminder</h3><span class="reminder-count" id="countClothes">0</span></div>
       <ul class="reminder-list" id="listClothes"></ul>
       <div class="reminder-add-extended">
-        <div class="r-row">
-          <input type="text" id="inputClothes" placeholder="Item (e.g. Pick up sherwani)">
+        <div class="rem-row">
+          <input type="text" id="inputClothes" placeholder="e.g. Pick up groom's sherwani">
           <input type="date" id="dateClothes">
         </div>
-        <div class="r-row">
-          <input type="text" id="clothesPerson" placeholder="For whom (e.g. Groom)">
+        <div class="rem-row">
+          <input type="text" id="clothesPerson" placeholder="For whom (e.g. Groom, Sister)">
           <select id="clothesVendor"><option value="">Link to vendor…</option></select>
+          <button data-add-reminder="clothes">+</button>
         </div>
-        <button data-add-reminder="clothes" class="btn btn-primary" style="align-self:flex-end;">+ Add</button>
       </div>
     </div>
     <div class="reminder-card" data-reminder="guest">
-      <div class="reminder-head">
-        <h3>📋 Guest Reminder</h3>
-        <span class="reminder-count" id="countGuest">0</span>
-      </div>
+      <div class="reminder-head"><h3>📋 Guest Reminder</h3><span class="reminder-count" id="countGuest">0</span></div>
       <ul class="reminder-list" id="listGuest"></ul>
       <div class="reminder-add-row">
         <input type="text" id="inputGuest" placeholder="e.g. Confirm headcount with caterer">
@@ -1060,23 +969,24 @@
         <button class="btn btn-ghost" id="btnGuestUpload">⭱ Upload guest Excel</button>
         <button class="btn btn-ghost" id="btnGuestTemplate">⬇ Sample guest template</button>
         <button class="btn btn-gold" id="btnGuestExport">⬇ Export guest list</button>
+        <button class="btn btn-ghost" id="btnPrintGuests">🖺 Print guest list</button>
       </div>
     </div>
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
-    <!-- Kankotri dedicated upload/download -->
+    <!-- Kankotri dedicated section -->
     <div class="kankotri-bar">
       <div>
-        <div class="kankotri-bar-title">𖥸 Kankotri</div>
-        <div class="kankotri-bar-sub">Dedicated upload/download for Kankotri invitation list (Adults + Writers)</div>
+        <div class="kankotri-bar-title">𖥸 Kankotri — Dedicated List</div>
+        <div class="kankotri-bar-sub">Upload/download the Kankotri invitation list (Adults + Writers only)</div>
       </div>
       <div class="kankotri-bar-actions">
         <input type="file" id="kankotriFileInput" accept=".xlsx,.xls">
-        <button class="btn btn-ivory" id="btnKankotriUpload">⭱ Upload Kankotri</button>
-        <button class="btn btn-ivory" id="btnKankotriTemplate">⬇ Template</button>
-        <button class="btn btn-ivory" id="btnKankotriExport">⬇ Export Kankotri</button>
-        <button class="btn btn-ivory" id="btnPrintKankotri">🖺 Print Kankotri</button>
+        <button class="btn-ivory" id="btnKankotriUpload">⭱ Upload</button>
+        <button class="btn-ivory" id="btnKankotriTemplate">⬇ Template</button>
+        <button class="btn-ivory" id="btnKankotriExport">⬇ Export</button>
+        <button class="btn-ivory" id="btnPrintKankotri">🖺 Print</button>
       </div>
     </div>
     <div class="guest-table-wrap">
@@ -1275,40 +1185,27 @@
 const DEFAULT_PINS = {admin:'1234', editor:'5678', viewer:'9999'};
 
 /* ================================================================
-   PLATFORM VENDORS — Paid advertisers baked into every customer copy.
-   ---------------------------------------------------------------
-   Edit this list BEFORE delivering the file to a customer.
-   These vendors always appear in the scrolling ticker, cannot be
-   deleted or edited by the customer (any role), and do NOT appear
-   in their vendor ledger or budget calculations.
-   ---------------------------------------------------------------
-   To add a vendor: copy one object, fill in the fields.
-   To remove: delete that object from the array.
-   logo: paste a small base64 image string, or leave '' for initial avatar.
-   ================================================================ */
-const PLATFORM_VENDORS = [
-  /* Example — delete this and add your real paid vendors before delivery:
-  {
-    id: 'pv_example1',
-    name: 'Sharma Caterers',
-    category: 'Catering',
-    phone: '9876543210',
-    website: 'https://sharmacaterers.com',
-    tagline: 'Premium wedding catering since 1995',
-    logo: ''
-  },
-  */
-];
-
-/* ================================================================
-   OWNER PIN — Secret PIN that unlocks the Owner panel.
-   Change this to something only you know before delivering the file.
-   The customer's Admin PIN (set separately) does NOT grant Owner access.
+   OWNER PIN — Change this before delivering to a customer.
+   The customer never sees this PIN. It only unlocks the Owner Panel.
    ================================================================ */
 const OWNER_PIN = '0000'; // ← CHANGE THIS before delivery
-let currentRole = null; // 'admin' | 'editor' | 'viewer'
+
+/* ================================================================
+   PLATFORM VENDORS — Paid advertisers always visible in the ticker.
+   Add/edit these via the Owner Panel, then download the updated file.
+   ================================================================ */
+const PLATFORM_VENDORS = [
+  // Example (remove before delivery or replace with real paid vendors):
+  // {id:'pv_example', name:'Sample Caterers', category:'Catering', phone:'9876500000', website:'https://example.com', tagline:'Best food in Ahmedabad', logo:''}
+];
+
+let currentRole = null;
 let lockPinEntry = '';
 let lockSelectedRole = 'admin';
+let platformVendors = [...PLATFORM_VENDORS]; // runtime-editable copy
+let editingPvId = null;
+let pendingPvLogo = undefined;
+let eventTimeline = {}; // {[eventName]: {date, startTime, venue, brideDressCode, groomDressCode, cateringVendorId, menuData, menuFileName, menuFileType, _open}}
 
 async function sha256(text){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -1355,7 +1252,7 @@ function lockError(msg){
 
 async function tryUnlock(){
   if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
-  // Owner PIN is hardcoded in the file — compare directly (no stored hash needed)
+  // Owner PIN is hardcoded — compare directly (not hashed storage)
   if(lockSelectedRole === 'owner'){
     if(lockPinEntry === OWNER_PIN){
       setRole('owner');
@@ -1364,9 +1261,7 @@ async function tryUnlock(){
       sessionStorage.setItem('vivaah-role', 'owner');
       document.getElementById('lockOverlay').classList.add('hidden');
       if(!vendors.length && !guests.length) loadData();
-    } else {
-      lockError('Wrong owner PIN');
-    }
+    } else { lockError('Wrong owner PIN'); }
     return;
   }
   const ok = await checkPin(lockSelectedRole, lockPinEntry);
@@ -1389,7 +1284,6 @@ function setRole(role){
   const labels = {owner:'🔑 Owner', admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
   badge.textContent = labels[role] || role;
   badge.className = 'role-badge role-' + role;
-  // Owner gets full admin access + owner panel button
   const isOwner = role === 'owner';
   const isAdmin = role === 'admin' || isOwner;
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
@@ -1399,23 +1293,17 @@ function setRole(role){
 }
 
 function applyRoleRestrictions(){
-  // For viewer: make all interactive elements non-functional with a visual indication
   const isViewer = currentRole === 'viewer';
   document.querySelectorAll(
     '#btnAddVendor, #btnUpload, #fileInput, #btnGuestUpload, #guestFileInput, '+
     '#btnAddGuest, #newGuestName, #newGuestPhone, #newGuestSide, '+
-    '#searchInput, .reminder-add-row button, .reminder-add-row input, '+
-    '.catering-actions button, #btnAddFunction'
+    '#searchInput, .rem-row button, .rem-row input, .reminder-add-row button, .reminder-add-row input, '+
+    '.catering-actions button, #btnAddFunction, #btnKankotriUpload, #kankotriFileInput'
   ).forEach(el=>{
     el.disabled = isViewer;
     el.style.opacity = isViewer ? '0.5' : '';
     el.style.cursor = isViewer ? 'not-allowed' : '';
   });
-  // For editor: block ad-vendor related actions (the featured toggle/logo in modal is inside admin-only class)
-  if(currentRole === 'editor'){
-    // Remove delete buttons from featured (ad) vendors in the table
-    // This is handled at render time — renderTable checks currentRole
-  }
 }
 
 /* Lock screen keypad */
@@ -1484,175 +1372,24 @@ document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
   showToast(changed ? `${changed} PIN${changed===1?'':'s'} updated` : 'No changes made');
 };
 
-/* ================================================================
-   OWNER PANEL — Platform vendor management (owner role only)
-   ================================================================ */
-let platformVendors = [...PLATFORM_VENDORS]; // runtime-editable copy
-let editingPvId = null;
-let pendingPvLogo = undefined;
-
-function openOwnerPanel(){
-  document.getElementById('ownerPinDisplay').textContent = OWNER_PIN;
-  renderPlatformVendorList();
-  document.getElementById('ownerPanelOverlay').classList.add('show');
-}
-document.getElementById('btnOwnerPanel').onclick = openOwnerPanel;
-document.getElementById('ownerPanelCancelBtn').onclick = ()=>document.getElementById('ownerPanelOverlay').classList.remove('show');
-document.getElementById('ownerPanelOverlay').addEventListener('click', e=>{
-  if(e.target.id==='ownerPanelOverlay') document.getElementById('ownerPanelOverlay').classList.remove('show');
-});
-
-function renderPlatformVendorList(){
-  const list = document.getElementById('platformVendorList');
-  if(platformVendors.length===0){
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-soft);font-size:13px;">No paid vendors yet — add your first one below.</div>';
-    return;
-  }
-  list.innerHTML = platformVendors.map(v=>{
-    const initial = (v.name||'?').trim().charAt(0).toUpperCase();
-    const logoHtml = v.logo
-      ? `<img class="pv-logo" src="${v.logo}" alt="">`
-      : `<span class="pv-logo-fallback">${escapeHtml(initial)}</span>`;
-    return `<div class="pv-item" data-pv-id="${v.id}">
-      ${logoHtml}
-      <div class="pv-info">
-        <div class="pv-name">${escapeHtml(v.name)}</div>
-        <div class="pv-meta">${escapeHtml(v.category||'')}${v.phone?' · '+escapeHtml(v.phone):''}${v.website?' · <a href="'+escapeHtml(v.website)+'" target="_blank" rel="noopener" style="color:var(--maroon);">website</a>':''}</div>
-        ${v.tagline?`<div class="pv-meta" style="font-style:italic;">${escapeHtml(v.tagline)}</div>`:''}
-      </div>
-      <div class="pv-actions">
-        <button class="icon-btn" data-edit-pv="${v.id}" title="Edit">✎</button>
-        <button class="icon-btn danger" data-del-pv="${v.id}" title="Remove">🗑</button>
-      </div>
-    </div>`;
-  }).join('');
-  renderTicker(); // Update ticker immediately
-}
-
-document.getElementById('platformVendorList').addEventListener('click', e=>{
-  const editBtn = e.target.closest('[data-edit-pv]');
-  const delBtn = e.target.closest('[data-del-pv]');
-  if(editBtn){
-    const v = platformVendors.find(x=>x.id===editBtn.dataset.editPv);
-    openPvModal(v);
-  }
-  if(delBtn){
-    const vid = delBtn.dataset.delPv;
-    const v = platformVendors.find(x=>x.id===vid);
-    if(v && confirm(`Remove "${v.name}" from the platform ad list? This only affects this session — download the updated file to make it permanent.`)){
-      platformVendors = platformVendors.filter(x=>x.id!==vid);
-      renderPlatformVendorList();
-    }
-  }
-});
-
-document.getElementById('btnAddPlatformVendor').onclick = ()=>openPvModal(null);
-
-function openPvModal(v){
-  editingPvId = v ? v.id : null;
-  pendingPvLogo = undefined;
-  document.getElementById('pvModalTitle').textContent = v ? 'Edit platform vendor' : 'Add platform vendor';
-  document.getElementById('pvName').value = v ? v.name : '';
-  document.getElementById('pvCategory').value = v ? (v.category||'') : '';
-  document.getElementById('pvPhone').value = v ? (v.phone||'') : '';
-  document.getElementById('pvWebsite').value = v ? (v.website||'') : '';
-  document.getElementById('pvTagline').value = v ? (v.tagline||'') : '';
-  refreshPvLogoPreview(v ? (v.logo||null) : null);
-  document.getElementById('platformVendorModalOverlay').classList.add('show');
-  setTimeout(()=>document.getElementById('pvName').focus(), 50);
-}
-function closePvModal(){
-  document.getElementById('platformVendorModalOverlay').classList.remove('show');
-  editingPvId = null;
-}
-document.getElementById('pvModalCancelBtn').onclick = closePvModal;
-document.getElementById('platformVendorModalOverlay').addEventListener('click', e=>{
-  if(e.target.id==='platformVendorModalOverlay') closePvModal();
-});
-
-function refreshPvLogoPreview(dataUrl){
-  const img = document.getElementById('pvLogoPreview');
-  const ph = document.getElementById('pvLogoPlaceholder');
-  if(dataUrl){ img.src=dataUrl; img.style.display='block'; ph.style.display='none'; }
-  else { img.style.display='none'; ph.style.display='block'; }
-}
-document.getElementById('btnPickPvLogo').onclick = ()=>document.getElementById('pvLogoFileInput').click();
-document.getElementById('pvLogoFileInput').addEventListener('change', e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  if(!file.type.startsWith('image/')){ showToast('Please choose an image file'); return; }
-  const reader = new FileReader();
-  reader.onload = evt=>{ pendingPvLogo = evt.target.result; refreshPvLogoPreview(pendingPvLogo); };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-});
-document.getElementById('btnClearPvLogo').onclick = ()=>{ pendingPvLogo = null; refreshPvLogoPreview(null); };
-
-document.getElementById('pvModalSaveBtn').onclick = ()=>{
-  const name = document.getElementById('pvName').value.trim();
-  if(!name){ showToast('Enter a vendor name'); return; }
-  let website = document.getElementById('pvWebsite').value.trim();
-  if(website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
-  if(editingPvId){
-    const v = platformVendors.find(x=>x.id===editingPvId);
-    if(v){
-      v.name=name; v.category=document.getElementById('pvCategory').value.trim();
-      v.phone=document.getElementById('pvPhone').value.trim();
-      v.website=website; v.tagline=document.getElementById('pvTagline').value.trim();
-      if(pendingPvLogo!==undefined) v.logo = pendingPvLogo||'';
-    }
-  } else {
-    platformVendors.push({
-      id:'pv_'+Date.now(), name, category:document.getElementById('pvCategory').value.trim(),
-      phone:document.getElementById('pvPhone').value.trim(), website,
-      tagline:document.getElementById('pvTagline').value.trim(),
-      logo: pendingPvLogo||''
-    });
-  }
-  closePvModal();
-  renderPlatformVendorList();
-  showToast('Platform vendor saved — download updated file to make permanent');
-};
-
-/* ---------- Download updated file with baked-in platform vendors ---------- */
-document.getElementById('btnDownloadUpdatedFile').onclick = ()=>{
-  const fs = require ? null : null; // browser only
-  const html = document.documentElement.outerHTML;
-  // Replace the PLATFORM_VENDORS constant with the current runtime list
-  const pvJson = JSON.stringify(platformVendors, null, 2);
-  const updated = html.replace(
-    /const PLATFORM_VENDORS = \[[\s\S]*?\];/,
-    `const PLATFORM_VENDORS = ${pvJson};`
-  );
-  const blob = new Blob([updated], {type:'text/html'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'vivaah-ledger-customer.html';
-  a.click();
-  URL.revokeObjectURL(a.href);
-  showToast('Updated file downloaded — this copy has your paid vendors baked in');
-};
-
 /* ---------- Session restore + initial lock check ---------- */
 async function initAuth(){
-  // Check session storage first (survives refresh in same tab)
   const sessionRole = sessionStorage.getItem('vivaah-role');
-  if(sessionRole && ['admin','editor','viewer'].includes(sessionRole)){
+  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole)){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
-  // Check local storage "remember me"
   const rememberedRole = localStorage.getItem('vivaah-role');
-  if(rememberedRole && ['admin','editor','viewer'].includes(rememberedRole)){
+  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole)){
     setRole(rememberedRole);
     sessionStorage.setItem('vivaah-role', rememberedRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
-  // Show lock screen — data loads after successful unlock
+  // Show lock screen
 }
 
 /* ================================================================ */
@@ -1671,10 +1408,9 @@ const WRITER_TRACKED_EVENTS = ['Kankotri']; // events tracking writer (calligrap
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
-let eventTimeline = {}; // keyed by event name: {date,startTime,venue,brideDressCode,groomDressCode,cateringVendorId,menuFileType,menuData}
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1742,8 +1478,8 @@ async function loadData(){
     if(r){ reminders = {...reminders, ...JSON.parse(r)}; }
   }catch(e){ /* keep defaults */ }
   try{
-    const t = await storageGet('wedding-timeline');
-    if(t){ eventTimeline = JSON.parse(t); }
+    const tl = await storageGet('wedding-timeline');
+    if(tl){ eventTimeline = JSON.parse(tl); }
   }catch(e){ eventTimeline = {}; }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
@@ -1761,10 +1497,6 @@ async function saveFunctions(){
 }
 async function saveBranding(){
   await storageSet('wedding-branding', JSON.stringify(branding));
-  queueCloudSave();
-}
-async function saveTimeline(){
-  await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
   queueCloudSave();
 }
 async function saveGuests(){
@@ -1963,7 +1695,6 @@ async function onSignedIn(){
       functions = cloudData.functions && cloudData.functions.length ? cloudData.functions : functions;
       guests = cloudData.guests || guests;
       reminders = cloudData.reminders || reminders;
-      eventTimeline = cloudData.eventTimeline || eventTimeline;
       // Branding: prefer cloud logo, fall back to local
       const cloudBrandingLogo = cloudLogos.brandingLogo || '';
       branding = {
@@ -2017,10 +1748,7 @@ async function pushToSheet(){
   // A1 — main data (vendors, functions, reminders, branding text) — logos excluded (in B1)
   const vendorsForSync = vendors.map(({logo, ...rest})=>rest);
   const brandingForSync = {...branding, logo: ''};
-  const timelineForSync = Object.fromEntries(
-    Object.entries(eventTimeline).map(([ev, t])=>([ev, {...t, menuData:''}]))
-  ); // exclude menu files (base64) from sync payload — too large
-  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, eventTimeline: timelineForSync, savedAt: new Date().toISOString()});
+  const mainPayload = JSON.stringify({vendors: vendorsForSync, functions, reminders, branding: brandingForSync, savedAt: new Date().toISOString()});
   // B1 — logos only (compressed base64, separate cell)
   const logosPayload = JSON.stringify({
     vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
@@ -2081,304 +1809,6 @@ function render(){
   renderGuests();
   renderTimeline();
 }
-
-/* ---------------- Event timeline ---------------- */
-function renderTimeline(){
-  const grid = document.getElementById('timelineGrid');
-  if(!grid) return;
-  // Populate caterer vendor dropdowns and update vendor selects in reminders
-  const cateringVendors = vendors.filter(v=>/cater/i.test(v.category||''));
-  // Update reminder vendor selects
-  ['Trial','Clothes'].forEach(cap=>{
-    const sel = document.getElementById(cap.toLowerCase()+'Vendor');
-    if(!sel) return;
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">Link to vendor…</option>' +
-      vendors.map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
-    sel.value = cur;
-  });
-
-  grid.innerHTML = WEDDING_EVENTS.map(ev=>{
-    const t = eventTimeline[ev] || {};
-    const isOpen = t._open || false;
-    const dateDisplay = t.date ? new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : 'Date not set';
-    const hasMenu = t.menuData && t.menuFileName;
-    return `
-    <div class="event-detail-card" data-ev="${escapeHtml(ev)}">
-      <div class="event-detail-head" data-ev-toggle="${escapeHtml(ev)}">
-        <h4>${escapeHtml(ev)}</h4>
-        <span class="ed-date">${dateDisplay}${t.startTime?' · '+escapeHtml(t.startTime):''}</span>
-      </div>
-      <div class="event-detail-body ${isOpen?'open':''}" id="edb-${escapeHtml(ev).replace(/[^a-z0-9]/gi,'_')}">
-        <div class="ed-field-row">
-          <div class="ed-field">
-            <label>Date</label>
-            <input type="date" data-tl-field="date" data-tl-ev="${escapeHtml(ev)}" value="${t.date||''}">
-          </div>
-          <div class="ed-field">
-            <label>Start time</label>
-            <input type="time" data-tl-field="startTime" data-tl-ev="${escapeHtml(ev)}" value="${t.startTime||''}">
-          </div>
-        </div>
-        <div class="ed-field">
-          <label>Venue / location</label>
-          <input type="text" data-tl-field="venue" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.venue||'')}" placeholder="e.g. Royal Banquet Hall, Ahmedabad">
-        </div>
-        <div class="ed-dress-section">
-          <h5>Dress code</h5>
-          <div class="ed-field-row">
-            <div class="ed-field">
-              <label>👰 Bride</label>
-              <input type="text" data-tl-field="brideDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.brideDressCode||'')}" placeholder="e.g. Red lehenga">
-            </div>
-            <div class="ed-field">
-              <label>🤵 Groom</label>
-              <input type="text" data-tl-field="groomDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.groomDressCode||'')}" placeholder="e.g. Ivory sherwani">
-            </div>
-          </div>
-        </div>
-        <div class="ed-menu-section">
-          <div class="ed-field">
-            <label>Caterer</label>
-            <select data-tl-field="cateringVendorId" data-tl-ev="${escapeHtml(ev)}">
-              <option value="">Select caterer…</option>
-              ${vendors.map(v=>`<option value="${v.id}"${t.cateringVendorId===v.id?' selected':''}>${escapeHtml(v.name)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="ed-field" style="margin-top:8px;">
-            <label>Catering menu (PDF or image)</label>
-            <div class="ed-menu-actions">
-              <input type="file" id="menuFile_${escapeHtml(ev).replace(/[^a-z0-9]/gi,'_')}" accept="image/*,application/pdf" style="display:none;">
-              <button class="btn btn-ghost" data-menu-pick="${escapeHtml(ev)}">📎 Upload menu</button>
-              ${hasMenu ? `<button class="btn btn-ghost" data-menu-view="${escapeHtml(ev)}">👁 View</button>
-              <button class="btn btn-ghost" data-menu-clear="${escapeHtml(ev)}" style="color:var(--rust);">✕ Remove</button>` : ''}
-            </div>
-            ${hasMenu ? `<div class="ed-menu-preview ${t.menuFileType==='pdf'?'has-pdf':''}">
-              ${t.menuFileType==='pdf' ?
-                `📄 <span>${escapeHtml(t.menuFileName)}</span>` :
-                `<img src="${t.menuData}" alt="Menu">`
-              }
-            </div>` : ''}
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// Timeline event delegation
-document.addEventListener('click', e=>{
-  const toggle = e.target.closest('[data-ev-toggle]');
-  if(toggle){
-    const ev = toggle.dataset.evToggle;
-    eventTimeline[ev] = eventTimeline[ev] || {};
-    eventTimeline[ev]._open = !eventTimeline[ev]._open;
-    renderTimeline(); return;
-  }
-  const menuPick = e.target.closest('[data-menu-pick]');
-  if(menuPick){
-    const ev = menuPick.dataset.menuPick;
-    const fileInput = document.getElementById('menuFile_'+ev.replace(/[^a-z0-9]/gi,'_'));
-    if(fileInput) fileInput.click(); return;
-  }
-  const menuView = e.target.closest('[data-menu-view]');
-  if(menuView){
-    const ev = menuView.dataset.menuView;
-    const t = eventTimeline[ev] || {};
-    if(t.menuData){
-      const win = window.open('');
-      if(t.menuFileType==='pdf'){
-        win.document.write(`<iframe src="${t.menuData}" style="width:100%;height:100vh;border:0;"></iframe>`);
-      } else {
-        win.document.write(`<img src="${t.menuData}" style="max-width:100%;">`);
-      }
-    }
-    return;
-  }
-  const menuClear = e.target.closest('[data-menu-clear]');
-  if(menuClear){
-    const ev = menuClear.dataset.menuClear;
-    eventTimeline[ev] = eventTimeline[ev] || {};
-    delete eventTimeline[ev].menuData;
-    delete eventTimeline[ev].menuFileName;
-    delete eventTimeline[ev].menuFileType;
-    saveTimeline(); renderTimeline(); return;
-  }
-});
-
-// Timeline field changes
-document.addEventListener('change', e=>{
-  const field = e.target.dataset.tlField;
-  const ev = e.target.dataset.tlEv;
-  if(!field || !ev) return;
-  eventTimeline[ev] = eventTimeline[ev] || {};
-  eventTimeline[ev][field] = e.target.value;
-  saveTimeline();
-  if(field==='date'||field==='startTime') renderTimeline(); // update header date display
-});
-
-// Menu file uploads
-document.addEventListener('change', e=>{
-  if(!e.target.id || !e.target.id.startsWith('menuFile_')) return;
-  const file = e.target.files[0];
-  if(!file) return;
-  const evKey = e.target.id.replace('menuFile_','').replace(/_/g,' ');
-  const ev = WEDDING_EVENTS.find(ev=>ev.replace(/[^a-z0-9]/gi,'_')===e.target.id.replace('menuFile_','')) || evKey;
-  if(file.size > 3*1024*1024){ showToast('File too large — keep menus under 3MB'); return; }
-  const reader = new FileReader();
-  reader.onload = evt=>{
-    eventTimeline[ev] = eventTimeline[ev] || {};
-    eventTimeline[ev].menuData = evt.target.result;
-    eventTimeline[ev].menuFileName = file.name;
-    eventTimeline[ev].menuFileType = file.type.includes('pdf') ? 'pdf' : 'image';
-    saveTimeline(); renderTimeline();
-    showToast('Menu uploaded for '+ev);
-  };
-  reader.readAsDataURL(file);
-  e.target.value = '';
-});
-
-/* ---------------- Print panel ---------------- */
-document.getElementById('btnPrint').onclick = ()=>openPrintPanel();
-document.getElementById('btnPrintFunctionWise').onclick = ()=>openPrintPanel();
-document.getElementById('btnPrintAll').onclick = ()=>printAll();
-
-function openPrintPanel(){
-  const panel = document.getElementById('printPanelOverlay');
-  if(panel) panel.classList.add('show');
-  else printAll();
-}
-
-document.getElementById('printPanelCloseBtn').onclick = ()=>{
-  document.getElementById('printPanelOverlay').classList.remove('show');
-};
-document.getElementById('printPanelOverlay').addEventListener('click', e=>{
-  if(e.target.id==='printPanelOverlay') document.getElementById('printPanelOverlay').classList.remove('show');
-});
-
-function setPrintDate(){
-  document.getElementById('printDate').textContent = 'Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-}
-function closePrintPanel(){
-  document.getElementById('printPanelOverlay').classList.remove('show');
-}
-
-// Print everything
-document.getElementById('printOptAll').onclick = ()=>{
-  closePrintPanel(); setPrintDate();
-  document.querySelectorAll('tr.detail-row, tr.guest-detail-row').forEach(r=>r.classList.add('open'));
-  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
-  document.body.dataset.printMode = 'all';
-  window.print();
-  delete document.body.dataset.printMode;
-};
-
-// Vendor list only — hide guest card, timeline, reminders, catering during print
-document.getElementById('printOptVendors').onclick = ()=>{
-  closePrintPanel(); setPrintDate();
-  document.querySelectorAll('tr.detail-row').forEach(r=>r.classList.add('open'));
-  document.body.dataset.printMode = 'vendors';
-  window.print();
-  delete document.body.dataset.printMode;
-};
-
-// Complete guest list — hide vendor ledger, timeline, reminders during print
-document.getElementById('printOptGuests').onclick = ()=>{
-  closePrintPanel(); setPrintDate();
-  document.querySelectorAll('tr.guest-detail-row').forEach(r=>r.classList.add('open'));
-  document.body.dataset.printMode = 'guests';
-  window.print();
-  delete document.body.dataset.printMode;
-};
-
-// Function-wise guest lists — print each event's guests as separate sections
-document.getElementById('printOptFunctionWise').onclick = ()=>{
-  closePrintPanel(); setPrintDate();
-  document.body.dataset.printMode = 'function-wise';
-  // Build a temporary print-only div with one section per event
-  const prevFilter = activeEventFilter;
-  const printDiv = document.createElement('div');
-  printDiv.id = 'functionWisePrint';
-  printDiv.style.cssText = 'display:none;';
-  printDiv.innerHTML = WEDDING_EVENTS.map(ev=>{
-    const t = eventTimeline[ev] || {};
-    const evGuests = guests.filter(g=>{ const c=guestEventCounts(g,ev); return WRITER_TRACKED_EVENTS.includes(ev)?(c.adults>0||c.writer>0):(c.adults>0||c.kids>0); });
-    const total = evGuests.reduce((s,g)=>{ const c=guestEventCounts(g,ev); return s+c.adults+(WRITER_TRACKED_EVENTS.includes(ev)?c.writer:c.kids); },0);
-    return `<div class="fw-section" style="page-break-after:always;padding:20px 0;">
-      <h2 style="font-family:'Cormorant Garamond',serif;color:#3E0F1C;margin:0 0 4px;">${escapeHtml(ev)}</h2>
-      <div style="font-size:12px;color:#6b5d52;margin-bottom:12px;">
-        ${t.date?new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}):''} 
-        ${t.startTime?'· '+escapeHtml(t.startTime):''} 
-        ${t.venue?'· '+escapeHtml(t.venue):''}
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="border-bottom:2px solid #E3D7C2;">
-          <th style="text-align:left;padding:6px 8px;">Family</th>
-          <th style="text-align:left;padding:6px 8px;">Phone</th>
-          <th style="text-align:left;padding:6px 8px;">Side</th>
-          <th style="text-align:right;padding:6px 8px;">Adults</th>
-          <th style="text-align:right;padding:6px 8px;">${WRITER_TRACKED_EVENTS.includes(ev)?'Writers':'Kids'}</th>
-          ${LADIES_TRACKED_EVENTS.includes(ev)?'<th style="text-align:right;padding:6px 8px;">Ladies</th>':''}
-        </tr></thead>
-        <tbody>${evGuests.map((g,i)=>{
-          const c=guestEventCounts(g,ev);
-          return `<tr style="border-bottom:1px solid #E3D7C2;background:${i%2?'#F3EBDB':'#fff'};">
-            <td style="padding:6px 8px;font-weight:600;">${escapeHtml(g.name)}</td>
-            <td style="padding:6px 8px;">${escapeHtml(g.phone||'—')}</td>
-            <td style="padding:6px 8px;">${escapeHtml(g.side||'—')}</td>
-            <td style="padding:6px 8px;text-align:right;">${c.adults}</td>
-            <td style="padding:6px 8px;text-align:right;">${WRITER_TRACKED_EVENTS.includes(ev)?c.writer:c.kids}</td>
-            ${LADIES_TRACKED_EVENTS.includes(ev)?`<td style="padding:6px 8px;text-align:right;">${c.ladies}</td>`:''}
-          </tr>`;
-        }).join('')}</tbody>
-        <tfoot><tr style="border-top:2px solid #5C1A2B;font-weight:700;">
-          <td colspan="3" style="padding:6px 8px;">Total — ${evGuests.length} families</td>
-          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).adults,0)}</td>
-          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+(WRITER_TRACKED_EVENTS.includes(ev)?guestEventCounts(g,ev).writer:guestEventCounts(g,ev).kids),0)}</td>
-          ${LADIES_TRACKED_EVENTS.includes(ev)?`<td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).ladies,0)}</td>`:''}
-        </tr></tfoot>
-      </table>
-    </div>`;
-  }).join('');
-  document.body.appendChild(printDiv);
-  // Temporarily show the print div and hide the main wrap
-  const mainWrap = document.querySelector('.wrap');
-  mainWrap.style.display = 'none';
-  printDiv.style.display = 'block';
-  window.print();
-  mainWrap.style.display = '';
-  printDiv.remove();
-  delete document.body.dataset.printMode;
-};
-
-// Timeline only
-document.getElementById('printOptTimeline').onclick = ()=>{
-  closePrintPanel(); setPrintDate();
-  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
-  document.body.dataset.printMode = 'timeline';
-  window.print();
-  delete document.body.dataset.printMode;
-  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.remove('open'));
-};
-
-function printFunctionGuests(ev){
-  setPrintDate();
-  const prevFilter = activeEventFilter;
-  activeEventFilter = ev;
-  renderGuests();
-  document.querySelectorAll('tr.guest-detail-row').forEach(r=>r.classList.add('open'));
-  window.print();
-  activeEventFilter = prevFilter;
-  renderGuests();
-}
-
-function printAll(){
-  setPrintDate();
-  document.querySelectorAll('tr.detail-row, tr.guest-detail-row').forEach(r=>r.classList.add('open'));
-  document.querySelectorAll('.event-detail-body').forEach(r=>r.classList.add('open'));
-  window.print();
-}
-
 
 function renderStats(){
   const totalBudget = vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
@@ -2898,97 +2328,6 @@ document.getElementById('brandingSaveBtn').onclick = async ()=>{
 };
 
 /* ---------------- Reminders (Trial / Clothes / Guest) ---------------- */
-const REMINDER_KEYS = ['trial', 'clothes', 'guest'];
-
-function renderReminders(){
-  REMINDER_KEYS.forEach(key=>{
-    const list = reminders[key] || [];
-    const ul = document.getElementById('list' + capitalize(key));
-    const countEl = document.getElementById('count' + capitalize(key));
-    const pending = list.filter(item=>!item.done).length;
-    countEl.textContent = pending;
-    if(list.length===0){
-      ul.innerHTML = '<div class="reminder-empty">Nothing added yet.</div>';
-      return;
-    }
-    const sorted = list.slice().sort((a,b)=>{
-      if(a.done !== b.done) return a.done ? 1 : -1;
-      return (a.date||'9999').localeCompare(b.date||'9999');
-    });
-    ul.innerHTML = sorted.map(item=>{
-      const vendorName = item.vendorId ? (vendors.find(v=>v.id===item.vendorId)||{}).name : '';
-      const meta = [
-        item.forPerson ? `👤 ${escapeHtml(item.forPerson)}` : '',
-        vendorName ? `🏪 ${escapeHtml(vendorName)}` : ''
-      ].filter(Boolean).join(' · ');
-      return `
-      <li class="reminder-item ${item.done?'done':''}" data-reminder-key="${key}" data-reminder-id="${item.id}">
-        <input type="checkbox" ${item.done?'checked':''} data-toggle-reminder>
-        <span class="r-body">
-          <span class="r-text">${escapeHtml(item.text)}</span>
-          ${meta ? `<span class="r-vendor">${meta}</span>` : ''}
-        </span>
-        ${item.date ? `<span class="r-date">${formatShortDate(item.date)}</span>` : ''}
-        <button class="r-del" data-del-reminder title="Remove">✕</button>
-      </li>`;
-    }).join('');
-  });
-}
-function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
-function formatShortDate(dateStr){
-  const d = new Date(dateStr);
-  if(isNaN(d)) return '';
-  return d.toLocaleDateString('en-IN', {day:'numeric', month:'short'});
-}
-
-function addReminder(key, text, date, vendorId, forPerson){
-  if(!text || !text.trim()) return false;
-  reminders[key] = reminders[key] || [];
-  reminders[key].push({id:uid(), text:text.trim(), date:date||'', done:false, vendorId:vendorId||'', forPerson:forPerson||''});
-  saveReminders(); renderReminders();
-  return true;
-}
-
-REMINDER_KEYS.forEach(key=>{
-  const cap = capitalize(key);
-  document.querySelector(`[data-add-reminder="${key}"]`).onclick = ()=>{
-    const textInput = document.getElementById('input'+cap);
-    const dateInput = document.getElementById('date'+cap);
-    const personInput = document.getElementById(key+'Person');
-    const vendorSel = document.getElementById(key+'Vendor');
-    const vendorId = vendorSel ? vendorSel.value : '';
-    const forPerson = personInput ? personInput.value.trim() : '';
-    if(addReminder(key, textInput.value, dateInput.value, vendorId, forPerson)){
-      textInput.value = '';
-      dateInput.value = '';
-      if(personInput) personInput.value = '';
-      if(vendorSel) vendorSel.value = '';
-    } else {
-      showToast('Type something to add');
-    }
-  };
-  document.getElementById('input'+cap).addEventListener('keydown', (e)=>{
-    if(e.key==='Enter'){
-      document.querySelector(`[data-add-reminder="${key}"]`).click();
-    }
-  });
-});
-
-document.getElementById('remindersGrid').addEventListener('click', (e)=>{
-  const item = e.target.closest('.reminder-item');
-  if(!item) return;
-  const key = item.dataset.reminderKey;
-  const id = item.dataset.reminderId;
-  if(e.target.matches('[data-toggle-reminder]')){
-    const r = (reminders[key]||[]).find(x=>x.id===id);
-    if(r){ r.done = e.target.checked; saveReminders(); renderReminders(); }
-  }
-  if(e.target.closest('[data-del-reminder]')){
-    reminders[key] = (reminders[key]||[]).filter(x=>x.id!==id);
-    saveReminders(); renderReminders();
-  }
-});
-
 /* ---------------- Guest list ---------------- */
 let openGuestRowId = null;
 
@@ -3059,26 +2398,22 @@ function renderGuests(){
      ${!activeEventFilter && totalWriter>0 ? `<span><b>${totalWriter}</b> writers (Kankotri)</span>` : ''}
      <span style="opacity:0.75;">${summaryLabel}</span>`;
 
-  // Accommodation summary — only shown on "All" view
+  // Accommodation summary (only on All view)
   const accomEl = document.getElementById('accomSummary');
-  if(!activeEventFilter){
-    const outsideAhmedabad = guests.filter(g=>g.city && g.city.trim().toLowerCase()!=='ahmedabad').length;
-    const outsideGujarat = guests.filter(g=>g.state && g.state.trim().toLowerCase()!=='gujarat').length;
-    const outsideIndia = guests.filter(g=>g.country && g.country.trim().toLowerCase()!=='india').length;
+  if(accomEl && !activeEventFilter){
+    const outAhmedabad = guests.filter(g=>g.city&&g.city.trim().toLowerCase()!=='ahmedabad').length;
+    const outGujarat = guests.filter(g=>g.state&&g.state.trim().toLowerCase()!=='gujarat').length;
+    const international = guests.filter(g=>g.country&&!['india',''].includes(g.country.trim().toLowerCase())).length;
     const needAccom = guests.filter(g=>g.needsAccommodation);
     const totalRooms = needAccom.reduce((s,g)=>s+Number(g.rooms||0),0);
     const totalBeds = needAccom.reduce((s,g)=>s+Number(g.beds||0),0);
-    accomEl.innerHTML = `
-      <span class="accom-chip">🏙️ Outside Ahmedabad: <b>${outsideAhmedabad}</b></span>
-      <span class="accom-chip">📍 Outside Gujarat: <b>${outsideGujarat}</b></span>
-      <span class="accom-chip">✈️ International: <b>${outsideIndia}</b></span>
-      ${needAccom.length>0 ? `
-      <span class="accom-chip highlight">🏨 Need accommodation: <b>${needAccom.length}</b> families</span>
-      <span class="accom-chip highlight">🛏️ Rooms: <b>${totalRooms}</b> · Beds: <b>${totalBeds}</b></span>` : ''}
-    `;
-  } else {
-    accomEl.innerHTML = '';
-  }
+    accomEl.innerHTML = guests.some(g=>g.city||g.state||g.country||g.needsAccommodation) ? `
+      <span class="accom-chip">🏙 Outside Ahmedabad: <b>${outAhmedabad}</b></span>
+      <span class="accom-chip">📍 Outside Gujarat: <b>${outGujarat}</b></span>
+      <span class="accom-chip">✈️ International: <b>${international}</b></span>
+      ${needAccom.length>0?`<span class="accom-chip alert">🏨 Need accommodation: <b>${needAccom.length}</b> families</span><span class="accom-chip alert">🛏 Rooms: <b>${totalRooms}</b> · Beds: <b>${totalBeds}</b></span>`:''}
+    ` : '';
+  } else if(accomEl){ accomEl.innerHTML=''; }
 
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
   document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
@@ -3150,33 +2485,13 @@ function renderGuests(){
             </div>
             <!-- Accommodation & origin -->
             <div class="guest-expand-detail">
-              <div class="gx-field">
-                <label>City</label>
-                <input type="text" value="${escapeHtml(g.city||'')}" placeholder="e.g. Ahmedabad" data-gx="${g.id}|city">
-              </div>
-              <div class="gx-field">
-                <label>State</label>
-                <input type="text" value="${escapeHtml(g.state||'')}" placeholder="e.g. Gujarat" data-gx="${g.id}|state">
-              </div>
-              <div class="gx-field">
-                <label>Country</label>
-                <input type="text" value="${escapeHtml(g.country||'India')}" placeholder="India" data-gx="${g.id}|country">
-              </div>
-              <div class="gx-field" style="align-self:end;">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                  <input type="checkbox" ${g.needsAccommodation?'checked':''} data-gx="${g.id}|needsAccommodation">
-                  Needs accommodation
-                </label>
-              </div>
-              ${g.needsAccommodation ? `
-              <div class="gx-field">
-                <label>Rooms needed</label>
-                <input type="number" min="0" value="${g.rooms||''}" placeholder="0" data-gx="${g.id}|rooms">
-              </div>
-              <div class="gx-field">
-                <label>Beds needed</label>
-                <input type="number" min="0" value="${g.beds||''}" placeholder="0" data-gx="${g.id}|beds">
-              </div>` : ''}
+              <div class="gx-field"><label>City</label><input type="text" value="${escapeHtml(g.city||'')}" placeholder="e.g. Ahmedabad" data-gx="${g.id}|city"></div>
+              <div class="gx-field"><label>State</label><input type="text" value="${escapeHtml(g.state||'')}" placeholder="e.g. Gujarat" data-gx="${g.id}|state"></div>
+              <div class="gx-field"><label>Country</label><input type="text" value="${escapeHtml(g.country||'India')}" placeholder="India" data-gx="${g.id}|country"></div>
+              <div class="gx-field gx-field-full"><label class="gx-check"><input type="checkbox" ${g.needsAccommodation?'checked':''} data-gx="${g.id}|needsAccommodation"> Needs accommodation</label></div>
+              ${g.needsAccommodation?`
+              <div class="gx-field"><label>Rooms needed</label><input type="number" min="0" value="${g.rooms||''}" placeholder="0" data-gx="${g.id}|rooms"></div>
+              <div class="gx-field"><label>Beds needed</label><input type="number" min="0" value="${g.beds||''}" placeholder="0" data-gx="${g.id}|beds"></div>`:''}
             </div>
           </div>
         </td>
@@ -3264,18 +2579,19 @@ document.getElementById('guestTableBody').addEventListener('change', (e)=>{
 /* ---------------- Guest list Excel upload/download ---------------- */
 document.getElementById('btnGuestTemplate').onclick = ()=>{
   const wb = XLSX.utils.book_new();
-  function blankRow(name, phone, side){
-    const row = {'Family / Guest Name':name, 'Phone':phone, 'Side':side};
+  function blankRow(name, phone, side, city, state, country){
+    const row = {'Family / Guest Name':name,'Phone':phone,'Side':side,
+      'City':city||'','State':state||'','Country':country||'India',
+      'Needs Accommodation':'No','Rooms':'','Beds':''};
     WEDDING_EVENTS.forEach(ev=>{
       row[ev+' Adults'] = '';
-      // Kankotri tracks Writer instead of Kids
       if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = '';
       else row[ev+' Kids'] = '';
       if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = '';
     });
     return row;
   }
-  const example1 = blankRow('Asha Patel Family', '9876512345', 'Bride');
+  const example1 = blankRow('Asha Patel Family','9876512345','Bride','Ahmedabad','Gujarat','India');
   example1['Kankotri Adults']=2; example1['Kankotri Writer']=1;
   example1['Ganesh-Grahshanti-Mosalu Adults']=2; example1['Ganesh-Grahshanti-Mosalu Kids']=0; example1['Ganesh-Grahshanti-Mosalu Ladies']=1;
   example1['Mehendi Adults']=2; example1['Mehendi Kids']=1; example1['Mehendi Ladies']=1;
@@ -3283,10 +2599,11 @@ document.getElementById('btnGuestTemplate').onclick = ()=>{
   example1['Marriage Adults']=2; example1['Marriage Kids']=2;
   example1['Reception Adults']=2; example1['Reception Kids']=2;
 
-  const example2 = blankRow('Rohan Shah Family', '9876523456', 'Groom');
+  const example2 = blankRow('Sharma Family (Mumbai)','9876523456','Groom','Mumbai','Maharashtra','India');
   example2['Kankotri Adults']=3; example2['Kankotri Writer']=0;
   example2['Marriage Adults']=3; example2['Marriage Kids']=0;
   example2['Reception Adults']=3; example2['Reception Kids']=1;
+  example2['Needs Accommodation']='Yes'; example2['Rooms']=2; example2['Beds']=4;
 
   const sheet = XLSX.utils.json_to_sheet([example1, example2]);
   XLSX.utils.book_append_sheet(wb, sheet, 'Guest List');
@@ -3903,11 +3220,614 @@ document.getElementById('voiceFab').onclick = ()=>{
   }
 };
 
+/* ================================================================
+   OWNER PANEL & PLATFORM VENDOR MANAGEMENT
+   ================================================================ */
+document.getElementById('btnOwnerPanel').onclick = ()=>{
+  document.getElementById('ownerPinDisplay').textContent = OWNER_PIN;
+  renderPlatformVendorList();
+  document.getElementById('ownerPanelOverlay').classList.add('show');
+};
+document.getElementById('ownerPanelCancelBtn').onclick = ()=>document.getElementById('ownerPanelOverlay').classList.remove('show');
+document.getElementById('ownerPanelOverlay').addEventListener('click', e=>{ if(e.target.id==='ownerPanelOverlay') document.getElementById('ownerPanelOverlay').classList.remove('show'); });
+
+function renderPlatformVendorList(){
+  const list = document.getElementById('platformVendorList');
+  if(platformVendors.length===0){ list.innerHTML='<div style="text-align:center;padding:20px;color:var(--ink-soft);font-size:13px;">No paid vendors yet.</div>'; return; }
+  list.innerHTML = platformVendors.map(v=>{
+    const init = (v.name||'?').trim().charAt(0).toUpperCase();
+    const logoHtml = v.logo ? `<img class="pv-logo" src="${v.logo}" alt="">` : `<span class="pv-logo-fallback">${escapeHtml(init)}</span>`;
+    return `<div class="pv-item" data-pv-id="${v.id}">${logoHtml}<div class="pv-info"><div class="pv-name">${escapeHtml(v.name)}</div><div class="pv-meta">${escapeHtml(v.category||'')}${v.phone?' · '+escapeHtml(v.phone):''}${v.tagline?' · <em>'+escapeHtml(v.tagline)+'</em>':''}</div></div><div class="pv-actions"><button class="icon-btn" data-edit-pv="${v.id}">✎</button><button class="icon-btn danger" data-del-pv="${v.id}">🗑</button></div></div>`;
+  }).join('');
+  renderTicker();
+}
+document.getElementById('btnAddPlatformVendor').onclick = ()=>openPvModal(null);
+document.getElementById('platformVendorList').addEventListener('click', e=>{
+  const editBtn = e.target.closest('[data-edit-pv]');
+  const delBtn = e.target.closest('[data-del-pv]');
+  if(editBtn){ const v=platformVendors.find(x=>x.id===editBtn.dataset.editPv); openPvModal(v); }
+  if(delBtn){ const vid=delBtn.dataset.delPv; if(confirm('Remove this paid vendor?')){ platformVendors=platformVendors.filter(x=>x.id!==vid); renderPlatformVendorList(); } }
+});
+function openPvModal(v){
+  editingPvId = v?v.id:null; pendingPvLogo=undefined;
+  document.getElementById('pvModalTitle').textContent = v?'Edit platform vendor':'Add platform vendor';
+  document.getElementById('pvName').value=v?v.name:''; document.getElementById('pvCategory').value=v?(v.category||''):'';
+  document.getElementById('pvPhone').value=v?(v.phone||''):''; document.getElementById('pvWebsite').value=v?(v.website||''):'';
+  document.getElementById('pvTagline').value=v?(v.tagline||''):'';
+  refreshPvLogoPreview(v?(v.logo||null):null);
+  document.getElementById('platformVendorModalOverlay').classList.add('show');
+}
+function closePvModal(){ document.getElementById('platformVendorModalOverlay').classList.remove('show'); editingPvId=null; }
+document.getElementById('pvModalCancelBtn').onclick = closePvModal;
+document.getElementById('platformVendorModalOverlay').addEventListener('click', e=>{ if(e.target.id==='platformVendorModalOverlay') closePvModal(); });
+function refreshPvLogoPreview(dataUrl){
+  const img=document.getElementById('pvLogoPreview'), ph=document.getElementById('pvLogoPlaceholder');
+  if(dataUrl){img.src=dataUrl;img.style.display='block';ph.style.display='none';}
+  else{img.style.display='none';ph.style.display='block';}
+}
+document.getElementById('btnPickPvLogo').onclick=()=>document.getElementById('pvLogoFileInput').click();
+document.getElementById('pvLogoFileInput').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader(); reader.onload=evt=>{pendingPvLogo=evt.target.result;refreshPvLogoPreview(pendingPvLogo);}; reader.readAsDataURL(file); e.target.value='';
+});
+document.getElementById('btnClearPvLogo').onclick=()=>{pendingPvLogo=null;refreshPvLogoPreview(null);};
+document.getElementById('pvModalSaveBtn').onclick=()=>{
+  const name=document.getElementById('pvName').value.trim(); if(!name){showToast('Enter a vendor name');return;}
+  let website=document.getElementById('pvWebsite').value.trim();
+  if(website&&!/^https?:\/\//i.test(website)) website='https://'+website;
+  const data={id:editingPvId||'pv_'+Date.now(), name, category:document.getElementById('pvCategory').value.trim(), phone:document.getElementById('pvPhone').value.trim(), website, tagline:document.getElementById('pvTagline').value.trim(), logo:''};
+  if(editingPvId){ const v=platformVendors.find(x=>x.id===editingPvId); if(v){Object.assign(v,data); if(pendingPvLogo!==undefined) v.logo=pendingPvLogo||'';} }
+  else{ data.logo=pendingPvLogo||''; platformVendors.push(data); }
+  closePvModal(); renderPlatformVendorList(); showToast('Vendor saved — download updated file to make permanent');
+};
+
+/* Download updated file with baked-in platform vendors */
+document.getElementById('btnDownloadUpdatedFile').onclick=()=>{
+  const html=document.documentElement.outerHTML;
+  const pvJson=JSON.stringify(platformVendors,null,2);
+  const updated=html.replace(/const PLATFORM_VENDORS = \[[\s\S]*?\];/,`const PLATFORM_VENDORS = ${pvJson};`);
+  const blob=new Blob([updated],{type:'text/html'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='vivaah-ledger-customer.html'; a.click(); URL.revokeObjectURL(a.href);
+  showToast('Updated file downloaded — share this copy with your customer');
+};
+
+/* ================================================================
+   ADMIN SETTINGS — PIN management
+   ================================================================ */
+document.getElementById('btnAdminSettings').onclick=()=>{
+  ['Admin','Editor','Viewer'].forEach(r=>document.getElementById('new'+r+'Pin').value='');
+  document.getElementById('adminSettingsOverlay').classList.add('show');
+};
+document.getElementById('adminSettingsCancelBtn').onclick=()=>document.getElementById('adminSettingsOverlay').classList.remove('show');
+document.getElementById('adminSettingsOverlay').addEventListener('click',e=>{if(e.target.id==='adminSettingsOverlay')document.getElementById('adminSettingsOverlay').classList.remove('show');});
+document.getElementById('adminSettingsSaveBtn').onclick=async()=>{
+  let changed=0;
+  for(const role of ['admin','editor','viewer']){
+    const cap=role.charAt(0).toUpperCase()+role.slice(1);
+    const val=document.getElementById('new'+cap+'Pin').value.trim();
+    if(val){ if(!/^\d{4}$/.test(val)){showToast('PINs must be exactly 4 digits');return;} await savePin(role,val); changed++; }
+  }
+  document.getElementById('adminSettingsOverlay').classList.remove('show');
+  showToast(changed?`${changed} PIN${changed===1?'':'s'} updated`:'No changes made');
+};
+
+/* ================================================================
+   EVENT TIMELINE
+   ================================================================ */
+async function saveTimeline(){ await storageSet('wedding-timeline',JSON.stringify(eventTimeline)); queueCloudSave(); }
+
+function renderTimeline(){
+  const grid=document.getElementById('timelineGrid'); if(!grid) return;
+  // Update vendor selects in reminder cards
+  ['trial','clothes'].forEach(key=>{
+    const sel=document.getElementById(key+'Vendor'); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Link to vendor…</option>'+vendors.map(v=>`<option value="${v.id}"${cur===v.id?' selected':''}>${escapeHtml(v.name)}</option>`).join('');
+    sel.value=cur;
+  });
+  grid.innerHTML=WEDDING_EVENTS.map(ev=>{
+    const t=eventTimeline[ev]||{};
+    const dateDisplay=t.date?new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Date not set';
+    const hasMenu=t.menuData&&t.menuFileName;
+    const evKey=ev.replace(/[^a-z0-9]/gi,'_');
+    return `<div class="event-detail-card">
+      <div class="event-detail-head" data-ev-toggle="${escapeHtml(ev)}">
+        <h4>${escapeHtml(ev)}</h4>
+        <span class="ed-date">${dateDisplay}${t.startTime?' · '+escapeHtml(t.startTime):''}</span>
+      </div>
+      <div class="event-detail-body${t._open?' open':''}" id="edb_${evKey}">
+        <div class="ed-field-row">
+          <div class="ed-field"><label>Date</label><input type="date" data-tl-field="date" data-tl-ev="${escapeHtml(ev)}" value="${t.date||''}"></div>
+          <div class="ed-field"><label>Start time</label><input type="time" data-tl-field="startTime" data-tl-ev="${escapeHtml(ev)}" value="${t.startTime||''}"></div>
+        </div>
+        <div class="ed-field"><label>Venue / location</label><input type="text" data-tl-field="venue" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.venue||'')}" placeholder="e.g. Royal Banquet Hall"></div>
+        <div class="ed-dress-section">
+          <h5>Dress code</h5>
+          <div class="ed-field-row">
+            <div class="ed-field"><label>👰 Bride</label><input type="text" data-tl-field="brideDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.brideDressCode||'')}" placeholder="e.g. Red lehenga"></div>
+            <div class="ed-field"><label>🤵 Groom</label><input type="text" data-tl-field="groomDressCode" data-tl-ev="${escapeHtml(ev)}" value="${escapeHtml(t.groomDressCode||'')}" placeholder="e.g. Ivory sherwani"></div>
+          </div>
+        </div>
+        <div class="ed-menu-section">
+          <div class="ed-field"><label>Caterer</label>
+            <select data-tl-field="cateringVendorId" data-tl-ev="${escapeHtml(ev)}">
+              <option value="">Select caterer…</option>
+              ${vendors.map(v=>`<option value="${v.id}"${t.cateringVendorId===v.id?' selected':''}>${escapeHtml(v.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="ed-field" style="margin-top:8px;"><label>Catering menu (PDF or image)</label>
+            <div class="ed-menu-actions">
+              <input type="file" id="menuFile_${evKey}" accept="image/*,application/pdf" style="display:none;">
+              <button class="btn btn-ghost btn-tiny" data-menu-pick="${escapeHtml(ev)}">📎 Upload menu</button>
+              ${hasMenu?`<button class="btn btn-ghost btn-tiny" data-menu-view="${escapeHtml(ev)}">👁 View</button><button class="btn btn-ghost btn-tiny" data-menu-clear="${escapeHtml(ev)}" style="color:var(--rust);">✕</button>`:''}
+            </div>
+            ${hasMenu?`<div class="ed-menu-preview${t.menuFileType==='pdf'?' pdf-preview':''}">${t.menuFileType==='pdf'?'📄 '+escapeHtml(t.menuFileName):`<img src="${t.menuData}" alt="Menu">`}</div>`:''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Timeline event delegation
+document.addEventListener('click',e=>{
+  const toggle=e.target.closest('[data-ev-toggle]');
+  if(toggle){ const ev=toggle.dataset.evToggle; eventTimeline[ev]=eventTimeline[ev]||{}; eventTimeline[ev]._open=!eventTimeline[ev]._open; renderTimeline(); return; }
+  const menuPick=e.target.closest('[data-menu-pick]');
+  if(menuPick){ const ev=menuPick.dataset.menuPick; const fi=document.getElementById('menuFile_'+ev.replace(/[^a-z0-9]/gi,'_')); if(fi) fi.click(); return; }
+  const menuView=e.target.closest('[data-menu-view]');
+  if(menuView){ const t=eventTimeline[menuView.dataset.menuView]||{}; if(t.menuData){ const w=window.open(''); w.document.write(t.menuFileType==='pdf'?`<iframe src="${t.menuData}" style="width:100%;height:100vh;border:0;"></iframe>`:`<img src="${t.menuData}" style="max-width:100%;">`); } return; }
+  const menuClear=e.target.closest('[data-menu-clear]');
+  if(menuClear){ const ev=menuClear.dataset.menuClear; if(eventTimeline[ev]){delete eventTimeline[ev].menuData;delete eventTimeline[ev].menuFileName;delete eventTimeline[ev].menuFileType;} saveTimeline(); renderTimeline(); return; }
+});
+document.addEventListener('change',e=>{
+  const field=e.target.dataset.tlField, ev=e.target.dataset.tlEv;
+  if(!field||!ev) return;
+  eventTimeline[ev]=eventTimeline[ev]||{};
+  eventTimeline[ev][field]=e.target.value;
+  saveTimeline();
+  if(field==='date'||field==='startTime') renderTimeline();
+});
+// Menu file uploads
+document.addEventListener('change',e=>{
+  if(!e.target.id||!e.target.id.startsWith('menuFile_')) return;
+  const file=e.target.files[0]; if(!file) return;
+  const evKey=e.target.id.replace('menuFile_','');
+  const ev=WEDDING_EVENTS.find(ev=>ev.replace(/[^a-z0-9]/gi,'_')===evKey)||evKey.replace(/_/g,' ');
+  if(file.size>3*1024*1024){showToast('File too large — keep menus under 3MB');return;}
+  const reader=new FileReader(); reader.onload=evt=>{
+    eventTimeline[ev]=eventTimeline[ev]||{};
+    eventTimeline[ev].menuData=evt.target.result; eventTimeline[ev].menuFileName=file.name;
+    eventTimeline[ev].menuFileType=file.type.includes('pdf')?'pdf':'image';
+    saveTimeline(); renderTimeline(); showToast('Menu uploaded for '+ev);
+  }; reader.readAsDataURL(file); e.target.value='';
+});
+document.getElementById('btnPrintTimeline').onclick=()=>{
+  document.getElementById('printDate').textContent='Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  WEDDING_EVENTS.forEach(ev=>{eventTimeline[ev]=eventTimeline[ev]||{};eventTimeline[ev]._open=true;});
+  renderTimeline(); window.print();
+};
+
+/* ================================================================
+   GUEST ACCOMMODATION — change handler for expand detail fields
+   ================================================================ */
+document.getElementById('guestTableBody').addEventListener('change',e=>{
+  const gxKey=e.target.dataset.gx; if(!gxKey) return;
+  const [gid,field]=gxKey.split('|');
+  const g=guests.find(x=>x.id===gid); if(!g) return;
+  if(field==='needsAccommodation') g.needsAccommodation=e.target.checked;
+  else if(field==='rooms'||field==='beds') g[field]=Math.max(0,Number(e.target.value)||0);
+  else g[field]=e.target.value;
+  saveGuests(); renderGuests();
+},{capture:false});
+
+/* ================================================================
+   REMINDER ITEMS — vendor + person display
+   ================================================================ */
+const REMINDER_KEYS=['trial','clothes','guest'];
+function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function formatShortDate(d){const dt=new Date(d);return isNaN(dt)?'':dt.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+
+function renderReminders(){
+  REMINDER_KEYS.forEach(key=>{
+    const list=reminders[key]||[];
+    const ul=document.getElementById('list'+capitalize(key));
+    const countEl=document.getElementById('count'+capitalize(key));
+    if(!ul) return;
+    const pending=list.filter(i=>!i.done).length;
+    countEl.textContent=pending;
+    if(list.length===0){ul.innerHTML='<div class="reminder-empty">Nothing added yet.</div>';return;}
+    const sorted=[...list].sort((a,b)=>a.done===b.done?((a.date||'9999').localeCompare(b.date||'9999')):(a.done?1:-1));
+    ul.innerHTML=sorted.map(item=>{
+      const vendor=item.vendorId?vendors.find(v=>v.id===item.vendorId):null;
+      return `<li class="reminder-item${item.done?' done':''}" data-reminder-key="${key}" data-reminder-id="${item.id}">
+        <input type="checkbox"${item.done?' checked':''} data-toggle-reminder>
+        <div style="flex:1;">
+          <span class="r-text">${escapeHtml(item.text)}</span>
+          ${item.date?`<span class="r-date">${formatShortDate(item.date)}</span>`:''}
+          ${vendor?`<div class="r-vendor-tag">📦 ${escapeHtml(vendor.name)}</div>`:''}
+          ${item.forPerson?`<div class="r-person-tag">👤 ${escapeHtml(item.forPerson)}</div>`:''}
+        </div>
+        <button class="r-del" data-del-reminder>✕</button>
+      </li>`;
+    }).join('');
+  });
+}
+
+function addReminder(key,text,date,vendorId,forPerson){
+  if(!text||!text.trim()) return false;
+  reminders[key]=reminders[key]||[];
+  reminders[key].push({id:uid(),text:text.trim(),date:date||'',done:false,vendorId:vendorId||'',forPerson:forPerson||''});
+  saveReminders(); renderReminders(); return true;
+}
+
+// Wire reminder add buttons
+REMINDER_KEYS.forEach(key=>{
+  const cap=capitalize(key);
+  const addBtn=document.querySelector(`[data-add-reminder="${key}"]`);
+  if(addBtn) addBtn.onclick=()=>{
+    const text=document.getElementById('input'+cap).value;
+    const date=document.getElementById('date'+cap).value;
+    const vendorId=(key!=='guest'&&document.getElementById(key+'Vendor'))?document.getElementById(key+'Vendor').value:'';
+    const forPerson=(key!=='guest'&&document.getElementById(key+'Person'))?document.getElementById(key+'Person').value:'';
+    if(addReminder(key,text,date,vendorId,forPerson)){
+      document.getElementById('input'+cap).value='';
+      document.getElementById('date'+cap).value='';
+      if(key!=='guest'&&document.getElementById(key+'Person')) document.getElementById(key+'Person').value='';
+    } else showToast('Type something to add');
+  };
+  const textInput=document.getElementById('input'+cap);
+  if(textInput) textInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&addBtn) addBtn.click();});
+});
+
+document.getElementById('remindersGrid').addEventListener('click',e=>{
+  const item=e.target.closest('.reminder-item'); if(!item) return;
+  const key=item.dataset.reminderKey, id=item.dataset.reminderId;
+  if(e.target.matches('[data-toggle-reminder]')){
+    const r=(reminders[key]||[]).find(x=>x.id===id); if(r){r.done=e.target.checked;saveReminders();renderReminders();}
+  }
+  if(e.target.closest('[data-del-reminder]')){
+    reminders[key]=(reminders[key]||[]).filter(x=>x.id!==id); saveReminders(); renderReminders();
+  }
+});
+
+/* ================================================================
+   PRINT PANEL
+   ================================================================ */
+document.getElementById('btnPrint').onclick=()=>document.getElementById('printPanelOverlay').classList.add('show');
+document.getElementById('btnPrintGuests').onclick=()=>printSection('guests');
+document.getElementById('printPanelCloseBtn').onclick=()=>document.getElementById('printPanelOverlay').classList.remove('show');
+
+function printSection(mode,eventFilter){
+  document.getElementById('printPanelOverlay').classList.remove('show');
+  document.getElementById('printDate').textContent='Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.body.dataset.printMode=mode;
+  if(eventFilter) document.body.dataset.printEvent=eventFilter;
+  document.querySelectorAll('tr.detail-row,tr.guest-detail-row').forEach(r=>r.classList.add('open'));
+  if(mode==='timeline'||mode==='all') WEDDING_EVENTS.forEach(ev=>{eventTimeline[ev]=eventTimeline[ev]||{};eventTimeline[ev]._open=true;});
+  renderTimeline();
+  window.print();
+  delete document.body.dataset.printMode;
+  delete document.body.dataset.printEvent;
+}
+
+document.getElementById('printOptAll').onclick=()=>printSection('all');
+document.getElementById('printOptVendors').onclick=()=>printSection('vendors');
+document.getElementById('printOptGuests').onclick=()=>printSection('guests');
+document.getElementById('printOptTimeline').onclick=()=>printSection('timeline');
+document.getElementById('printOptFunctionWise').onclick=()=>{
+  document.getElementById('printPanelOverlay').classList.remove('show');
+  document.getElementById('printDate').textContent='Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  document.body.dataset.printMode='functionwise';
+  // Build a printable section for each event
+  const printArea=document.createElement('div');
+  printArea.id='functionWisePrintArea';
+  printArea.style.cssText='display:none;';
+  printArea.innerHTML=WEDDING_EVENTS.map(ev=>{
+    const evGuests=guests.filter(g=>{const c=guestEventCounts(g,ev);return WRITER_TRACKED_EVENTS.includes(ev)?(c.adults>0||c.writer>0):(c.adults>0||c.kids>0);});
+    if(evGuests.length===0) return '';
+    const t=eventTimeline[ev]||{};
+    const isWriter=WRITER_TRACKED_EVENTS.includes(ev);
+    const isLadies=LADIES_TRACKED_EVENTS.includes(ev);
+    return `<div style="page-break-before:auto;margin-bottom:30px;">
+      <h2 style="color:#3E0F1C;font-family:'Cormorant Garamond',serif;margin:0 0 4px;">${escapeHtml(ev)}</h2>
+      ${t.date?`<div style="font-size:12px;color:#6b5d52;">${new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${t.startTime?' · '+t.startTime:''}${t.venue?' · '+t.venue:''}</div>`:''}
+      <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;">
+        <thead><tr style="background:#3E0F1C;color:#FBF6EE;">
+          <th style="padding:6px 8px;text-align:left;">Family</th><th style="padding:6px 8px;text-align:left;">Phone</th><th style="padding:6px 8px;text-align:left;">Side</th>
+          <th style="padding:6px 8px;text-align:right;">Adults</th>${isLadies?'<th style="padding:6px 8px;text-align:right;">Ladies</th>':''}
+          <th style="padding:6px 8px;text-align:right;">${isWriter?'Writer':'Kids'}</th>
+        </tr></thead>
+        <tbody>${evGuests.map((g,i)=>{const c=guestEventCounts(g,ev);return `<tr style="background:${i%2?'#F3EBDB':'#fff'};">
+          <td style="padding:5px 8px;">${escapeHtml(g.name)}</td><td style="padding:5px 8px;">${escapeHtml(g.phone||'—')}</td><td style="padding:5px 8px;">${escapeHtml(g.side||'—')}</td>
+          <td style="padding:5px 8px;text-align:right;">${c.adults}</td>${isLadies?`<td style="padding:5px 8px;text-align:right;">${c.ladies}</td>`:''}
+          <td style="padding:5px 8px;text-align:right;">${isWriter?c.writer:c.kids}</td>
+        </tr>`;}).join('')}</tbody>
+        <tfoot><tr style="background:#F3EBDB;font-weight:700;">
+          <td colspan="3" style="padding:6px 8px;">Total</td>
+          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).adults,0)}</td>
+          ${isLadies?`<td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).ladies,0)}</td>`:''}
+          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+(isWriter?guestEventCounts(g,ev).writer:guestEventCounts(g,ev).kids),0)}</td>
+        </tfoot>
+      </table>
+    </div>`;
+  }).filter(Boolean).join('<hr style="border:none;border-top:2px solid #D4A24C;margin:20px 0;">');
+  document.body.appendChild(printArea);
+  printArea.style.display='block';
+  window.print();
+  printArea.remove();
+  delete document.body.dataset.printMode;
+};
+
+/* ================================================================
+   KANKOTRI DEDICATED UPLOAD / DOWNLOAD / PRINT
+   ================================================================ */
+document.getElementById('btnKankotriUpload').onclick=()=>document.getElementById('kankotriFileInput').click();
+document.getElementById('kankotriFileInput').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=evt=>{
+    try{
+      const data=new Uint8Array(evt.target.result);
+      const wb=XLSX.read(data,{type:'array'});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const getVal=(row,keys)=>{for(const k of Object.keys(row)){if(keys.includes(norm(k)))return row[k];}return '';};
+      let added=0,updated=0;
+      rows.forEach(row=>{
+        const name=String(getVal(row,['familyguestname','guestname','name','family'])).trim(); if(!name) return;
+        const adults=Number(getVal(row,['adults','adultcount']))||0;
+        const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
+        const phone=String(getVal(row,['phone','mobile'])).trim();
+        const side=String(getVal(row,['side'])).trim()||'Both';
+        const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+        if(existing){
+          if(adults>0||writer>0) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
+          existing.phone=phone||existing.phone; existing.side=side; updated++;
+        } else {
+          const events=adults>0||writer>0?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
+          guests.push({id:uid(),name,phone,side,events}); added++;
+        }
+      });
+      saveGuests(); renderGuests();
+      showToast(`Kankotri: ${added} added, ${updated} updated`);
+    }catch(err){showToast('Could not read file — check the format');}
+    e.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+});
+document.getElementById('btnKankotriTemplate').onclick=()=>{
+  const wb=XLSX.utils.book_new();
+  const sheet=XLSX.utils.json_to_sheet([
+    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1},
+    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0},
+  ]);
+  XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
+  XLSX.writeFile(wb,'Kankotri_Template.xlsx');
+  showToast('Kankotri template downloaded');
+};
+document.getElementById('btnKankotriExport').onclick=()=>{
+  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
+  if(kankotriGuests.length===0){showToast('No Kankotri guests to export');return;}
+  const wb=XLSX.utils.book_new();
+  const rows=kankotriGuests.map(g=>{const c=guestEventCounts(g,'Kankotri');return{'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'','Adults':c.adults,'Writer':c.writer,'City':g.city||'','State':g.state||'','Country':g.country||''};});
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Kankotri');
+  XLSX.writeFile(wb,`Kankotri_Guest_List_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast(`Exported ${kankotriGuests.length} Kankotri guests`);
+};
+document.getElementById('btnPrintKankotri').onclick=()=>{
+  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
+  const t=eventTimeline['Kankotri']||{};
+  const printArea=document.createElement('div');
+  printArea.id='kankotriPrintArea';
+  printArea.innerHTML=`
+    <h2 style="color:#3E0F1C;font-family:'Cormorant Garamond',serif;margin:0 0 4px;">𖥸 Kankotri Guest List</h2>
+    ${t.date?`<div style="font-size:12px;color:#6b5d52;">${new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${t.startTime?' · '+t.startTime:''}${t.venue?' · '+t.venue:''}</div>`:''}
+    <p style="font-size:12px;color:#6b5d52;">Generated ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</p>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
+      <thead><tr style="background:#3E0F1C;color:#FBF6EE;"><th style="padding:6px 8px;text-align:left;">Family</th><th style="padding:6px 8px;text-align:left;">Phone</th><th style="padding:6px 8px;text-align:left;">Side</th><th style="padding:6px 8px;text-align:right;">Adults</th><th style="padding:6px 8px;text-align:right;">Writer</th></tr></thead>
+      <tbody>${kankotriGuests.map((g,i)=>{const c=guestEventCounts(g,'Kankotri');return`<tr style="background:${i%2?'#F3EBDB':'#fff'};"><td style="padding:5px 8px;">${escapeHtml(g.name)}</td><td style="padding:5px 8px;">${escapeHtml(g.phone||'—')}</td><td style="padding:5px 8px;">${escapeHtml(g.side||'—')}</td><td style="padding:5px 8px;text-align:right;">${c.adults}</td><td style="padding:5px 8px;text-align:right;">${c.writer}</td></tr>`;}).join('')}</tbody>
+      <tfoot><tr style="background:#F3EBDB;font-weight:700;"><td colspan="3" style="padding:6px 8px;">Total</td><td style="padding:6px 8px;text-align:right;">${kankotriGuests.reduce((s,g)=>s+guestEventCounts(g,'Kankotri').adults,0)}</td><td style="padding:6px 8px;text-align:right;">${kankotriGuests.reduce((s,g)=>s+guestEventCounts(g,'Kankotri').writer,0)}</td></tr></tfoot>
+    </table>`;
+  document.body.appendChild(printArea);
+  window.print();
+  printArea.remove();
+};
+
+/* ================================================================
+   ITEMS 5 & 6: Timeline + Accommodation in sync & Excel
+   ================================================================ */
+
+/* 5. Add eventTimeline to Google Sheets sync —
+   already included in pushToSheet via queueCloudSave() which is called by
+   saveTimeline(). But we must make sure the onSignedIn pull also restores it. */
+// Patch: extend the existing saveSyncMeta to also save timeline locally,
+// and patch loadData to load timeline from storage on init. */
+const _origLoadData = loadData;
+async function loadData(){
+  await _origLoadData();
+  try{
+    const tl = await storageGet('wedding-timeline');
+    if(tl){ Object.assign(eventTimeline, JSON.parse(tl)); }
+  }catch(e){}
+  renderTimeline();
+}
+
+/* Make pushToSheet include eventTimeline in the main payload.
+   We do this by patching the payload construction. */
+const _origPushToSheet = pushToSheet;
+async function pushToSheet(){
+  // Store timeline locally (already done by saveTimeline),
+  // then include it in the main Sheets payload by temporarily
+  // merging it into the main data push.
+  // We override the function body fully here:
+  if(!googleAccessToken || !sheetId) return;
+  const vendorsForSync = vendors.map(({logo,...rest})=>rest);
+  const brandingForSync = {...branding, logo:''};
+  // Strip menu data from timeline for sync (too large as base64 images)
+  const timelineForSync = Object.fromEntries(
+    Object.entries(eventTimeline).map(([ev, t])=>{
+      const {menuData, _open, ...rest} = t||{};
+      return [ev, rest];
+    })
+  );
+  const mainPayload = JSON.stringify({
+    vendors: vendorsForSync, functions, reminders, branding: brandingForSync,
+    timeline: timelineForSync, savedAt: new Date().toISOString()
+  });
+  const logosPayload = JSON.stringify({
+    vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id, v.logo])),
+    brandingLogo: branding.logo||''
+  });
+  const guestPayload = JSON.stringify(compressGuests(guests));
+  try{
+    await sheetsApi(`/${sheetId}/values:batchUpdate`,{
+      method:'POST',
+      body: JSON.stringify({
+        valueInputOption:'RAW',
+        data:[
+          {range: SHEET_DATA_RANGE, values:[[mainPayload]]},
+          {range: SHEET_LOGO_RANGE, values:[[logosPayload]]},
+          {range: 'Data!C1', values:[[guestPayload]]}
+        ]
+      })
+    });
+    setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){
+    console.error('push failed',e);
+    if(e.message&&(e.message.includes('401')||e.message.includes('403'))){
+      googleAccessToken=null;
+      await storageSet('google-token-cache','');
+      setSyncStatus('error','Google session expired — please sign in again');
+    } else {
+      setSyncStatus('error','Sync failed — data saved locally');
+    }
+  }
+}
+
+/* Also patch onSignedIn to restore timeline from cloud pull */
+const _origOnSignedIn = onSignedIn;
+async function onSignedIn(){
+  setSyncStatus('saving','Connecting…');
+  try{
+    let cachedId = await storageGet('wedding-sheet-id');
+    sheetId = cachedId || await findOrCreateSheet();
+    await storageSet('wedding-sheet-id', sheetId);
+    const cloudData = await pullFromSheet();
+    if(cloudData){
+      const localLogoByName = {};
+      vendors.forEach(v=>{ if(v.logo) localLogoByName[v.name.toLowerCase()]=v.logo; });
+      vendors = (cloudData.vendors||vendors).map(v=>({...v, logo:localLogoByName[v.name.toLowerCase()]||''}));
+      functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
+      guests = cloudData.guests||guests;
+      reminders = cloudData.reminders||reminders;
+      // Restore timeline — keep local menu images (too large for cloud)
+      if(cloudData.timeline){
+        Object.entries(cloudData.timeline).forEach(([ev,t])=>{
+          const localMenu = eventTimeline[ev] ? {menuData:eventTimeline[ev].menuData, menuFileName:eventTimeline[ev].menuFileName, menuFileType:eventTimeline[ev].menuFileType} : {};
+          eventTimeline[ev] = {...t, ...localMenu};
+        });
+      }
+      const localBrandingLogo = branding.logo;
+      branding = {...(cloudData.branding||branding), logo:localBrandingLogo};
+      applyBranding();
+    } else {
+      await pushToSheet();
+    }
+    setSyncStatus('ok','Synced just now');
+    render();
+  }catch(e){
+    console.error(e);
+    setSyncStatus('error','Connection issue — saved locally only');
+    showToast('Could not connect to Google Sheets: '+e.message);
+  }
+}
+
+/* 6. Add accommodation columns to guest Excel export/import */
+/* Patch guest export to include City, State, Country, Accommodation, Rooms, Beds */
+const _origGuestExport = document.getElementById('btnGuestExport').onclick;
+document.getElementById('btnGuestExport').onclick = ()=>{
+  if(guests.length===0){ showToast('Add guests before exporting'); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = guests.map(g=>{
+    const row = {'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'',
+      'City':g.city||'','State':g.state||'','Country':g.country||'India',
+      'Needs Accommodation':g.needsAccommodation?'Yes':'No',
+      'Rooms':g.rooms||'','Beds':g.beds||''};
+    WEDDING_EVENTS.forEach(ev=>{
+      const c = guestEventCounts(g,ev);
+      row[ev+' Adults'] = c.adults||'';
+      if(WRITER_TRACKED_EVENTS.includes(ev)) row[ev+' Writer'] = c.writer||'';
+      else row[ev+' Kids'] = c.kids||'';
+      if(LADIES_TRACKED_EVENTS.includes(ev)) row[ev+' Ladies'] = c.ladies||'';
+    });
+    return row;
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Guest List');
+  XLSX.writeFile(wb,`Vivaah_Guest_List_${new Date().toISOString().slice(0,10)}.xlsx`);
+  showToast('Guest list exported');
+};
+
+/* Patch the guest file upload to also read accommodation columns.
+   We hook into the existing guestFileInput change event via a wrapper. */
+const guestFileInputEl = document.getElementById('guestFileInput');
+const _origGuestFileHandler = guestFileInputEl.onchange;
+guestFileInputEl.addEventListener('change', e=>{
+  // The main handler already runs via the existing addEventListener.
+  // We can't easily patch it, so we process the accommodation columns
+  // in a second pass after the main handler fires.
+  // Instead we replace the handler cleanly:
+}, false);
+
+// Actually the cleanest fix is to directly patch the data inside the existing
+// guestFileInput change handler. Let's override it entirely by removing and re-adding:
+const oldGuestFileListeners = []; // can't remove anonymous listeners in old browsers
+// Instead, we add a second pass via a MutationObserver or simply add a 'change' listener
+// that runs AFTER the main one and patches accommodation fields.
+// Since JS event listeners fire in registration order, we add ours after the existing one.
+document.getElementById('guestFileInput').addEventListener('change', function accomPatch(e){
+  // This fires after the main upload handler. We re-read the file to extract accommodation.
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data,{type:'array'});
+      const sheetName = wb.SheetNames.find(n=>/guest/i.test(n))||wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName],{defval:''});
+      const norm = s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const getVal = (row,keys)=>{for(const k of Object.keys(row)){if(keys.includes(norm(k)))return row[k];}return '';};
+      rows.forEach(row=>{
+        const name = String(getVal(row,['familyguestname','guestname','name','family'])).trim();
+        if(!name) return;
+        const g = guests.find(x=>x.name.toLowerCase()===name.toLowerCase());
+        if(!g) return;
+        const city = String(getVal(row,['city'])).trim();
+        const state = String(getVal(row,['state'])).trim();
+        const country = String(getVal(row,['country'])).trim();
+        const accomRaw = String(getVal(row,['needsaccommodation','accommodation','accom'])).trim().toLowerCase();
+        const needsAccommodation = accomRaw==='yes'||accomRaw==='true'||accomRaw==='1';
+        const rooms = Number(getVal(row,['rooms']))||0;
+        const beds = Number(getVal(row,['beds']))||0;
+        if(city) g.city = city;
+        if(state) g.state = state;
+        if(country) g.country = country;
+        if(accomRaw) g.needsAccommodation = needsAccommodation;
+        if(rooms) g.rooms = rooms;
+        if(beds) g.beds = beds;
+      });
+      saveGuests(); renderGuests();
+    }catch(err){ console.error('accom patch failed',err); }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
 /* ---------------- Init ---------------- */
 (async ()=>{
   initGoogleAuth();
   initVoiceControl();
-  await initAuth(); // shows lock screen or restores session, then calls loadData
+  await initAuth();
   await tryRestoreGoogleSession();
 })();
 </script>
