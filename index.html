@@ -1472,7 +1472,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1658,20 +1658,32 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    return [g.id, g.name, g.phone||'', g.side||'', evArr];
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds]
+    // Fields added after evArr are new — expandGuests handles missing trailing fields gracefully
+    return [
+      g.id, g.name, g.phone||'', g.side||'', evArr,
+      g.city||'', g.state||'', g.country||'',
+      g.needsAccommodation ? 1 : 0,
+      g.rooms||0, g.beds||0
+    ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
     if(!Array.isArray(arr)) return arr; // already expanded (legacy format)
-    const [id,name,phone,side,evArr] = arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
         events[WEDDING_EVENTS[i]] = {adults:e[0]||0, kids:e[1]||0, ladies:e[2]||0, writer:e[3]||0};
       }
     });
-    return {id, name, phone, side, events};
+    return {
+      id, name, phone, side, events,
+      city: city||'', state: state||'', country: country||'',
+      needsAccommodation: !!needsAccom,
+      rooms: rooms||0, beds: beds||0
+    };
   });
 }
 
@@ -2064,14 +2076,19 @@ document.getElementById('btnApplyCatering').onclick = ()=>{
 function renderTicker(){
   const wrap = document.getElementById('tickerWrap');
   const track = document.getElementById('tickerTrack');
-  const featured = vendors.filter(v=>v.featured);
-  if(featured.length===0){
+  // Platform vendors (owner's paid advertisers) always show first
+  // Customer's own featured vendors follow
+  const allFeatured = [
+    ...platformVendors.map(v=>({...v, _isPlatform:true})),
+    ...vendors.filter(v=>v.featured)
+  ];
+  if(allFeatured.length===0){
     wrap.classList.add('empty');
     track.innerHTML = '';
     return;
   }
   wrap.classList.remove('empty');
-  const itemsHtml = featured.map(v=>{
+  const itemsHtml = allFeatured.map(v=>{
     const initial = escapeHtml((v.name||'?').trim().charAt(0).toUpperCase() || '?');
     const logoHtml = v.logo
       ? `<img class="t-logo" src="${v.logo}" alt="">`
