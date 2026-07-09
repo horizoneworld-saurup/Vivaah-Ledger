@@ -1245,8 +1245,21 @@ const OWNER_PIN = '0000'; // ← CHANGE THIS before delivery
    Add/edit these via the Owner Panel, then download the updated file.
    ================================================================ */
 const PLATFORM_VENDORS = [
-  // Example (remove before delivery or replace with real paid vendors):
-  // {id:'pv_example', name:'Sample Caterers', category:'Catering', phone:'9876500000', website:'https://example.com', tagline:'Best food in Ahmedabad', logo:''}
+  // ═══════════════════════════════════════════════════════════════
+  // OWNER: Add your paid advertising vendors here before delivery.
+  // Use the Owner Panel (🔑 login) to manage these visually,
+  // then click "Download updated file" to bake them in permanently.
+  // The sample below shows the format — replace with real vendors.
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id:'pv_sample_1',
+    name:'Your Advertiser Name',
+    category:'Catering',
+    phone:'9876500000',
+    website:'https://example.com',
+    tagline:'Contact us for wedding packages',
+    logo:''
+  }
 ];
 
 let currentRole = null;
@@ -1303,7 +1316,6 @@ function lockError(msg){
 async function tryUnlock(){
   if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
   if(lockSelectedRole === 'owner'){
-    // Check stored hash first (set via admin settings), then fall back to hardcoded constant
     const storedOwnerHash = await storageGet('pin-hash-owner').catch(()=>null);
     let ok = false;
     if(storedOwnerHash){ ok = (await sha256(lockPinEntry)) === storedOwnerHash; }
@@ -1314,7 +1326,8 @@ async function tryUnlock(){
       if(remember) localStorage.setItem('vivaah-role','owner');
       sessionStorage.setItem('vivaah-role','owner');
       document.getElementById('lockOverlay').classList.add('hidden');
-      if(!vendors.length && !guests.length) loadData();
+      // Always load data + render — ensures ticker and all sections appear immediately
+      await loadData();
     } else { lockError('Wrong owner PIN'); }
     return;
   }
@@ -1325,7 +1338,8 @@ async function tryUnlock(){
     if(remember) localStorage.setItem('vivaah-role', lockSelectedRole);
     sessionStorage.setItem('vivaah-role', lockSelectedRole);
     document.getElementById('lockOverlay').classList.add('hidden');
-    if(!vendors.length && !guests.length) loadData();
+    // Always load data + render — ensures ticker and all sections appear immediately
+    await loadData();
   } else {
     lockError('Wrong PIN — try again');
   }
@@ -1472,7 +1486,7 @@ let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
