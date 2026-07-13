@@ -718,6 +718,30 @@
   .gs-item-meta{font-size:11.5px; color:var(--ink-soft); margin-top:1px;}
   .gs-highlight{background:rgba(212,162,76,0.35); border-radius:3px; padding:0 1px;}
   .gs-empty{padding:20px; text-align:center; color:var(--ink-soft); font-size:13px;}
+
+  /* ---------- Kankotri tier cards ---------- */
+  .kankotri-cards-section{margin-bottom:16px;}
+  .kankotri-tier-uploads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px;}
+  @media(max-width:760px){.kankotri-tier-uploads{grid-template-columns:1fr;}}
+  .kankotri-tier-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;}
+  .ktc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .ktc-badge{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;}
+  .ktc-vip{background:#FFF0C0;color:#856404;border:1px solid #E8C900;}
+  .ktc-premium{background:#E8F0FF;color:#1A3A8A;border:1px solid #B0C4FF;}
+  .ktc-normal{background:var(--ivory-deep);color:var(--ink-soft);border:1px solid var(--line);}
+  .ktc-count{font-size:11.5px;font-weight:600;color:var(--ink-soft);}
+  .ktc-preview{
+    min-height:90px;border:1.5px dashed var(--line);border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    overflow:hidden;background:var(--ivory-deep);
+  }
+  .ktc-preview img,.ktc-preview embed{max-width:100%;max-height:90px;object-fit:contain;}
+  .kankotri-filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .kankotri-summary-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;}
+  .kankotri-summary-row b{color:var(--maroon-dark);}
+  .tier-select{padding:4px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;cursor:pointer;}
+  .dispatch-sent{color:var(--sage);font-weight:700;font-size:12px;}
+  .dispatch-pending{color:var(--rust);font-weight:700;font-size:12px;}
 </style>
 </head>
 <body>
@@ -1028,8 +1052,8 @@
     <!-- Kankotri dedicated section -->
     <div class="kankotri-bar">
       <div>
-        <div class="kankotri-bar-title">𖥸 Kankotri — Dedicated List</div>
-        <div class="kankotri-bar-sub">Upload/download the Kankotri invitation list (Adults + Writers only)</div>
+        <div class="kankotri-bar-title">𖥸 Kankotri — Invitation Card Management</div>
+        <div class="kankotri-bar-sub">Assign tiers, track dispatch, upload card designs per tier</div>
       </div>
       <div class="kankotri-bar-actions">
         <input type="file" id="kankotriFileInput" accept=".xlsx,.xls">
@@ -1039,6 +1063,68 @@
         <button class="btn-ivory" id="btnPrintKankotri">🖺 Print</button>
       </div>
     </div>
+
+    <!-- Kankotri card designs per tier -->
+    <div class="kankotri-cards-section">
+      <div class="kankotri-tier-uploads">
+
+        <!-- VIP Premium -->
+        <div class="kankotri-tier-card">
+          <div class="ktc-head">
+            <span class="ktc-badge ktc-vip">👑 VIP Premium</span>
+            <span class="ktc-count" id="kankotriCount_vip">0 families</span>
+          </div>
+          <div class="ktc-preview" id="kankotriPreview_vip">
+            <span style="opacity:0.4;font-size:28px;">𖥸</span>
+            <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">No card design uploaded</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <input type="file" id="kankotriCard_vip" accept="image/*,application/pdf" style="display:none;">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;" data-ktc-upload="vip">📎 Upload VIP card</button>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;display:none;" data-ktc-clear="vip" id="kankotriClear_vip">✕ Remove</button>
+          </div>
+        </div>
+
+        <!-- Premium -->
+        <div class="kankotri-tier-card">
+          <div class="ktc-head">
+            <span class="ktc-badge ktc-premium">⭐ Premium</span>
+            <span class="ktc-count" id="kankotriCount_premium">0 families</span>
+          </div>
+          <div class="ktc-preview" id="kankotriPreview_premium">
+            <span style="opacity:0.4;font-size:28px;">𖥸</span>
+            <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">No card design uploaded</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <input type="file" id="kankotriCard_premium" accept="image/*,application/pdf" style="display:none;">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;" data-ktc-upload="premium">📎 Upload Premium card</button>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;display:none;" data-ktc-clear="premium" id="kankotriClear_premium">✕ Remove</button>
+          </div>
+        </div>
+
+        <!-- Normal -->
+        <div class="kankotri-tier-card">
+          <div class="ktc-head">
+            <span class="ktc-badge ktc-normal">🎟 Normal</span>
+            <span class="ktc-count" id="kankotriCount_normal">0 families</span>
+          </div>
+          <div class="ktc-preview" id="kankotriPreview_normal">
+            <span style="opacity:0.4;font-size:28px;">𖥸</span>
+            <div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">No card design uploaded</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+            <input type="file" id="kankotriCard_normal" accept="image/*,application/pdf" style="display:none;">
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;" data-ktc-upload="normal">📎 Upload Normal card</button>
+            <button class="btn btn-ghost" style="font-size:12px;padding:6px 10px;display:none;" data-ktc-clear="normal" id="kankotriClear_normal">✕ Remove</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Kankotri filter chips -->
+    <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
+    <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
     <div class="guest-table-wrap">
       <table class="guest-table" id="guestTable">
         <thead>
@@ -1051,6 +1137,8 @@
             <th class="num" id="thAdults">Adults</th>
             <th class="num" id="thLadies">Ladies</th>
             <th class="num" id="thKids">Kids</th>
+            <th id="thTier" style="display:none;">Kankotri Tier</th>
+            <th id="thDispatch" style="display:none;">Dispatch</th>
             <th style="width:36px;"></th>
           </tr>
         </thead>
@@ -1478,15 +1566,17 @@ let lastExportAt = null;
 let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 
 /* Guest list & reminders state */
-const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Marriage', 'Reception'];
-const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti-Mosalu', 'Mehendi']; // events needing a ladies sub-count out of adults (women-specific rituals)
-const WRITER_TRACKED_EVENTS = ['Kankotri']; // events tracking writer (calligrapher) count instead of kids
+const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Haldi', 'Marriage', 'Reception'];
+const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti-Mosalu', 'Mehendi']; // women-specific rituals
+const WRITER_TRACKED_EVENTS = ['Kankotri']; // calligrapher count instead of kids
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
+let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per tier
+let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1557,10 +1647,15 @@ async function loadData(){
     const tl = await storageGet('wedding-timeline');
     if(tl){ eventTimeline = JSON.parse(tl); }
   }catch(e){ eventTimeline = {}; }
+  try{
+    const kc = await storageGet('wedding-kankotri-cards');
+    if(kc){ kankotriCards = {...kankotriCards, ...JSON.parse(kc)}; }
+  }catch(e){ /* keep defaults */ }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
   }
   applyBranding();
+  renderKankotriCardPreviews();
   render();
 }
 async function saveData(){
@@ -1582,6 +1677,9 @@ async function saveGuests(){
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
   queueCloudSave();
+}
+async function saveKankotriCards(){
+  await storageSet('wedding-kankotri-cards', JSON.stringify(kankotriCards));
 }
 function applyBranding(){
   document.getElementById('brandTitle').textContent = branding.title || 'Vivaah Ledger';
@@ -1672,20 +1770,20 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds]
-    // Fields added after evArr are new — expandGuests handles missing trailing fields gracefully
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent]
     return [
       g.id, g.name, g.phone||'', g.side||'', evArr,
       g.city||'', g.state||'', g.country||'',
       g.needsAccommodation ? 1 : 0,
-      g.rooms||0, g.beds||0
+      g.rooms||0, g.beds||0,
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0
     ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
-    if(!Array.isArray(arr)) return arr; // already expanded (legacy format)
-    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds] = arr;
+    if(!Array.isArray(arr)) return arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
@@ -1694,9 +1792,9 @@ function expandGuests(compressed){
     });
     return {
       id, name, phone, side, events,
-      city: city||'', state: state||'', country: country||'',
-      needsAccommodation: !!needsAccom,
-      rooms: rooms||0, beds: beds||0
+      city:city||'', state:state||'', country:country||'',
+      needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent
     };
   });
 }
@@ -2522,6 +2620,32 @@ function renderGuests(){
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
   document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
   document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
+  // Show Tier and Dispatch columns only when Kankotri tab is active
+  const isKankotri = activeEventFilter === 'Kankotri';
+  document.getElementById('thTier').style.display = isKankotri ? '' : 'none';
+  document.getElementById('thDispatch').style.display = isKankotri ? '' : 'none';
+  // Kankotri summary when Kankotri is active
+  const kankotriSummaryRow = document.getElementById('kankotriSummaryRow');
+  if(isKankotri && kankotriSummaryRow){
+    const vipCount = guests.filter(g=>g.kankotriTier==='vip').length;
+    const premiumCount = guests.filter(g=>g.kankotriTier==='premium').length;
+    const normalCount = guests.filter(g=>g.kankotriTier==='normal').length;
+    const sentCount = guests.filter(g=>g.kankotriSent).length;
+    const pendingCount = guests.filter(g=>!g.kankotriSent && (guestEventCounts(g,'Kankotri').adults>0||guestEventCounts(g,'Kankotri').writer>0)).length;
+    kankotriSummaryRow.innerHTML =
+      `<span>👑 VIP Premium: <b>${vipCount}</b></span>
+       <span>⭐ Premium: <b>${premiumCount}</b></span>
+       <span>🎟 Normal: <b>${normalCount}</b></span>
+       <span class="dispatch-sent">✓ Sent: <b>${sentCount}</b></span>
+       <span class="dispatch-pending">⏳ Pending: <b>${pendingCount}</b></span>`;
+    // Update tier counts on the card headers
+    ['vip','premium','normal'].forEach(tier=>{
+      const el = document.getElementById('kankotriCount_'+tier);
+      if(el) el.textContent = guests.filter(g=>g.kankotriTier===tier).length+' families';
+    });
+  } else if(kankotriSummaryRow){
+    kankotriSummaryRow.innerHTML = '';
+  }
 
   // Table body
   const body = document.getElementById('guestTableBody');
@@ -2610,6 +2734,21 @@ function renderGuests(){
         <td class="num">${rawCounts.adults}</td>
         <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
         <td class="num">${secondColValue}</td>
+        ${activeEventFilter==='Kankotri' ? `
+        <td>
+          <select class="tier-select" data-tier-guest="${g.id}">
+            <option value="">— Tier —</option>
+            <option value="vip" ${g.kankotriTier==='vip'?'selected':''}>👑 VIP Premium</option>
+            <option value="premium" ${g.kankotriTier==='premium'?'selected':''}>⭐ Premium</option>
+            <option value="normal" ${g.kankotriTier==='normal'?'selected':''}>🎟 Normal</option>
+          </select>
+        </td>
+        <td>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" ${g.kankotriSent?'checked':''} data-dispatch-guest="${g.id}">
+            <span class="${g.kankotriSent?'dispatch-sent':'dispatch-pending'}">${g.kankotriSent?'✓ Sent':'⏳ Pending'}</span>
+          </label>
+        </td>` : ''}
         <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
       </tr>
       ${detailRow}
@@ -2649,8 +2788,14 @@ document.getElementById('guestTableBody').addEventListener('click', (e)=>{
     saveGuests(); renderGuests();
     return;
   }
+  // Dispatch checkbox
+  if(e.target.dataset.dispatchGuest){
+    const g = guests.find(x=>x.id===e.target.dataset.dispatchGuest);
+    if(g){ g.kankotriSent = e.target.checked; saveGuests(); renderGuests(); }
+    return;
+  }
   const row = e.target.closest('tr.guest-row');
-  if(row){
+  if(row && !e.target.closest('select') && !e.target.closest('input')){
     const gid = row.dataset.guestId;
     openGuestRowId = (openGuestRowId===gid) ? null : gid;
     renderGuests();
@@ -2658,6 +2803,12 @@ document.getElementById('guestTableBody').addEventListener('click', (e)=>{
 });
 
 document.getElementById('guestTableBody').addEventListener('change', (e)=>{
+  // Tier select
+  if(e.target.dataset.tierGuest){
+    const g = guests.find(x=>x.id===e.target.dataset.tierGuest);
+    if(g){ g.kankotriTier = e.target.value; saveGuests(); renderGuests(); }
+    return;
+  }
   const key = e.target.dataset.guestCount;
   if(!key) return;
   const [gid, ev, field] = key.split('|');
@@ -3271,44 +3422,101 @@ function hideVoiceCaption(){
 }
 
 function handleVoiceCommand(transcript){
-  const text = transcript.toLowerCase();
+  const text = transcript.toLowerCase().trim();
   showVoiceCaption(`Heard: "${transcript}"`);
 
-  // Determine target reminder list by keyword
-  let targetKey = null;
-  if(/trial/.test(text)) targetKey = 'trial';
-  else if(/cloth|dress|outfit|sherwani|lehenga|saree/.test(text)) targetKey = 'clothes';
-  else if(/guest/.test(text)) targetKey = 'guest';
-
-  // "show <list>" — just opens visual focus, no data change
-  if(/^show|^open|^go to/.test(text) && targetKey){
-    const card = document.querySelector(`[data-reminder="${targetKey}"]`);
-    if(card){
-      card.scrollIntoView({behavior:'smooth', block:'center'});
-      showVoiceCaption(`Showing ${capitalize(targetKey)} Reminder`);
+  // ── FIND GUEST ── "find guest Patel" / "search guest Sharma"
+  if(/^(find|search|show|look up)\s+(guest|family)\s+(.+)/i.test(transcript)){
+    const match = transcript.match(/^(?:find|search|show|look up)\s+(?:guest|family)\s+(.+)/i);
+    const query = match[1].trim().toLowerCase();
+    const hit = guests.find(g=>g.name.toLowerCase().includes(query));
+    if(hit){
+      openGuestRowId = hit.id; activeEventFilter=''; renderGuests();
+      document.querySelector('.guest-card')?.scrollIntoView({behavior:'smooth',block:'start'});
+      showVoiceCaption(`Found guest: ${hit.name}`);
+    } else {
+      showVoiceCaption(`No guest matching "${match[1]}" found`);
     }
     return;
   }
 
-  // "add/remind me <key> reminder [to/that] <text>"
+  // ── FIND VENDOR ── "find vendor Royal Banquet" / "search vendor caterer"
+  if(/^(find|search|show|look up)\s+(vendor|supplier)\s+(.+)/i.test(transcript)){
+    const match = transcript.match(/^(?:find|search|show|look up)\s+(?:vendor|supplier)\s+(.+)/i);
+    const query = match[1].trim().toLowerCase();
+    const hit = vendors.find(v=>v.name.toLowerCase().includes(query)||(v.category||'').toLowerCase().includes(query));
+    if(hit){
+      openRowId = hit.id; renderTable();
+      document.querySelector('.ledger')?.scrollIntoView({behavior:'smooth',block:'start'});
+      showVoiceCaption(`Found vendor: ${hit.name}`);
+    } else {
+      showVoiceCaption(`No vendor matching "${match[1]}" found`);
+    }
+    return;
+  }
+
+  // ── ADD GUEST ── "add guest Sharma family, Sangeet, Marriage"
+  if(/^add\s+(?:new\s+)?(?:guest|family)\s+(.+)/i.test(transcript)){
+    const match = transcript.match(/^add\s+(?:new\s+)?(?:guest|family)\s+(.+)/i);
+    const parts = match[1].split(/,\s*/);
+    const name = parts[0].trim();
+    if(!name){ showVoiceCaption('Please say a name after "add guest"'); return; }
+    const matchedEvents = parts.slice(1)
+      .map(p=>WEDDING_EVENTS.find(ev=>ev.toLowerCase().includes(p.trim().toLowerCase())))
+      .filter(Boolean);
+    const events = {};
+    matchedEvents.forEach(ev=>{ events[ev]={adults:1,kids:0,ladies:0,writer:0}; });
+    const existing = guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+    if(existing){
+      Object.assign(existing.events, events);
+      saveGuests(); renderGuests();
+      showVoiceCaption(`Updated guest: ${name}${matchedEvents.length?` — added to ${matchedEvents.join(', ')}`:''}. Check row to set full counts.`);
+    } else {
+      guests.push({id:uid(), name, phone:'', side:'Both', events});
+      saveGuests(); renderGuests();
+      showVoiceCaption(`Added guest: ${name}${matchedEvents.length?` — invited to ${matchedEvents.join(', ')}`:''}. Click row to set adult/kid counts.`);
+    }
+    return;
+  }
+
+  // ── ADD VENDOR ── "add vendor Royal Banquet Catering" / "add vendor sharma decor"
+  if(/^add\s+(?:new\s+)?vendor\s+(.+)/i.test(transcript)){
+    const match = transcript.match(/^add\s+(?:new\s+)?vendor\s+(.+)/i);
+    const parts = match[1].split(/,\s*/);
+    const name = parts[0].trim();
+    const category = parts[1]? parts[1].trim() : '';
+    if(!name){ showVoiceCaption('Please say a vendor name after "add vendor"'); return; }
+    const newVendor = {id:uid(), name, category, quoted:0, contact:'', phone:'', notes:'', featured:false, website:'', tagline:'', logo:'', payments:[]};
+    vendors.push(newVendor);
+    saveData(); render();
+    showVoiceCaption(`Added vendor: ${name}${category?' ('+category+')':''}. Open their row to add payment details.`);
+    return;
+  }
+
+  // ── REMINDER COMMANDS (existing) ──
+  let targetKey = null;
+  if(/trial/.test(text)) targetKey = 'trial';
+  else if(/cloth|dress|outfit|sherwani|lehenga|saree/.test(text)) targetKey = 'clothes';
+  else if(/guest reminder|remind.*guest/.test(text)) targetKey = 'guest';
+
+  if(/^show|^open|^go to/.test(text) && targetKey){
+    const card = document.querySelector(`[data-reminder="${targetKey}"]`);
+    if(card){ card.scrollIntoView({behavior:'smooth', block:'center'}); showVoiceCaption(`Showing ${capitalize(targetKey)} Reminder`); }
+    return;
+  }
+
   if(targetKey){
     let item = transcript;
-    // Strip common command phrasing to extract the actual reminder text
     item = item.replace(/^(add( to)?|create|new|remind me( to)?|set)\s*/i, '');
-    item = item.replace(/(trial|clothes?|dress|outfit|sherwani|lehenga|saree|guest)\s*(reminder)?\s*(to|that|for|about)?\s*/i, '');
-    item = item.replace(/^[\s,]+|[\s,]+$/g, ''); // trim stray leading/trailing commas and spaces
-    item = item.replace(/^(to|for|that|about)\s+/i, ''); // drop a stray leftover connector word
-    item = item.trim();
-    if(!item){
-      showVoiceCaption(`Add what to ${capitalize(targetKey)} Reminder? Try again.`);
-      return;
-    }
+    item = item.replace(/(trial|clothes?|dress|outfit|sherwani|lehenga|saree|guest\s*reminder)\s*(reminder)?\s*(to|that|for|about)?\s*/i, '');
+    item = item.replace(/^[\s,]+|[\s,]+$/g, '').replace(/^(to|for|that|about)\s+/i, '').trim();
+    if(!item){ showVoiceCaption(`Add what to ${capitalize(targetKey)} Reminder? Try again.`); return; }
     addReminder(targetKey, item, '');
     showVoiceCaption(`Added to ${capitalize(targetKey)} Reminder: "${item}"`);
     return;
   }
 
-  showVoiceCaption('Didn\'t catch a reminder type — say "trial", "clothes", or "guest".');
+  showVoiceCaption('Try: "find guest Patel" · "add guest Shah family, Sangeet" · "find vendor caterer" · "add vendor Royal, Catering" · "add trial reminder pick up dress"');
 }
 
 document.getElementById('voiceFab').onclick = ()=>{
@@ -3664,6 +3872,68 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
 };
 
 /* ================================================================
+   KANKOTRI CARD DESIGNS — upload/preview per tier
+   ================================================================ */
+function renderKankotriCardPreviews(){
+  ['vip','premium','normal'].forEach(tier=>{
+    const preview = document.getElementById('kankotriPreview_'+tier);
+    if(!preview) return;
+    if(kankotriCards[tier]){
+      const isImg = kankotriCards[tier].startsWith('data:image');
+      preview.innerHTML = isImg
+        ? `<img src="${kankotriCards[tier]}" alt="${tier} card">`
+        : `<div style="padding:10px;font-size:12px;text-align:center;">📄 PDF card uploaded<br><span style="font-size:10px;color:var(--ink-soft);">Click view to open</span></div>`;
+      document.getElementById('kankotriClear_'+tier).style.display = '';
+    } else {
+      preview.innerHTML = `<span style="opacity:0.4;font-size:28px;">𖥸</span><div style="font-size:11.5px;color:var(--ink-soft);margin-top:6px;">No card design uploaded</div>`;
+    }
+  });
+}
+
+document.addEventListener('click', e=>{
+  const uploadBtn = e.target.closest('[data-ktc-upload]');
+  if(uploadBtn){ document.getElementById('kankotriCard_'+uploadBtn.dataset.ktcUpload).click(); return; }
+  const clearBtn = e.target.closest('[data-ktc-clear]');
+  if(clearBtn){
+    const tier = clearBtn.dataset.ktcClear;
+    kankotriCards[tier] = '';
+    saveKankotriCards(); renderKankotriCardPreviews();
+    return;
+  }
+  // View PDF card
+  if(e.target.closest('.ktc-preview')){
+    const preview = e.target.closest('.ktc-preview');
+    const tier = ['vip','premium','normal'].find(t=>preview.id==='kankotriPreview_'+t);
+    if(tier && kankotriCards[tier]){
+      const win = window.open('');
+      if(kankotriCards[tier].startsWith('data:image')){
+        win.document.write(`<img src="${kankotriCards[tier]}" style="max-width:100%;">`);
+      } else {
+        win.document.write(`<iframe src="${kankotriCards[tier]}" style="width:100%;height:100vh;border:0;"></iframe>`);
+      }
+    }
+    return;
+  }
+});
+
+['vip','premium','normal'].forEach(tier=>{
+  const input = document.getElementById('kankotriCard_'+tier);
+  if(!input) return;
+  input.addEventListener('change', e=>{
+    const file = e.target.files[0]; if(!file) return;
+    if(file.size > 3*1024*1024){ showToast('Keep card files under 3MB'); return; }
+    const reader = new FileReader();
+    reader.onload = evt=>{
+      kankotriCards[tier] = evt.target.result;
+      saveKankotriCards(); renderKankotriCardPreviews();
+      showToast(`${tier==='vip'?'VIP Premium':tier==='premium'?'Premium':'Normal'} card uploaded`);
+    };
+    reader.readAsDataURL(file);
+    e.target.value='';
+  });
+});
+
+/* ================================================================
    KANKOTRI DEDICATED UPLOAD / DOWNLOAD / PRINT
    ================================================================ */
 document.getElementById('btnKankotriUpload').onclick=()=>document.getElementById('kankotriFileInput').click();
@@ -3685,13 +3955,20 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
         const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
         const phone=String(getVal(row,['phone','mobile'])).trim();
         const side=String(getVal(row,['side'])).trim()||'Both';
+        const tierRaw=String(getVal(row,['tier','kankotritier'])).trim().toLowerCase();
+        const tier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
+        const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
         if(existing){
           if(adults>0||writer>0) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
-          existing.phone=phone||existing.phone; existing.side=side; updated++;
+          existing.phone=phone||existing.phone; existing.side=side;
+          if(tier) existing.kankotriTier=tier;
+          existing.kankotriSent=sent;
+          updated++;
         } else {
           const events=adults>0||writer>0?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
-          guests.push({id:uid(),name,phone,side,events}); added++;
+          guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
         }
       });
       saveGuests(); renderGuests();
@@ -3704,8 +3981,9 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
 document.getElementById('btnKankotriTemplate').onclick=()=>{
   const wb=XLSX.utils.book_new();
   const sheet=XLSX.utils.json_to_sheet([
-    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1},
-    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0},
+    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1,'Tier':'VIP Premium','Sent':'No'},
+    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0,'Tier':'Premium','Sent':'No'},
+    {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Adults':4,'Writer':0,'Tier':'Normal','Sent':'Yes'},
   ]);
   XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
   XLSX.writeFile(wb,'Kankotri_Template.xlsx');
@@ -3715,7 +3993,16 @@ document.getElementById('btnKankotriExport').onclick=()=>{
   const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
   if(kankotriGuests.length===0){showToast('No Kankotri guests to export');return;}
   const wb=XLSX.utils.book_new();
-  const rows=kankotriGuests.map(g=>{const c=guestEventCounts(g,'Kankotri');return{'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'','Adults':c.adults,'Writer':c.writer,'City':g.city||'','State':g.state||'','Country':g.country||''};});
+  const rows=kankotriGuests.map(g=>{
+    const c=guestEventCounts(g,'Kankotri');
+    return{
+      'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'',
+      'Adults':c.adults,'Writer':c.writer,
+      'Tier':g.kankotriTier==='vip'?'VIP Premium':g.kankotriTier==='premium'?'Premium':g.kankotriTier==='normal'?'Normal':'',
+      'Sent':g.kankotriSent?'Yes':'No',
+      'City':g.city||'','State':g.state||'','Country':g.country||''
+    };
+  });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Kankotri');
   XLSX.writeFile(wb,`Kankotri_Guest_List_${new Date().toISOString().slice(0,10)}.xlsx`);
   showToast(`Exported ${kankotriGuests.length} Kankotri guests`);
