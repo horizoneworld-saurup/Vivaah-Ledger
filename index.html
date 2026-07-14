@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>:<!-- PWA Support -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#c0392b">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Vivaah">
-<link rel="apple-touch-icon" href="icons/icon-152x152.png">
-<link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+<head>
 <meta charset="UTF-8">
 <title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -610,6 +601,22 @@
   .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;transition:background .15s,border-color .15s;}
   .pin-dot.filled{background:var(--maroon);border-color:var(--maroon);}
   .pin-dot.error{background:var(--rust);border-color:var(--rust);}
+
+  /* ── Email gate styles ── */
+  .email-gate{display:flex;flex-direction:column;align-items:center;width:100%;}
+  .email-gate input[type=email]{width:100%;box-sizing:border-box;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;font-family:'Inter';background:#fff;color:var(--ink);outline:none;transition:border-color .2s;margin-bottom:12px;}
+  .email-gate input[type=email]:focus{border-color:var(--maroon);}
+  .email-gate .eg-btn{width:100%;padding:12px;background:var(--maroon);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter';cursor:pointer;transition:background .2s;}
+  .email-gate .eg-btn:hover{background:var(--maroon-dark);}
+  .email-gate .eg-btn:disabled{background:#ccc;cursor:not-allowed;}
+  .waiting-box{text-align:center;width:100%;}
+  .waiting-spinner{width:44px;height:44px;border:3px solid var(--ivory-deep);border-top-color:var(--maroon);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .waiting-email-badge{background:var(--ivory-deep);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--maroon);margin:10px 0 18px;word-break:break-all;}
+  .eg-back{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;margin-top:14px;text-decoration:underline;font-family:'Inter';}
+  .eg-status-msg{font-size:13px;color:var(--ink-soft);margin-top:8px;min-height:20px;text-align:center;}
+  .eg-status-msg.error{color:var(--rust);}
+  .eg-status-msg.success{color:#2E7D32;}
   .lock-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
   .key-btn{background:#fff;border:1px solid var(--line);border-radius:12px;font-size:20px;font-weight:600;color:var(--ink);padding:14px 0;cursor:pointer;transition:background .12s,transform .1s;font-family:'Cormorant Garamond',serif;}
   .key-btn:hover{background:var(--ivory-deep);}
@@ -767,29 +774,57 @@
       </svg>
     </div>
     <h2 class="lock-title">Vivaah Ledger</h2>
-    <p class="lock-sub">Enter your PIN to continue</p>
-    <div class="lock-role-tabs">
-      <button class="lock-tab active" data-lock-role="admin">Admin</button>
-      <button class="lock-tab" data-lock-role="editor">Editor</button>
-      <button class="lock-tab" data-lock-role="viewer">Viewer</button>
-      <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only" style="border-color:#C4A0E8;color:#5C1A8A;">🔑</button>
+
+    <!-- STEP 1: Email gate -->
+    <div id="emailGateStep">
+      <p class="lock-sub">Enter your email to request access</p>
+      <div class="email-gate">
+        <input type="email" id="egEmailInput" placeholder="your@email.com" autocomplete="email" inputmode="email">
+        <button class="eg-btn" id="egRequestBtn">Request Access →</button>
+        <div class="eg-status-msg" id="egStatusMsg"></div>
+      </div>
     </div>
-    <div class="lock-pin-dots" id="lockPinDots">
-      <span class="pin-dot" id="dot0"></span>
-      <span class="pin-dot" id="dot1"></span>
-      <span class="pin-dot" id="dot2"></span>
-      <span class="pin-dot" id="dot3"></span>
+
+    <!-- STEP 2: Waiting for approval -->
+    <div id="waitingStep" style="display:none;">
+      <p class="lock-sub">Approval request sent!</p>
+      <div class="waiting-box">
+        <div class="waiting-spinner"></div>
+        <p style="font-size:14px;color:var(--ink-soft);margin:0 0 6px;">Waiting for owner approval…</p>
+        <div class="waiting-email-badge" id="waitingEmailBadge"></div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;">An email has been sent to the owner.<br>This page will update automatically.</p>
+        <div class="eg-status-msg" id="waitingStatusMsg"></div>
+        <button class="eg-back" id="egBackBtn">← Use a different email</button>
+      </div>
     </div>
-    <div class="lock-keypad">
-      <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button>
-      <button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button><button class="key-btn" data-key="6">6</button>
-      <button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button>
-      <button class="key-btn key-clear" data-key="clear">⌫</button><button class="key-btn" data-key="0">0</button><button class="key-btn key-enter" data-key="enter">✓</button>
+
+    <!-- STEP 3: PIN entry (shown after approval) -->
+    <div id="pinStep" style="display:none;">
+      <p class="lock-sub">Access approved! Enter your PIN</p>
+      <div class="lock-role-tabs">
+        <button class="lock-tab active" data-lock-role="admin">Admin</button>
+        <button class="lock-tab" data-lock-role="editor">Editor</button>
+        <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+        <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only" style="border-color:#C4A0E8;color:#5C1A8A;">🔑</button>
+      </div>
+      <div class="lock-pin-dots" id="lockPinDots">
+        <span class="pin-dot" id="dot0"></span>
+        <span class="pin-dot" id="dot1"></span>
+        <span class="pin-dot" id="dot2"></span>
+        <span class="pin-dot" id="dot3"></span>
+      </div>
+      <div class="lock-keypad">
+        <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button>
+        <button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button><button class="key-btn" data-key="6">6</button>
+        <button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button>
+        <button class="key-btn key-clear" data-key="clear">⌫</button><button class="key-btn" data-key="0">0</button><button class="key-btn key-enter" data-key="enter">✓</button>
+      </div>
+      <div class="lock-remember">
+        <label><input type="checkbox" id="lockRemember"> Stay signed in on this device</label>
+      </div>
+      <div class="lock-error" id="lockError"></div>
     </div>
-    <div class="lock-remember">
-      <label><input type="checkbox" id="lockRemember"> Stay signed in on this device</label>
-    </div>
-    <div class="lock-error" id="lockError"></div>
+
   </div>
 </div>
 
@@ -1501,10 +1536,16 @@ document.querySelectorAll('.lock-tab').forEach(tab=>{
 document.getElementById('btnSignOutRole').onclick = ()=>{
   currentRole = null;
   localStorage.removeItem('vivaah-role');
+  localStorage.removeItem('vivaah-approved-email');
   sessionStorage.removeItem('vivaah-role');
+  egCurrentEmail = '';
+  egStopPolling();
   lockPinEntry = '';
   updatePinDots();
   document.getElementById('lockError').textContent = '';
+  document.getElementById('egEmailInput').value = '';
+  document.getElementById('egStatusMsg').textContent = '';
+  showLockStep('email');
   document.getElementById('lockOverlay').classList.remove('hidden');
 };
 
@@ -1546,6 +1587,125 @@ document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
 };
 
 /* ---------- Session restore + initial lock check ---------- */
+/* ================================================================
+   EMAIL GATE — Worker URL (update after you deploy the Worker)
+   ================================================================ */
+const AUTH_WORKER_URL = 'https://vivaah-auth.rms-d21.workers.dev'; // ← UPDATE THIS
+const OWNER_EMAIL_CLIENT = 'horizoneworld@gmail.com';
+
+let egCurrentEmail = '';
+let egPollingInterval = null;
+
+/* Show a step, hide others */
+function showLockStep(step){ // 'email' | 'waiting' | 'pin'
+  document.getElementById('emailGateStep').style.display = step==='email' ? '' : 'none';
+  document.getElementById('waitingStep').style.display   = step==='waiting' ? '' : 'none';
+  document.getElementById('pinStep').style.display       = step==='pin' ? '' : 'none';
+}
+
+/* Request access from worker */
+async function egRequestAccess(){
+  const input = document.getElementById('egEmailInput');
+  const email = input.value.trim().toLowerCase();
+  const statusEl = document.getElementById('egStatusMsg');
+  const btn = document.getElementById('egRequestBtn');
+
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    statusEl.textContent = 'Please enter a valid email address.';
+    statusEl.className = 'eg-status-msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  statusEl.textContent = '';
+
+  try{
+    const resp = await fetch(AUTH_WORKER_URL + '/request-access', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await resp.json();
+
+    if(data.status === 'approved'){
+      // Owner or already approved — go straight to PIN
+      egCurrentEmail = email;
+      localStorage.setItem('vivaah-approved-email', email);
+      showLockStep('pin');
+    } else if(data.status === 'pending'){
+      egCurrentEmail = email;
+      document.getElementById('waitingEmailBadge').textContent = email;
+      showLockStep('waiting');
+      egStartPolling();
+    } else {
+      statusEl.textContent = data.error || 'Something went wrong. Please try again.';
+      statusEl.className = 'eg-status-msg error';
+    }
+  } catch(e){
+    statusEl.textContent = 'Network error. Please check your connection.';
+    statusEl.className = 'eg-status-msg error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Request Access →';
+  }
+}
+
+/* Poll worker for approval status every 5 seconds */
+function egStartPolling(){
+  egStopPolling();
+  egPollingInterval = setInterval(egCheckStatus, 5000);
+}
+function egStopPolling(){
+  if(egPollingInterval){ clearInterval(egPollingInterval); egPollingInterval = null; }
+}
+
+async function egCheckStatus(){
+  if(!egCurrentEmail) return;
+  try{
+    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: egCurrentEmail})
+    });
+    const data = await resp.json();
+    const statusEl = document.getElementById('waitingStatusMsg');
+
+    if(data.status === 'approved'){
+      egStopPolling();
+      localStorage.setItem('vivaah-approved-email', egCurrentEmail);
+      statusEl.textContent = '✅ Approved! Loading PIN screen…';
+      statusEl.className = 'eg-status-msg success';
+      setTimeout(()=>{ showLockStep('pin'); }, 800);
+    } else if(data.status === 'rejected'){
+      egStopPolling();
+      statusEl.textContent = '❌ Access was rejected by the owner.';
+      statusEl.className = 'eg-status-msg error';
+      setTimeout(()=>{
+        showLockStep('email');
+        document.getElementById('egStatusMsg').textContent = 'Your request was rejected. Contact the owner.';
+        document.getElementById('egStatusMsg').className = 'eg-status-msg error';
+      }, 2000);
+    }
+    // 'pending' or 'none' → keep polling silently
+  } catch(e){ /* network hiccup — keep polling */ }
+}
+
+/* Back button */
+document.getElementById('egBackBtn').onclick = ()=>{
+  egStopPolling();
+  egCurrentEmail = '';
+  document.getElementById('egEmailInput').value = '';
+  document.getElementById('egStatusMsg').textContent = '';
+  showLockStep('email');
+};
+
+/* Request button */
+document.getElementById('egRequestBtn').onclick = egRequestAccess;
+document.getElementById('egEmailInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') egRequestAccess();
+});
+
 async function initAuth(){
   const sessionRole = sessionStorage.getItem('vivaah-role');
   if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole)){
@@ -1562,7 +1722,30 @@ async function initAuth(){
     await loadData();
     return;
   }
-  // Show lock screen
+
+  // Check if device has a pre-approved email (30-day approval)
+  const approvedEmail = localStorage.getItem('vivaah-approved-email');
+  if(approvedEmail){
+    // Verify still approved with worker
+    try{
+      const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email: approvedEmail})
+      });
+      const data = await resp.json();
+      if(data.status === 'approved'){
+        egCurrentEmail = approvedEmail;
+        showLockStep('pin');
+        return;
+      } else {
+        localStorage.removeItem('vivaah-approved-email');
+      }
+    } catch(e){ /* network error — fall through to email gate */ }
+  }
+
+  // Show email gate
+  showLockStep('email');
 }
 
 /* ================================================================ */
@@ -1585,7 +1768,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -4118,15 +4301,5 @@ function runGlobalSearch(q, gsInput, gsResults){
   gsResults.innerHTML=html; gsResults.style.display='block';
 }
 </script>
-</body>:<!-- PWA Service Worker -->
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker
-        .register('/Vivaah-Ledger/sw.js')
-        .then(reg => console.log('[SW] Registered'))
-        .catch(err => console.warn('[SW] Failed:', err));
-    });
-  }
-</script>
+</body>
 </html>
