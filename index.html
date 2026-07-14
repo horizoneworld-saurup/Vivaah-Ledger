@@ -862,15 +862,64 @@
 <!-- OWNER PANEL -->
 <div class="modal-overlay" id="ownerPanelOverlay">
   <div class="modal" style="max-width:640px;">
-    <h3>🔑 Owner Panel — Platform Vendors</h3>
-    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">These paid vendors appear in every customer's ticker and cannot be removed by customers. Download the updated file to deliver to a customer.</p>
-    <div id="platformVendorList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
-    <button class="btn btn-ghost" id="btnAddPlatformVendor" style="width:100%;justify-content:center;">+ Add paid vendor</button>
-    <div class="modal-actions" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
-      <button class="btn btn-ghost" id="ownerPanelCancelBtn">Close</button>
-      <button class="btn btn-gold" id="btnDownloadUpdatedFile">⬇ Download updated file for customer</button>
+    <h3>🔑 Owner Panel</h3>
+
+    <!-- Owner Panel Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:18px;border-bottom:1.5px solid var(--line);padding-bottom:10px;">
+      <button id="opTabVendors" onclick="opSwitchTab('vendors')" style="padding:6px 16px;border-radius:8px;border:1.5px solid var(--maroon);background:var(--maroon);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">🏪 Platform Vendors</button>
+      <button id="opTabAccess" onclick="opSwitchTab('access')" style="padding:6px 16px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;">🔐 Access Manager</button>
     </div>
-    <div style="background:var(--ivory-deep);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-top:12px;">ℹ Owner PIN is: <b id="ownerPinDisplay"></b> — edit <code>OWNER_PIN</code> in the source before delivery.</div>
+
+    <!-- Tab: Platform Vendors -->
+    <div id="opPanelVendors">
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">These paid vendors appear in every customer's ticker and cannot be removed by customers. Download the updated file to deliver to a customer.</p>
+      <div id="platformVendorList" style="display:flex;flex-direction:column;gap:10px;max-height:300px;overflow-y:auto;margin-bottom:14px;"></div>
+      <button class="btn btn-ghost" id="btnAddPlatformVendor" style="width:100%;justify-content:center;">+ Add paid vendor</button>
+      <div class="modal-actions" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <button class="btn btn-ghost" id="ownerPanelCancelBtn">Close</button>
+        <button class="btn btn-gold" id="btnDownloadUpdatedFile">⬇ Download updated file for customer</button>
+      </div>
+      <div style="background:var(--ivory-deep);border-radius:9px;padding:10px 12px;font-size:11.5px;color:var(--ink-soft);margin-top:12px;">ℹ Owner PIN is: <b id="ownerPinDisplay"></b> — edit <code>OWNER_PIN</code> in the source before delivery.</div>
+    </div>
+
+    <!-- Tab: Access Manager -->
+    <div id="opPanelAccess" style="display:none;">
+      <p style="font-size:12px;color:var(--ink-soft);margin:0 0 16px;">View and revoke access for approved users. Revoking forces them to request approval again.</p>
+
+      <!-- Lookup approved email -->
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input type="email" id="amEmailInput" placeholder="Enter email to check or revoke…" style="flex:1;padding:9px 12px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;">
+        <button onclick="amCheckEmail()" style="padding:9px 16px;background:var(--maroon);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Check</button>
+      </div>
+
+      <!-- Status result -->
+      <div id="amResult" style="display:none;background:var(--ivory-deep);border-radius:10px;padding:14px 16px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div id="amResultEmail" style="font-weight:600;font-size:14px;color:var(--ink);"></div>
+            <div id="amResultStatus" style="font-size:12px;margin-top:3px;"></div>
+          </div>
+          <button id="amRevokeBtn" onclick="amRevokeEmail()" style="padding:8px 18px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🚫 Revoke Access</button>
+        </div>
+      </div>
+
+      <div id="amStatusMsg" style="font-size:13px;min-height:18px;text-align:center;color:var(--ink-soft);"></div>
+
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;">ℹ How it works</div>
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.7;">
+          • Approved users stay logged in for <b>30 days</b><br>
+          • Revoking removes their access immediately<br>
+          • They will need to request approval again to re-enter<br>
+          • You (<b>horizoneworld@gmail.com</b>) are always pre-approved
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn btn-ghost" onclick="document.getElementById('ownerPanelOverlay').classList.remove('show')">Close</button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1588,6 +1637,99 @@ document.getElementById('adminSettingsSaveBtn').onclick = async ()=>{
 
 /* ---------- Session restore + initial lock check ---------- */
 /* ================================================================
+   ACCESS MANAGER — Owner Panel functions
+   ================================================================ */
+function opSwitchTab(tab) {
+  document.getElementById('opPanelVendors').style.display = tab === 'vendors' ? '' : 'none';
+  document.getElementById('opPanelAccess').style.display  = tab === 'access'  ? '' : 'none';
+  document.getElementById('opTabVendors').style.background = tab === 'vendors' ? 'var(--maroon)' : '#fff';
+  document.getElementById('opTabVendors').style.color      = tab === 'vendors' ? '#fff' : 'var(--ink)';
+  document.getElementById('opTabAccess').style.background  = tab === 'access'  ? 'var(--maroon)' : '#fff';
+  document.getElementById('opTabAccess').style.color       = tab === 'access'  ? '#fff' : 'var(--ink)';
+}
+
+async function amCheckEmail() {
+  const email = document.getElementById('amEmailInput').value.trim().toLowerCase();
+  const resultEl   = document.getElementById('amResult');
+  const statusMsg  = document.getElementById('amStatusMsg');
+  const revokeBtn  = document.getElementById('amRevokeBtn');
+  const resultEmail  = document.getElementById('amResultEmail');
+  const resultStatus = document.getElementById('amResultStatus');
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    statusMsg.textContent = 'Please enter a valid email address.';
+    statusMsg.style.color = 'var(--rust)';
+    return;
+  }
+
+  statusMsg.textContent = 'Checking…';
+  statusMsg.style.color = 'var(--ink-soft)';
+  resultEl.style.display = 'none';
+
+  try {
+    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await resp.json();
+    statusMsg.textContent = '';
+    resultEmail.textContent = email;
+    resultEl.style.display = '';
+
+    if (data.status === 'approved') {
+      resultStatus.innerHTML = '<span style="color:#2E7D32;font-weight:600;">✅ Approved</span> — has active access';
+      revokeBtn.style.display = '';
+    } else if (data.status === 'pending') {
+      resultStatus.innerHTML = '<span style="color:#E65100;font-weight:600;">⏳ Pending</span> — waiting for your approval';
+      revokeBtn.style.display = 'none';
+    } else {
+      resultStatus.innerHTML = '<span style="color:var(--ink-soft);">⭕ No access</span> — not approved';
+      revokeBtn.style.display = 'none';
+    }
+  } catch(e) {
+    statusMsg.textContent = 'Network error. Check your connection.';
+    statusMsg.style.color = 'var(--rust)';
+  }
+}
+
+async function amRevokeEmail() {
+  const email = document.getElementById('amEmailInput').value.trim().toLowerCase();
+  const statusMsg = document.getElementById('amStatusMsg');
+  const revokeBtn = document.getElementById('amRevokeBtn');
+
+  if (!confirm(`Revoke access for ${email}? They will need to request approval again.`)) return;
+
+  revokeBtn.disabled = true;
+  revokeBtn.textContent = 'Revoking…';
+  statusMsg.textContent = '';
+
+  try {
+    const resp = await fetch(AUTH_WORKER_URL + '/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com' }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      document.getElementById('amResultStatus').innerHTML = '<span style="color:#C62828;font-weight:600;">🚫 Revoked</span> — access removed';
+      revokeBtn.style.display = 'none';
+      statusMsg.textContent = `✅ Access revoked for ${email}`;
+      statusMsg.style.color = '#2E7D32';
+    } else {
+      statusMsg.textContent = data.error || 'Could not revoke. Try again.';
+      statusMsg.style.color = 'var(--rust)';
+    }
+  } catch(e) {
+    statusMsg.textContent = 'Network error. Check your connection.';
+    statusMsg.style.color = 'var(--rust)';
+  } finally {
+    revokeBtn.disabled = false;
+    revokeBtn.textContent = '🚫 Revoke Access';
+  }
+}
+
+/* ================================================================
    EMAIL GATE — Worker URL (update after you deploy the Worker)
    ================================================================ */
 const AUTH_WORKER_URL = 'https://vivaah-auth.rms-d21.workers.dev'; // ← UPDATE THIS
@@ -1768,7 +1910,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
