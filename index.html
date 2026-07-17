@@ -1785,7 +1785,8 @@ async function egRequestAccess(){
       statusEl.className = 'eg-status-msg error';
     }
   } catch(e){
-    statusEl.textContent = 'Network error. Please check your connection.';
+    console.error('Request access error:', e);
+    statusEl.textContent = 'Network error: ' + (e.message || 'Could not reach server. Try refreshing the page.');
     statusEl.className = 'eg-status-msg error';
   } finally {
     btn.disabled = false;
@@ -1910,7 +1911,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
