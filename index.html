@@ -908,7 +908,7 @@
       <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);">
         <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;">ℹ How it works</div>
         <div style="font-size:12px;color:var(--ink-soft);line-height:1.7;">
-          • Approved users stay logged in for <b>30 days</b><br>
+          • Approved users stay logged in for <b>6 months</b><br>
           • Revoking removes their access immediately<br>
           • They will need to request approval again to re-enter<br>
           • You (<b>horizoneworld@gmail.com</b>) are always pre-approved
@@ -1910,7 +1910,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -3061,9 +3061,20 @@ function renderGuests(){
     return `
       <tr class="guest-row" data-guest-id="${g.id}">
         <td><span class="guest-chev ${isOpen?'open':''}">›</span></td>
-        <td class="gname">${escapeHtml(g.name)}</td>
-        <td>${escapeHtml(g.phone||'—')}</td>
-        <td>${escapeHtml(g.side||'—')}</td>
+        <td class="gname" style="min-width:130px;">
+          <input type="text" class="guest-inline-edit" value="${escapeHtml(g.name)}" data-guest-inline="${g.id}|name" style="width:100%;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
+        </td>
+        <td>
+          <input type="text" class="guest-inline-edit" value="${escapeHtml(g.phone||'')}" placeholder="—" data-guest-inline="${g.id}|phone" style="width:90px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
+        </td>
+        <td>
+          <select class="guest-inline-edit" data-guest-inline="${g.id}|side" style="padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+            <option value="" ${!g.side?'selected':''}>— Side —</option>
+            <option value="Bride" ${g.side==='Bride'?'selected':''}>Bride</option>
+            <option value="Groom" ${g.side==='Groom'?'selected':''}>Groom</option>
+            <option value="Both" ${g.side==='Both'?'selected':''}>Both</option>
+          </select>
+        </td>
         <td class="invited-to">${invited.length ? escapeHtml(invited.join(', ')) : '<span style="color:var(--ink-soft);">Not yet set</span>'}</td>
         <td class="num">${rawCounts.adults}</td>
         <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
@@ -3083,11 +3094,28 @@ function renderGuests(){
             <span class="${g.kankotriSent?'dispatch-sent':'dispatch-pending'}">${g.kankotriSent?'✓ Sent':'⏳ Pending'}</span>
           </label>
         </td>` : ''}
-        <td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>
+        ${currentRole==='editor' ? '' : `<td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>`}
       </tr>
       ${detailRow}
     `;
   }).join('');
+
+  // Save inline edits (name, phone, side) — runs after every renderGuests()
+  document.querySelectorAll('.guest-inline-edit').forEach(el => {
+    el.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const [gid, field] = e.target.dataset.guestInline.split('|');
+      const g = guests.find(x => x.id === gid);
+      if (!g) return;
+      const val = e.target.value.trim();
+      if (field === 'name' && !val) { showToast('Name cannot be empty'); e.target.value = g.name; return; }
+      g[field] = val;
+      saveGuests();
+      showToast('Saved ✓');
+    });
+    el.addEventListener('click', e => e.stopPropagation());
+    el.addEventListener('keydown', e => { if(e.key==='Enter') { e.preventDefault(); e.target.blur(); } });
+  });
 }
 
 document.getElementById('guestEventChips').addEventListener('click', (e)=>{
