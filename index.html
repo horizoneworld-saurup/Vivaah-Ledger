@@ -1911,7 +1911,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -3312,14 +3312,27 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
           seenInThisFile[nameKey] = idx;
         }
 
+        // Read Tier column — map Excel values to internal keys
+        const tierRaw = String(getVal(row,['tier','kankotritier','kankotri tier'])).trim().toLowerCase();
+        let kankotriTier = '';
+        if(tierRaw.includes('vip') || tierRaw.includes('vvip')) kankotriTier = 'vip';
+        else if(tierRaw.includes('premium')) kankotriTier = 'premium';
+        else if(tierRaw.includes('normal')) kankotriTier = 'normal';
+
+        // Read Sent column
+        const sentRaw = String(getVal(row,['sent','dispatched','kankotrisent'])).trim().toLowerCase();
+        const kankotriSent = ['yes','y','true','1','sent'].includes(sentRaw);
+
         const existing = guests.find(g=>g.name.toLowerCase()===nameKey);
         if(existing){
           existing.phone = phone || existing.phone;
           existing.side = side;
           existing.events = {...existing.events, ...events};
+          if(kankotriTier) existing.kankotriTier = kankotriTier;
+          if(kankotriSent) existing.kankotriSent = kankotriSent;
           if(wasInThisFileAlready) mergedWithinFile++; else updatedExisting++;
         } else {
-          guests.push({id:uid(), name, phone, side, events});
+          guests.push({id:uid(), name, phone, side, events, kankotriTier, kankotriSent});
           added++;
         }
       });
