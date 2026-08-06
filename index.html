@@ -1218,6 +1218,47 @@
     <!-- Kankotri filter chips -->
     <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
+
+    <!-- ── Invitation Distribution Table ── -->
+    <div style="margin-top:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--maroon);">📋 Invitation Distribution List</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="invSearchInput" placeholder="Search family…" style="padding:6px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:160px;">
+          <select id="invTierFilter" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+            <option value="">All Tiers</option>
+            <option value="vip">👑 VIP Premium</option>
+            <option value="premium">⭐ Premium</option>
+            <option value="normal">🎟 Normal</option>
+            <option value="unassigned">⭕ Unassigned</option>
+          </select>
+          <select id="invSentFilter" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+            <option value="">All Status</option>
+            <option value="sent">✓ Sent</option>
+            <option value="pending">⏳ Pending</option>
+          </select>
+        </div>
+      </div>
+      <div id="invSummaryBar" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin-bottom:10px;padding:10px 14px;background:var(--ivory-deep);border-radius:10px;"></div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;" id="invTable">
+          <thead>
+            <tr style="background:var(--maroon);color:#fff;text-align:left;">
+              <th style="padding:9px 12px;border-radius:8px 0 0 0;">#</th>
+              <th style="padding:9px 12px;">Family / Guest Name</th>
+              <th style="padding:9px 12px;">Phone</th>
+              <th style="padding:9px 12px;">Side</th>
+              <th style="padding:9px 12px;">Tier</th>
+              <th style="padding:9px 12px;">No. of Cards</th>
+              <th style="padding:9px 12px;border-radius:0 8px 0 0;">Sent</th>
+            </tr>
+          </thead>
+          <tbody id="invTableBody"></tbody>
+        </table>
+      </div>
+      <div id="invEmptyMsg" style="display:none;text-align:center;padding:28px;color:var(--ink-soft);font-size:13px;">No guests in main list yet — add guests first.</div>
+    </div>
+
     <div class="guest-table-wrap">
       <table class="guest-table" id="guestTable">
         <thead>
@@ -1911,7 +1952,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -1991,6 +2032,7 @@ async function loadData(){
   }
   applyBranding();
   renderKankotriCardPreviews();
+  renderInvTable();
   render();
 }
 async function saveData(){
@@ -2006,6 +2048,7 @@ async function saveBranding(){
   queueCloudSave();
 }
 async function saveGuests(){
+  renderInvTable();
   await storageSet('wedding-guests', JSON.stringify(guests));
   queueCloudSave();
 }
@@ -4250,6 +4293,121 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
 /* ================================================================
    KANKOTRI CARD DESIGNS — upload/preview per tier
    ================================================================ */
+/* ================================================================
+   KANKOTRI INVITATION DISTRIBUTION TABLE
+   ================================================================ */
+function renderInvTable(){
+  const searchEl   = document.getElementById('invSearchInput');
+  const tierFEl    = document.getElementById('invTierFilter');
+  const sentFEl    = document.getElementById('invSentFilter');
+  const tbody      = document.getElementById('invTableBody');
+  const emptyMsg   = document.getElementById('invEmptyMsg');
+  const summaryBar = document.getElementById('invSummaryBar');
+  if(!tbody) return;
+
+  const search   = (searchEl ? searchEl.value : '').toLowerCase();
+  const tierF    = tierFEl ? tierFEl.value : '';
+  const sentF    = sentFEl ? sentFEl.value : '';
+
+  let list = [...guests];
+
+  if(search) list = list.filter(g => g.name.toLowerCase().includes(search) || (g.phone||'').includes(search));
+  if(tierF === 'unassigned') list = list.filter(g => !g.invTier);
+  else if(tierF) list = list.filter(g => g.invTier === tierF);
+  if(sentF === 'sent')    list = list.filter(g => g.invSent);
+  if(sentF === 'pending') list = list.filter(g => !g.invSent);
+
+  // Summary bar
+  const allG = guests;
+  const vipC     = allG.filter(g=>g.invTier==='vip').length;
+  const premC    = allG.filter(g=>g.invTier==='premium').length;
+  const normC    = allG.filter(g=>g.invTier==='normal').length;
+  const unassC   = allG.filter(g=>!g.invTier).length;
+  const sentC    = allG.filter(g=>g.invSent).length;
+  const totalCards = allG.reduce((s,g)=>s+(Number(g.invCards)||0),0);
+
+  summaryBar.innerHTML = `
+    <span>👑 VIP: <b>${vipC}</b></span>
+    <span>⭐ Premium: <b>${premC}</b></span>
+    <span>🎟 Normal: <b>${normC}</b></span>
+    <span>⭕ Unassigned: <b>${unassC}</b></span>
+    <span style="margin-left:8px;">✓ Sent: <b>${sentC}</b></span>
+    <span>📦 Total cards: <b>${totalCards}</b></span>
+  `;
+
+  if(guests.length === 0){ emptyMsg.style.display=''; tbody.innerHTML=''; return; }
+  emptyMsg.style.display = 'none';
+
+  tbody.innerHTML = list.map((g, i) => {
+    const tier = g.invTier || '';
+    const tierLabel = tier==='vip' ? '👑 VIP Premium' : tier==='premium' ? '⭐ Premium' : tier==='normal' ? '🎟 Normal' : '— Assign —';
+    const tierColor = tier==='vip' ? '#856404' : tier==='premium' ? '#1A3A8A' : tier==='normal' ? '#555' : '#bbb';
+    const tierBg    = tier==='vip' ? '#FFF0C0' : tier==='premium' ? '#E8F0FF' : tier==='normal' ? '#F3EBDB' : '#fafafa';
+    const cards = g.invCards || 0;
+    const sent  = g.invSent || false;
+    const rowBg = i%2===0 ? '#fff' : 'var(--ivory)';
+    return `<tr style="background:${rowBg};border-bottom:1px solid var(--line);">
+      <td style="padding:8px 12px;color:var(--ink-soft);font-size:12px;">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:600;">${escapeHtml(g.name)}</td>
+      <td style="padding:8px 12px;color:var(--ink-soft);">${escapeHtml(g.phone||'—')}</td>
+      <td style="padding:8px 12px;">${escapeHtml(g.side||'—')}</td>
+      <td style="padding:8px 12px;">
+        <select data-inv-tier="${g.id}" style="padding:5px 8px;border:1.5px solid var(--line);border-radius:7px;font-size:12px;background:${tierBg};color:${tierColor};font-weight:600;cursor:pointer;">
+          <option value="" ${!tier?'selected':''}>— Assign Tier —</option>
+          <option value="vip"      ${tier==='vip'?'selected':''}>👑 VIP Premium</option>
+          <option value="premium"  ${tier==='premium'?'selected':''}>⭐ Premium</option>
+          <option value="normal"   ${tier==='normal'?'selected':''}>🎟 Normal</option>
+        </select>
+      </td>
+      <td style="padding:8px 12px;">
+        <input type="number" min="0" max="99" data-inv-cards="${g.id}" value="${cards}"
+          style="width:60px;padding:5px 8px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;text-align:center;">
+      </td>
+      <td style="padding:8px 12px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" data-inv-sent="${g.id}" ${sent?'checked':''}>
+          <span style="font-size:12px;font-weight:600;color:${sent?'#2E7D32':'#E65100'};">${sent?'✓ Sent':'⏳ Pending'}</span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Wire up change events
+  tbody.querySelectorAll('[data-inv-tier]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invTier);
+      if(g){ g.invTier = e.target.value; saveGuests(); renderInvTable(); }
+    });
+  });
+  tbody.querySelectorAll('[data-inv-cards]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invCards);
+      if(g){ g.invCards = Number(e.target.value)||0; saveGuests(); renderInvTable(); }
+    });
+  });
+  tbody.querySelectorAll('[data-inv-sent]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invSent);
+      if(g){ g.invSent = e.target.checked; saveGuests(); renderInvTable(); }
+      // Update label without full re-render
+      const span = e.target.nextElementSibling;
+      if(span){ span.textContent = e.target.checked?'✓ Sent':'⏳ Pending'; span.style.color = e.target.checked?'#2E7D32':'#E65100'; }
+    });
+  });
+
+  // Update kankotri tier counts in the card design boxes (use invTier now)
+  ['vip','premium','normal'].forEach(tier=>{
+    const el = document.getElementById('kankotriCount_'+tier);
+    if(el) el.textContent = guests.filter(g=>g.invTier===tier).length + ' families';
+  });
+}
+
+// Wire up search & filter
+['invSearchInput','invTierFilter','invSentFilter'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', renderInvTable);
+});
+
 function renderKankotriCardPreviews(){
   ['vip','premium','normal'].forEach(tier=>{
     const preview = document.getElementById('kankotriPreview_'+tier);
@@ -4368,16 +4526,25 @@ document.getElementById('btnKankotriTemplate').onclick=()=>{
   showToast('Kankotri template downloaded');
 };
 document.getElementById('btnKankotriExport').onclick=()=>{
-  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
-  if(kankotriGuests.length===0){showToast('No Kankotri guests to export');return;}
+  if(guests.length===0){showToast('No guests to export');return;}
   const wb=XLSX.utils.book_new();
+  // Sheet 1: Invitation Distribution (all guests)
+  const invRows=guests.map(g=>({
+    'Family / Guest Name':g.name,
+    'Phone':g.phone||'',
+    'Side':g.side||'',
+    'Tier':g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'Unassigned',
+    'No. of Cards':g.invCards||0,
+    'Sent':g.invSent?'Yes':'No',
+  }));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(invRows),'Invitation Distribution');
+  // Sheet 2: Kankotri event writers
+  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
   const rows=kankotriGuests.map(g=>{
     const c=guestEventCounts(g,'Kankotri');
     return{
       'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'',
       'Adults':c.adults,'Writer':c.writer,
-      'Tier':g.kankotriTier==='vip'?'VIP Premium':g.kankotriTier==='premium'?'Premium':g.kankotriTier==='normal'?'Normal':'',
-      'Sent':g.kankotriSent?'Yes':'No',
       'City':g.city||'','State':g.state||'','Country':g.country||''
     };
   });
