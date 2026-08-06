@@ -1911,7 +1911,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -4336,14 +4336,16 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
         const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
         const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+        // Always create Kankotri event if row has any data (adults, writer, or tier)
+        const hasKankotriData = adults>0 || writer>0 || tier!=='';
         if(existing){
-          if(adults>0||writer>0) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
+          if(hasKankotriData) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
           existing.phone=phone||existing.phone; existing.side=side;
           if(tier) existing.kankotriTier=tier;
           existing.kankotriSent=sent;
           updated++;
         } else {
-          const events=adults>0||writer>0?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
+          const events=hasKankotriData?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
           guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
         }
       });
