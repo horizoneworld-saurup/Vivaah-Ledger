@@ -1952,7 +1952,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -2148,20 +2148,21 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent]
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent]
     return [
       g.id, g.name, g.phone||'', g.side||'', evArr,
       g.city||'', g.state||'', g.country||'',
       g.needsAccommodation ? 1 : 0,
       g.rooms||0, g.beds||0,
-      g.kankotriTier||'', g.kankotriSent ? 1 : 0
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0,
+      g.invTier||'', g.invCards||0, g.invSent ? 1 : 0
     ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
     if(!Array.isArray(arr)) return arr;
-    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent] = arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
@@ -2172,7 +2173,8 @@ function expandGuests(compressed){
       id, name, phone, side, events,
       city:city||'', state:state||'', country:country||'',
       needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
-      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
+      invTier:invTier||'', invCards:invCards||0, invSent:!!invSent
     };
   });
 }
