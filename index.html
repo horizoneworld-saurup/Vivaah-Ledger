@@ -1952,7 +1952,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -2113,7 +2113,13 @@ function initGoogleAuth(){
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
     callback: async (resp)=>{
-      if(resp.error){ showToast('Google sign-in failed: '+resp.error); return; }
+      if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
+      if(resp.error){ 
+        setSyncStatus(null,'');
+        storageSet('google-token-cache','');
+        showToast('Google sign-in failed — please try again'); 
+        return; 
+      }
       googleAccessToken = resp.access_token;
       await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
       await onSignedIn();
@@ -2133,6 +2139,16 @@ async function tryRestoreGoogleSession(){
       } else if(parsed.token && googleTokenClient){
         // Token expired — attempt a silent refresh (no popup if user already consented)
         setSyncStatus('saving', 'Refreshing Google session…');
+        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
+        const refreshTimeout = setTimeout(()=>{
+          setSyncStatus(null, '');
+          showToast('Session expired — please sign in again');
+          // Clear bad cached token
+          storageSet('google-token-cache', '');
+          googleAccessToken = null;
+        }, 8000);
+        // Store timeout so callback can clear it
+        window._googleRefreshTimeout = refreshTimeout;
         googleTokenClient.requestAccessToken({prompt:''});
         return; // callback in initTokenClient will call onSignedIn() if successful
       }
@@ -2278,6 +2294,7 @@ async function onSignedIn(){
     setSyncStatus('ok','Synced just now');
     render();
     renderTimeline();
+    renderInvTable(); // refresh invitation distribution after cloud data loads
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
