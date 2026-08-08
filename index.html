@@ -597,6 +597,34 @@
   .lock-role-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:22px;}
   .lock-tab{flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
   .lock-tab.active{background:var(--maroon);color:var(--ivory);border-color:var(--maroon);}
+  /* ── Call / WhatsApp / Confirm buttons ── */
+  .guest-action-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+  .btn-call{padding:4px 9px;background:#1976D2;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-whatsapp{padding:4px 9px;background:#25D366;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-confirm{padding:4px 9px;background:#E65100;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+  .confirmed-badge{font-size:11px;color:#2E7D32;font-weight:600;background:#E8F5E9;padding:3px 8px;border-radius:6px;}
+
+  /* ── WhatsApp message editor modal ── */
+  .wa-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .wa-modal-overlay.show{display:flex;}
+  .wa-modal{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .wa-modal h3{margin:0 0 6px;font-size:17px;color:var(--maroon);}
+  .wa-modal textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';resize:vertical;min-height:120px;outline:none;margin:12px 0;}
+  .wa-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+
+  /* ── Headcount confirm modal ── */
+  .hc-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .hc-modal-overlay.show{display:flex;}
+  .hc-modal{background:#fff;border-radius:18px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .hc-modal h3{margin:0 0 14px;font-size:17px;color:var(--maroon);}
+  .hc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hc-row label{font-size:14px;color:var(--ink);}
+  .hc-row input{width:80px;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;text-align:center;}
+  .hc-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+
+  /* ── Reminder alert styles ── */
+  .reminder-alert-badge{font-size:11px;background:#FFF3E0;color:#E65100;padding:2px 8px;border-radius:6px;font-weight:600;margin-left:6px;}
+
   .lock-pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
   .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;transition:background .15s,border-color .15s;}
   .pin-dot.filled{background:var(--maroon);border-color:var(--maroon);}
@@ -1771,6 +1799,166 @@ async function amRevokeEmail() {
 }
 
 /* ================================================================
+   WHATSAPP MESSAGE TEMPLATE
+   ================================================================ */
+const DEFAULT_WA_MSG = `Dear [Name],
+
+We warmly invite you to our wedding celebration. Kindly confirm your attendance and expected headcount.
+
+Thank you! 🌸
+— Shah Family`;
+
+let waCurrentGuestId = null;
+let hcCurrentGuestId = null;
+
+// ── WhatsApp functions ────────────────────────────────────────────
+function waOpen(guestId) {
+  const g = guests.find(x => x.id === guestId);
+  if (!g || !g.phone) return;
+  waCurrentGuestId = guestId;
+  document.getElementById('waGuestName').textContent = g.name;
+  document.getElementById('waGuestPhone').textContent = g.phone;
+  // Restore saved custom message or use default
+  document.getElementById('waMessageText').value = g.waCustomMsg || DEFAULT_WA_MSG;
+  document.getElementById('waModalOverlay').classList.add('show');
+}
+
+function waSend() {
+  const g = guests.find(x => x.id === waCurrentGuestId);
+  if (!g) return;
+  const rawMsg = document.getElementById('waMessageText').value;
+  // Save custom message per guest
+  g.waCustomMsg = rawMsg;
+  saveGuests();
+  // Replace [Name] placeholder
+  const msg = rawMsg.replace(/\[Name\]/g, g.name);
+  const phone = g.phone.replace(/[^0-9]/g, '');
+  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+  document.getElementById('waModalOverlay').classList.remove('show');
+}
+
+// ── Headcount confirmation functions ─────────────────────────────
+function hcOpen(guestId) {
+  const g = guests.find(x => x.id === guestId);
+  if (!g) return;
+  hcCurrentGuestId = guestId;
+  document.getElementById('hcGuestName').textContent = g.name;
+  document.getElementById('hcAdults').value = g.confirmedAdults || 0;
+  document.getElementById('hcKids').value = g.confirmedKids || 0;
+  document.getElementById('hcCallStatus').value = g.callStatus || 'confirmed';
+  document.getElementById('hcModalOverlay').classList.add('show');
+}
+
+async function hcSave() {
+  const g = guests.find(x => x.id === hcCurrentGuestId);
+  if (!g) return;
+  g.confirmedAdults = Number(document.getElementById('hcAdults').value) || 0;
+  g.confirmedKids   = Number(document.getElementById('hcKids').value) || 0;
+  g.callStatus      = document.getElementById('hcCallStatus').value;
+  g.confirmedAt     = new Date().toISOString();
+  await saveGuests();
+  renderGuests();
+  document.getElementById('hcModalOverlay').classList.remove('show');
+  showToast(`✅ ${g.name} — ${g.confirmedAdults} adults confirmed`);
+}
+
+// ── Wire up guest row action buttons (called after renderGuests) ──
+function wireGuestActionBtns() {
+  document.querySelectorAll('[data-wa-guest]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); waOpen(btn.dataset.waGuest); };
+  });
+  document.querySelectorAll('[data-confirm-guest]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); hcOpen(btn.dataset.confirmGuest); };
+  });
+}
+
+/* ================================================================
+   REMINDER ALERTS — Email + Push Notification
+   ================================================================ */
+const REMINDER_CHECK_KEY = 'vivaah-reminder-last-check';
+
+async function requestPushPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function sendPushNotification(title, body) {
+  if (Notification.permission !== 'granted') return;
+  new Notification(title, {
+    body,
+    icon: 'icons/icon-192x192.png',
+    badge: 'icons/icon-72x72.png',
+    tag: 'vivaah-reminder',
+  });
+}
+
+async function sendReminderEmail(subject, body) {
+  try {
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: 'service_rrh49ga',
+        template_id: 'template_nkz7qec',
+        user_id: '84IAbs0-O2AoJTARe',
+        template_params: {
+          to_email: 'horizoneworld@gmail.com',
+          subject: subject,
+          requester_email: 'Vivaah Ledger Reminder',
+          approve_url: 'https://vivaah-ledger.pages.dev',
+          reject_url: 'https://vivaah-ledger.pages.dev',
+          app_url: 'https://vivaah-ledger.pages.dev',
+          time: body,
+        },
+      }),
+    });
+  } catch(e) { console.error('Reminder email failed:', e); }
+}
+
+async function checkReminders() {
+  // Only check once per day
+  const lastCheck = await storageGet(REMINDER_CHECK_KEY);
+  const today = new Date().toDateString();
+  if (lastCheck === today) return;
+  await storageSet(REMINDER_CHECK_KEY, today);
+
+  if (!reminders || reminders.length === 0) return;
+  const now = new Date();
+
+  for (const rem of reminders) {
+    if (!rem.date || !rem.title) continue;
+    const eventDate = new Date(rem.date);
+    const daysLeft = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+
+    // Fire at 7 days and 3 days before
+    if (daysLeft === 7 || daysLeft === 3) {
+      const title = `🌸 ${rem.title} — ${daysLeft} days to go!`;
+      const body  = `${rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}. Only ${daysLeft} days left!`;
+
+      // Push notification
+      sendPushNotification(title, body);
+
+      // Email alert
+      await sendReminderEmail(
+        `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
+        body
+      );
+    }
+  }
+}
+
+// Request push permission on first load (after user interaction)
+document.addEventListener('click', async () => {
+  if (Notification.permission === 'default') {
+    await requestPushPermission();
+  }
+}, { once: true });
+
+/* ================================================================
    EMAIL GATE — Worker URL (update after you deploy the Worker)
    ================================================================ */
 const AUTH_WORKER_URL = 'https://vivaah-auth.rms-d21.workers.dev'; // ← UPDATE THIS
@@ -1928,6 +2116,8 @@ async function initAuth(){
     } catch(e){ /* network error — fall through to email gate */ }
   }
 
+  // Check reminders once per day
+  checkReminders();
   // Show email gate
   showLockStep('email');
 }
@@ -1952,7 +2142,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -2113,7 +2303,13 @@ function initGoogleAuth(){
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
     callback: async (resp)=>{
-      if(resp.error){ showToast('Google sign-in failed: '+resp.error); return; }
+      if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
+      if(resp.error){ 
+        setSyncStatus(null,'');
+        storageSet('google-token-cache','');
+        showToast('Google sign-in failed — please try again'); 
+        return; 
+      }
       googleAccessToken = resp.access_token;
       await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
       await onSignedIn();
@@ -2133,6 +2329,16 @@ async function tryRestoreGoogleSession(){
       } else if(parsed.token && googleTokenClient){
         // Token expired — attempt a silent refresh (no popup if user already consented)
         setSyncStatus('saving', 'Refreshing Google session…');
+        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
+        const refreshTimeout = setTimeout(()=>{
+          setSyncStatus(null, '');
+          showToast('Session expired — please sign in again');
+          // Clear bad cached token
+          storageSet('google-token-cache', '');
+          googleAccessToken = null;
+        }, 8000);
+        // Store timeout so callback can clear it
+        window._googleRefreshTimeout = refreshTimeout;
         googleTokenClient.requestAccessToken({prompt:''});
         return; // callback in initTokenClient will call onSignedIn() if successful
       }
@@ -2148,20 +2354,22 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent]
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent]
     return [
       g.id, g.name, g.phone||'', g.side||'', evArr,
       g.city||'', g.state||'', g.country||'',
       g.needsAccommodation ? 1 : 0,
       g.rooms||0, g.beds||0,
-      g.kankotriTier||'', g.kankotriSent ? 1 : 0
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0,
+      g.invTier||'', g.invCards||0, g.invSent ? 1 : 0,
+      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||''
     ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
     if(!Array.isArray(arr)) return arr;
-    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent] = arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
@@ -2172,7 +2380,10 @@ function expandGuests(compressed){
       id, name, phone, side, events,
       city:city||'', state:state||'', country:country||'',
       needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
-      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
+      invTier:invTier||'', invCards:invCards||0, invSent:!!invSent,
+      confirmedAdults:Number(arr[16])||0, confirmedKids:Number(arr[17])||0,
+      callStatus:arr[18]||'', waCustomMsg:arr[19]||''
     };
   });
 }
@@ -2276,6 +2487,7 @@ async function onSignedIn(){
     setSyncStatus('ok','Synced just now');
     render();
     renderTimeline();
+    renderInvTable(); // refresh invitation distribution after cloud data loads
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -3138,11 +3350,26 @@ function renderGuests(){
             <span class="${g.kankotriSent?'dispatch-sent':'dispatch-pending'}">${g.kankotriSent?'✓ Sent':'⏳ Pending'}</span>
           </label>
         </td>` : ''}
+        <td>
+          <div class="guest-action-btns">
+            ${g.phone ? `
+              <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
+              <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
+            ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
+            <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
+              ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
+            </button>
+            ${g.confirmedAdults > 0 ? `<span class="confirmed-badge">✅ ${g.confirmedAdults} confirmed</span>` : ''}
+          </div>
+        </td>
         ${currentRole==='editor' ? '' : `<td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>`}
       </tr>
       ${detailRow}
     `;
   }).join('');
+
+  // Wire call/WA/confirm buttons
+  wireGuestActionBtns();
 
   // Save inline edits (name, phone, side) — runs after every renderGuests()
   document.querySelectorAll('.guest-inline-edit').forEach(el => {
@@ -4485,45 +4712,54 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
       let added=0,updated=0;
       rows.forEach(row=>{
         const name=String(getVal(row,['familyguestname','guestname','name','family'])).trim(); if(!name) return;
-        const adults=Number(getVal(row,['adults','adultcount']))||0;
-        const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
         const phone=String(getVal(row,['phone','mobile'])).trim();
         const side=String(getVal(row,['side'])).trim()||'Both';
-        const tierRaw=String(getVal(row,['tier','kankotritier'])).trim().toLowerCase();
-        const tier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const tierRaw=String(getVal(row,['tier','invtier','kankotritier'])).trim().toLowerCase();
+        const invTier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const invCards=Number(getVal(row,['noofcards','numcards','cards','numberofcards','nocards']))||0;
         const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
-        const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
+        const invSent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
-        // Always create Kankotri event if row has any data (adults, writer, or tier)
-        const hasKankotriData = adults>0 || writer>0 || tier!=='';
         if(existing){
-          if(hasKankotriData) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
-          existing.phone=phone||existing.phone; existing.side=side;
-          if(tier) existing.kankotriTier=tier;
-          existing.kankotriSent=sent;
+          existing.phone=phone||existing.phone;
+          existing.side=side||existing.side;
+          if(invTier) existing.invTier=invTier;
+          if(invCards) existing.invCards=invCards;
+          existing.invSent=invSent;
           updated++;
         } else {
-          const events=hasKankotriData?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
-          guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
+          guests.push({id:uid(),name,phone,side,events:{},invTier,invCards,invSent});
+          added++;
         }
       });
-      saveGuests(); renderGuests();
-      showToast(`Kankotri: ${added} added, ${updated} updated`);
-    }catch(err){showToast('Could not read file — check the format');}
+      saveGuests(); renderGuests(); renderInvTable();
+      showToast(`Invitation list: ${added} added, ${updated} updated`);
+    }catch(err){console.error(err);showToast('Could not read file — check the format');}
     e.target.value='';
   };
   reader.readAsArrayBuffer(file);
 });
 document.getElementById('btnKankotriTemplate').onclick=()=>{
   const wb=XLSX.utils.book_new();
-  const sheet=XLSX.utils.json_to_sheet([
-    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1,'Tier':'VIP Premium','Sent':'No'},
-    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0,'Tier':'Premium','Sent':'No'},
-    {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Adults':4,'Writer':0,'Tier':'Normal','Sent':'Yes'},
-  ]);
-  XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
-  XLSX.writeFile(wb,'Kankotri_Template.xlsx');
-  showToast('Kankotri template downloaded');
+  // If guests exist, pre-fill template with current guest list
+  const rows = guests.length > 0
+    ? guests.map(g=>({
+        'Family / Guest Name': g.name,
+        'Phone': g.phone||'',
+        'Side': g.side||'',
+        'Tier': g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'',
+        'No. of Cards': g.invCards||0,
+        'Sent': g.invSent?'Yes':'No',
+      }))
+    : [
+        {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Tier':'VIP Premium','No. of Cards':2,'Sent':'No'},
+        {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Tier':'Premium','No. of Cards':3,'Sent':'No'},
+        {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Tier':'Normal','No. of Cards':4,'Sent':'Yes'},
+      ];
+  const sheet=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,sheet,'Invitation');
+  XLSX.writeFile(wb,'Kankotri_Invitation_Template.xlsx');
+  showToast('Template downloaded with current guest list');
 };
 document.getElementById('btnKankotriExport').onclick=()=>{
   if(guests.length===0){showToast('No guests to export');return;}
@@ -4654,5 +4890,48 @@ function runGlobalSearch(q, gsInput, gsResults){
   gsResults.innerHTML=html; gsResults.style.display='block';
 }
 </script>
+<!-- ── WhatsApp Message Editor Modal ── -->
+<div class="wa-modal-overlay" id="waModalOverlay">
+  <div class="wa-modal">
+    <h3>💬 WhatsApp Message</h3>
+    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 4px;">To: <strong id="waGuestName"></strong> (<span id="waGuestPhone"></span>)</p>
+    <textarea id="waMessageText"></textarea>
+    <div style="font-size:11px;color:var(--ink-soft);">You can edit the message before sending. <strong>[Name]</strong> will be replaced with the guest's name.</div>
+    <div class="wa-modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('waModalOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn btn-gold" onclick="waSend()">Open WhatsApp →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Headcount Confirmation Modal ── -->
+<div class="hc-modal-overlay" id="hcModalOverlay">
+  <div class="hc-modal">
+    <h3>✓ Confirm Headcount</h3>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">Guest: <strong id="hcGuestName"></strong></p>
+    <div class="hc-row">
+      <label>Confirmed Adults</label>
+      <input type="number" min="0" id="hcAdults" value="0">
+    </div>
+    <div class="hc-row">
+      <label>Confirmed Kids</label>
+      <input type="number" min="0" id="hcKids" value="0">
+    </div>
+    <div class="hc-row" style="padding-top:10px;border-top:1px solid var(--line);">
+      <label style="font-weight:600;">Call Status</label>
+      <select id="hcCallStatus" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
+        <option value="confirmed">✅ Confirmed attending</option>
+        <option value="declined">❌ Declined</option>
+        <option value="maybe">🤔 Maybe</option>
+        <option value="no-answer">📵 No answer</option>
+      </select>
+    </div>
+    <div class="hc-modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('hcModalOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn btn-gold" onclick="hcSave()">Save Confirmation</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
