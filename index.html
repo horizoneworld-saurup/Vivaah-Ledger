@@ -1952,7 +1952,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -4487,45 +4487,54 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
       let added=0,updated=0;
       rows.forEach(row=>{
         const name=String(getVal(row,['familyguestname','guestname','name','family'])).trim(); if(!name) return;
-        const adults=Number(getVal(row,['adults','adultcount']))||0;
-        const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
         const phone=String(getVal(row,['phone','mobile'])).trim();
         const side=String(getVal(row,['side'])).trim()||'Both';
-        const tierRaw=String(getVal(row,['tier','kankotritier'])).trim().toLowerCase();
-        const tier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const tierRaw=String(getVal(row,['tier','invtier','kankotritier'])).trim().toLowerCase();
+        const invTier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const invCards=Number(getVal(row,['noofcards','numcards','cards','numberofcards','nocards']))||0;
         const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
-        const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
+        const invSent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
-        // Always create Kankotri event if row has any data (adults, writer, or tier)
-        const hasKankotriData = adults>0 || writer>0 || tier!=='';
         if(existing){
-          if(hasKankotriData) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
-          existing.phone=phone||existing.phone; existing.side=side;
-          if(tier) existing.kankotriTier=tier;
-          existing.kankotriSent=sent;
+          existing.phone=phone||existing.phone;
+          existing.side=side||existing.side;
+          if(invTier) existing.invTier=invTier;
+          if(invCards) existing.invCards=invCards;
+          existing.invSent=invSent;
           updated++;
         } else {
-          const events=hasKankotriData?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
-          guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
+          guests.push({id:uid(),name,phone,side,events:{},invTier,invCards,invSent});
+          added++;
         }
       });
-      saveGuests(); renderGuests();
-      showToast(`Kankotri: ${added} added, ${updated} updated`);
-    }catch(err){showToast('Could not read file — check the format');}
+      saveGuests(); renderGuests(); renderInvTable();
+      showToast(`Invitation list: ${added} added, ${updated} updated`);
+    }catch(err){console.error(err);showToast('Could not read file — check the format');}
     e.target.value='';
   };
   reader.readAsArrayBuffer(file);
 });
 document.getElementById('btnKankotriTemplate').onclick=()=>{
   const wb=XLSX.utils.book_new();
-  const sheet=XLSX.utils.json_to_sheet([
-    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1,'Tier':'VIP Premium','Sent':'No'},
-    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0,'Tier':'Premium','Sent':'No'},
-    {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Adults':4,'Writer':0,'Tier':'Normal','Sent':'Yes'},
-  ]);
-  XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
-  XLSX.writeFile(wb,'Kankotri_Template.xlsx');
-  showToast('Kankotri template downloaded');
+  // If guests exist, pre-fill template with current guest list
+  const rows = guests.length > 0
+    ? guests.map(g=>({
+        'Family / Guest Name': g.name,
+        'Phone': g.phone||'',
+        'Side': g.side||'',
+        'Tier': g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'',
+        'No. of Cards': g.invCards||0,
+        'Sent': g.invSent?'Yes':'No',
+      }))
+    : [
+        {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Tier':'VIP Premium','No. of Cards':2,'Sent':'No'},
+        {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Tier':'Premium','No. of Cards':3,'Sent':'No'},
+        {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Tier':'Normal','No. of Cards':4,'Sent':'Yes'},
+      ];
+  const sheet=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,sheet,'Invitation');
+  XLSX.writeFile(wb,'Kankotri_Invitation_Template.xlsx');
+  showToast('Template downloaded with current guest list');
 };
 document.getElementById('btnKankotriExport').onclick=()=>{
   if(guests.length===0){showToast('No guests to export');return;}
