@@ -1952,7 +1952,7 @@ let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per t
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
 /* Google Sheets sync state */
-const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '846653967627-oa6eh2tgmq2a41pa5t6l7rjgt28jk8k7.apps.googleusercontent.com';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
@@ -2113,13 +2113,7 @@ function initGoogleAuth(){
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
     callback: async (resp)=>{
-      if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
-      if(resp.error){ 
-        setSyncStatus(null,'');
-        storageSet('google-token-cache','');
-        showToast('Google sign-in failed — please try again'); 
-        return; 
-      }
+      if(resp.error){ showToast('Google sign-in failed: '+resp.error); return; }
       googleAccessToken = resp.access_token;
       await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
       await onSignedIn();
@@ -2139,16 +2133,6 @@ async function tryRestoreGoogleSession(){
       } else if(parsed.token && googleTokenClient){
         // Token expired — attempt a silent refresh (no popup if user already consented)
         setSyncStatus('saving', 'Refreshing Google session…');
-        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
-        const refreshTimeout = setTimeout(()=>{
-          setSyncStatus(null, '');
-          showToast('Session expired — please sign in again');
-          // Clear bad cached token
-          storageSet('google-token-cache', '');
-          googleAccessToken = null;
-        }, 8000);
-        // Store timeout so callback can clear it
-        window._googleRefreshTimeout = refreshTimeout;
         googleTokenClient.requestAccessToken({prompt:''});
         return; // callback in initTokenClient will call onSignedIn() if successful
       }
@@ -2164,21 +2148,20 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent]
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent]
     return [
       g.id, g.name, g.phone||'', g.side||'', evArr,
       g.city||'', g.state||'', g.country||'',
       g.needsAccommodation ? 1 : 0,
       g.rooms||0, g.beds||0,
-      g.kankotriTier||'', g.kankotriSent ? 1 : 0,
-      g.invTier||'', g.invCards||0, g.invSent ? 1 : 0
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0
     ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
     if(!Array.isArray(arr)) return arr;
-    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent] = arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
@@ -2189,8 +2172,7 @@ function expandGuests(compressed){
       id, name, phone, side, events,
       city:city||'', state:state||'', country:country||'',
       needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
-      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
-      invTier:invTier||'', invCards:invCards||0, invSent:!!invSent
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent
     };
   });
 }
@@ -2294,7 +2276,6 @@ async function onSignedIn(){
     setSyncStatus('ok','Synced just now');
     render();
     renderTimeline();
-    renderInvTable(); // refresh invitation distribution after cloud data loads
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -4504,54 +4485,45 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
       let added=0,updated=0;
       rows.forEach(row=>{
         const name=String(getVal(row,['familyguestname','guestname','name','family'])).trim(); if(!name) return;
+        const adults=Number(getVal(row,['adults','adultcount']))||0;
+        const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
         const phone=String(getVal(row,['phone','mobile'])).trim();
         const side=String(getVal(row,['side'])).trim()||'Both';
-        const tierRaw=String(getVal(row,['tier','invtier','kankotritier'])).trim().toLowerCase();
-        const invTier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
-        const invCards=Number(getVal(row,['noofcards','numcards','cards','numberofcards','nocards']))||0;
+        const tierRaw=String(getVal(row,['tier','kankotritier'])).trim().toLowerCase();
+        const tier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
         const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
-        const invSent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
+        const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
+        // Always create Kankotri event if row has any data (adults, writer, or tier)
+        const hasKankotriData = adults>0 || writer>0 || tier!=='';
         if(existing){
-          existing.phone=phone||existing.phone;
-          existing.side=side||existing.side;
-          if(invTier) existing.invTier=invTier;
-          if(invCards) existing.invCards=invCards;
-          existing.invSent=invSent;
+          if(hasKankotriData) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
+          existing.phone=phone||existing.phone; existing.side=side;
+          if(tier) existing.kankotriTier=tier;
+          existing.kankotriSent=sent;
           updated++;
         } else {
-          guests.push({id:uid(),name,phone,side,events:{},invTier,invCards,invSent});
-          added++;
+          const events=hasKankotriData?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
+          guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
         }
       });
-      saveGuests(); renderGuests(); renderInvTable();
-      showToast(`Invitation list: ${added} added, ${updated} updated`);
-    }catch(err){console.error(err);showToast('Could not read file — check the format');}
+      saveGuests(); renderGuests();
+      showToast(`Kankotri: ${added} added, ${updated} updated`);
+    }catch(err){showToast('Could not read file — check the format');}
     e.target.value='';
   };
   reader.readAsArrayBuffer(file);
 });
 document.getElementById('btnKankotriTemplate').onclick=()=>{
   const wb=XLSX.utils.book_new();
-  // If guests exist, pre-fill template with current guest list
-  const rows = guests.length > 0
-    ? guests.map(g=>({
-        'Family / Guest Name': g.name,
-        'Phone': g.phone||'',
-        'Side': g.side||'',
-        'Tier': g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'',
-        'No. of Cards': g.invCards||0,
-        'Sent': g.invSent?'Yes':'No',
-      }))
-    : [
-        {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Tier':'VIP Premium','No. of Cards':2,'Sent':'No'},
-        {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Tier':'Premium','No. of Cards':3,'Sent':'No'},
-        {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Tier':'Normal','No. of Cards':4,'Sent':'Yes'},
-      ];
-  const sheet=XLSX.utils.json_to_sheet(rows);
-  XLSX.utils.book_append_sheet(wb,sheet,'Invitation');
-  XLSX.writeFile(wb,'Kankotri_Invitation_Template.xlsx');
-  showToast('Template downloaded with current guest list');
+  const sheet=XLSX.utils.json_to_sheet([
+    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1,'Tier':'VIP Premium','Sent':'No'},
+    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0,'Tier':'Premium','Sent':'No'},
+    {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Adults':4,'Writer':0,'Tier':'Normal','Sent':'Yes'},
+  ]);
+  XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
+  XLSX.writeFile(wb,'Kankotri_Template.xlsx');
+  showToast('Kankotri template downloaded');
 };
 document.getElementById('btnKankotriExport').onclick=()=>{
   if(guests.length===0){showToast('No guests to export');return;}
