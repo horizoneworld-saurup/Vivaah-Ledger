@@ -1608,6 +1608,8 @@ function setRole(role){
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
   document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
   applyRoleRestrictions();
+  // Only show Google sign-in for owner
+  setTimeout(updateGoogleSignInVisibility, 100);
 }
 
 function applyRoleRestrictions(){
@@ -1736,7 +1738,7 @@ async function amCheckEmail() {
   resultEl.style.display = 'none';
 
   try {
-    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+    const resp = await fetch('/api/check-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -1774,7 +1776,7 @@ async function amRevokeEmail() {
   statusMsg.textContent = '';
 
   try {
-    const resp = await fetch(AUTH_WORKER_URL + '/revoke', {
+    const resp = await fetch('/api/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com' }),
@@ -1961,7 +1963,7 @@ document.addEventListener('click', async () => {
 /* ================================================================
    EMAIL GATE — Worker URL (update after you deploy the Worker)
    ================================================================ */
-const AUTH_WORKER_URL = 'https://vivaah-auth.rms-d21.workers.dev'; // ← UPDATE THIS
+const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! // ← UPDATE THIS
 const OWNER_EMAIL_CLIENT = 'horizoneworld@gmail.com';
 
 let egCurrentEmail = '';
@@ -1992,7 +1994,7 @@ async function egRequestAccess(){
   statusEl.textContent = '';
 
   try{
-    const resp = await fetch(AUTH_WORKER_URL + '/request-access', {
+    const resp = await fetch('/api/request-access', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email})
@@ -2035,7 +2037,7 @@ function egStopPolling(){
 async function egCheckStatus(){
   if(!egCurrentEmail) return;
   try{
-    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+    const resp = await fetch('/api/check-status', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email: egCurrentEmail})
@@ -2100,7 +2102,7 @@ async function initAuth(){
   if(approvedEmail){
     // Verify still approved with worker
     try{
-      const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+      const resp = await fetch('/api/check-status', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({email: approvedEmail})
@@ -2272,6 +2274,26 @@ async function saveSyncMeta(){
 const SHEET_NAME = 'Vivaah Ledger Data';
 const SHEET_DATA_RANGE = 'Data!A1';   // main data (vendors, guests, functions, reminders, branding text)
 const SHEET_LOGO_RANGE = 'Data!B1';   // logos only (compressed base64, separate cell to stay under 50k char limit)
+
+function isOwnerRole(){
+  return currentRole === 'owner';
+}
+
+function updateGoogleSignInVisibility(){
+  const signInBtn = document.getElementById('btnGoogleSignIn');
+  const syncBanner = document.getElementById('syncBannerText');
+  const syncBar = document.querySelector('.sync-bar') || document.querySelector('[class*="sync"]');
+  
+  if(!isOwnerRole()){
+    // Non-owner — hide Google sign-in completely
+    if(signInBtn) signInBtn.style.display = 'none';
+    if(syncBanner) syncBanner.parentElement.style.display = 'none';
+  } else {
+    // Owner — show Google sign-in
+    if(signInBtn) signInBtn.style.display = '';
+    if(syncBanner) syncBanner.parentElement.style.display = '';
+  }
+}
 
 function setSyncStatus(state, text){
   const banner = document.getElementById('syncBanner');
