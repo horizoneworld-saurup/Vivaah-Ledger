@@ -927,7 +927,16 @@
             <div id="amResultEmail" style="font-weight:600;font-size:14px;color:var(--ink);"></div>
             <div id="amResultStatus" style="font-size:12px;margin-top:3px;"></div>
           </div>
-          <button id="amRevokeBtn" onclick="amRevokeEmail()" style="padding:8px 18px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🚫 Revoke Access</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="amExtendMonths" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';display:none;">
+              <option value="3">3 Months</option>
+              <option value="6" selected>6 Months</option>
+              <option value="9">9 Months</option>
+              <option value="12">12 Months</option>
+            </select>
+            <button id="amExtendBtn" onclick="amExtendEmail()" style="padding:8px 18px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🔄 Extend Access</button>
+            <button id="amRevokeBtn" onclick="amRevokeEmail()" style="padding:8px 18px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🚫 Revoke Access</button>
+          </div>
         </div>
       </div>
 
@@ -1097,6 +1106,7 @@
         <div class="rem-row">
           <input type="text" id="inputTrial" placeholder="e.g. Bridal trial — 3pm">
           <input type="date" id="dateTrial">
+          <input type="time" id="timeTrial" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         </div>
         <div class="rem-row">
           <input type="text" id="trialPerson" placeholder="For whom (e.g. Bride, Mum)">
@@ -1112,6 +1122,7 @@
         <div class="rem-row">
           <input type="text" id="inputClothes" placeholder="e.g. Pick up groom's sherwani">
           <input type="date" id="dateClothes">
+          <input type="time" id="timeClothes" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         </div>
         <div class="rem-row">
           <input type="text" id="clothesPerson" placeholder="For whom (e.g. Groom, Sister)">
@@ -1126,6 +1137,7 @@
       <div class="reminder-add-row">
         <input type="text" id="inputGuest" placeholder="e.g. Confirm headcount with caterer">
         <input type="date" id="dateGuest">
+        <input type="time" id="timeGuest" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         <button data-add-reminder="guest">+</button>
       </div>
     </div>
@@ -1749,6 +1761,8 @@ async function amCheckEmail() {
     if (data.status === 'approved') {
       resultStatus.innerHTML = '<span style="color:#2E7D32;font-weight:600;">✅ Approved</span> — has active access';
       revokeBtn.style.display = '';
+      document.getElementById('amExtendBtn').style.display = '';
+      document.getElementById('amExtendMonths').style.display = '';
     } else if (data.status === 'pending') {
       resultStatus.innerHTML = '<span style="color:#E65100;font-weight:600;">⏳ Pending</span> — waiting for your approval';
       revokeBtn.style.display = 'none';
@@ -1759,6 +1773,40 @@ async function amCheckEmail() {
   } catch(e) {
     statusMsg.textContent = 'Network error. Check your connection.';
     statusMsg.style.color = 'var(--rust)';
+  }
+}
+
+async function amExtendEmail() {
+  const email = document.getElementById('amEmailInput').value.trim().toLowerCase();
+  const months = parseInt(document.getElementById('amExtendMonths').value);
+  const statusMsg = document.getElementById('amStatusMsg');
+  const extendBtn = document.getElementById('amExtendBtn');
+
+  if (!confirm(`Extend access for ${email} by ${months} months?`)) return;
+
+  extendBtn.disabled = true;
+  extendBtn.textContent = 'Extending…';
+
+  try {
+    const resp = await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com', months }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      statusMsg.textContent = `✅ Access extended for ${months} months for ${email}`;
+      statusMsg.style.color = '#2E7D32';
+    } else {
+      statusMsg.textContent = data.error || 'Could not extend. Try again.';
+      statusMsg.style.color = 'var(--rust)';
+    }
+  } catch(e) {
+    statusMsg.textContent = 'Network error. Check your connection.';
+    statusMsg.style.color = 'var(--rust)';
+  } finally {
+    extendBtn.disabled = false;
+    extendBtn.textContent = '🔄 Extend Access';
   }
 }
 
@@ -1944,10 +1992,14 @@ async function checkReminders() {
     const eventDate = new Date(rem.date);
     const daysLeft = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
 
-    // Fire at 7 days and 3 days before
-    if (daysLeft === 7 || daysLeft === 3) {
-      const title = `🌸 ${rem.title} — ${daysLeft} days to go!`;
-      const body  = `${rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}. Only ${daysLeft} days left!`;
+    // Fire at 7 days and 3 days before, or on the day at the reminder time
+    const isReminderDay = daysLeft === 0 && rem.time && now.toTimeString().slice(0,5) >= rem.time;
+    if (daysLeft === 7 || daysLeft === 3 || isReminderDay) {
+      const timeStr = rem.time ? ` at ${rem.time}` : '';
+      const title = daysLeft === 0 ? `🌸 ${rem.text||rem.title} — Today${timeStr}!` : `🌸 ${rem.text||rem.title} — ${daysLeft} days to go!`;
+      const body  = daysLeft === 0 
+        ? `Reminder: ${rem.text||rem.title} is scheduled for today${timeStr}.`
+        : `${rem.text||rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}${timeStr}. Only ${daysLeft} days left!`;
 
       // Push notification (always fires)
       sendPushNotification(title, body);
@@ -4426,7 +4478,7 @@ function renderReminders(){
         <input type="checkbox"${item.done?' checked':''} data-toggle-reminder>
         <div style="flex:1;">
           <span class="r-text">${escapeHtml(item.text)}</span>
-          ${item.date?`<span class="r-date">${formatShortDate(item.date)}</span>`:''}
+          ${item.date?`<span class="r-date">${formatShortDate(item.date)}${item.time?' ⏰ '+item.time:''}</span>`:''}
           ${vendor?`<div class="r-vendor-tag">📦 ${escapeHtml(vendor.name)}</div>`:''}
           ${item.forPerson?`<div class="r-person-tag">👤 ${escapeHtml(item.forPerson)}</div>`:''}
         </div>
@@ -4436,10 +4488,10 @@ function renderReminders(){
   });
 }
 
-function addReminder(key,text,date,vendorId,forPerson){
+function addReminder(key,text,date,vendorId,forPerson,time){
   if(!text||!text.trim()) return false;
   reminders[key]=reminders[key]||[];
-  reminders[key].push({id:uid(),text:text.trim(),date:date||'',done:false,vendorId:vendorId||'',forPerson:forPerson||''});
+  reminders[key].push({id:uid(),text:text.trim(),date:date||'',time:time||'',done:false,vendorId:vendorId||'',forPerson:forPerson||''});
   saveReminders(); renderReminders(); return true;
 }
 
@@ -4450,11 +4502,14 @@ REMINDER_KEYS.forEach(key=>{
   if(addBtn) addBtn.onclick=()=>{
     const text=document.getElementById('input'+cap).value;
     const date=document.getElementById('date'+cap).value;
+    const timeEl=document.getElementById('time'+cap);
+    const time=timeEl?timeEl.value:'';
     const vendorId=(key!=='guest'&&document.getElementById(key+'Vendor'))?document.getElementById(key+'Vendor').value:'';
     const forPerson=(key!=='guest'&&document.getElementById(key+'Person'))?document.getElementById(key+'Person').value:'';
-    if(addReminder(key,text,date,vendorId,forPerson)){
+    if(addReminder(key,text,date,vendorId,forPerson,time)){
       document.getElementById('input'+cap).value='';
       document.getElementById('date'+cap).value='';
+      if(timeEl) timeEl.value='';
       if(key!=='guest'&&document.getElementById(key+'Person')) document.getElementById(key+'Person').value='';
     } else showToast('Type something to add');
   };
