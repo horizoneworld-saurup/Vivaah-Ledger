@@ -1608,8 +1608,6 @@ function setRole(role){
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
   document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
   applyRoleRestrictions();
-  // Only show Google sign-in for owner
-  setTimeout(updateGoogleSignInVisibility, 100);
 }
 
 function applyRoleRestrictions(){
@@ -2274,26 +2272,6 @@ async function saveSyncMeta(){
 const SHEET_NAME = 'Vivaah Ledger Data';
 const SHEET_DATA_RANGE = 'Data!A1';   // main data (vendors, guests, functions, reminders, branding text)
 const SHEET_LOGO_RANGE = 'Data!B1';   // logos only (compressed base64, separate cell to stay under 50k char limit)
-
-function isOwnerRole(){
-  return currentRole === 'owner';
-}
-
-function updateGoogleSignInVisibility(){
-  const signInBtn = document.getElementById('btnGoogleSignIn');
-  const syncBanner = document.getElementById('syncBannerText');
-  const syncBar = document.querySelector('.sync-bar') || document.querySelector('[class*="sync"]');
-  
-  if(!isOwnerRole()){
-    // Non-owner — hide Google sign-in completely
-    if(signInBtn) signInBtn.style.display = 'none';
-    if(syncBanner) syncBanner.parentElement.style.display = 'none';
-  } else {
-    // Owner — show Google sign-in
-    if(signInBtn) signInBtn.style.display = '';
-    if(syncBanner) syncBanner.parentElement.style.display = '';
-  }
-}
 
 function setSyncStatus(state, text){
   const banner = document.getElementById('syncBanner');
