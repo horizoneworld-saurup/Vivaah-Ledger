@@ -2311,6 +2311,16 @@ async function saveGuests(){
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
   queueCloudSave();
+  // Sync reminders to Cloudflare KV so cron job can send alerts
+  if(googleUserEmail){
+    try{
+      await fetch('/api/save-reminders', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: googleUserEmail, reminders })
+      });
+    } catch(e){ console.log('Reminder KV sync skipped:', e.message); }
+  }
 }
 async function saveKankotriCards(){
   await storageSet('wedding-kankotri-cards', JSON.stringify(kankotriCards));
