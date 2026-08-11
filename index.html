@@ -1896,7 +1896,13 @@ function sendPushNotification(title, body) {
   });
 }
 
-async function sendReminderEmail(subject, body) {
+async function sendReminderEmail(subject, bodyText, userEmail) {
+  // Send to the signed-in user's own Google email — not owner
+  const toEmail = userEmail || googleUserEmail || null;
+  if (!toEmail) {
+    console.log('No user email for reminder — push notification only');
+    return;
+  }
   try {
     await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -1906,16 +1912,17 @@ async function sendReminderEmail(subject, body) {
         template_id: 'template_nkz7qec',
         user_id: '84IAbs0-O2AoJTARe',
         template_params: {
-          to_email: 'horizoneworld@gmail.com',
+          to_email: toEmail,
           subject: subject,
           requester_email: 'Vivaah Ledger Reminder',
           approve_url: 'https://vivaah-ledger.pages.dev',
           reject_url: 'https://vivaah-ledger.pages.dev',
           app_url: 'https://vivaah-ledger.pages.dev',
-          time: body,
+          time: bodyText,
         },
       }),
     });
+    console.log('Reminder email sent to:', toEmail);
   } catch(e) { console.error('Reminder email failed:', e); }
 }
 
@@ -1929,6 +1936,9 @@ async function checkReminders() {
   if (!reminders || reminders.length === 0) return;
   const now = new Date();
 
+  // Get signed-in user's email to send reminder to them
+  const userEmail = googleUserEmail || null;
+
   for (const rem of reminders) {
     if (!rem.date || !rem.title) continue;
     const eventDate = new Date(rem.date);
@@ -1939,14 +1949,17 @@ async function checkReminders() {
       const title = `🌸 ${rem.title} — ${daysLeft} days to go!`;
       const body  = `${rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}. Only ${daysLeft} days left!`;
 
-      // Push notification
+      // Push notification (always fires)
       sendPushNotification(title, body);
 
-      // Email alert
-      await sendReminderEmail(
-        `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
-        body
-      );
+      // Email alert — only to signed-in user's own Gmail
+      if (userEmail) {
+        await sendReminderEmail(
+          `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
+          body,
+          userEmail
+        );
+      }
     }
   }
 }
@@ -2146,6 +2159,7 @@ const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.goo
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
+let googleUserEmail = null; // signed-in user's Gmail
 let sheetId = null;
 let isSyncing = false;
 let cloudSaveTimer = null;
@@ -2312,6 +2326,15 @@ function initGoogleAuth(){
       }
       googleAccessToken = resp.access_token;
       await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
+      // Get signed-in user's email from Google
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+        });
+        const info = await userInfo.json();
+        googleUserEmail = info.email || null;
+        console.log('Signed in as:', googleUserEmail);
+      } catch(e) { console.error('Could not get user email:', e); }
       await onSignedIn();
     }
   });
@@ -2395,6 +2418,7 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
 
 document.getElementById('btnSignOut').onclick = async ()=>{
   googleAccessToken = null;
+  googleUserEmail = null;
   sheetId = null;
   await storageSet('google-token-cache', '');
   await storageSet('wedding-sheet-id', '');
