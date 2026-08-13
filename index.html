@@ -622,6 +622,23 @@
   .hc-row input{width:80px;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;text-align:center;}
   .hc-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
 
+  /* ── Auto-backup bar ── */
+  .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
+  .backup-bar strong{color:var(--maroon);}
+  .btn-backup{padding:5px 14px;background:var(--maroon);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;}
+
+  /* ── Bulk Tier Assignment ── */
+  .bulk-tier-bar{background:var(--ivory-deep);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .bulk-tier-bar select{padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;}
+  .bulk-tier-bar button{padding:6px 14px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-bulk-apply{background:var(--maroon);color:#fff;}
+  .btn-bulk-clear{background:var(--ivory);color:var(--ink);border:1.5px solid var(--line) !important;border-style:solid;}
+  .bulk-count{font-size:12.5px;color:var(--ink-soft);padding:4px 8px;background:#fff;border-radius:6px;border:1px solid var(--line);}
+  .inv-checkbox{width:15px;height:15px;cursor:pointer;accent-color:var(--maroon);}
+  .select-all-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .btn-sel-side{padding:4px 12px;border:1.5px solid var(--line);border-radius:7px;font-size:12px;cursor:pointer;background:#fff;color:var(--ink);}
+  .btn-sel-side.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+
   /* ── Notes Section ── */
   .notes-section{background:#fff;border-radius:14px;padding:22px;margin-bottom:20px;box-shadow:0 2px 12px rgba(92,26,43,0.07);}
   .notes-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
@@ -1329,7 +1346,46 @@
 
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
+
+      <!-- Auto-backup bar -->
+      <div class="backup-bar">
+        <div>💾 <strong>Auto-backup:</strong> <span id="lastBackupTime">Not backed up yet</span> — download a backup anytime to protect your data</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
+          <button class="btn-backup" style="background:var(--sage);" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
+          <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreFromBackup(this.files[0]).then(()=>this.value='')">
+        </div>
+      </div>
+
+      <!-- Bulk tier assignment bar -->
+      <div class="bulk-tier-bar" id="bulkTierBar" style="display:none;">
+        <span class="bulk-count"><span id="bulkSelectedCount">0</span> selected</span>
+        <select id="bulkTierSelect">
+          <option value="">— Assign Tier —</option>
+          <option value="vip">👑 VIP Premium</option>
+          <option value="premium">⭐ Premium</option>
+          <option value="normal">🎟 Normal</option>
+        </select>
+        <input type="number" id="bulkCardsInput" min="0" max="99" placeholder="Cards" style="width:70px;padding:6px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;">
+        <button class="btn-bulk-apply" onclick="applyBulkTier()">✓ Apply to Selected</button>
+        <button class="btn-bulk-clear" onclick="clearBulkSelection()" style="border:1.5px solid var(--line);">✕ Clear</button>
+      </div>
+
+      <!-- Select all shortcuts -->
+      <div class="select-all-row" id="selectAllRow" style="display:none;">
+        <button class="btn-sel-side" onclick="bulkSelectSide('all')">Select All</button>
+        <button class="btn-sel-side" onclick="bulkSelectSide('Bride')">Bride Side</button>
+        <button class="btn-sel-side" onclick="bulkSelectSide('Groom')">Groom Side</button>
+        <button class="btn-sel-side" onclick="bulkSelectSide('none')">Deselect All</button>
+      </div>
+
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--maroon);font-weight:600;">
+            <input type="checkbox" id="enableBulkMode" onchange="toggleBulkMode(this.checked)" style="width:15px;height:15px;accent-color:var(--maroon);">
+            Bulk Select Mode
+          </label>
+        </div>
         <div style="font-size:13px;font-weight:700;color:var(--maroon);">📋 Invitation Distribution List</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <input type="text" id="invSearchInput" placeholder="Search family…" style="padding:6px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:160px;">
@@ -1352,7 +1408,8 @@
         <table style="width:100%;border-collapse:collapse;font-size:13px;" id="invTable">
           <thead>
             <tr style="background:var(--maroon);color:#fff;text-align:left;">
-              <th style="padding:9px 12px;border-radius:8px 0 0 0;">#</th>
+              <th style="padding:9px 12px;border-radius:8px 0 0 0;" id="invChkHeader" class="inv-chk-col" style="display:none;"></th>
+              <th style="padding:9px 12px;">#</th>
               <th style="padding:9px 12px;">Family / Guest Name</th>
               <th style="padding:9px 12px;">Phone</th>
               <th style="padding:9px 12px;">Side</th>
@@ -2090,6 +2147,137 @@ document.addEventListener('click', async () => {
     await requestPushPermission();
   }
 }, { once: true });
+
+/* ================================================================
+   AUTO-BACKUP SYSTEM
+   ================================================================ */
+let lastBackupAt = null;
+
+function downloadBackup() {
+  const backup = {
+    version: '1.0',
+    backedUpAt: new Date().toISOString(),
+    guests,
+    vendors,
+    reminders,
+    notes,
+    functions,
+    eventTimeline,
+    branding,
+    kankotriCards,
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vivaah-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  lastBackupAt = new Date();
+  const el = document.getElementById('lastBackupTime');
+  if (el) el.textContent = 'Backed up at ' + lastBackupAt.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+  showToast('✅ Backup downloaded — keep this file safe!');
+}
+
+async function restoreFromBackup(file) {
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    if (!backup.version || !backup.guests) { showToast('❌ Invalid backup file'); return; }
+
+    if (!confirm(`Restore backup from ${backup.backedUpAt}? This will overwrite current data.`)) return;
+
+    if (backup.guests)       { guests = backup.guests; await saveGuests(); }
+    if (backup.vendors)      { vendors = backup.vendors; await storageSet('wedding-vendors', JSON.stringify(vendors)); }
+    if (backup.reminders)    { reminders = backup.reminders; await saveReminders(); }
+    if (backup.notes)        { notes = backup.notes; await saveNotes(); }
+    if (backup.functions)    { functions = backup.functions; await storageSet('wedding-functions', JSON.stringify(functions)); }
+    if (backup.eventTimeline){ eventTimeline = backup.eventTimeline; await saveTimeline(); }
+    if (backup.kankotriCards){ kankotriCards = backup.kankotriCards; await saveKankotriCards(); }
+
+    queueCloudSave();
+    render();
+    renderInvTable();
+    renderNotes();
+    showToast('✅ Backup restored successfully!');
+  } catch(e) {
+    showToast('❌ Could not restore backup: ' + e.message);
+  }
+}
+
+// Auto-backup reminder — show time since last backup
+function updateBackupStatus() {
+  const el = document.getElementById('lastBackupTime');
+  if (!el) return;
+  if (!lastBackupAt) {
+    el.textContent = 'Not backed up yet this session';
+  }
+}
+
+/* ================================================================
+   BULK TIER ASSIGNMENT
+   ================================================================ */
+let bulkMode = false;
+let bulkSelected = new Set();
+
+function toggleBulkMode(enabled) {
+  bulkMode = enabled;
+  bulkSelected.clear();
+  document.getElementById('bulkTierBar').style.display = enabled ? 'flex' : 'none';
+  document.getElementById('selectAllRow').style.display = enabled ? 'flex' : 'none';
+  renderInvTable();
+  updateBulkCount();
+}
+
+function updateBulkCount() {
+  const el = document.getElementById('bulkSelectedCount');
+  if (el) el.textContent = bulkSelected.size;
+}
+
+function bulkSelectSide(side) {
+  if (side === 'none') {
+    bulkSelected.clear();
+  } else if (side === 'all') {
+    guests.forEach(g => bulkSelected.add(g.id));
+  } else {
+    guests.filter(g => g.side === side).forEach(g => bulkSelected.add(g.id));
+  }
+  updateBulkCount();
+  renderInvTable();
+}
+
+function clearBulkSelection() {
+  bulkSelected.clear();
+  updateBulkCount();
+  document.getElementById('enableBulkMode').checked = false;
+  toggleBulkMode(false);
+}
+
+async function applyBulkTier() {
+  if (bulkSelected.size === 0) { showToast('No families selected'); return; }
+
+  const tier = document.getElementById('bulkTierSelect').value;
+  const cards = parseInt(document.getElementById('bulkCardsInput').value) || 0;
+
+  if (!tier && !cards) { showToast('Select a tier or number of cards to apply'); return; }
+
+  const tierLabel = tier === 'vip' ? '👑 VIP Premium' : tier === 'premium' ? '⭐ Premium' : tier === 'normal' ? '🎟 Normal' : '';
+
+  if (!confirm(`Apply ${tierLabel ? tierLabel + ' tier' : ''}${cards ? (tierLabel ? ' + ' : '') + cards + ' cards' : ''} to ${bulkSelected.size} families?`)) return;
+
+  guests.forEach(g => {
+    if (bulkSelected.has(g.id)) {
+      if (tier) g.invTier = tier;
+      if (cards) g.invCards = cards;
+    }
+  });
+
+  await saveGuests();
+  showToast(`✅ Applied to ${bulkSelected.size} families`);
+  bulkSelected.clear();
+  updateBulkCount();
+  renderInvTable();
+}
 
 /* ================================================================
    NOTES SYSTEM
@@ -4895,7 +5083,10 @@ function renderInvTable(){
     const cards = g.invCards || 0;
     const sent  = g.invSent || false;
     const rowBg = i%2===0 ? '#fff' : 'var(--ivory)';
-    return `<tr style="background:${rowBg};border-bottom:1px solid var(--line);">
+    const isChecked = bulkSelected && bulkSelected.has(g.id);
+    const rowHighlight = isChecked ? 'background:#FFF8DC !important;' : '';
+    return `<tr style="background:${rowBg};border-bottom:1px solid var(--line);${rowHighlight}">
+      ${bulkMode ? `<td style="padding:8px 12px;text-align:center;"><input type="checkbox" class="inv-checkbox" data-bulk-id="${g.id}" ${isChecked?'checked':''}></td>` : ''}
       <td style="padding:8px 12px;color:var(--ink-soft);font-size:12px;">${i+1}</td>
       <td style="padding:8px 12px;font-weight:600;">${escapeHtml(g.name)}</td>
       <td style="padding:8px 12px;color:var(--ink-soft);">${escapeHtml(g.phone||'—')}</td>
@@ -4920,6 +5111,20 @@ function renderInvTable(){
       </td>
     </tr>`;
   }).join('');
+
+  // Wire bulk checkboxes
+  if (bulkMode) {
+    tbody.querySelectorAll('[data-bulk-id]').forEach(cb => {
+      cb.addEventListener('change', e => {
+        e.stopPropagation();
+        if (e.target.checked) bulkSelected.add(e.target.dataset.bulkId);
+        else bulkSelected.delete(e.target.dataset.bulkId);
+        updateBulkCount();
+        // Highlight row
+        e.target.closest('tr').style.background = e.target.checked ? '#FFF0C0' : '';
+      });
+    });
+  }
 
   // Wire up change events
   tbody.querySelectorAll('[data-inv-tier]').forEach(el => {
