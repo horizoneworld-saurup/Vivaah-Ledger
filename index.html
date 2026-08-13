@@ -597,6 +597,59 @@
   .lock-role-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:22px;}
   .lock-tab{flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
   .lock-tab.active{background:var(--maroon);color:var(--ivory);border-color:var(--maroon);}
+  /* ── Call / WhatsApp / Confirm buttons ── */
+  .guest-action-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+  .btn-call{padding:4px 9px;background:#1976D2;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-whatsapp{padding:4px 9px;background:#25D366;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-confirm{padding:4px 9px;background:#E65100;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+  .confirmed-badge{font-size:11px;color:#2E7D32;font-weight:600;background:#E8F5E9;padding:3px 8px;border-radius:6px;}
+
+  /* ── WhatsApp message editor modal ── */
+  .wa-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .wa-modal-overlay.show{display:flex;}
+  .wa-modal{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .wa-modal h3{margin:0 0 6px;font-size:17px;color:var(--maroon);}
+  .wa-modal textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';resize:vertical;min-height:120px;outline:none;margin:12px 0;}
+  .wa-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+
+  /* ── Headcount confirm modal ── */
+  .hc-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .hc-modal-overlay.show{display:flex;}
+  .hc-modal{background:#fff;border-radius:18px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .hc-modal h3{margin:0 0 14px;font-size:17px;color:var(--maroon);}
+  .hc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hc-row label{font-size:14px;color:var(--ink);}
+  .hc-row input{width:80px;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;text-align:center;}
+  .hc-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+
+  /* ── Notes Section ── */
+  .notes-section{background:#fff;border-radius:14px;padding:22px;margin-bottom:20px;box-shadow:0 2px 12px rgba(92,26,43,0.07);}
+  .notes-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .notes-section-head h2{margin:0;font-size:18px;color:var(--maroon);}
+  .note-card{background:var(--ivory);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;position:relative;}
+  .note-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .note-title{font-size:14px;font-weight:700;color:var(--maroon);}
+  .note-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .note-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--ivory-deep);color:var(--maroon);margin-right:6px;}
+  .note-content{font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap;}
+  .note-actions{display:flex;gap:6px;}
+  .note-edit-btn{padding:4px 10px;background:none;border:1.5px solid var(--gold);border-radius:7px;font-size:12px;color:var(--maroon);cursor:pointer;font-weight:600;}
+  .note-del-btn{padding:4px 10px;background:none;border:1.5px solid var(--line);border-radius:7px;font-size:12px;color:var(--rust);cursor:pointer;}
+  .notes-empty{text-align:center;padding:32px;color:var(--ink-soft);font-size:13px;}
+
+  /* ── Note Modal ── */
+  .note-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;padding:20px;}
+  .note-modal-overlay.show{display:flex;}
+  .note-modal{background:#fff;border-radius:18px;padding:28px;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .note-modal h3{margin:0 0 18px;font-size:17px;color:var(--maroon);}
+  .note-modal input,.note-modal textarea,.note-modal select{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;font-family:'Inter';outline:none;margin-bottom:10px;}
+  .note-modal textarea{min-height:100px;resize:vertical;}
+  .note-modal input:focus,.note-modal textarea:focus,.note-modal select:focus{border-color:var(--maroon);}
+  .note-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+
+  /* ── Reminder alert styles ── */
+  .reminder-alert-badge{font-size:11px;background:#FFF3E0;color:#E65100;padding:2px 8px;border-radius:6px;font-weight:600;margin-left:6px;}
+
   .lock-pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
   .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;transition:background .15s,border-color .15s;}
   .pin-dot.filled{background:var(--maroon);border-color:var(--maroon);}
@@ -899,7 +952,16 @@
             <div id="amResultEmail" style="font-weight:600;font-size:14px;color:var(--ink);"></div>
             <div id="amResultStatus" style="font-size:12px;margin-top:3px;"></div>
           </div>
-          <button id="amRevokeBtn" onclick="amRevokeEmail()" style="padding:8px 18px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🚫 Revoke Access</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select id="amExtendMonths" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';display:none;">
+              <option value="3">3 Months</option>
+              <option value="6" selected>6 Months</option>
+              <option value="9">9 Months</option>
+              <option value="12">12 Months</option>
+            </select>
+            <button id="amExtendBtn" onclick="amExtendEmail()" style="padding:8px 18px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🔄 Extend Access</button>
+            <button id="amRevokeBtn" onclick="amRevokeEmail()" style="padding:8px 18px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:none;">🚫 Revoke Access</button>
+          </div>
         </div>
       </div>
 
@@ -1069,6 +1131,7 @@
         <div class="rem-row">
           <input type="text" id="inputTrial" placeholder="e.g. Bridal trial — 3pm">
           <input type="date" id="dateTrial">
+          <input type="time" id="timeTrial" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         </div>
         <div class="rem-row">
           <input type="text" id="trialPerson" placeholder="For whom (e.g. Bride, Mum)">
@@ -1084,6 +1147,7 @@
         <div class="rem-row">
           <input type="text" id="inputClothes" placeholder="e.g. Pick up groom's sherwani">
           <input type="date" id="dateClothes">
+          <input type="time" id="timeClothes" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         </div>
         <div class="rem-row">
           <input type="text" id="clothesPerson" placeholder="For whom (e.g. Groom, Sister)">
@@ -1098,7 +1162,51 @@
       <div class="reminder-add-row">
         <input type="text" id="inputGuest" placeholder="e.g. Confirm headcount with caterer">
         <input type="date" id="dateGuest">
+        <input type="time" id="timeGuest" style="padding:7px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
         <button data-add-reminder="guest">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ NOTES SECTION ═══════════════ -->
+  <div class="notes-section">
+    <div class="notes-section-head">
+      <h2>📝 Notes & Quick References</h2>
+      <button class="btn btn-gold" id="btnAddNote">+ Add Note</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+      <input type="text" id="noteSearchInput" placeholder="Search notes…" style="padding:7px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:180px;">
+      <select id="noteFilterTag" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+        <option value="">All Categories</option>
+        <option value="general">📌 General</option>
+        <option value="vendor">🏪 Vendor</option>
+        <option value="guest">👥 Guest</option>
+        <option value="budget">💰 Budget</option>
+        <option value="urgent">🔴 Urgent</option>
+      </select>
+    </div>
+    <div id="notesContainer"></div>
+  </div>
+
+  <!-- Note Modal -->
+  <div class="note-modal-overlay" id="noteModalOverlay">
+    <div class="note-modal">
+      <h3 id="noteModalTitle">📝 Add Note</h3>
+      <input type="text" id="noteInputTitle" placeholder="Note title e.g. Call caterer about menu…">
+      <textarea id="noteInputContent" placeholder="Write your note here…"></textarea>
+      <select id="noteInputTag">
+        <option value="general">📌 General</option>
+        <option value="vendor">🏪 Vendor</option>
+        <option value="guest">👥 Guest</option>
+        <option value="budget">💰 Budget</option>
+        <option value="urgent">🔴 Urgent</option>
+      </select>
+      <select id="noteInputLink">
+        <option value="">— Link to vendor or guest (optional) —</option>
+      </select>
+      <div class="note-modal-actions">
+        <button class="btn btn-ghost" onclick="document.getElementById('noteModalOverlay').classList.remove('show')">Cancel</button>
+        <button class="btn btn-gold" id="noteModalSaveBtn" onclick="noteSave()">Save Note</button>
       </div>
     </div>
   </div>
@@ -1218,6 +1326,47 @@
     <!-- Kankotri filter chips -->
     <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
+
+    <!-- ── Invitation Distribution Table ── -->
+    <div style="margin-top:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--maroon);">📋 Invitation Distribution List</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <input type="text" id="invSearchInput" placeholder="Search family…" style="padding:6px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:160px;">
+          <select id="invTierFilter" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+            <option value="">All Tiers</option>
+            <option value="vip">👑 VIP Premium</option>
+            <option value="premium">⭐ Premium</option>
+            <option value="normal">🎟 Normal</option>
+            <option value="unassigned">⭕ Unassigned</option>
+          </select>
+          <select id="invSentFilter" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
+            <option value="">All Status</option>
+            <option value="sent">✓ Sent</option>
+            <option value="pending">⏳ Pending</option>
+          </select>
+        </div>
+      </div>
+      <div id="invSummaryBar" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;margin-bottom:10px;padding:10px 14px;background:var(--ivory-deep);border-radius:10px;"></div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;" id="invTable">
+          <thead>
+            <tr style="background:var(--maroon);color:#fff;text-align:left;">
+              <th style="padding:9px 12px;border-radius:8px 0 0 0;">#</th>
+              <th style="padding:9px 12px;">Family / Guest Name</th>
+              <th style="padding:9px 12px;">Phone</th>
+              <th style="padding:9px 12px;">Side</th>
+              <th style="padding:9px 12px;">Tier</th>
+              <th style="padding:9px 12px;">No. of Cards</th>
+              <th style="padding:9px 12px;border-radius:0 8px 0 0;">Sent</th>
+            </tr>
+          </thead>
+          <tbody id="invTableBody"></tbody>
+        </table>
+      </div>
+      <div id="invEmptyMsg" style="display:none;text-align:center;padding:28px;color:var(--ink-soft);font-size:13px;">No guests in main list yet — add guests first.</div>
+    </div>
+
     <div class="guest-table-wrap">
       <table class="guest-table" id="guestTable">
         <thead>
@@ -1667,7 +1816,7 @@ async function amCheckEmail() {
   resultEl.style.display = 'none';
 
   try {
-    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+    const resp = await fetch('/api/check-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -1680,6 +1829,8 @@ async function amCheckEmail() {
     if (data.status === 'approved') {
       resultStatus.innerHTML = '<span style="color:#2E7D32;font-weight:600;">✅ Approved</span> — has active access';
       revokeBtn.style.display = '';
+      document.getElementById('amExtendBtn').style.display = '';
+      document.getElementById('amExtendMonths').style.display = '';
     } else if (data.status === 'pending') {
       resultStatus.innerHTML = '<span style="color:#E65100;font-weight:600;">⏳ Pending</span> — waiting for your approval';
       revokeBtn.style.display = 'none';
@@ -1690,6 +1841,40 @@ async function amCheckEmail() {
   } catch(e) {
     statusMsg.textContent = 'Network error. Check your connection.';
     statusMsg.style.color = 'var(--rust)';
+  }
+}
+
+async function amExtendEmail() {
+  const email = document.getElementById('amEmailInput').value.trim().toLowerCase();
+  const months = parseInt(document.getElementById('amExtendMonths').value);
+  const statusMsg = document.getElementById('amStatusMsg');
+  const extendBtn = document.getElementById('amExtendBtn');
+
+  if (!confirm(`Extend access for ${email} by ${months} months?`)) return;
+
+  extendBtn.disabled = true;
+  extendBtn.textContent = 'Extending…';
+
+  try {
+    const resp = await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com', months }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      statusMsg.textContent = `✅ Access extended for ${months} months for ${email}`;
+      statusMsg.style.color = '#2E7D32';
+    } else {
+      statusMsg.textContent = data.error || 'Could not extend. Try again.';
+      statusMsg.style.color = 'var(--rust)';
+    }
+  } catch(e) {
+    statusMsg.textContent = 'Network error. Check your connection.';
+    statusMsg.style.color = 'var(--rust)';
+  } finally {
+    extendBtn.disabled = false;
+    extendBtn.textContent = '🔄 Extend Access';
   }
 }
 
@@ -1705,7 +1890,7 @@ async function amRevokeEmail() {
   statusMsg.textContent = '';
 
   try {
-    const resp = await fetch(AUTH_WORKER_URL + '/revoke', {
+    const resp = await fetch('/api/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com' }),
@@ -1730,9 +1915,341 @@ async function amRevokeEmail() {
 }
 
 /* ================================================================
+   WHATSAPP MESSAGE TEMPLATE
+   ================================================================ */
+const DEFAULT_WA_MSG = `Dear [Name],
+
+We warmly invite you to our wedding celebration. Kindly confirm your attendance and expected headcount.
+
+Thank you! 🌸
+— Shah Family`;
+
+let waCurrentGuestId = null;
+let hcCurrentGuestId = null;
+
+// ── WhatsApp functions ────────────────────────────────────────────
+function waOpen(guestId) {
+  const g = guests.find(x => x.id === guestId);
+  if (!g || !g.phone) return;
+  waCurrentGuestId = guestId;
+  document.getElementById('waGuestName').textContent = g.name;
+  document.getElementById('waGuestPhone').textContent = g.phone;
+  // Restore saved custom message or use default
+  document.getElementById('waMessageText').value = g.waCustomMsg || DEFAULT_WA_MSG;
+  document.getElementById('waModalOverlay').classList.add('show');
+}
+
+function waSend() {
+  const g = guests.find(x => x.id === waCurrentGuestId);
+  if (!g) return;
+  const rawMsg = document.getElementById('waMessageText').value;
+  // Save custom message per guest
+  g.waCustomMsg = rawMsg;
+  saveGuests();
+  // Replace [Name] placeholder
+  const msg = rawMsg.replace(/\[Name\]/g, g.name);
+  const phone = g.phone.replace(/[^0-9]/g, '');
+  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+  document.getElementById('waModalOverlay').classList.remove('show');
+}
+
+// ── Headcount confirmation functions ─────────────────────────────
+function hcOpen(guestId) {
+  const g = guests.find(x => x.id === guestId);
+  if (!g) return;
+  hcCurrentGuestId = guestId;
+  document.getElementById('hcGuestName').textContent = g.name;
+  document.getElementById('hcAdults').value = g.confirmedAdults || 0;
+  document.getElementById('hcKids').value = g.confirmedKids || 0;
+  document.getElementById('hcCallStatus').value = g.callStatus || 'confirmed';
+  document.getElementById('hcModalOverlay').classList.add('show');
+}
+
+async function hcSave() {
+  const g = guests.find(x => x.id === hcCurrentGuestId);
+  if (!g) return;
+  g.confirmedAdults = Number(document.getElementById('hcAdults').value) || 0;
+  g.confirmedKids   = Number(document.getElementById('hcKids').value) || 0;
+  g.callStatus      = document.getElementById('hcCallStatus').value;
+  g.confirmedAt     = new Date().toISOString();
+  await saveGuests();
+  renderGuests();
+  document.getElementById('hcModalOverlay').classList.remove('show');
+  showToast(`✅ ${g.name} — ${g.confirmedAdults} adults confirmed`);
+}
+
+// ── Wire up guest row action buttons (called after renderGuests) ──
+function wireGuestActionBtns() {
+  document.querySelectorAll('[data-wa-guest]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); waOpen(btn.dataset.waGuest); };
+  });
+  document.querySelectorAll('[data-confirm-guest]').forEach(btn => {
+    btn.onclick = e => { e.stopPropagation(); hcOpen(btn.dataset.confirmGuest); };
+  });
+}
+
+/* ================================================================
+   REMINDER ALERTS — Email + Push Notification
+   ================================================================ */
+const REMINDER_CHECK_KEY = 'vivaah-reminder-last-check';
+
+async function requestPushPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function sendPushNotification(title, body) {
+  if (Notification.permission !== 'granted') return;
+  new Notification(title, {
+    body,
+    icon: 'icons/icon-192x192.png',
+    badge: 'icons/icon-72x72.png',
+    tag: 'vivaah-reminder',
+  });
+}
+
+async function sendReminderEmail(subject, bodyText, userEmail) {
+  // Send to the signed-in user's own Google email — not owner
+  const toEmail = userEmail || googleUserEmail || null;
+  if (!toEmail) {
+    console.log('No user email for reminder — push notification only');
+    return;
+  }
+  try {
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: 'service_rrh49ga',
+        template_id: 'template_nkz7qec',
+        user_id: '84IAbs0-O2AoJTARe',
+        template_params: {
+          to_email: toEmail,
+          subject: subject,
+          requester_email: 'Vivaah Ledger Reminder',
+          approve_url: 'https://vivaah-ledger.pages.dev',
+          reject_url: 'https://vivaah-ledger.pages.dev',
+          app_url: 'https://vivaah-ledger.pages.dev',
+          time: bodyText,
+        },
+      }),
+    });
+    console.log('Reminder email sent to:', toEmail);
+  } catch(e) { console.error('Reminder email failed:', e); }
+}
+
+async function checkReminders() {
+  // Only check once per day
+  const lastCheck = await storageGet(REMINDER_CHECK_KEY);
+  const today = new Date().toDateString();
+  if (lastCheck === today) return;
+  await storageSet(REMINDER_CHECK_KEY, today);
+
+  if (!reminders || reminders.length === 0) return;
+  const now = new Date();
+
+  // Get signed-in user's email to send reminder to them
+  const userEmail = googleUserEmail || null;
+
+  for (const rem of reminders) {
+    if (!rem.date || !rem.title) continue;
+    const eventDate = new Date(rem.date);
+    const daysLeft = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+
+    // Fire at 7 days and 3 days before, or on the day at the reminder time
+    const isReminderDay = daysLeft === 0 && rem.time && now.toTimeString().slice(0,5) >= rem.time;
+    if (daysLeft === 7 || daysLeft === 3 || isReminderDay) {
+      const timeStr = rem.time ? ` at ${rem.time}` : '';
+      const title = daysLeft === 0 ? `🌸 ${rem.text||rem.title} — Today${timeStr}!` : `🌸 ${rem.text||rem.title} — ${daysLeft} days to go!`;
+      const body  = daysLeft === 0 
+        ? `Reminder: ${rem.text||rem.title} is scheduled for today${timeStr}.`
+        : `${rem.text||rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}${timeStr}. Only ${daysLeft} days left!`;
+
+      // Push notification (always fires)
+      sendPushNotification(title, body);
+
+      // Email alert — only to signed-in user's own Gmail
+      if (userEmail) {
+        await sendReminderEmail(
+          `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
+          body,
+          userEmail
+        );
+      }
+    }
+  }
+}
+
+// Request push permission on first load (after user interaction)
+document.addEventListener('click', async () => {
+  if (Notification.permission === 'default') {
+    await requestPushPermission();
+  }
+}, { once: true });
+
+/* ================================================================
+   NOTES SYSTEM
+   ================================================================ */
+let notes = [];
+let noteEditId = null;
+
+const NOTE_TAGS = {
+  general: '📌 General', vendor: '🏪 Vendor',
+  guest: '👥 Guest', budget: '💰 Budget', urgent: '🔴 Urgent'
+};
+const NOTE_TAG_COLORS = {
+  general: '#5C1A2B', vendor: '#1A3A8A',
+  guest: '#1A5C1A', budget: '#856404', urgent: '#C62828'
+};
+
+async function loadNotes() {
+  const raw = await storageGet('wedding-notes');
+  notes = raw ? JSON.parse(raw) : [];
+}
+
+async function saveNotes() {
+  await storageSet('wedding-notes', JSON.stringify(notes));
+  queueCloudSave();
+  renderNotes();
+}
+
+async function loadNotes() {
+  try {
+    const raw = await storageGet('wedding-notes');
+    notes = raw ? JSON.parse(raw) : [];
+  } catch(e) { notes = []; }
+}
+
+function renderNotes() {
+  const container = document.getElementById('notesContainer');
+  if (!container) return;
+
+  const search = (document.getElementById('noteSearchInput')?.value || '').toLowerCase();
+  const tagFilter = document.getElementById('noteFilterTag')?.value || '';
+
+  let filtered = [...notes];
+  if (search) filtered = filtered.filter(n =>
+    n.title.toLowerCase().includes(search) ||
+    n.content.toLowerCase().includes(search)
+  );
+  if (tagFilter) filtered = filtered.filter(n => n.tag === tagFilter);
+
+  // Sort by newest first
+  filtered.sort((a, b) => b.createdAt - a.createdAt);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="notes-empty">📝 No notes yet — click "+ Add Note" to get started</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(n => {
+    const tagLabel = NOTE_TAGS[n.tag] || '📌 General';
+    const tagColor = NOTE_TAG_COLORS[n.tag] || '#5C1A2B';
+    const date = new Date(n.createdAt).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
+    const time = new Date(n.createdAt).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+    const linkedName = n.linkedId ? (
+      vendors.find(v=>v.id===n.linkedId)?.name ||
+      guests.find(g=>g.id===n.linkedId)?.name || ''
+    ) : '';
+
+    return `<div class="note-card" id="note-${n.id}">
+      <div class="note-card-header">
+        <div>
+          <div class="note-title">${escapeHtml(n.title)}</div>
+          <div class="note-meta">
+            <span class="note-tag" style="color:${tagColor};background:${tagColor}15;">${tagLabel}</span>
+            ${linkedName ? `<span class="note-tag">🔗 ${escapeHtml(linkedName)}</span>` : ''}
+            ${date} at ${time}
+          </div>
+        </div>
+        <div class="note-actions">
+          <button class="note-edit-btn" onclick="noteEdit('${n.id}')">✏️ Edit</button>
+          ${currentRole !== 'viewer' ? `<button class="note-del-btn" onclick="noteDelete('${n.id}')">✕</button>` : ''}
+        </div>
+      </div>
+      <div class="note-content">${escapeHtml(n.content)}</div>
+    </div>`;
+  }).join('');
+}
+
+function noteOpenModal(editId = null) {
+  noteEditId = editId;
+  const modal = document.getElementById('noteModalOverlay');
+  const titleEl = document.getElementById('noteModalTitle');
+  const titleInput = document.getElementById('noteInputTitle');
+  const contentInput = document.getElementById('noteInputContent');
+  const tagInput = document.getElementById('noteInputTag');
+  const linkInput = document.getElementById('noteInputLink');
+
+  // Populate link dropdown with vendors + guests
+  const vendorOpts = vendors.map(v => `<option value="${v.id}">${escapeHtml(v.name)} (Vendor)</option>`).join('');
+  const guestOpts = guests.map(g => `<option value="${g.id}">${escapeHtml(g.name)} (Guest)</option>`).join('');
+  linkInput.innerHTML = `<option value="">— Link to vendor or guest (optional) —</option>${vendorOpts}${guestOpts}`;
+
+  if (editId) {
+    const n = notes.find(x => x.id === editId);
+    if (!n) return;
+    titleEl.textContent = '✏️ Edit Note';
+    titleInput.value = n.title;
+    contentInput.value = n.content;
+    tagInput.value = n.tag || 'general';
+    linkInput.value = n.linkedId || '';
+  } else {
+    titleEl.textContent = '📝 Add Note';
+    titleInput.value = '';
+    contentInput.value = '';
+    tagInput.value = 'general';
+    linkInput.value = '';
+  }
+
+  modal.classList.add('show');
+  setTimeout(() => titleInput.focus(), 100);
+}
+
+async function noteSave() {
+  const title = document.getElementById('noteInputTitle').value.trim();
+  const content = document.getElementById('noteInputContent').value.trim();
+  const tag = document.getElementById('noteInputTag').value;
+  const linkedId = document.getElementById('noteInputLink').value;
+
+  if (!title) { showToast('Please enter a title'); return; }
+  if (!content) { showToast('Please enter note content'); return; }
+
+  if (noteEditId) {
+    const n = notes.find(x => x.id === noteEditId);
+    if (n) { n.title = title; n.content = content; n.tag = tag; n.linkedId = linkedId; n.updatedAt = Date.now(); }
+  } else {
+    notes.push({ id: uid(), title, content, tag, linkedId, createdAt: Date.now(), updatedAt: Date.now() });
+  }
+
+  await saveNotes();
+  document.getElementById('noteModalOverlay').classList.remove('show');
+  showToast(noteEditId ? '✅ Note updated' : '✅ Note saved');
+  noteEditId = null;
+}
+
+function noteEdit(id) { noteOpenModal(id); }
+
+async function noteDelete(id) {
+  if (!confirm('Delete this note?')) return;
+  notes = notes.filter(n => n.id !== id);
+  await saveNotes();
+  showToast('Note deleted');
+}
+
+// Wire up
+document.getElementById('btnAddNote')?.addEventListener('click', () => noteOpenModal());
+document.getElementById('noteSearchInput')?.addEventListener('input', renderNotes);
+document.getElementById('noteFilterTag')?.addEventListener('change', renderNotes);
+
+/* ================================================================
    EMAIL GATE — Worker URL (update after you deploy the Worker)
    ================================================================ */
-const AUTH_WORKER_URL = 'https://vivaah-auth.rms-d21.workers.dev'; // ← UPDATE THIS
+const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! // ← UPDATE THIS
 const OWNER_EMAIL_CLIENT = 'horizoneworld@gmail.com';
 
 let egCurrentEmail = '';
@@ -1763,7 +2280,7 @@ async function egRequestAccess(){
   statusEl.textContent = '';
 
   try{
-    const resp = await fetch(AUTH_WORKER_URL + '/request-access', {
+    const resp = await fetch('/api/request-access', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email})
@@ -1785,7 +2302,8 @@ async function egRequestAccess(){
       statusEl.className = 'eg-status-msg error';
     }
   } catch(e){
-    statusEl.textContent = 'Network error. Please check your connection.';
+    console.error('Request access error:', e);
+    statusEl.textContent = 'Network error: ' + (e.message || 'Could not reach server. Try refreshing the page.');
     statusEl.className = 'eg-status-msg error';
   } finally {
     btn.disabled = false;
@@ -1805,7 +2323,7 @@ function egStopPolling(){
 async function egCheckStatus(){
   if(!egCurrentEmail) return;
   try{
-    const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+    const resp = await fetch('/api/check-status', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email: egCurrentEmail})
@@ -1870,7 +2388,7 @@ async function initAuth(){
   if(approvedEmail){
     // Verify still approved with worker
     try{
-      const resp = await fetch(AUTH_WORKER_URL + '/check-status', {
+      const resp = await fetch('/api/check-status', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({email: approvedEmail})
@@ -1886,6 +2404,10 @@ async function initAuth(){
     } catch(e){ /* network error — fall through to email gate */ }
   }
 
+  // Load notes
+  await loadNotes(); renderNotes();
+  // Check reminders once per day
+  checkReminders();
   // Show email gate
   showLockStep('email');
 }
@@ -1914,6 +2436,7 @@ const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.goo
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
 let googleAccessToken = null;
 let googleTokenClient = null;
+let googleUserEmail = null; // signed-in user's Gmail
 let sheetId = null;
 let isSyncing = false;
 let cloudSaveTimer = null;
@@ -1985,12 +2508,18 @@ async function loadData(){
     const kc = await storageGet('wedding-kankotri-cards');
     if(kc){ kankotriCards = {...kankotriCards, ...JSON.parse(kc)}; }
   }catch(e){ /* keep defaults */ }
+  try{
+    const nt = await storageGet('wedding-notes');
+    if(nt){ notes = JSON.parse(nt); }
+  }catch(e){ notes = []; }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
   }
   applyBranding();
   renderKankotriCardPreviews();
+  renderInvTable();
   render();
+  renderNotes();
 }
 async function saveData(){
   await storageSet('wedding-vendors', JSON.stringify(vendors));
@@ -2005,12 +2534,23 @@ async function saveBranding(){
   queueCloudSave();
 }
 async function saveGuests(){
+  renderInvTable();
   await storageSet('wedding-guests', JSON.stringify(guests));
   queueCloudSave();
 }
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
   queueCloudSave();
+  // Sync reminders to Cloudflare KV so cron job can send alerts
+  if(googleUserEmail){
+    try{
+      await fetch('/api/save-reminders', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: googleUserEmail, reminders })
+      });
+    } catch(e){ console.log('Reminder KV sync skipped:', e.message); }
+  }
 }
 async function saveKankotriCards(){
   await storageSet('wedding-kankotri-cards', JSON.stringify(kankotriCards));
@@ -2069,9 +2609,24 @@ function initGoogleAuth(){
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
     callback: async (resp)=>{
-      if(resp.error){ showToast('Google sign-in failed: '+resp.error); return; }
+      if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
+      if(resp.error){ 
+        setSyncStatus(null,'');
+        storageSet('google-token-cache','');
+        showToast('Google sign-in failed — please try again'); 
+        return; 
+      }
       googleAccessToken = resp.access_token;
       await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
+      // Get signed-in user's email from Google
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+        });
+        const info = await userInfo.json();
+        googleUserEmail = info.email || null;
+        console.log('Signed in as:', googleUserEmail);
+      } catch(e) { console.error('Could not get user email:', e); }
       await onSignedIn();
     }
   });
@@ -2089,6 +2644,16 @@ async function tryRestoreGoogleSession(){
       } else if(parsed.token && googleTokenClient){
         // Token expired — attempt a silent refresh (no popup if user already consented)
         setSyncStatus('saving', 'Refreshing Google session…');
+        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
+        const refreshTimeout = setTimeout(()=>{
+          setSyncStatus(null, '');
+          showToast('Session expired — please sign in again');
+          // Clear bad cached token
+          storageSet('google-token-cache', '');
+          googleAccessToken = null;
+        }, 8000);
+        // Store timeout so callback can clear it
+        window._googleRefreshTimeout = refreshTimeout;
         googleTokenClient.requestAccessToken({prompt:''});
         return; // callback in initTokenClient will call onSignedIn() if successful
       }
@@ -2104,20 +2669,22 @@ function compressGuests(guestArr){
       const e = g.events && g.events[ev];
       return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
     });
-    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent]
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent]
     return [
       g.id, g.name, g.phone||'', g.side||'', evArr,
       g.city||'', g.state||'', g.country||'',
       g.needsAccommodation ? 1 : 0,
       g.rooms||0, g.beds||0,
-      g.kankotriTier||'', g.kankotriSent ? 1 : 0
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0,
+      g.invTier||'', g.invCards||0, g.invSent ? 1 : 0,
+      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||''
     ];
   });
 }
 function expandGuests(compressed){
   return (compressed||[]).map(arr=>{
     if(!Array.isArray(arr)) return arr;
-    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent] = arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent] = arr;
     const events={};
     (evArr||[]).forEach((e,i)=>{
       if(e && (e[0]>0||e[1]>0||e[3]>0)){
@@ -2128,7 +2695,10 @@ function expandGuests(compressed){
       id, name, phone, side, events,
       city:city||'', state:state||'', country:country||'',
       needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
-      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
+      invTier:invTier||'', invCards:invCards||0, invSent:!!invSent,
+      confirmedAdults:Number(arr[16])||0, confirmedKids:Number(arr[17])||0,
+      callStatus:arr[18]||'', waCustomMsg:arr[19]||''
     };
   });
 }
@@ -2140,6 +2710,7 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
 
 document.getElementById('btnSignOut').onclick = async ()=>{
   googleAccessToken = null;
+  googleUserEmail = null;
   sheetId = null;
   await storageSet('google-token-cache', '');
   await storageSet('wedding-sheet-id', '');
@@ -2211,6 +2782,7 @@ async function onSignedIn(){
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
       guests = cloudData.guests||guests;
       reminders = cloudData.reminders||reminders;
+      notes = cloudData.notes||notes;
       // Branding logo: prefer cloud, fall back to local
       branding = {
         ...(cloudData.branding||branding),
@@ -2232,6 +2804,8 @@ async function onSignedIn(){
     setSyncStatus('ok','Synced just now');
     render();
     renderTimeline();
+    renderInvTable(); // refresh invitation distribution after cloud data loads
+    notes = cloudData.notes || notes; renderNotes();
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -2280,6 +2854,7 @@ async function pushToSheet(){
   const mainPayload = JSON.stringify({
     vendors:vendorsForSync, functions, reminders,
     branding:brandingForSync, timeline:timelineForSync,
+    notes:notes,
     savedAt:new Date().toISOString()
   });
   const logosPayload = JSON.stringify({
@@ -3094,11 +3669,26 @@ function renderGuests(){
             <span class="${g.kankotriSent?'dispatch-sent':'dispatch-pending'}">${g.kankotriSent?'✓ Sent':'⏳ Pending'}</span>
           </label>
         </td>` : ''}
+        <td>
+          <div class="guest-action-btns">
+            ${g.phone ? `
+              <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
+              <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
+            ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
+            <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
+              ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
+            </button>
+            ${g.confirmedAdults > 0 ? `<span class="confirmed-badge">✅ ${g.confirmedAdults} confirmed</span>` : ''}
+          </div>
+        </td>
         ${currentRole==='editor' ? '' : `<td><button class="guest-del-btn" data-del-guest title="Remove">✕</button></td>`}
       </tr>
       ${detailRow}
     `;
   }).join('');
+
+  // Wire call/WA/confirm buttons
+  wireGuestActionBtns();
 
   // Save inline edits (name, phone, side) — runs after every renderGuests()
   document.querySelectorAll('.guest-inline-edit').forEach(el => {
@@ -3311,14 +3901,27 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
           seenInThisFile[nameKey] = idx;
         }
 
+        // Read Tier column — map Excel values to internal keys
+        const tierRaw = String(getVal(row,['tier','kankotritier','kankotri tier'])).trim().toLowerCase();
+        let kankotriTier = '';
+        if(tierRaw.includes('vip') || tierRaw.includes('vvip')) kankotriTier = 'vip';
+        else if(tierRaw.includes('premium')) kankotriTier = 'premium';
+        else if(tierRaw.includes('normal')) kankotriTier = 'normal';
+
+        // Read Sent column
+        const sentRaw = String(getVal(row,['sent','dispatched','kankotrisent'])).trim().toLowerCase();
+        const kankotriSent = ['yes','y','true','1','sent'].includes(sentRaw);
+
         const existing = guests.find(g=>g.name.toLowerCase()===nameKey);
         if(existing){
           existing.phone = phone || existing.phone;
           existing.side = side;
           existing.events = {...existing.events, ...events};
+          if(kankotriTier) existing.kankotriTier = kankotriTier;
+          if(kankotriSent) existing.kankotriSent = kankotriSent;
           if(wasInThisFileAlready) mergedWithinFile++; else updatedExisting++;
         } else {
-          guests.push({id:uid(), name, phone, side, events});
+          guests.push({id:uid(), name, phone, side, events, kankotriTier, kankotriSent});
           added++;
         }
       });
@@ -4118,7 +4721,7 @@ function renderReminders(){
         <input type="checkbox"${item.done?' checked':''} data-toggle-reminder>
         <div style="flex:1;">
           <span class="r-text">${escapeHtml(item.text)}</span>
-          ${item.date?`<span class="r-date">${formatShortDate(item.date)}</span>`:''}
+          ${item.date?`<span class="r-date">${formatShortDate(item.date)}${item.time?' ⏰ '+item.time:''}</span>`:''}
           ${vendor?`<div class="r-vendor-tag">📦 ${escapeHtml(vendor.name)}</div>`:''}
           ${item.forPerson?`<div class="r-person-tag">👤 ${escapeHtml(item.forPerson)}</div>`:''}
         </div>
@@ -4128,10 +4731,10 @@ function renderReminders(){
   });
 }
 
-function addReminder(key,text,date,vendorId,forPerson){
+function addReminder(key,text,date,vendorId,forPerson,time){
   if(!text||!text.trim()) return false;
   reminders[key]=reminders[key]||[];
-  reminders[key].push({id:uid(),text:text.trim(),date:date||'',done:false,vendorId:vendorId||'',forPerson:forPerson||''});
+  reminders[key].push({id:uid(),text:text.trim(),date:date||'',time:time||'',done:false,vendorId:vendorId||'',forPerson:forPerson||''});
   saveReminders(); renderReminders(); return true;
 }
 
@@ -4142,11 +4745,14 @@ REMINDER_KEYS.forEach(key=>{
   if(addBtn) addBtn.onclick=()=>{
     const text=document.getElementById('input'+cap).value;
     const date=document.getElementById('date'+cap).value;
+    const timeEl=document.getElementById('time'+cap);
+    const time=timeEl?timeEl.value:'';
     const vendorId=(key!=='guest'&&document.getElementById(key+'Vendor'))?document.getElementById(key+'Vendor').value:'';
     const forPerson=(key!=='guest'&&document.getElementById(key+'Person'))?document.getElementById(key+'Person').value:'';
-    if(addReminder(key,text,date,vendorId,forPerson)){
+    if(addReminder(key,text,date,vendorId,forPerson,time)){
       document.getElementById('input'+cap).value='';
       document.getElementById('date'+cap).value='';
+      if(timeEl) timeEl.value='';
       if(key!=='guest'&&document.getElementById(key+'Person')) document.getElementById(key+'Person').value='';
     } else showToast('Type something to add');
   };
@@ -4236,6 +4842,121 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
 /* ================================================================
    KANKOTRI CARD DESIGNS — upload/preview per tier
    ================================================================ */
+/* ================================================================
+   KANKOTRI INVITATION DISTRIBUTION TABLE
+   ================================================================ */
+function renderInvTable(){
+  const searchEl   = document.getElementById('invSearchInput');
+  const tierFEl    = document.getElementById('invTierFilter');
+  const sentFEl    = document.getElementById('invSentFilter');
+  const tbody      = document.getElementById('invTableBody');
+  const emptyMsg   = document.getElementById('invEmptyMsg');
+  const summaryBar = document.getElementById('invSummaryBar');
+  if(!tbody) return;
+
+  const search   = (searchEl ? searchEl.value : '').toLowerCase();
+  const tierF    = tierFEl ? tierFEl.value : '';
+  const sentF    = sentFEl ? sentFEl.value : '';
+
+  let list = [...guests];
+
+  if(search) list = list.filter(g => g.name.toLowerCase().includes(search) || (g.phone||'').includes(search));
+  if(tierF === 'unassigned') list = list.filter(g => !g.invTier);
+  else if(tierF) list = list.filter(g => g.invTier === tierF);
+  if(sentF === 'sent')    list = list.filter(g => g.invSent);
+  if(sentF === 'pending') list = list.filter(g => !g.invSent);
+
+  // Summary bar
+  const allG = guests;
+  const vipC     = allG.filter(g=>g.invTier==='vip').length;
+  const premC    = allG.filter(g=>g.invTier==='premium').length;
+  const normC    = allG.filter(g=>g.invTier==='normal').length;
+  const unassC   = allG.filter(g=>!g.invTier).length;
+  const sentC    = allG.filter(g=>g.invSent).length;
+  const totalCards = allG.reduce((s,g)=>s+(Number(g.invCards)||0),0);
+
+  summaryBar.innerHTML = `
+    <span>👑 VIP: <b>${vipC}</b></span>
+    <span>⭐ Premium: <b>${premC}</b></span>
+    <span>🎟 Normal: <b>${normC}</b></span>
+    <span>⭕ Unassigned: <b>${unassC}</b></span>
+    <span style="margin-left:8px;">✓ Sent: <b>${sentC}</b></span>
+    <span>📦 Total cards: <b>${totalCards}</b></span>
+  `;
+
+  if(guests.length === 0){ emptyMsg.style.display=''; tbody.innerHTML=''; return; }
+  emptyMsg.style.display = 'none';
+
+  tbody.innerHTML = list.map((g, i) => {
+    const tier = g.invTier || '';
+    const tierLabel = tier==='vip' ? '👑 VIP Premium' : tier==='premium' ? '⭐ Premium' : tier==='normal' ? '🎟 Normal' : '— Assign —';
+    const tierColor = tier==='vip' ? '#856404' : tier==='premium' ? '#1A3A8A' : tier==='normal' ? '#555' : '#bbb';
+    const tierBg    = tier==='vip' ? '#FFF0C0' : tier==='premium' ? '#E8F0FF' : tier==='normal' ? '#F3EBDB' : '#fafafa';
+    const cards = g.invCards || 0;
+    const sent  = g.invSent || false;
+    const rowBg = i%2===0 ? '#fff' : 'var(--ivory)';
+    return `<tr style="background:${rowBg};border-bottom:1px solid var(--line);">
+      <td style="padding:8px 12px;color:var(--ink-soft);font-size:12px;">${i+1}</td>
+      <td style="padding:8px 12px;font-weight:600;">${escapeHtml(g.name)}</td>
+      <td style="padding:8px 12px;color:var(--ink-soft);">${escapeHtml(g.phone||'—')}</td>
+      <td style="padding:8px 12px;">${escapeHtml(g.side||'—')}</td>
+      <td style="padding:8px 12px;">
+        <select data-inv-tier="${g.id}" style="padding:5px 8px;border:1.5px solid var(--line);border-radius:7px;font-size:12px;background:${tierBg};color:${tierColor};font-weight:600;cursor:pointer;">
+          <option value="" ${!tier?'selected':''}>— Assign Tier —</option>
+          <option value="vip"      ${tier==='vip'?'selected':''}>👑 VIP Premium</option>
+          <option value="premium"  ${tier==='premium'?'selected':''}>⭐ Premium</option>
+          <option value="normal"   ${tier==='normal'?'selected':''}>🎟 Normal</option>
+        </select>
+      </td>
+      <td style="padding:8px 12px;">
+        <input type="number" min="0" max="99" data-inv-cards="${g.id}" value="${cards}"
+          style="width:60px;padding:5px 8px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;text-align:center;">
+      </td>
+      <td style="padding:8px 12px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+          <input type="checkbox" data-inv-sent="${g.id}" ${sent?'checked':''}>
+          <span style="font-size:12px;font-weight:600;color:${sent?'#2E7D32':'#E65100'};">${sent?'✓ Sent':'⏳ Pending'}</span>
+        </label>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Wire up change events
+  tbody.querySelectorAll('[data-inv-tier]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invTier);
+      if(g){ g.invTier = e.target.value; saveGuests(); renderInvTable(); }
+    });
+  });
+  tbody.querySelectorAll('[data-inv-cards]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invCards);
+      if(g){ g.invCards = Number(e.target.value)||0; saveGuests(); renderInvTable(); }
+    });
+  });
+  tbody.querySelectorAll('[data-inv-sent]').forEach(el => {
+    el.addEventListener('change', e => {
+      const g = guests.find(x=>x.id===e.target.dataset.invSent);
+      if(g){ g.invSent = e.target.checked; saveGuests(); renderInvTable(); }
+      // Update label without full re-render
+      const span = e.target.nextElementSibling;
+      if(span){ span.textContent = e.target.checked?'✓ Sent':'⏳ Pending'; span.style.color = e.target.checked?'#2E7D32':'#E65100'; }
+    });
+  });
+
+  // Update kankotri tier counts in the card design boxes (use invTier now)
+  ['vip','premium','normal'].forEach(tier=>{
+    const el = document.getElementById('kankotriCount_'+tier);
+    if(el) el.textContent = guests.filter(g=>g.invTier===tier).length + ' families';
+  });
+}
+
+// Wire up search & filter
+['invSearchInput','invTierFilter','invSentFilter'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(el) el.addEventListener('input', renderInvTable);
+});
+
 function renderKankotriCardPreviews(){
   ['vip','premium','normal'].forEach(tier=>{
     const preview = document.getElementById('kankotriPreview_'+tier);
@@ -4313,55 +5034,75 @@ document.getElementById('kankotriFileInput').addEventListener('change',e=>{
       let added=0,updated=0;
       rows.forEach(row=>{
         const name=String(getVal(row,['familyguestname','guestname','name','family'])).trim(); if(!name) return;
-        const adults=Number(getVal(row,['adults','adultcount']))||0;
-        const writer=Number(getVal(row,['writer','writers','calligrapher']))||0;
         const phone=String(getVal(row,['phone','mobile'])).trim();
         const side=String(getVal(row,['side'])).trim()||'Both';
-        const tierRaw=String(getVal(row,['tier','kankotritier'])).trim().toLowerCase();
-        const tier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const tierRaw=String(getVal(row,['tier','invtier','kankotritier'])).trim().toLowerCase();
+        const invTier = tierRaw.includes('vip')?'vip':tierRaw.includes('premium')?'premium':tierRaw.includes('normal')?'normal':'';
+        const invCards=Number(getVal(row,['noofcards','numcards','cards','numberofcards','nocards']))||0;
         const sentRaw=String(getVal(row,['sent','dispatched','dispatch'])).trim().toLowerCase();
-        const sent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
+        const invSent = sentRaw==='yes'||sentRaw==='true'||sentRaw==='1'||sentRaw==='sent';
         const existing=guests.find(g=>g.name.toLowerCase()===name.toLowerCase());
         if(existing){
-          if(adults>0||writer>0) existing.events={...existing.events,Kankotri:{adults,kids:0,ladies:0,writer}};
-          existing.phone=phone||existing.phone; existing.side=side;
-          if(tier) existing.kankotriTier=tier;
-          existing.kankotriSent=sent;
+          existing.phone=phone||existing.phone;
+          existing.side=side||existing.side;
+          if(invTier) existing.invTier=invTier;
+          if(invCards) existing.invCards=invCards;
+          existing.invSent=invSent;
           updated++;
         } else {
-          const events=adults>0||writer>0?{Kankotri:{adults,kids:0,ladies:0,writer}}:{};
-          guests.push({id:uid(),name,phone,side,events,kankotriTier:tier,kankotriSent:sent}); added++;
+          guests.push({id:uid(),name,phone,side,events:{},invTier,invCards,invSent});
+          added++;
         }
       });
-      saveGuests(); renderGuests();
-      showToast(`Kankotri: ${added} added, ${updated} updated`);
-    }catch(err){showToast('Could not read file — check the format');}
+      saveGuests(); renderGuests(); renderInvTable();
+      showToast(`Invitation list: ${added} added, ${updated} updated`);
+    }catch(err){console.error(err);showToast('Could not read file — check the format');}
     e.target.value='';
   };
   reader.readAsArrayBuffer(file);
 });
 document.getElementById('btnKankotriTemplate').onclick=()=>{
   const wb=XLSX.utils.book_new();
-  const sheet=XLSX.utils.json_to_sheet([
-    {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Adults':2,'Writer':1,'Tier':'VIP Premium','Sent':'No'},
-    {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Adults':3,'Writer':0,'Tier':'Premium','Sent':'No'},
-    {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Adults':4,'Writer':0,'Tier':'Normal','Sent':'Yes'},
-  ]);
-  XLSX.utils.book_append_sheet(wb,sheet,'Kankotri');
-  XLSX.writeFile(wb,'Kankotri_Template.xlsx');
-  showToast('Kankotri template downloaded');
+  // If guests exist, pre-fill template with current guest list
+  const rows = guests.length > 0
+    ? guests.map(g=>({
+        'Family / Guest Name': g.name,
+        'Phone': g.phone||'',
+        'Side': g.side||'',
+        'Tier': g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'',
+        'No. of Cards': g.invCards||0,
+        'Sent': g.invSent?'Yes':'No',
+      }))
+    : [
+        {'Family / Guest Name':'Asha Patel Family','Phone':'9876512345','Side':'Bride','Tier':'VIP Premium','No. of Cards':2,'Sent':'No'},
+        {'Family / Guest Name':'Rohan Shah Family','Phone':'9876523456','Side':'Groom','Tier':'Premium','No. of Cards':3,'Sent':'No'},
+        {'Family / Guest Name':'Mehta Family','Phone':'9876500001','Side':'Bride','Tier':'Normal','No. of Cards':4,'Sent':'Yes'},
+      ];
+  const sheet=XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,sheet,'Invitation');
+  XLSX.writeFile(wb,'Kankotri_Invitation_Template.xlsx');
+  showToast('Template downloaded with current guest list');
 };
 document.getElementById('btnKankotriExport').onclick=()=>{
-  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
-  if(kankotriGuests.length===0){showToast('No Kankotri guests to export');return;}
+  if(guests.length===0){showToast('No guests to export');return;}
   const wb=XLSX.utils.book_new();
+  // Sheet 1: Invitation Distribution (all guests)
+  const invRows=guests.map(g=>({
+    'Family / Guest Name':g.name,
+    'Phone':g.phone||'',
+    'Side':g.side||'',
+    'Tier':g.invTier==='vip'?'VIP Premium':g.invTier==='premium'?'Premium':g.invTier==='normal'?'Normal':'Unassigned',
+    'No. of Cards':g.invCards||0,
+    'Sent':g.invSent?'Yes':'No',
+  }));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(invRows),'Invitation Distribution');
+  // Sheet 2: Kankotri event writers
+  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
   const rows=kankotriGuests.map(g=>{
     const c=guestEventCounts(g,'Kankotri');
     return{
       'Family / Guest Name':g.name,'Phone':g.phone||'','Side':g.side||'',
       'Adults':c.adults,'Writer':c.writer,
-      'Tier':g.kankotriTier==='vip'?'VIP Premium':g.kankotriTier==='premium'?'Premium':g.kankotriTier==='normal'?'Normal':'',
-      'Sent':g.kankotriSent?'Yes':'No',
       'City':g.city||'','State':g.state||'','Country':g.country||''
     };
   });
@@ -4471,5 +5212,48 @@ function runGlobalSearch(q, gsInput, gsResults){
   gsResults.innerHTML=html; gsResults.style.display='block';
 }
 </script>
+<!-- ── WhatsApp Message Editor Modal ── -->
+<div class="wa-modal-overlay" id="waModalOverlay">
+  <div class="wa-modal">
+    <h3>💬 WhatsApp Message</h3>
+    <p style="font-size:12px;color:var(--ink-soft);margin:0 0 4px;">To: <strong id="waGuestName"></strong> (<span id="waGuestPhone"></span>)</p>
+    <textarea id="waMessageText"></textarea>
+    <div style="font-size:11px;color:var(--ink-soft);">You can edit the message before sending. <strong>[Name]</strong> will be replaced with the guest's name.</div>
+    <div class="wa-modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('waModalOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn btn-gold" onclick="waSend()">Open WhatsApp →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Headcount Confirmation Modal ── -->
+<div class="hc-modal-overlay" id="hcModalOverlay">
+  <div class="hc-modal">
+    <h3>✓ Confirm Headcount</h3>
+    <p style="font-size:13px;color:var(--ink-soft);margin:0 0 14px;">Guest: <strong id="hcGuestName"></strong></p>
+    <div class="hc-row">
+      <label>Confirmed Adults</label>
+      <input type="number" min="0" id="hcAdults" value="0">
+    </div>
+    <div class="hc-row">
+      <label>Confirmed Kids</label>
+      <input type="number" min="0" id="hcKids" value="0">
+    </div>
+    <div class="hc-row" style="padding-top:10px;border-top:1px solid var(--line);">
+      <label style="font-weight:600;">Call Status</label>
+      <select id="hcCallStatus" style="padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';">
+        <option value="confirmed">✅ Confirmed attending</option>
+        <option value="declined">❌ Declined</option>
+        <option value="maybe">🤔 Maybe</option>
+        <option value="no-answer">📵 No answer</option>
+      </select>
+    </div>
+    <div class="hc-modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('hcModalOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn btn-gold" onclick="hcSave()">Save Confirmation</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
