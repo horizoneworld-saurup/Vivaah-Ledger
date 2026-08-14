@@ -984,6 +984,15 @@
 
       <div id="amStatusMsg" style="font-size:13px;min-height:18px;text-align:center;color:var(--ink-soft);"></div>
 
+      <!-- Approved Users List -->
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:12px;font-weight:700;color:var(--maroon);">👥 Approved Users</div>
+          <button onclick="amLoadApprovedList()" style="padding:4px 12px;background:var(--ivory-deep);border:1px solid var(--line);border-radius:7px;font-size:12px;cursor:pointer;color:var(--maroon);font-weight:600;">🔄 Refresh List</button>
+        </div>
+        <div id="amApprovedList" style="font-size:12.5px;color:var(--ink-soft);">Click Refresh to load approved users…</div>
+      </div>
+
       <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line);">
         <div style="font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;">ℹ How it works</div>
         <div style="font-size:12px;color:var(--ink-soft);line-height:1.7;">
@@ -1898,6 +1907,39 @@ async function amCheckEmail() {
   } catch(e) {
     statusMsg.textContent = 'Network error. Check your connection.';
     statusMsg.style.color = 'var(--rust)';
+  }
+}
+
+async function amLoadApprovedList() {
+  const listEl = document.getElementById('amApprovedList');
+  listEl.innerHTML = '<span style="color:var(--ink-soft);">Loading…</span>';
+  try {
+    const resp = await fetch('/api/list-approved', { method: 'GET' });
+    const data = await resp.json();
+    if (!data.users || data.users.length === 0) {
+      listEl.innerHTML = '<span style="color:var(--ink-soft);">No approved users found.</span>';
+      return;
+    }
+    listEl.innerHTML = data.users.map(u => {
+      const approvedDate = u.approvedAt ? new Date(u.approvedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const expiryDate = u.expiresAt ? new Date(u.expiresAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      const daysLeft = u.expiresAt ? Math.ceil((u.expiresAt - Date.now()) / (1000*60*60*24)) : 0;
+      const expiryColor = daysLeft < 14 ? '#C62828' : daysLeft < 30 ? '#E65100' : '#2E7D32';
+      const isOwner = u.email === 'horizoneworld@gmail.com';
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--ivory);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
+        <div>
+          <div style="font-weight:600;font-size:13px;color:var(--ink);">${u.email} ${isOwner ? '👑' : ''}</div>
+          <div style="font-size:11px;color:var(--ink-soft);">
+            Approved: ${approvedDate} &nbsp;·&nbsp;
+            Duration: <strong>${u.months || 6} months</strong> &nbsp;·&nbsp;
+            Expires: <span style="color:${expiryColor};font-weight:600;">${expiryDate} (${daysLeft} days left)</span>
+          </div>
+        </div>
+        ${!isOwner ? `<button onclick="document.getElementById('amEmailInput').value='${u.email}';amCheckEmail();" style="padding:4px 10px;background:var(--maroon);color:#fff;border:none;border-radius:7px;font-size:11px;cursor:pointer;font-weight:600;">Manage</button>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = '<span style="color:var(--rust);">Could not load list. Check connection.</span>';
   }
 }
 
