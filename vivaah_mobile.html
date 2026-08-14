@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vivaah Ledger</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --maroon: #5C1A2B; --gold: #D4A24C; --ivory: #FBF6EE;
+  --ivory2: #F3EBDB; --dark: #2A1F1A; --gray: #888;
+  --line: #E0C8A8; --rust: #C62828;
+}
+body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min-height: 100vh; padding-bottom: 64px; }
+
+/* ── REDIRECT DESKTOP ── */
+.desktop-msg { display: none; }
+@media (min-width: 768px) {
+  body > *:not(.desktop-msg) { display: none !important; }
+  .desktop-msg {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 40px; background: var(--maroon);
+  }
+  .desktop-msg h1 { color: var(--gold); font-size: 28px; margin-bottom: 12px; }
+  .desktop-msg p { color: #C4906A; font-size: 15px; margin-bottom: 24px; }
+  .desktop-msg a { display: inline-block; padding: 12px 28px; background: var(--gold); color: var(--maroon); border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; }
+}
+
+/* ── TOP BAR ── */
+.topbar { background: var(--maroon); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.topbar-title { color: var(--gold); font-size: 16px; font-weight: 700; }
+.topbar-sub { color: #C4906A; font-size: 10px; margin-top: 1px; }
+.btn-back { background: rgba(255,255,255,0.15); border: none; color: var(--gold); padding: 5px 11px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
+.btn-back.show { display: block; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; animation: fadeUp .2s ease; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── SUMMARY BAR ── */
+.sum-bar { background: #fff; margin: 10px; border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-around; border: 1px solid var(--line); }
+.sum-item { text-align: center; }
+.sum-val { font-size: 15px; font-weight: 700; color: var(--maroon); }
+.sum-lbl { font-size: 9px; color: var(--gray); margin-top: 1px; }
+
+/* ── DASHBOARD GRID ── */
+.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 10px 10px; }
+.dash-card { border-radius: 14px; padding: 14px 12px; cursor: pointer; transition: transform .15s, opacity .15s; position: relative; min-height: 110px; }
+.dash-card:active { transform: scale(0.95); opacity: 0.85; }
+.dc-icon { font-size: 24px; margin-bottom: 6px; display: block; }
+.dc-name { font-size: 13px; font-weight: 700; color: #fff; }
+.dc-stats { margin-top: 6px; }
+.dc-stat { font-size: 10px; display: block; margin-top: 2px; color: rgba(255,255,255,0.85); }
+.dc-arrow { position: absolute; bottom: 10px; right: 12px; color: rgba(255,255,255,0.35); font-size: 14px; }
+
+.cBudget   { background: linear-gradient(135deg,#856404,#C8960E); }
+.cVendor   { background: linear-gradient(135deg,#1A3A8A,#2952C4); }
+.cGuest    { background: linear-gradient(135deg,#5C1A2B,#8A2A3F); }
+.cKankotri { background: linear-gradient(135deg,#3E0F1C,#5C1A2B); border:1px solid rgba(212,164,76,0.3); }
+.cKankotri .dc-name { color: var(--gold); }
+.cKankotri .dc-stat { color: #F0D8A8; }
+.cReminder { background: linear-gradient(135deg,#5C1A8A,#8A2AC4); }
+.cTimeline { background: linear-gradient(135deg,#1A5C5C,#2E8B8B); }
+.cNotes    { background: linear-gradient(135deg,#2E6B1A,#4A9B2A); }
+.cCatering { background: linear-gradient(135deg,#C45000,#E67300); }
+
+/* ── SECTION HEADER ── */
+.sec-head { padding: 12px 14px; }
+.sec-head-title { color: #fff; font-size: 15px; font-weight: 700; }
+.sec-head-sub { color: rgba(255,255,255,0.75); font-size: 10px; margin-top: 2px; }
+.sec-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
+.sec-badge { background: rgba(255,255,255,0.2); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.sec-badge.gold { background: rgba(212,164,76,0.3); color: var(--gold); }
+.sec-actions { display: flex; gap: 8px; padding: 8px 10px 4px; }
+.btn-sec-act { padding: 5px 12px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(255,255,255,0.1); cursor: pointer; }
+
+/* ── ACCORDION ── */
+.acc-wrap { padding: 6px 10px; }
+.acc-group { background: #fff; border-radius: 10px; margin-bottom: 8px; overflow: hidden; border: 1px solid var(--line); }
+.acc-head { padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.acc-head-left { display: flex; align-items: center; gap: 8px; }
+.acc-head-title { font-size: 12px; font-weight: 700; color: var(--maroon); }
+.acc-head-count { font-size: 10px; color: var(--gray); }
+.acc-arrow { font-size: 12px; color: var(--gray); transition: transform .2s; }
+.acc-arrow.open { transform: rotate(90deg); }
+.acc-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.acc-body.open { max-height: 800px; }
+
+/* ── ROW ITEMS ── */
+.row-item { padding: 9px 12px; border-top: 1px solid var(--ivory2); display: flex; justify-content: space-between; align-items: center; }
+.row-name { font-size: 12px; font-weight: 600; color: var(--dark); }
+.row-sub { font-size: 10px; color: var(--gray); margin-top: 2px; }
+.row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.badge { padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 600; white-space: nowrap; }
+.b-pend { background: #FFF3E0; color: #C45000; }
+.b-conf { background: #E8F5E9; color: #2E7D32; }
+.b-settled { background: #E8F5E9; color: #2E7D32; }
+.b-partial { background: #FFF8E1; color: #F57F17; }
+.b-unpaid { background: #FFEBEE; color: #C62828; }
+.b-vip { background: #FFF0C0; color: #856404; }
+.b-prem { background: #E8F0FF; color: #1A3A8A; }
+.b-norm { background: #F3EBDB; color: #555; }
+.b-sent { background: #E8F5E9; color: #2E7D32; }
+.b-unsent { background: #FFF3E0; color: #C45000; }
+
+/* ── REMINDER ROW ── */
+.rem-row { padding: 10px 12px; border-top: 1px solid var(--ivory2); display: flex; align-items: center; gap: 10px; }
+.rem-emoji { font-size: 20px; flex-shrink: 0; }
+.rem-title { font-size: 12px; font-weight: 600; color: var(--dark); }
+.rem-sub { font-size: 10px; color: var(--gray); margin-top: 1px; }
+.rem-days { padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.d-today { background: #FFEBEE; color: #C62828; }
+.d-soon { background: #FFF3E0; color: #C45000; }
+.d-ok { background: #E8F5E9; color: #2E7D32; }
+
+/* ── TIMELINE ── */
+.tl-wrap { padding: 8px 14px; }
+.tl-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--ivory2); }
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.tl-past { background: #bbb; }
+.tl-next { background: #2E7D32; box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
+.tl-future { background: var(--gold); }
+.tl-name { font-size: 12px; font-weight: 700; color: var(--maroon); }
+.tl-date { font-size: 10px; color: var(--gray); margin-top: 2px; }
+.tl-venue { font-size: 10px; color: #666; }
+
+/* ── NOTES ── */
+.note-card { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
+.note-tag { display: inline-block; padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 600; background: var(--ivory2); color: var(--maroon); margin-bottom: 5px; }
+.note-title { font-size: 13px; font-weight: 700; color: var(--maroon); }
+.note-content { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.5; }
+.note-meta { font-size: 9px; color: var(--gray); margin-top: 6px; }
+
+/* ── SEARCH BAR ── */
+.search-bar { padding: 8px 10px 4px; }
+.search-bar input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 13px; outline: none; background: #fff; }
+.search-bar input:focus { border-color: var(--maroon); }
+
+/* ── OPEN FULL BTN ── */
+.open-full { display: block; margin: 10px; padding: 12px; background: var(--maroon); color: var(--gold); border: none; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; text-decoration: none; }
+
+/* ── BOTTOM NAV ── */
+.bottomnav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--maroon); display: flex; border-top: 1px solid rgba(212,164,76,0.25); z-index: 100; padding-bottom: env(safe-area-inset-bottom,0); }
+.nav-item { flex: 1; padding: 7px 4px 5px; text-align: center; cursor: pointer; border-top: 2px solid transparent; }
+.nav-item.active { border-top-color: var(--gold); }
+.nav-icon { font-size: 18px; display: block; line-height: 1; }
+.nav-lbl { font-size: 9px; color: rgba(255,255,255,0.45); margin-top: 2px; display: block; }
+.nav-item.active .nav-lbl { color: var(--gold); }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 28px 16px; color: var(--gray); font-size: 13px; }
+
+/* ── BUDGET CARDS ── */
+.budget-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+.budget-card { background: #fff; border-radius: 10px; padding: 12px; text-align: center; border: 1px solid var(--line); }
+.bc-val { font-size: 16px; font-weight: 700; color: var(--maroon); }
+.bc-lbl { font-size: 10px; color: var(--gray); margin-top: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Desktop redirect message -->
+<div class="desktop-msg">
+  <h1>🌸 Vivaah Ledger Mobile</h1>
+  <p>This is the mobile view — please open on your phone or tablet.<br>For desktop, use the full tool.</p>
+  <a href="https://vivaah-ledger.pages.dev">Open Full Tool →</a>
+</div>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="btn-back" id="btnBack" onclick="showDash()">← Back</button>
+    <div>
+      <div class="topbar-title" id="topTitle">🌸 Vivaah Ledger</div>
+      <div class="topbar-sub" id="topSub">Loading...</div>
+    </div>
+  </div>
+  <div class="sync-dot" id="syncDot" title="Data loaded"></div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DASHBOARD
+     ════════════════════════════════════════ -->
+<div class="view active" id="vDash">
+  <div class="sum-bar">
+    <div class="sum-item"><div class="sum-val" id="sBudget">₹0</div><div class="sum-lbl">Budget</div></div>
+    <div class="sum-item"><div class="sum-val" id="sVendors">0</div><div class="sum-lbl">Vendors</div></div>
+    <div class="sum-item"><div class="sum-val" id="sGuests">0</div><div class="sum-lbl">Families</div></div>
+    <div class="sum-item"><div class="sum-val" id="sAlerts">0</div><div class="sum-lbl">Alerts</div></div>
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card cBudget" onclick="showSec('budget')">
+      <span class="dc-icon">💰</span>
+      <div class="dc-name">Budget</div>
+      <div class="dc-stats"><span class="dc-stat" id="dB1">—</span><span class="dc-stat" id="dB2">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cVendor" onclick="showSec('vendor')">
+      <span class="dc-icon">🏪</span>
+      <div class="dc-name">Vendors</div>
+      <div class="dc-stats"><span class="dc-stat" id="dV1">—</span><span class="dc-stat" id="dV2">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cGuest" onclick="showSec('guest')">
+      <span class="dc-icon">👥</span>
+      <div class="dc-name">Guests</div>
+      <div class="dc-stats"><span class="dc-stat" id="dG1">—</span><span class="dc-stat" id="dG2">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cKankotri" onclick="showSec('kankotri')">
+      <span class="dc-icon">𖥸</span>
+      <div class="dc-name">Kankotri</div>
+      <div class="dc-stats"><span class="dc-stat" id="dK1">—</span><span class="dc-stat" id="dK2">—</span></div>
+      <span class="dc-arrow" style="color:rgba(212,164,76,0.4);">→</span>
+    </div>
+    <div class="dash-card cReminder" onclick="showSec('reminder')">
+      <span class="dc-icon">🔔</span>
+      <div class="dc-name">Reminders</div>
+      <div class="dc-stats"><span class="dc-stat" id="dR1">—</span><span class="dc-stat" id="dR2">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cTimeline" onclick="showSec('timeline')">
+      <span class="dc-icon">📅</span>
+      <div class="dc-name">Timeline</div>
+      <div class="dc-stats"><span class="dc-stat" id="dT1">—</span><span class="dc-stat" id="dT2">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cNotes" onclick="showSec('notes')">
+      <span class="dc-icon">📝</span>
+      <div class="dc-name">Notes</div>
+      <div class="dc-stats"><span class="dc-stat" id="dN1">—</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+    <div class="dash-card cCatering" onclick="showSec('catering')">
+      <span class="dc-icon">🍽️</span>
+      <div class="dc-name">Catering</div>
+      <div class="dc-stats"><span class="dc-stat">Calculator</span><span class="dc-stat">Tap to open →</span></div>
+      <span class="dc-arrow">→</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     BUDGET
+     ════════════════════════════════════════ -->
+<div class="view" id="vBudget">
+  <div class="sec-head" style="background:linear-gradient(135deg,#856404,#C8960E);">
+    <div class="sec-head-title">💰 Budget & Payment Tracking</div>
+    <div class="sec-head-sub">Track spend, advances and dues</div>
+    <div class="sec-badges" id="budgetBadges"></div>
+  </div>
+  <div class="budget-cards" id="budgetCards"></div>
+  <div class="acc-wrap" id="budgetList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     VENDORS
+     ════════════════════════════════════════ -->
+<div class="view" id="vVendor">
+  <div class="sec-head" style="background:linear-gradient(135deg,#1A3A8A,#2952C4);">
+    <div class="sec-head-title">🏪 Vendor Management</div>
+    <div class="sec-head-sub">Caterers, photographers, decorators</div>
+    <div class="sec-badges" id="vendorBadges"></div>
+  </div>
+  <div class="search-bar"><input id="vendorSearch" placeholder="Search vendor..." oninput="renderVendors()"></div>
+  <div class="acc-wrap" id="vendorList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     GUESTS
+     ════════════════════════════════════════ -->
+<div class="view" id="vGuest">
+  <div class="sec-head" style="background:linear-gradient(135deg,#5C1A2B,#8A2A3F);">
+    <div class="sec-head-title">👥 Guest List</div>
+    <div class="sec-head-sub">Call, WhatsApp, confirm headcount</div>
+    <div class="sec-badges" id="guestBadges"></div>
+  </div>
+  <div class="search-bar"><input id="guestSearch" placeholder="Search family..." oninput="renderGuests()"></div>
+  <div class="acc-wrap" id="guestList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     KANKOTRI
+     ════════════════════════════════════════ -->
+<div class="view" id="vKankotri">
+  <div class="sec-head" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);">
+    <div class="sec-head-title" style="color:var(--gold);">𖥸 Kankotri Invitations</div>
+    <div class="sec-head-sub" style="color:#F0D8A8;">Tier assignment · dispatch tracking</div>
+    <div class="sec-badges" id="kankotriBadges"></div>
+  </div>
+  <div class="acc-wrap" id="kankotriList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Assign Tiers →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     REMINDERS
+     ════════════════════════════════════════ -->
+<div class="view" id="vReminder">
+  <div class="sec-head" style="background:linear-gradient(135deg,#5C1A8A,#8A2AC4);">
+    <div class="sec-head-title">🔔 Reminders & Alerts</div>
+    <div class="sec-head-sub">Auto email at 8:00 AM IST daily</div>
+    <div class="sec-badges" id="reminderBadges"></div>
+  </div>
+  <div class="acc-wrap" id="reminderList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Add Reminders →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     TIMELINE
+     ════════════════════════════════════════ -->
+<div class="view" id="vTimeline">
+  <div class="sec-head" style="background:linear-gradient(135deg,#1A5C5C,#2E8B8B);">
+    <div class="sec-head-title">📅 Wedding Event Timeline</div>
+    <div class="sec-head-sub">All events — dates, venues, schedules</div>
+    <div class="sec-badges" id="timelineBadges"></div>
+  </div>
+  <div class="tl-wrap" id="timelineList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Edit Timeline →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     NOTES
+     ════════════════════════════════════════ -->
+<div class="view" id="vNotes">
+  <div class="sec-head" style="background:linear-gradient(135deg,#2E6B1A,#4A9B2A);">
+    <div class="sec-head-title">📝 Notes & References</div>
+    <div class="sec-head-sub">Linked to vendors or guests</div>
+    <div class="sec-badges" id="notesBadges"></div>
+  </div>
+  <div class="acc-wrap" id="notesList"></div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Add Notes →</a>
+</div>
+
+<!-- ════════════════════════════════════════
+     CATERING
+     ════════════════════════════════════════ -->
+<div class="view" id="vCatering">
+  <div class="sec-head" style="background:linear-gradient(135deg,#C45000,#E67300);">
+    <div class="sec-head-title">🍽️ Guest & Catering Calculator</div>
+    <div class="sec-head-sub">Estimate quantities per event</div>
+  </div>
+  <div class="empty">
+    <p style="font-size:32px;margin-bottom:12px;">🍽️</p>
+    <p>Open the full tool to use the catering calculator with all event details.</p>
+  </div>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Vivaah Ledger →</a>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<div class="bottomnav">
+  <div class="nav-item active" id="navHome" onclick="showDash()">
+    <span class="nav-icon">🏠</span><span class="nav-lbl">Home</span>
+  </div>
+  <div class="nav-item" id="navVendor" onclick="showSec('vendor')">
+    <span class="nav-icon">🏪</span><span class="nav-lbl">Vendors</span>
+  </div>
+  <div class="nav-item" id="navGuest" onclick="showSec('guest')">
+    <span class="nav-icon">👥</span><span class="nav-lbl">Guests</span>
+  </div>
+  <div class="nav-item" id="navReminder" onclick="showSec('reminder')">
+    <span class="nav-icon">🔔</span><span class="nav-lbl">Alerts</span>
+  </div>
+  <div class="nav-item" id="navKankotri" onclick="showSec('kankotri')">
+    <span class="nav-icon">𖥸</span><span class="nav-lbl">Kankotri</span>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+let guests=[], vendors=[], reminders={}, notes=[], timeline={};
+
+function fmt(n){
+  n=Number(n)||0;
+  return '₹'+(n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':n);
+}
+
+function loadAll(){
+  try{ const r=localStorage.getItem('wedding-guests'); if(r) guests=JSON.parse(r); }catch(e){ guests=[]; }
+  try{ const r=localStorage.getItem('wedding-vendors'); if(r) vendors=JSON.parse(r); }catch(e){ vendors=[]; }
+  try{ const r=localStorage.getItem('wedding-reminders'); if(r) reminders=JSON.parse(r); }catch(e){ reminders={}; }
+  try{ const r=localStorage.getItem('wedding-notes'); if(r) notes=JSON.parse(r); }catch(e){ notes=[]; }
+  try{ const r=localStorage.getItem('wedding-timeline'); if(r) timeline=JSON.parse(r); }catch(e){ timeline={}; }
+  updateDash();
+}
+
+function updateDash(){
+  const totalB=vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
+  const totalP=vendors.reduce((s,v)=>s+(v.payments||[]).reduce((ps,p)=>ps+Number(p.amount||0),0),0);
+  const totalD=totalB-totalP;
+  const pending=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)>p;}).length;
+  const confirmed=guests.filter(g=>g.callStatus==='confirmed').length;
+  const allRem=[...(reminders.trial||[]),...(reminders.clothes||[]),...(reminders.guest||[])].filter(r=>!r.done);
+  const vip=guests.filter(g=>g.invTier==='vip').length;
+  const prem=guests.filter(g=>g.invTier==='premium').length;
+  const norm=guests.filter(g=>g.invTier==='normal').length;
+  const cards=guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0);
+  const evCount=Object.values(timeline).filter(e=>e&&e.date).length;
+  const upcoming=Object.entries(timeline).filter(([k,e])=>e&&e.date&&new Date(e.date)>=new Date()).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
+  const branding = (() => { try{ const b=localStorage.getItem('wedding-branding'); return b?JSON.parse(b):{}; }catch(e){ return {}; } })();
+
+  document.getElementById('topSub').textContent = branding.title || 'Shah Family Wedding';
+
+  // Summary
+  document.getElementById('sBudget').textContent=fmt(totalB);
+  document.getElementById('sVendors').textContent=vendors.length;
+  document.getElementById('sGuests').textContent=guests.length;
+  document.getElementById('sAlerts').textContent=allRem.length;
+
+  // Cards
+  document.getElementById('dB1').textContent=fmt(totalB)+' total budget';
+  document.getElementById('dB2').textContent=fmt(totalP)+' paid · '+fmt(totalD)+' due';
+  document.getElementById('dV1').textContent=vendors.length+' vendors tracked';
+  document.getElementById('dV2').textContent=pending+' pending payment';
+  document.getElementById('dG1').textContent=guests.length+' families';
+  document.getElementById('dG2').textContent=confirmed+' confirmed';
+  document.getElementById('dK1').textContent='👑 '+vip+' · ⭐ '+prem+' · 🎟 '+norm;
+  document.getElementById('dK2').textContent='📦 '+cards+' total cards';
+  document.getElementById('dR1').textContent=allRem.length+' active reminders';
+  document.getElementById('dR2').textContent='Email at 8:00 AM IST daily';
+  document.getElementById('dT1').textContent=evCount+' events';
+  document.getElementById('dT2').textContent=upcoming.length>0?'Next: '+upcoming[0][0]:'No upcoming events';
+  document.getElementById('dN1').textContent=notes.length+' notes saved';
+}
+
+// ── ACCORDION HELPER ─────────────────────────────────────────
+function accGroup(title, color, bgColor, items, renderFn, startOpen=false){
+  const id='acc_'+Math.random().toString(36).slice(2);
+  const openClass=startOpen?' open':'';
+  return `<div class="acc-group">
+    <div class="acc-head" style="background:${bgColor||'#fff'};" onclick="toggleAcc('${id}')">
+      <div class="acc-head-left">
+        <span class="acc-head-title" style="color:${color||'var(--maroon)'};">${title}</span>
+        <span class="acc-head-count">(${items.length})</span>
+      </div>
+      <span class="acc-arrow${startOpen?' open':''}" id="arr_${id}">▶</span>
+    </div>
+    <div class="acc-body${openClass}" id="${id}">
+      ${items.length===0?'<div class="empty">Nothing here yet</div>':items.map(renderFn).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleAcc(id){
+  const body=document.getElementById(id);
+  const arr=document.getElementById('arr_'+id);
+  body.classList.toggle('open');
+  arr.classList.toggle('open');
+}
+
+// ── RENDER SECTIONS ──────────────────────────────────────────
+
+function renderBudget(){
+  const totalB=vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
+  const totalP=vendors.reduce((s,v)=>s+(v.payments||[]).reduce((ps,p)=>ps+Number(p.amount||0),0),0);
+  const totalD=totalB-totalP;
+  const settled=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)<=p;}).length;
+
+  document.getElementById('budgetBadges').innerHTML=
+    `<span class="sec-badge">${fmt(totalB)} total</span><span class="sec-badge">${fmt(totalP)} paid</span><span class="sec-badge">${fmt(totalD)} due</span>`;
+
+  document.getElementById('budgetCards').innerHTML=`
+    <div class="budget-card"><div class="bc-val">${fmt(totalB)}</div><div class="bc-lbl">Total Budget</div></div>
+    <div class="budget-card"><div class="bc-val" style="color:#2E7D32;">${fmt(totalP)}</div><div class="bc-lbl">Total Paid</div></div>
+    <div class="budget-card"><div class="bc-val" style="color:#C62828;">${fmt(totalD)}</div><div class="bc-lbl">Outstanding</div></div>
+    <div class="budget-card"><div class="bc-val">${settled}/${vendors.length}</div><div class="bc-lbl">Vendors Settled</div></div>`;
+
+  const settled_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)<=p;});
+  const partial_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return p>0&&Number(v.quoted||0)>p;});
+  const unpaid_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return p===0&&Number(v.quoted||0)>0;});
+
+  const renderVRow=(v)=>{
+    const paid=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+    const due=Number(v.quoted||0)-paid;
+    const status=due<=0?'b-settled':'b-partial';
+    return `<div class="row-item">
+      <div><div class="row-name">${v.name||'—'}</div><div class="row-sub">${v.category||''}</div></div>
+      <div class="row-right"><span class="badge b-unpaid">${fmt(due)} due</span></div>
+    </div>`;
+  };
+
+  document.getElementById('budgetList').innerHTML=
+    accGroup('⏳ Unpaid ('+unpaid_v.length+')','#C62828','#FFEBEE',unpaid_v,renderVRow,true)+
+    accGroup('⚡ Partial Payment','#C45000','#FFF3E0',partial_v,renderVRow)+
+    accGroup('✅ Settled','#2E7D32','#E8F5E9',settled_v,renderVRow);
+}
+
+function renderVendors(){
+  const q=(document.getElementById('vendorSearch')?.value||'').toLowerCase();
+  const filtered=q?vendors.filter(v=>(v.name||'').toLowerCase().includes(q)||(v.category||'').toLowerCase().includes(q)):vendors;
+
+  const cats=[...new Set(filtered.map(v=>v.category||'Uncategorized'))].sort();
+  const pending=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)>p;}).length;
+
+  document.getElementById('vendorBadges').innerHTML=
+    `<span class="sec-badge">${vendors.length} vendors</span><span class="sec-badge">${pending} pending</span>`;
+
+  const renderV=(v)=>{
+    const paid=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);
+    const due=Number(v.quoted||0)-paid;
+    const cls=due<=0?'b-settled':paid>0?'b-partial':'b-unpaid';
+    const statusTxt=due<=0?'✅ Settled':paid>0?'⚡ Partial':'⏳ Unpaid';
+    return `<div class="row-item">
+      <div><div class="row-name">${v.name||'—'}</div><div class="row-sub">${fmt(v.quoted||0)} quoted${v.phone?'  ·  '+v.phone:''}</div></div>
+      <div class="row-right"><span class="badge ${cls}">${statusTxt}</span><span style="font-size:10px;color:var(--gray);">${fmt(due)} due</span></div>
+    </div>`;
+  };
+
+  document.getElementById('vendorList').innerHTML=cats.map(cat=>{
+    const catV=filtered.filter(v=>(v.category||'Uncategorized')===cat);
+    return accGroup(cat,'var(--maroon)','#fff',catV,renderV,cats.length===1);
+  }).join('')||(filtered.length===0?'<div class="empty">No vendors found</div>':'');
+}
+
+function renderGuests(){
+  const q=(document.getElementById('guestSearch')?.value||'').toLowerCase();
+  const filtered=q?guests.filter(g=>(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q)):guests;
+  const confirmed=guests.filter(g=>g.callStatus==='confirmed').length;
+
+  document.getElementById('guestBadges').innerHTML=
+    `<span class="sec-badge">${guests.length} families</span><span class="sec-badge">${confirmed} confirmed</span><span class="sec-badge">${guests.length-confirmed} pending</span>`;
+
+  const renderG=(g)=>{
+    const cls=g.callStatus==='confirmed'?'b-conf':g.callStatus==='declined'?'b-unpaid':'b-pend';
+    const statusTxt=g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':'⏳ Pending';
+    return `<div class="row-item">
+      <div><div class="row-name">${g.name||'—'}</div><div class="row-sub">${g.phone||''}${g.confirmedAdults?'  ·  '+g.confirmedAdults+' adults':''}</div></div>
+      <div class="row-right"><span class="badge ${cls}">${statusTxt}</span></div>
+    </div>`;
+  };
+
+  const bride=filtered.filter(g=>g.side==='Bride');
+  const groom=filtered.filter(g=>g.side==='Groom');
+  const both=filtered.filter(g=>g.side!=='Bride'&&g.side!=='Groom');
+
+  document.getElementById('guestList').innerHTML=
+    (bride.length>0?accGroup('👰 Bride Side','#5C1A2B','#FAF0F2',bride,renderG,true):'')+
+    (groom.length>0?accGroup('🤵 Groom Side','#1A3A8A','#F0F4FF',groom,renderG):'')+
+    (both.length>0?accGroup('Both Sides','#555','#F5F5F5',both,renderG):'');
+}
+
+function renderKankotri(){
+  const vip=guests.filter(g=>g.invTier==='vip');
+  const prem=guests.filter(g=>g.invTier==='premium');
+  const norm=guests.filter(g=>g.invTier==='normal');
+  const unassigned=guests.filter(g=>!g.invTier);
+  const cards=guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0);
+  const sent=guests.filter(g=>g.invSent).length;
+
+  document.getElementById('kankotriBadges').innerHTML=
+    `<span class="sec-badge gold">👑 ${vip.length} VIP</span><span class="sec-badge gold">⭐ ${prem.length} Premium</span><span class="sec-badge gold">🎟 ${norm.length} Normal</span><span class="sec-badge gold">📦 ${cards} cards</span><span class="sec-badge gold">✅ ${sent} sent</span>`;
+
+  const renderK=(g)=>{
+    const sentCls=g.invSent?'b-sent':'b-unsent';
+    const sentTxt=g.invSent?'✅ Sent':'⏳ Pending';
+    return `<div class="row-item">
+      <div><div class="row-name">${g.name||'—'}</div><div class="row-sub">${g.side||''} side  ·  ${g.invCards||0} cards</div></div>
+      <div class="row-right"><span class="badge ${sentCls}">${sentTxt}</span></div>
+    </div>`;
+  };
+
+  document.getElementById('kankotriList').innerHTML=
+    accGroup('👑 VIP Premium','#856404','#FFF8E8',vip,renderK,true)+
+    accGroup('⭐ Premium','#1A3A8A','#F0F4FF',prem,renderK)+
+    accGroup('🎟 Normal','#555','#F5F5F5',norm,renderK)+
+    accGroup('⭕ Unassigned','#999','#fafafa',unassigned,renderK);
+}
+
+function renderReminders(){
+  const now=new Date(); now.setHours(0,0,0,0);
+  const trial=(reminders.trial||[]).filter(r=>!r.done);
+  const clothes=(reminders.clothes||[]).filter(r=>!r.done);
+  const guest=(reminders.guest||[]).filter(r=>!r.done);
+  const all=[...trial,...clothes,...guest];
+
+  document.getElementById('reminderBadges').innerHTML=
+    `<span class="sec-badge">🥻 Trial: ${trial.length}</span><span class="sec-badge">👗 Clothes: ${clothes.length}</span><span class="sec-badge">📋 Guest: ${guest.length}</span>`;
+
+  const renderR=(r,emoji)=>{
+    const d=new Date(r.date||''); d.setHours(0,0,0,0);
+    const days=isNaN(d)?99:Math.round((d-now)/(1000*60*60*24));
+    const cls=days<=0?'d-today':days<=3?'d-soon':'d-ok';
+    const daysTxt=days<0?'Overdue':days===0?'Today!':days===1?'Tomorrow':days+'d left';
+    return `<div class="rem-row">
+      <div class="rem-emoji">${emoji}</div>
+      <div style="flex:1"><div class="rem-title">${r.text||'Reminder'}</div><div class="rem-sub">${r.date||''}${r.time?' at '+r.time:''}</div></div>
+      <span class="rem-days ${cls}">${daysTxt}</span>
+    </div>`;
+  };
+
+  document.getElementById('reminderList').innerHTML=
+    accGroup('🥻 Trial Reminders','#5C1A8A','#F5F0FF',trial,r=>renderR(r,'🥻'),true)+
+    accGroup('👗 Clothes Reminders','#5C1A8A','#F5F0FF',clothes,r=>renderR(r,'👗'))+
+    accGroup('📋 Guest Reminders','#5C1A8A','#F5F0FF',guest,r=>renderR(r,'📋'));
+}
+
+function renderTimeline(){
+  const entries=Object.entries(timeline).filter(([k,e])=>e&&e.date).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
+  const now=new Date();
+
+  document.getElementById('timelineBadges').innerHTML=`<span class="sec-badge">${entries.length} events</span>`;
+
+  document.getElementById('timelineList').innerHTML=entries.map(([name,ev])=>{
+    const d=new Date(ev.date);
+    const isPast=d<now;
+    const isNext=!isPast&&entries.find(([k,e])=>new Date(e.date)>=now)?.[0]===name;
+    const dotCls=isPast?'tl-past':isNext?'tl-next':'tl-future';
+    return `<div class="tl-row">
+      <div class="tl-dot ${dotCls}"></div>
+      <div><div class="tl-name">${name}</div>
+      <div class="tl-date">${d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</div>
+      ${ev.venue?`<div class="tl-venue">📍 ${ev.venue}</div>`:''}
+      </div>
+    </div>`;
+  }).join('')||'<div class="empty">No events added yet</div>';
+}
+
+function renderNotes(){
+  const tagNames={general:'📌 General',vendor:'🏪 Vendor',guest:'👥 Guest',budget:'💰 Budget',urgent:'🔴 Urgent'};
+  document.getElementById('notesBadges').innerHTML=`<span class="sec-badge">${notes.length} notes</span>`;
+  document.getElementById('notesList').innerHTML=notes.length===0?'<div class="empty">No notes yet</div>':
+    notes.sort((a,b)=>b.createdAt-a.createdAt).map(n=>`
+      <div class="note-card">
+        <span class="note-tag">${tagNames[n.tag]||'📌 General'}</span>
+        <div class="note-title">${n.title||''}</div>
+        <div class="note-content">${n.content||''}</div>
+        <div class="note-meta">${new Date(n.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
+      </div>`).join('');
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────
+const SEC_CONFIG = {
+  budget:   { title:'💰 Budget',      navId:null,          render:renderBudget   },
+  vendor:   { title:'🏪 Vendors',     navId:'navVendor',   render:renderVendors  },
+  guest:    { title:'👥 Guests',      navId:'navGuest',    render:renderGuests   },
+  kankotri: { title:'𖥸 Kankotri',    navId:'navKankotri', render:renderKankotri },
+  reminder: { title:'🔔 Reminders',   navId:'navReminder', render:renderReminders},
+  timeline: { title:'📅 Timeline',    navId:null,          render:renderTimeline },
+  notes:    { title:'📝 Notes',       navId:null,          render:renderNotes    },
+  catering: { title:'🍽️ Catering',   navId:null,          render:null           },
+};
+
+function showDash(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('vDash').classList.add('active');
+  document.getElementById('topTitle').textContent='🌸 Vivaah Ledger';
+  document.getElementById('topSub').textContent = (() => { try{ const b=JSON.parse(localStorage.getItem('wedding-branding')||'{}'); return b.title||'Shah Family Wedding'; }catch(e){ return 'Shah Family Wedding'; } })();
+  document.getElementById('btnBack').classList.remove('show');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('navHome').classList.add('active');
+}
+
+function showSec(sec){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const cfg=SEC_CONFIG[sec];
+  const viewId='v'+sec.charAt(0).toUpperCase()+sec.slice(1);
+  document.getElementById(viewId).classList.add('active');
+  document.getElementById('topTitle').textContent=cfg.title;
+  document.getElementById('topSub').textContent='Tap ← to return home';
+  document.getElementById('btnBack').classList.add('show');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(cfg.navId) document.getElementById(cfg.navId).classList.add('active');
+  if(cfg.render) cfg.render();
+  window.scrollTo(0,0);
+}
+
+// ── INIT ────────────────────────────────────────────────────
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>
