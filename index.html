@@ -622,6 +622,28 @@
   .hc-row input{width:80px;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;text-align:center;}
   .hc-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
 
+  /* ── Section Headers ── */
+  .sec-header{border-radius:12px 12px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:28px;margin-bottom:0;}
+  .sec-header-left{display:flex;align-items:center;gap:12px;}
+  .sec-header-icon{font-size:26px;line-height:1;}
+  .sec-header-title{font-size:16px;font-weight:700;line-height:1.2;}
+  .sec-header-sub{font-size:12px;margin-top:3px;opacity:0.85;}
+  .sec-header-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+  .sec-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;}
+  .sec-header-actions{display:flex;gap:8px;align-items:center;}
+  .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
+  .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
+  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
+
+  /* Section header colors */
+  .sec-budget{background:linear-gradient(135deg,#856404,#B8860B);}
+  .sec-timeline{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
+  .sec-vendor{background:linear-gradient(135deg,#1A3A8A,#2952C4);}
+  .sec-guest{background:linear-gradient(135deg,#5C1A2B,#8A2A3F);}
+  .sec-reminder{background:linear-gradient(135deg,#5C1A8A,#8A2AC4);}
+  .sec-notes{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
+  .sec-catering{background:linear-gradient(135deg,#C45000,#E67300);}
+
   /* ── Auto-backup bar ── */
   .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
   .backup-bar strong{color:var(--maroon);}
@@ -1116,6 +1138,26 @@
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 
+  <!-- BUDGET SECTION HEADER -->
+  <div class="sec-header sec-budget" id="budgetSectionHeader">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">💰</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Budget & Payment Tracking</div>
+        <div class="sec-header-sub" style="color:#FFE8A0;">Track total spend, payments made and outstanding dues</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="budgetHeaderBadge">₹0 budget</span>
+          <span class="sec-badge" id="paidHeaderBadge">₹0 paid</span>
+          <span class="sec-badge" id="outstandingHeaderBadge">₹0 due</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('budget')">🖨️ Print</button>
+    </div>
+  </div>
+  <div class="sec-body" id="budgetSectionBody">
+
   <div class="dash">
     <div class="card budget">
       <div class="label">Total wedding budget</div>
@@ -1140,14 +1182,56 @@
     </div>
   </div>
 
+  </div><!-- end budgetSectionBody -->
+
+  <!-- EVENT TIMELINE SECTION HEADER -->
+  <div class="sec-header sec-timeline">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">📅</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Wedding Event Timeline</div>
+        <div class="sec-header-sub" style="color:#A0E8E8;">All your wedding events — dates, venues, schedules</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="timelineHeaderBadge">0 events</span>
+          <span class="sec-badge" id="nextEventBadge">No upcoming events</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('timeline')">🖨️ Print</button>
+    </div>
+  </div>
+  <div class="sec-body">
   <!-- EVENT TIMELINE -->
-  <div class="event-timeline-card">
+  <div class="event-timeline-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="event-timeline-head">
-      <h2>Event timeline</h2>
-      <button class="btn btn-ghost" id="btnPrintTimeline">🖺 Print timeline</button>
+      <h2 style="display:none;">Event timeline</h2>
+      <button class="btn btn-ghost" id="btnPrintTimeline" style="display:none;">🖺 Print timeline</button>
     </div>
     <div class="event-cards-grid" id="timelineGrid"></div>
   </div>
+
+  </div><!-- end timeline sec-body -->
+
+  <!-- REMINDERS SECTION HEADER -->
+  <div class="sec-header sec-reminder">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">🔔</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Reminders & Alerts</div>
+        <div class="sec-header-sub" style="color:#E0C0FF;">Auto-email alerts at 8:00 AM IST — 7 days, 3 days, 1 day before events</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge">🥻 Trial: <span id="remHeaderTrial">0</span></span>
+          <span class="sec-badge">👗 Clothes: <span id="remHeaderClothes">0</span></span>
+          <span class="sec-badge">📋 Guest: <span id="remHeaderGuest">0</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('reminders')">🖨️ Print</button>
+    </div>
+  </div>
+  <div class="sec-body" style="padding:16px;">
 
   <div class="reminders-grid" id="remindersGrid">
     <div class="reminder-card" data-reminder="trial">
@@ -1194,9 +1278,30 @@
     </div>
   </div>
 
+  </div><!-- end reminders sec-body -->
+
+  <!-- NOTES SECTION HEADER -->
+  <div class="sec-header sec-notes">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">📝</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Notes & Quick References</div>
+        <div class="sec-header-sub" style="color:#C0E8A0;">Keep important notes linked to vendors or guests — syncs to Google Sheets</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge"><span id="notesHeaderCount">0</span> notes</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('notes')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="noteOpenModal()" style="background:rgba(255,255,255,0.25);">+ Add Note</button>
+    </div>
+  </div>
+  <div class="sec-body" style="padding:16px;">
+
   <!-- ═══════════════ NOTES SECTION ═══════════════ -->
-  <div class="notes-section">
-    <div class="notes-section-head">
+  <div class="notes-section" style="box-shadow:none;border-radius:0;padding:0;margin:0;">
+    <div class="notes-section-head" style="display:none;">
       <h2>📝 Notes & Quick References</h2>
       <button class="btn btn-gold" id="btnAddNote">+ Add Note</button>
     </div>
@@ -1237,7 +1342,27 @@
     </div>
   </div>
 
-  <div class="catering-card">
+  </div><!-- end notes sec-body -->
+
+  <!-- CATERING SECTION HEADER -->
+  <div class="sec-header sec-catering">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">🍽️</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Guest & Catering Calculator</div>
+        <div class="sec-header-sub" style="color:#FFD0A0;">Estimate food quantities based on total guest count per event</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="cateringHeaderBadge">Enter guest count to calculate</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('catering')">🖨️ Print</button>
+    </div>
+  </div>
+  <div class="sec-body">
+
+  <div class="catering-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="catering-head">
       <div>
         <h2>Guest &amp; catering calculator</h2>
@@ -1353,6 +1478,29 @@
     <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
 
+  </div><!-- end catering sec-body -->
+
+  <!-- VENDOR SECTION HEADER -->
+  <div class="sec-header sec-vendor" id="vendorSectionHeader">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">🏪</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Vendor Management</div>
+        <div class="sec-header-sub" style="color:#A0C0FF;">Manage caterers, decorators, photographers — track payments & contacts</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="vendorHeaderCount">0 vendors</span>
+          <span class="sec-badge" id="vendorHeaderPending">0 pending</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('vendor')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
+    </div>
+  </div>
+  <div class="sec-body" id="vendorSectionBody" style="padding:16px;">
+  </div><!-- vendor section body filled by renderVendors -->
+
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
 
@@ -1434,8 +1582,31 @@
     </div>
 
     <!-- Guest List Section Header -->
-    <div style="background:var(--maroon);border-radius:12px 12px 0 0;padding:14px 18px;margin-top:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-      <div style="color:var(--gold);font-size:15px;font-weight:700;">👥 Guest List</div>
+    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
+      <div class="sec-header-left">
+        <div class="sec-header-icon">👥</div>
+        <div>
+          <div class="sec-header-title" style="color:#fff;">Guest List</div>
+          <div class="sec-header-sub" style="color:#F0C0C8;">All families — call, WhatsApp, confirm headcount, track accommodation</div>
+          <div class="sec-header-badges">
+            <span class="sec-badge" id="guestHeaderTotal">0 families</span>
+            <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
+            <span class="sec-badge" id="guestHeaderPending">0 pending</span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-header-actions">
+        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
+      </div>
+    </div>
+
+    <!-- Guest backup bar -->
+    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
+      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
+        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
+      </div>
     </div>
 
     <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
@@ -2196,6 +2367,123 @@ document.addEventListener('click', async () => {
 }, { once: true });
 
 /* ================================================================
+   SECTION PRINT SYSTEM
+   ================================================================ */
+function printSection(section) {
+  const printStyles = `
+    <style>
+      body { font-family: Arial, sans-serif; font-size: 13px; color: #2A1F1A; }
+      h1 { color: #5C1A2B; border-bottom: 2px solid #D4A24C; padding-bottom: 8px; }
+      h2 { color: #5C1A2B; font-size: 14px; }
+      table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+      th { background: #5C1A2B; color: #fff; padding: 8px; text-align: left; }
+      td { padding: 7px 8px; border-bottom: 1px solid #E0C8A8; }
+      tr:nth-child(even) td { background: #FBF6EE; }
+      .no-print { display: none !important; }
+      @media print { button { display: none; } }
+    </style>`;
+
+  let title = '';
+  let bodyHTML = '';
+
+  if (section === 'budget') {
+    title = '💰 Budget & Payment Tracking';
+    const budget = document.getElementById('statBudget')?.textContent || '₹0';
+    const paid = document.getElementById('statPaid')?.textContent || '₹0';
+    const outstanding = document.getElementById('statOutstanding')?.textContent || '₹0';
+    const vendors = document.getElementById('statVendorCount')?.textContent || '0';
+    bodyHTML = `<table><tr><th>Item</th><th>Value</th></tr>
+      <tr><td>Total Budget</td><td>${budget}</td></tr>
+      <tr><td>Total Paid</td><td>${paid}</td></tr>
+      <tr><td>Outstanding</td><td>${outstanding}</td></tr>
+      <tr><td>Vendors Tracked</td><td>${vendors}</td></tr></table>`;
+  } else if (section === 'timeline') {
+    title = '📅 Wedding Event Timeline';
+    bodyHTML = document.getElementById('timelineGrid')?.innerHTML || 'No events added yet.';
+  } else if (section === 'reminders') {
+    title = '🔔 Reminders & Alerts';
+    bodyHTML = document.getElementById('remindersGrid')?.innerHTML || '';
+  } else if (section === 'notes') {
+    title = '📝 Notes & Quick References';
+    bodyHTML = document.getElementById('notesContainer')?.innerHTML || 'No notes yet.';
+  } else if (section === 'catering') {
+    title = '🍽️ Guest & Catering Calculator';
+    bodyHTML = document.querySelector('.catering-card')?.innerHTML || '';
+  } else if (section === 'vendor') {
+    title = '🏪 Vendor Management';
+    bodyHTML = document.querySelector('.event-block-grid, #vendorSectionBody')?.innerHTML || 'No vendors added yet.';
+  } else if (section === 'guests') {
+    title = '👥 Guest List';
+    const tbl = document.getElementById('guestTable');
+    bodyHTML = tbl ? `<table>${tbl.innerHTML}</table>` : 'No guests added yet.';
+  }
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${title}</title>${printStyles}</head>
+    <body>
+      <h1>${title}</h1>
+      <p style="color:#888;font-size:11px;">Vivaah Ledger — Printed on ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} at ${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</p>
+      ${bodyHTML}
+    </body></html>`);
+  win.document.close();
+  setTimeout(() => { win.print(); }, 500);
+}
+
+/* ================================================================
+   SECTION BADGE UPDATES — called after render()
+   ================================================================ */
+function updateSectionBadges() {
+  // Budget badges
+  const budget = document.getElementById('statBudget')?.textContent;
+  const paid = document.getElementById('statPaid')?.textContent;
+  const outstanding = document.getElementById('statOutstanding')?.textContent;
+  if (budget) document.getElementById('budgetHeaderBadge')?.setAttribute('textContent', budget);
+  if (document.getElementById('budgetHeaderBadge')) document.getElementById('budgetHeaderBadge').textContent = budget || '₹0 budget';
+  if (document.getElementById('paidHeaderBadge')) document.getElementById('paidHeaderBadge').textContent = (paid || '₹0') + ' paid';
+  if (document.getElementById('outstandingHeaderBadge')) document.getElementById('outstandingHeaderBadge').textContent = (outstanding || '₹0') + ' due';
+
+  // Vendor badges
+  const vendorCount = vendors ? vendors.length : 0;
+  const pendingVendors = vendors ? vendors.filter(v => (v.quoted||0) > (v.payments||[]).reduce((s,p)=>s+(p.amount||0),0)).length : 0;
+  if (document.getElementById('vendorHeaderCount')) document.getElementById('vendorHeaderCount').textContent = vendorCount + ' vendors';
+  if (document.getElementById('vendorHeaderPending')) document.getElementById('vendorHeaderPending').textContent = pendingVendors + ' pending payment';
+
+  // Guest badges
+  const total = guests ? guests.length : 0;
+  const confirmed = guests ? guests.filter(g => g.callStatus === 'confirmed').length : 0;
+  const pending = total - confirmed;
+  if (document.getElementById('guestHeaderTotal')) document.getElementById('guestHeaderTotal').textContent = total + ' families';
+  if (document.getElementById('guestHeaderConfirmed')) document.getElementById('guestHeaderConfirmed').textContent = confirmed + ' confirmed';
+  if (document.getElementById('guestHeaderPending')) document.getElementById('guestHeaderPending').textContent = pending + ' pending';
+
+  // Reminder badges
+  const trialCount = (reminders.trial||[]).filter(r=>!r.done).length;
+  const clothesCount = (reminders.clothes||[]).filter(r=>!r.done).length;
+  const guestCount = (reminders.guest||[]).filter(r=>!r.done).length;
+  if (document.getElementById('remHeaderTrial')) document.getElementById('remHeaderTrial').textContent = trialCount;
+  if (document.getElementById('remHeaderClothes')) document.getElementById('remHeaderClothes').textContent = clothesCount;
+  if (document.getElementById('remHeaderGuest')) document.getElementById('remHeaderGuest').textContent = guestCount;
+
+  // Notes badge
+  const notesCount = notes ? notes.length : 0;
+  if (document.getElementById('notesHeaderCount')) document.getElementById('notesHeaderCount').textContent = notesCount;
+
+  // Timeline badge
+  const timelineCount = Object.values(eventTimeline||{}).filter(e=>e.date).length;
+  if (document.getElementById('timelineHeaderBadge')) document.getElementById('timelineHeaderBadge').textContent = timelineCount + ' events';
+
+  // Next event
+  const upcomingEvents = Object.entries(eventTimeline||{})
+    .filter(([k,e]) => e.date && new Date(e.date) >= new Date())
+    .sort((a,b) => new Date(a[1].date) - new Date(b[1].date));
+  if (upcomingEvents.length > 0) {
+    const [name, ev] = upcomingEvents[0];
+    const d = new Date(ev.date).toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+    if (document.getElementById('nextEventBadge')) document.getElementById('nextEventBadge').textContent = 'Next: ' + name + ' ' + d;
+  }
+}
+
+/* ================================================================
    AUTO-BACKUP SYSTEM
    ================================================================ */
 let lastBackupAt = null;
@@ -2755,6 +3043,7 @@ async function loadData(){
   renderInvTable();
   render();
   renderNotes();
+  updateSectionBadges();
 }
 async function saveData(){
   await storageSet('wedding-vendors', JSON.stringify(vendors));
@@ -2772,6 +3061,7 @@ async function saveGuests(){
   renderInvTable();
   await storageSet('wedding-guests', JSON.stringify(guests));
   queueCloudSave();
+  setTimeout(updateSectionBadges, 200);
 }
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
@@ -3041,6 +3331,7 @@ async function onSignedIn(){
     renderTimeline();
     renderInvTable(); // refresh invitation distribution after cloud data loads
     notes = cloudData.notes || notes; renderNotes();
+    updateSectionBadges();
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
