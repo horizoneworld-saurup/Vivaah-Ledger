@@ -705,15 +705,18 @@ const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! /
 
 
 
+let lockPinEntry = '';
+async function sha256(msg){ const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(msg)); return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''); }
+function lockError(msg){ const el=document.getElementById('lockError'); if(el) el.textContent=msg; lockPinEntry=''; document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('filled')); }
+let lockSelectedRole = 'admin';
+
+const SHEET_NAME = 'Vivaah Ledger Data';
+const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Haldi', 'Marriage', 'Reception'];
 const uid = () => 'v_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
 function fmt(n){ n=Number(n)||0; return '₹'+(n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':String(n)); }
 
 let currentRole = null;
-let googleAccessToken = null;
-let googleUserEmail = null;
-let sheetId = null;
 let tokenExpiresAt = 0;
-let cloudSaveTimer = null;
 let pollingTimer = null;
 let approvedEmail = null;
 
@@ -1083,7 +1086,21 @@ async function storageSet(key, value){
   try{ localStorage.setItem(key, value); }catch(e){ console.error('storage save failed', e); }
 }
 
-function sheetsApi(path, options={}
+async function sheetsApi(path, options={}){
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets${path}`, {
+    ...options,
+    headers:{
+      'Authorization': `Bearer ${googleAccessToken}`,
+      'Content-Type': 'application/json',
+      ...(options.headers||{})
+    }
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error && err.error.message ? err.error.message : `Sheets API error ${res.status}`);
+  }
+  return res.json();
+}
 
 function compressGuests(guestArr){
   return guestArr.map(g=>{
@@ -1278,7 +1295,7 @@ async function loadNotes() {
   } catch(e) { notes = []; }
 }
 
-function checkReminders() {
+async function checkReminders() {
   // Only check once per day
   const lastCheck = await storageGet(REMINDER_CHECK_KEY);
   const today = new Date().toDateString();
@@ -1857,14 +1874,16 @@ function showSec(sec){
 }
 
 // ════════════════════════════════════════════════════════════
-//  AUTH HOOKS — called by lock screen functions
+//  AUTH HOOK — patch setRole to show main app after login
 // ════════════════════════════════════════════════════════════
-// After setRole is called by tryUnlock, show main app
-const _origSetRole = setRole;
-function setRole(role){
-  _origSetRole(role);
-  afterLogin();
-}
+// Store original and patch
+(function patchSetRole(){
+  const _orig = setRole;
+  window.setRole = function(role){
+    _orig(role);
+    afterLogin();
+  };
+})();
 
 // ════════════════════════════════════════════════════════════
 //  INIT
@@ -1875,21 +1894,22 @@ function setRole(role){
   document.getElementById('egEmailInput')?.addEventListener('keydown', e=>{if(e.key==='Enter') egRequestAccess();});
   document.getElementById('egBackBtn')?.addEventListener('click', ()=>showLockStep('email'));
 
-  // Wire keypad
+  // Wire keypad — uses lockPinEntry from main tool
   document.querySelectorAll('.key-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const key=btn.dataset.key;
       if(key==='clear'){
-        if(window._pin) window._pin=window._pin.slice(0,-1);
+        if(lockPinEntry.length>0) lockPinEntry=lockPinEntry.slice(0,-1);
       } else if(key==='enter'){
         tryUnlock();
+        return;
       } else {
-        if(!window._pin) window._pin='';
-        if(window._pin.length<4) window._pin+=key;
+        if(lockPinEntry.length<4) lockPinEntry+=key;
       }
       // Update dots
       const dots=document.querySelectorAll('.pin-dot');
-      dots.forEach((dot,i)=>dot.classList.toggle('filled', i<(window._pin?.length||0)));
+      dots.forEach((dot,i)=>dot.classList.toggle('filled', i<lockPinEntry.length));
+      document.getElementById('lockError').textContent='';
     });
   });
 
@@ -1898,8 +1918,10 @@ function setRole(role){
     tab.addEventListener('click', ()=>{
       document.querySelectorAll('.lock-tab').forEach(t=>t.classList.remove('active'));
       tab.classList.add('active');
-      window._pin='';
+      lockSelectedRole = tab.dataset.lockRole || 'admin';
+      lockPinEntry='';
       document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('filled'));
+      document.getElementById('lockError').textContent='';
     });
   });
 
