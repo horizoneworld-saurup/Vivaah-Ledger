@@ -1402,7 +1402,27 @@
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
     <!-- Kankotri dedicated section -->
-    <div class="kankotri-bar">
+    <!-- KANKOTRI SECTION HEADER -->
+    <div class="sec-header" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
+      <div class="sec-header-left">
+        <div class="sec-header-icon">𖥸</div>
+        <div>
+          <div class="sec-header-title" style="color:var(--gold);">Kankotri — Invitation Card Management</div>
+          <div class="sec-header-sub" style="color:#F0D8A8;">Assign VIP/Premium/Normal tiers, set card counts, track dispatch</div>
+          <div class="sec-header-badges">
+            <span class="sec-badge" style="background:rgba(212,164,76,0.3);">👑 VIP: <span id="kankotriHeaderVip">0</span></span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.3);">⭐ Premium: <span id="kankotriHeaderPremium">0</span></span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.3);">🎟 Normal: <span id="kankotriHeaderNormal">0</span></span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.3);">📦 Cards: <span id="kankotriHeaderCards">0</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-header-actions">
+        <button class="btn-print-sec" onclick="printSection('kankotri')">🖨️ Print</button>
+      </div>
+    </div>
+
+    <div class="kankotri-bar" style="border-radius:0;margin-bottom:0;border-top:1px solid rgba(255,255,255,0.1);">
       <div>
         <div class="kankotri-bar-title">𖥸 Kankotri — Invitation Card Management</div>
         <div class="kankotri-bar-sub">Assign tiers, track dispatch, upload card designs per tier</div>
@@ -1479,27 +1499,6 @@
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
 
   </div><!-- end catering sec-body -->
-
-  <!-- VENDOR SECTION HEADER -->
-  <div class="sec-header sec-vendor" id="vendorSectionHeader">
-    <div class="sec-header-left">
-      <div class="sec-header-icon">🏪</div>
-      <div>
-        <div class="sec-header-title" style="color:#fff;">Vendor Management</div>
-        <div class="sec-header-sub" style="color:#A0C0FF;">Manage caterers, decorators, photographers — track payments & contacts</div>
-        <div class="sec-header-badges">
-          <span class="sec-badge" id="vendorHeaderCount">0 vendors</span>
-          <span class="sec-badge" id="vendorHeaderPending">0 pending</span>
-        </div>
-      </div>
-    </div>
-    <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('vendor')">🖨️ Print</button>
-      <button class="btn-print-sec" onclick="document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
-    </div>
-  </div>
-  <div class="sec-body" id="vendorSectionBody" style="padding:16px;">
-  </div><!-- vendor section body filled by renderVendors -->
 
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
@@ -1642,7 +1641,26 @@
     </div>
   </div>
 
-  <div class="toolbar">
+  <!-- VENDOR SECTION HEADER -->
+  <div class="sec-header sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">🏪</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Vendor Management</div>
+        <div class="sec-header-sub" style="color:#A0C0FF;">Manage caterers, decorators, photographers — track payments & contacts</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="vendorHeaderCount">0 vendors</span>
+          <span class="sec-badge" id="vendorHeaderPending">0 pending payment</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="printSection('vendor')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
+    </div>
+  </div>
+
+  <div class="toolbar" style="border-radius:0;">
     <h2>Vendor ledger</h2>
     <div class="filters">
       <input type="text" class="search-input" id="searchInput" placeholder="Search vendor or category…">
@@ -2416,6 +2434,10 @@ function printSection(section) {
     title = '👥 Guest List';
     const tbl = document.getElementById('guestTable');
     bodyHTML = tbl ? `<table>${tbl.innerHTML}</table>` : 'No guests added yet.';
+  } else if (section === 'kankotri') {
+    title = '𖥸 Kankotri — Invitation Card Management';
+    const tbl = document.getElementById('invTable');
+    bodyHTML = tbl ? `<table>${tbl.innerHTML}</table>` : 'No invitation data yet.';
   }
 
   const win = window.open('', '_blank');
@@ -2441,6 +2463,16 @@ function updateSectionBadges() {
   if (document.getElementById('budgetHeaderBadge')) document.getElementById('budgetHeaderBadge').textContent = budget || '₹0 budget';
   if (document.getElementById('paidHeaderBadge')) document.getElementById('paidHeaderBadge').textContent = (paid || '₹0') + ' paid';
   if (document.getElementById('outstandingHeaderBadge')) document.getElementById('outstandingHeaderBadge').textContent = (outstanding || '₹0') + ' due';
+
+  // Kankotri badges
+  const vipCount = guests ? guests.filter(g=>g.invTier==='vip').length : 0;
+  const premCount = guests ? guests.filter(g=>g.invTier==='premium').length : 0;
+  const normCount = guests ? guests.filter(g=>g.invTier==='normal').length : 0;
+  const totalCards = guests ? guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
+  if (document.getElementById('kankotriHeaderVip')) document.getElementById('kankotriHeaderVip').textContent = vipCount;
+  if (document.getElementById('kankotriHeaderPremium')) document.getElementById('kankotriHeaderPremium').textContent = premCount;
+  if (document.getElementById('kankotriHeaderNormal')) document.getElementById('kankotriHeaderNormal').textContent = normCount;
+  if (document.getElementById('kankotriHeaderCards')) document.getElementById('kankotriHeaderCards').textContent = totalCards;
 
   // Vendor badges
   const vendorCount = vendors ? vendors.length : 0;
