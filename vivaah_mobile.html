@@ -3,173 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Vivaah Ledger</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --maroon: #5C1A2B; --gold: #D4A24C; --ivory: #FBF6EE;
-  --ivory2: #F3EBDB; --dark: #2A1F1A; --gray: #888;
-  --line: #E0C8A8; --rust: #C62828;
+/* ── BASE ── */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --maroon:#5C1A2B;--maroon-dark:#3E0F1C;--gold:#D4A24C;--ivory:#FBF6EE;
+  --ivory-deep:#F3EBDB;--ink:#2A1F1A;--ink-soft:#888;--line:#E0C8A8;
+  --sage:#1A5C1A;--rust:#C62828;--r-lg:14px;
+  --card-shadow:0 2px 12px rgba(92,26,43,0.07);
 }
-body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min-height: 100vh; padding-bottom: 64px; }
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:100vh;padding-bottom:70px;}
 
-/* ── REDIRECT DESKTOP ── */
-.desktop-msg { display: none; }
-@media (min-width: 768px) {
-  body > *:not(.desktop-msg) { display: none !important; }
-  .desktop-msg {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    min-height: 100vh; text-align: center; padding: 40px; background: var(--maroon);
-  }
-  .desktop-msg h1 { color: var(--gold); font-size: 28px; margin-bottom: 12px; }
-  .desktop-msg p { color: #C4906A; font-size: 15px; margin-bottom: 24px; }
-  .desktop-msg a { display: inline-block; padding: 12px 28px; background: var(--gold); color: var(--maroon); border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 15px; }
+/* ── DESKTOP REDIRECT ── */
+@media(min-width:768px){
+  body>*:not(.desktop-redirect){display:none!important;}
+  .desktop-redirect{display:flex!important;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:40px;background:var(--maroon);}
+  .desktop-redirect h1{color:var(--gold);font-size:28px;margin-bottom:12px;font-family:Georgia,serif;}
+  .desktop-redirect p{color:#C4906A;font-size:15px;margin-bottom:24px;line-height:1.6;}
+  .desktop-redirect a{display:inline-block;padding:14px 32px;background:var(--gold);color:var(--maroon);border-radius:12px;font-weight:700;text-decoration:none;font-size:15px;}
 }
+
+/* ── LOCK SCREEN ── */
+.lock-overlay{
+    position:fixed; inset:0; z-index:999;
+    background:linear-gradient(135deg, var(--maroon-dark) 0%, #2A0A14 60%, #1A0A00 100%);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .lock-overlay.hidden{display:none;}
+  .lock-box{
+    background:rgba(251,246,238,0.97); border-radius:24px; padding:36px 32px 28px;
+    width:100%; max-width:340px; text-align:center;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);
+    border:1px solid rgba(212,162,76,0.3);
+  }
+  .lock-logo{ margin-bottom:14px; }
+  .lock-title{
+    font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700;
+    color:var(--maroon-dark); margin:0 0 4px;
+  }
+  .lock-sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px; }
+  .lock-role-tabs{
+    display:flex; gap:6px; justify-content:center; margin-bottom:22px;
+  }
+  .lock-tab{
+    flex:1; padding:8px 4px; border-radius:9px; border:1px solid var(--line); background:#fff;
+    font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer; transition:all .15s;
+  }
+  .lock-tab.active{background:var(--maroon); color:var(--ivory); border-color:var(--maroon);}
+  .lock-pin-dots{
+    display:flex; justify-content:center; gap:14px; margin-bottom:22px;
+  }
+  .pin-dot{
+    width:14px; height:14px; border-radius:50%; border:2px solid var(--line); background:#fff;
+    transition:background .15s, border-color .15s;
+  }
+  .pin-dot.filled{background:var(--maroon); border-color:var(--maroon);}
+  .pin-dot.error{background:var(--rust); border-color:var(--rust);}
+  .lock-keypad{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:18px;
+  }
+  .key-btn{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    font-size:20px; font-weight:600; color:var(--ink); padding:14px 0; cursor:pointer;
+    transition:background .12s, transform .1s; font-family:'Cormorant Garamond',serif;
+  }
+  .key-btn:hover{background:var(--ivory-deep);}
+  .key-btn:active{transform:scale(0.94); background:var(--ivory-deep);}
+  .key-clear{font-size:16px; color:var(--rust);}
+  .key-enter{background:var(--maroon); color:#fff; border-color:var(--maroon);}
+  .key-enter:hover{background:var(--maroon-dark);}
+  .lock-remember{font-size:12px; color:var(--ink-soft); margin-bottom:10px;}
+  .lock-remember input{accent-color:var(--maroon); cursor:pointer;}
+  .lock-error{
+    font-size:12.5px; font-weight:600; color:var(--rust); min-height:18px;
+    transition:opacity .2s;
+  }  /* --- Role badge --- */
+  .role-badge{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;border:1px solid var(--line);}
+  .role-badge.role-owner{background:#F0E8FF;color:#5C1A8A;border-color:#C4A0E8;}
+  .role-badge.role-admin{background:#FFF0E6;color:#B5562F;border-color:#E8C09A;}
+  .role-badge.role-editor{background:#EEF6EE;color:#4A7A4A;border-color:#B5D4B5;}
+  .role-badge.role-viewer{background:var(--ivory-deep);color:var(--ink-soft);border-color:var(--line);}
+  body.role-viewer .editor-only,body.role-viewer .admin-only,body.role-viewer .owner-only,
+  body.role-editor .admin-only,body.role-editor .owner-only,
+  body.role-admin .owner-only{display:none!important;}
+
+  /* --- Lock screen --- */
+  .lock-overlay{position:fixed;inset:0;z-index:999;background:linear-gradient(135deg,var(--maroon-dark) 0%,#2A0A14 60%,#1A0A00 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+  .lock-overlay.hidden{display:none;}
+  .lock-box{background:rgba(251,246,238,0.97);border-radius:24px;padding:36px 32px 28px;width:100%;max-width:340px;text-align:center;box-shadow:0 40px 80px -20px rgba(0,0,0,0.6);border:1px solid rgba(212,162,76,0.3);}
+  .lock-logo{margin-bottom:14px;}
+  .lock-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--maroon-dark);margin:0 0 4px;}
+  .lock-sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;}
+  .lock-role-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:22px;}
+  .lock-tab{flex:1;padding:8px 4px;border-radius:9px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink-soft);cursor:pointer;transition:all .15s;}
+  .lock-tab.active{background:var(--maroon);color:var(--ivory);border-color:var(--maroon);}
+  /* ── Call / WhatsApp / Confirm buttons ── */
+  .guest-action-btns{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+  .btn-call{padding:4px 9px;background:#1976D2;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-whatsapp{padding:4px 9px;background:#25D366;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;}
+  .btn-confirm{padding:4px 9px;background:#E65100;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+  .confirmed-badge{font-size:11px;color:#2E7D32;font-weight:600;background:#E8F5E9;padding:3px 8px;border-radius:6px;}
+
+  /* ── WhatsApp message editor modal ── */
+  .wa-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .wa-modal-overlay.show{display:flex;}
+  .wa-modal{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .wa-modal h3{margin:0 0 6px;font-size:17px;color:var(--maroon);}
+  .wa-modal textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;font-family:'Inter';resize:vertical;min-height:120px;outline:none;margin:12px 0;}
+  .wa-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px;}
+
+  /* ── Headcount confirm modal ── */
+  .hc-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .hc-modal-overlay.show{display:flex;}
+  .hc-modal{background:#fff;border-radius:18px;padding:28px;max-width:400px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .hc-modal h3{margin:0 0 14px;font-size:17px;color:var(--maroon);}
+  .hc-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hc-row label{font-size:14px;color:var(--ink);}
+  .hc-row input{width:80px;padding:7px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:15px;text-align:center;}
+  .hc-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;}
+
+  /* ── Section Headers ── */
+  .sec-header{border-radius:12px 12px 0 0;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:28px;margin-bottom:0;}
+  .sec-header-left{display:flex;align-items:center;gap:12px;}
+  .sec-header-icon{font-size:26px;line-height:1;}
+  .sec-header-title{font-size:16px;font-weight:700;line-height:1.2;}
+  .sec-header-sub{font-size:12px;margin-top:3px;opacity:0.85;}
+  .sec-header-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+  .sec-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;}
+  .sec-header-actions{display:flex;gap:8px;align-items:center;}
+  .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
+  .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
+  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
+
+  /* Section header colors */
+  .sec-budget{background:linear-gradient(135deg,#856404,#B8860B);}
+  .sec-timeline{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
+  .sec-vendor{background:linear-gradient(135deg,#1A3A8A,#2952C4);}
+  .sec-guest{background:linear-gradient(135deg,#5C1A2B,#8A2A3F);}
+  .sec-reminder{background:linear-gradient(135deg,#5C1A8A,#8A2AC4);}
+  .sec-notes{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
+  .sec-catering{background:linear-gradient(135deg,#C45000,#E67300);}
+
+  /* ── Auto-backup bar ── */
+  .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
+  .backup-bar strong{color:var(--maroon);}
+  .btn-backup{padding:5px 14px;background:var(--maroon);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;}
+
+  /* ── Bulk Tier Assignment ── */
+  .bulk-tier-bar{background:var(--ivory-deep);border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .bulk-tier-bar select{padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;}
+  .bulk-tier-bar button{padding:6px 14px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-bulk-apply{background:var(--maroon);color:#fff;}
+  .btn-bulk-clear{background:var(--ivory);color:var(--ink);border:1.5px solid var(--line) !important;border-style:solid;}
+  .bulk-count{font-size:12.5px;color:var(--ink-soft);padding:4px 8px;background:#fff;border-radius:6px;border:1px solid var(--line);}
+  .inv-checkbox{width:15px;height:15px;cursor:pointer;accent-color:var(--maroon);}
+  .select-all-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .btn-sel-side{padding:4px 12px;border:1.5px solid var(--line);border-radius:7px;font-size:12px;cursor:pointer;background:#fff;color:var(--ink);}
+  .btn-sel-side.active{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+
+  /* ── Notes Section ── */
+  .notes-section{background:#fff;border-radius:14px;padding:22px;margin-bottom:20px;box-shadow:0 2px 12px rgba(92,26,43,0.07);}
+  .notes-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+  .notes-section-head h2{margin:0;font-size:18px;color:var(--maroon);}
+  .note-card{background:var(--ivory);border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;position:relative;}
+  .note-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .note-title{font-size:14px;font-weight:700;color:var(--maroon);}
+  .note-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .note-tag{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:var(--ivory-deep);color:var(--maroon);margin-right:6px;}
+  .note-content{font-size:13px;color:var(--ink);line-height:1.6;white-space:pre-wrap;}
+  .note-actions{display:flex;gap:6px;}
+  .note-edit-btn{padding:4px 10px;background:none;border:1.5px solid var(--gold);border-radius:7px;font-size:12px;color:var(--maroon);cursor:pointer;font-weight:600;}
+  .note-del-btn{padding:4px 10px;background:none;border:1.5px solid var(--line);border-radius:7px;font-size:12px;color:var(--rust);cursor:pointer;}
+  .notes-empty{text-align:center;padding:32px;color:var(--ink-soft);font-size:13px;}
+
+  /* ── Note Modal ── */
+  .note-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;padding:20px;}
+  .note-modal-overlay.show{display:flex;}
+  .note-modal{background:#fff;border-radius:18px;padding:28px;max-width:520px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
+  .note-modal h3{margin:0 0 18px;font-size:17px;color:var(--maroon);}
+  .note-modal input,.note-modal textarea,.note-modal select{width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:13px;font-family:'Inter';outline:none;margin-bottom:10px;}
+  .note-modal textarea{min-height:100px;resize:vertical;}
+  .note-modal input:focus,.note-modal textarea:focus,.note-modal select:focus{border-color:var(--maroon);}
+  .note-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+
+  /* ── Reminder alert styles ── */
+  .reminder-alert-badge{font-size:11px;background:#FFF3E0;color:#E65100;padding:2px 8px;border-radius:6px;font-weight:600;margin-left:6px;}
+
+  .lock-pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:22px;}
+  .pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);background:#fff;transition:background .15s,border-color .15s;}
+  .pin-dot.filled{background:var(--maroon);border-color:var(--maroon);}
+  .pin-dot.error{background:var(--rust);border-color:var(--rust);}
+
+  /* ── Email gate styles ── */
+  .email-gate{display:flex;flex-direction:column;align-items:center;width:100%;}
+  .email-gate input[type=email]{width:100%;box-sizing:border-box;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;font-size:15px;font-family:'Inter';background:#fff;color:var(--ink);outline:none;transition:border-color .2s;margin-bottom:12px;}
+  .email-gate input[type=email]:focus{border-color:var(--maroon);}
+  .email-gate .eg-btn{width:100%;padding:12px;background:var(--maroon);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;font-family:'Inter';cursor:pointer;transition:background .2s;}
+  .email-gate .eg-btn:hover{background:var(--maroon-dark);}
+  .email-gate .eg-btn:disabled{background:#ccc;cursor:not-allowed;}
+  .waiting-box{text-align:center;width:100%;}
+  .waiting-spinner{width:44px;height:44px;border:3px solid var(--ivory-deep);border-top-color:var(--maroon);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .waiting-email-badge{background:var(--ivory-deep);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--maroon);margin:10px 0 18px;word-break:break-all;}
+  .eg-back{background:none;border:none;color:var(--ink-soft);font-size:13px;cursor:pointer;margin-top:14px;text-decoration:underline;font-family:'Inter';}
+  .eg-status-msg{font-size:13px;color:var(--ink-soft);margin-top:8px;min-height:20px;text-align:center;}
+  .eg-status-msg.error{color:var(--rust);}
+  .eg-status-msg.success{color:#2E7D32;}
+  .lock-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  .key-btn{background:#fff;border:1px solid var(--line);border-radius:12px;font-size:20px;font-weight:600;color:var(--ink);padding:14px 0;cursor:pointer;transition:background .12s,transform .1s;font-family:'Cormorant Garamond',serif;}
+  .key-btn:hover{background:var(--ivory-deep);}
+  .key-btn:active{transform:scale(0.94);}
+  .key-clear{font-size:16px;color:var(--rust);}
+  .key-enter{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+  .key-enter:hover{background:var(--maroon-dark);}
+  .lock-remember{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .lock-remember input{accent-color:var(--maroon);cursor:pointer;}
+  .lock-error{font-size:12.5px;font-weight:600;color:var(--rust);min-height:18px;}
+
+  /* --- Event timeline --- */
+  
 
 /* ── TOP BAR ── */
-.topbar { background: var(--maroon); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-.topbar-left { display: flex; align-items: center; gap: 10px; }
-.topbar-title { color: var(--gold); font-size: 16px; font-weight: 700; }
-.topbar-sub { color: #C4906A; font-size: 10px; margin-top: 1px; }
-.btn-back { background: rgba(255,255,255,0.15); border: none; color: var(--gold); padding: 5px 11px; border-radius: 7px; font-size: 12px; font-weight: 600; cursor: pointer; display: none; }
-.btn-back.show { display: block; }
-.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #4CAF50; }
+.topbar{background:var(--maroon);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar-title{color:var(--gold);font-size:16px;font-weight:700;}
+.topbar-sub{color:#C4906A;font-size:10px;margin-top:1px;}
+.btn-back{background:rgba(255,255,255,0.15);border:none;color:var(--gold);padding:5px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:none;}
+.btn-back.show{display:block;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#4CAF50;}
+.sync-dot.syncing{background:#FFA726;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* ── GOOGLE SIGN-IN AREA ── */
+.google-signin-bar{background:#fff;margin:10px;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);gap:10px;flex-wrap:wrap;}
+.google-user-info{font-size:12px;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.google-user-info img{width:28px;height:28px;border-radius:50%;}
+.btn-goog{padding:7px 14px;border:1.5px solid var(--line);border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--maroon);}
+.btn-goog-out{background:none;border:none;font-size:11px;color:var(--ink-soft);cursor:pointer;padding:4px 8px;}
+.sync-status{font-size:10px;color:var(--ink-soft);display:flex;align-items:center;gap:4px;}
 
 /* ── VIEWS ── */
-.view { display: none; }
-.view.active { display: block; animation: fadeUp .2s ease; }
-@keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.view{display:none;}
+.view.active{display:block;animation:fadeUp .2s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
 /* ── SUMMARY BAR ── */
-.sum-bar { background: #fff; margin: 10px; border-radius: 12px; padding: 10px 14px; display: flex; justify-content: space-around; border: 1px solid var(--line); }
-.sum-item { text-align: center; }
-.sum-val { font-size: 15px; font-weight: 700; color: var(--maroon); }
-.sum-lbl { font-size: 9px; color: var(--gray); margin-top: 1px; }
+.sum-bar{background:#fff;margin:10px;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-around;border:1px solid var(--line);}
+.sum-item{text-align:center;}
+.sum-val{font-size:15px;font-weight:700;color:var(--maroon);}
+.sum-lbl{font-size:9px;color:var(--ink-soft);margin-top:1px;}
 
 /* ── DASHBOARD GRID ── */
-.dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 10px 10px; }
-.dash-card { border-radius: 14px; padding: 14px 12px; cursor: pointer; transition: transform .15s, opacity .15s; position: relative; min-height: 110px; }
-.dash-card:active { transform: scale(0.95); opacity: 0.85; }
-.dc-icon { font-size: 24px; margin-bottom: 6px; display: block; }
-.dc-name { font-size: 13px; font-weight: 700; color: #fff; }
-.dc-stats { margin-top: 6px; }
-.dc-stat { font-size: 10px; display: block; margin-top: 2px; color: rgba(255,255,255,0.85); }
-.dc-arrow { position: absolute; bottom: 10px; right: 12px; color: rgba(255,255,255,0.35); font-size: 14px; }
-
-.cBudget   { background: linear-gradient(135deg,#856404,#C8960E); }
-.cVendor   { background: linear-gradient(135deg,#1A3A8A,#2952C4); }
-.cGuest    { background: linear-gradient(135deg,#5C1A2B,#8A2A3F); }
-.cKankotri { background: linear-gradient(135deg,#3E0F1C,#5C1A2B); border:1px solid rgba(212,164,76,0.3); }
-.cKankotri .dc-name { color: var(--gold); }
-.cKankotri .dc-stat { color: #F0D8A8; }
-.cReminder { background: linear-gradient(135deg,#5C1A8A,#8A2AC4); }
-.cTimeline { background: linear-gradient(135deg,#1A5C5C,#2E8B8B); }
-.cNotes    { background: linear-gradient(135deg,#2E6B1A,#4A9B2A); }
-.cCatering { background: linear-gradient(135deg,#C45000,#E67300); }
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 10px 10px;}
+.dash-card{border-radius:16px;padding:14px 12px;cursor:pointer;transition:transform .15s,opacity .15s;position:relative;min-height:110px;}
+.dash-card:active{transform:scale(0.95);opacity:0.85;}
+.dc-icon{font-size:24px;margin-bottom:6px;display:block;}
+.dc-name{font-size:13px;font-weight:700;color:#fff;}
+.dc-stat{font-size:10px;display:block;margin-top:2px;color:rgba(255,255,255,0.85);}
+.dc-arrow{position:absolute;bottom:10px;right:12px;color:rgba(255,255,255,0.3);font-size:14px;}
+.cBudget{background:linear-gradient(135deg,#856404,#C8960E);}
+.cVendor{background:linear-gradient(135deg,#1A3A8A,#2952C4);}
+.cGuest{background:linear-gradient(135deg,#5C1A2B,#8A2A3F);}
+.cKankotri{background:linear-gradient(135deg,#3E0F1C,#5C1A2B);border:1px solid rgba(212,164,76,0.3);}
+.cKankotri .dc-name{color:var(--gold);}
+.cKankotri .dc-stat{color:#F0D8A8;}
+.cReminder{background:linear-gradient(135deg,#5C1A8A,#8A2AC4);}
+.cTimeline{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
+.cNotes{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
+.cCatering{background:linear-gradient(135deg,#C45000,#E67300);}
 
 /* ── SECTION HEADER ── */
-.sec-head { padding: 12px 14px; }
-.sec-head-title { color: #fff; font-size: 15px; font-weight: 700; }
-.sec-head-sub { color: rgba(255,255,255,0.75); font-size: 10px; margin-top: 2px; }
-.sec-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 7px; }
-.sec-badge { background: rgba(255,255,255,0.2); color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
-.sec-badge.gold { background: rgba(212,164,76,0.3); color: var(--gold); }
-.sec-actions { display: flex; gap: 8px; padding: 8px 10px 4px; }
-.btn-sec-act { padding: 5px 12px; border: 1.5px solid rgba(255,255,255,0.3); border-radius: 7px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(255,255,255,0.1); cursor: pointer; }
-
-/* ── ACCORDION ── */
-.acc-wrap { padding: 6px 10px; }
-.acc-group { background: #fff; border-radius: 10px; margin-bottom: 8px; overflow: hidden; border: 1px solid var(--line); }
-.acc-head { padding: 11px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-.acc-head-left { display: flex; align-items: center; gap: 8px; }
-.acc-head-title { font-size: 12px; font-weight: 700; color: var(--maroon); }
-.acc-head-count { font-size: 10px; color: var(--gray); }
-.acc-arrow { font-size: 12px; color: var(--gray); transition: transform .2s; }
-.acc-arrow.open { transform: rotate(90deg); }
-.acc-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
-.acc-body.open { max-height: 800px; }
-
-/* ── ROW ITEMS ── */
-.row-item { padding: 9px 12px; border-top: 1px solid var(--ivory2); display: flex; justify-content: space-between; align-items: center; }
-.row-name { font-size: 12px; font-weight: 600; color: var(--dark); }
-.row-sub { font-size: 10px; color: var(--gray); margin-top: 2px; }
-.row-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
-.badge { padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 600; white-space: nowrap; }
-.b-pend { background: #FFF3E0; color: #C45000; }
-.b-conf { background: #E8F5E9; color: #2E7D32; }
-.b-settled { background: #E8F5E9; color: #2E7D32; }
-.b-partial { background: #FFF8E1; color: #F57F17; }
-.b-unpaid { background: #FFEBEE; color: #C62828; }
-.b-vip { background: #FFF0C0; color: #856404; }
-.b-prem { background: #E8F0FF; color: #1A3A8A; }
-.b-norm { background: #F3EBDB; color: #555; }
-.b-sent { background: #E8F5E9; color: #2E7D32; }
-.b-unsent { background: #FFF3E0; color: #C45000; }
-
-/* ── REMINDER ROW ── */
-.rem-row { padding: 10px 12px; border-top: 1px solid var(--ivory2); display: flex; align-items: center; gap: 10px; }
-.rem-emoji { font-size: 20px; flex-shrink: 0; }
-.rem-title { font-size: 12px; font-weight: 600; color: var(--dark); }
-.rem-sub { font-size: 10px; color: var(--gray); margin-top: 1px; }
-.rem-days { padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-.d-today { background: #FFEBEE; color: #C62828; }
-.d-soon { background: #FFF3E0; color: #C45000; }
-.d-ok { background: #E8F5E9; color: #2E7D32; }
-
-/* ── TIMELINE ── */
-.tl-wrap { padding: 8px 14px; }
-.tl-row { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--ivory2); }
-.tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-.tl-past { background: #bbb; }
-.tl-next { background: #2E7D32; box-shadow: 0 0 0 3px rgba(46,125,50,0.2); }
-.tl-future { background: var(--gold); }
-.tl-name { font-size: 12px; font-weight: 700; color: var(--maroon); }
-.tl-date { font-size: 10px; color: var(--gray); margin-top: 2px; }
-.tl-venue { font-size: 10px; color: #666; }
-
-/* ── NOTES ── */
-.note-card { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 8px; border-left: 3px solid var(--gold); }
-.note-tag { display: inline-block; padding: 2px 7px; border-radius: 7px; font-size: 10px; font-weight: 600; background: var(--ivory2); color: var(--maroon); margin-bottom: 5px; }
-.note-title { font-size: 13px; font-weight: 700; color: var(--maroon); }
-.note-content { font-size: 11px; color: #555; margin-top: 4px; line-height: 1.5; }
-.note-meta { font-size: 9px; color: var(--gray); margin-top: 6px; }
+.sec-head{padding:12px 14px;}
+.sec-head-title{color:#fff;font-size:15px;font-weight:700;}
+.sec-head-sub{color:rgba(255,255,255,0.75);font-size:10px;margin-top:2px;}
+.sec-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.sec-badge{background:rgba(255,255,255,0.2);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+.sec-badge.gold{background:rgba(212,164,76,0.3);color:var(--gold);}
 
 /* ── SEARCH BAR ── */
-.search-bar { padding: 8px 10px 4px; }
-.search-bar input { width: 100%; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 9px; font-size: 13px; outline: none; background: #fff; }
-.search-bar input:focus { border-color: var(--maroon); }
+.search-bar{padding:8px 10px 4px;}
+.search-bar input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fff;color:var(--ink);}
+.search-bar input:focus{border-color:var(--maroon);}
 
-/* ── OPEN FULL BTN ── */
-.open-full { display: block; margin: 10px; padding: 12px; background: var(--maroon); color: var(--gold); border: none; border-radius: 12px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; text-decoration: none; }
+/* ── ACCORDION ── */
+.acc-wrap{padding:6px 10px;}
+.acc-group{background:#fff;border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid var(--line);box-shadow:var(--card-shadow);}
+.acc-head{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;}
+.acc-head-left{display:flex;align-items:center;gap:8px;}
+.acc-head-title{font-size:12px;font-weight:700;color:var(--maroon);}
+.acc-head-count{font-size:10px;color:var(--ink-soft);background:var(--ivory-deep);padding:1px 6px;border-radius:8px;}
+.acc-arrow{font-size:12px;color:var(--ink-soft);transition:transform .2s;}
+.acc-arrow.open{transform:rotate(90deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.acc-body.open{max-height:1200px;}
 
-/* ── BOTTOM NAV ── */
-.bottomnav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--maroon); display: flex; border-top: 1px solid rgba(212,164,76,0.25); z-index: 100; padding-bottom: env(safe-area-inset-bottom,0); }
-.nav-item { flex: 1; padding: 7px 4px 5px; text-align: center; cursor: pointer; border-top: 2px solid transparent; }
-.nav-item.active { border-top-color: var(--gold); }
-.nav-icon { font-size: 18px; display: block; line-height: 1; }
-.nav-lbl { font-size: 9px; color: rgba(255,255,255,0.45); margin-top: 2px; display: block; }
-.nav-item.active .nav-lbl { color: var(--gold); }
+/* ── ROWS ── */
+.row-item{padding:10px 12px;border-top:1px solid var(--ivory-deep);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.row-item:active{background:var(--ivory);}
+.row-name{font-size:12px;font-weight:600;color:var(--ink);}
+.row-sub{font-size:10px;color:var(--ink-soft);margin-top:2px;}
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.badge{padding:2px 7px;border-radius:7px;font-size:10px;font-weight:600;white-space:nowrap;}
+.b-settled{background:#E8F5E9;color:#2E7D32;}
+.b-partial{background:#FFF8E1;color:#F57F17;}
+.b-unpaid{background:#FFEBEE;color:#C62828;}
+.b-pend{background:#FFF3E0;color:#C45000;}
+.b-conf{background:#E8F5E9;color:#2E7D32;}
+.b-decl{background:#FFEBEE;color:#C62828;}
+.b-vip{background:#FFF0C0;color:#856404;}
+.b-prem{background:#E8F0FF;color:#1A3A8A;}
+.b-norm{background:#F3EBDB;color:#555;}
+.b-sent{background:#E8F5E9;color:#2E7D32;}
+.b-unsent{background:#FFF3E0;color:#C45000;}
 
-/* ── EMPTY STATE ── */
-.empty { text-align: center; padding: 28px 16px; color: var(--gray); font-size: 13px; }
+/* ── ACTION BUTTONS ── */
+.action-btns{display:flex;gap:6px;padding:6px 12px 10px;flex-wrap:wrap;}
+.btn-action{padding:6px 14px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:var(--maroon);}
+.btn-action.primary{background:var(--maroon);color:#fff;border-color:var(--maroon);}
+.btn-action.green{background:#1A5C1A;color:#fff;border-color:#1A5C1A;}
+.btn-action.blue{background:#1A3A8A;color:#fff;border-color:#1A3A8A;}
+
+/* ── REMINDER ROW ── */
+.rem-row{padding:10px 12px;border-top:1px solid var(--ivory-deep);display:flex;align-items:center;gap:10px;}
+.rem-emoji{font-size:20px;flex-shrink:0;}
+.rem-title{font-size:12px;font-weight:600;color:var(--ink);}
+.rem-sub{font-size:10px;color:var(--ink-soft);margin-top:1px;}
+.rem-days{padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;flex-shrink:0;}
+.d-today{background:#FFEBEE;color:#C62828;}
+.d-soon{background:#FFF3E0;color:#C45000;}
+.d-ok{background:#E8F5E9;color:#2E7D32;}
+.d-over{background:#FFEBEE;color:#C62828;}
+
+/* ── TIMELINE ── */
+.tl-wrap{padding:8px 14px;}
+.tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--ivory-deep);}
+.tl-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.tl-past{background:#bbb;}
+.tl-next{background:#2E7D32;box-shadow:0 0 0 3px rgba(46,125,50,0.2);}
+.tl-future{background:var(--gold);}
+.tl-name{font-size:13px;font-weight:700;color:var(--maroon);}
+.tl-date{font-size:10px;color:var(--ink-soft);margin-top:2px;}
+.tl-venue{font-size:10px;color:#666;margin-top:1px;}
+
+/* ── NOTES ── */
+.note-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid var(--gold);box-shadow:var(--card-shadow);}
+.note-tag{display:inline-block;padding:2px 7px;border-radius:7px;font-size:10px;font-weight:600;background:var(--ivory-deep);color:var(--maroon);margin-bottom:5px;}
+.note-title{font-size:13px;font-weight:700;color:var(--maroon);}
+.note-content{font-size:11px;color:#555;margin-top:4px;line-height:1.5;}
+.note-meta{font-size:9px;color:var(--ink-soft);margin-top:6px;}
 
 /* ── BUDGET CARDS ── */
-.budget-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
-.budget-card { background: #fff; border-radius: 10px; padding: 12px; text-align: center; border: 1px solid var(--line); }
-.bc-val { font-size: 16px; font-weight: 700; color: var(--maroon); }
-.bc-lbl { font-size: 10px; color: var(--gray); margin-top: 3px; }
+.budget-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;}
+.budget-card{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line);box-shadow:var(--card-shadow);}
+.bc-val{font-size:16px;font-weight:700;color:var(--maroon);}
+.bc-lbl{font-size:10px;color:var(--ink-soft);margin-top:3px;}
+
+/* ── OPEN FULL BUTTON ── */
+.open-full{display:block;margin:10px;padding:12px;background:var(--maroon);color:var(--gold);border:none;border-radius:12px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:28px 16px;color:var(--ink-soft);font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+
+/* ── BOTTOM NAV ── */
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:var(--maroon);display:flex;border-top:1px solid rgba(212,164,76,0.25);z-index:100;padding-bottom:env(safe-area-inset-bottom,0);}
+.nav-item{flex:1;padding:7px 4px 5px;text-align:center;cursor:pointer;border-top:2px solid transparent;}
+.nav-item.active{border-top-color:var(--gold);}
+.nav-icon{font-size:18px;display:block;line-height:1;}
+.nav-lbl{font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px;display:block;}
+.nav-item.active .nav-lbl{color:var(--gold);}
+
+/* ── DETAIL MODAL ── */
+.detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.detail-overlay.show{display:flex;animation:slideUp .25s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.detail-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;max-height:80vh;overflow-y:auto;width:100%;}
+.detail-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+.detail-title{font-size:16px;font-weight:700;color:var(--maroon);margin-bottom:4px;}
+.detail-sub{font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+.detail-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ivory-deep);font-size:12px;}
+.detail-label{color:var(--ink-soft);}
+.detail-val{font-weight:600;color:var(--ink);}
+.detail-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btn-detail{flex:1;min-width:80px;padding:10px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;}
+.btn-call{background:#1A5C1A;color:#fff;}
+.btn-wa{background:#25D366;color:#fff;}
+.btn-confirm{background:var(--maroon);color:var(--gold);}
+.btn-close-detail{background:var(--ivory-deep);color:var(--ink);}
+
+/* ── CONFIRM MODAL ── */
+.confirm-modal{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;width:100%;}
+.confirm-input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;margin:6px 0 12px;outline:none;}
+.confirm-input:focus{border-color:var(--maroon);}
+.confirm-label{font-size:12px;color:var(--ink-soft);margin-bottom:2px;display:block;}
+.status-select{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;margin:6px 0 12px;outline:none;background:#fff;}
 </style>
 </head>
 <body>
 
-<!-- Desktop redirect message -->
-<div class="desktop-msg">
-  <h1>🌸 Vivaah Ledger Mobile</h1>
-  <p>This is the mobile view — please open on your phone or tablet.<br>For desktop, use the full tool.</p>
+<!-- Desktop message -->
+<div class="desktop-redirect">
+  <h1>🌸 Vivaah Ledger</h1>
+  <p>This mobile view is designed for phones and tablets.<br>For desktop, please use the full tool.</p>
   <a href="https://vivaah-ledger.pages.dev">Open Full Tool →</a>
 </div>
 
-<!-- ── TOP BAR ── -->
+<!-- ═══════ LOCK SCREEN (reused from main tool) ═══════ -->
+<div class="lock-overlay" id="lockOverlay">
+  <div class="lock-box">
+    <div class="lock-logo">
+      <svg viewBox="0 0 48 48" fill="none" style="width:52px;height:52px;">
+        <circle cx="24" cy="24" r="22" stroke="#D4A24C" stroke-width="1.5"/>
+        <path d="M24 8 C30 14, 30 20, 24 24 C18 20, 18 14, 24 8 Z" fill="#5C1A2B"/>
+        <path d="M24 24 C30 28, 30 34, 24 40 C18 34, 18 28, 24 24 Z" fill="#D4A24C"/>
+        <circle cx="24" cy="24" r="2.4" fill="#FBF6EE"/>
+      </svg>
+    </div>
+    <h2 class="lock-title">Vivaah Ledger</h2>
+
+    <!-- STEP 1: Email gate -->
+    <div id="emailGateStep">
+      <p class="lock-sub">Enter your email to request access</p>
+      <div class="email-gate">
+        <input type="email" id="egEmailInput" placeholder="your@email.com" autocomplete="email" inputmode="email">
+        <button class="eg-btn" id="egRequestBtn">Request Access →</button>
+        <div class="eg-status-msg" id="egStatusMsg"></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Waiting for approval -->
+    <div id="waitingStep" style="display:none;">
+      <p class="lock-sub">Approval request sent!</p>
+      <div class="waiting-box">
+        <div class="waiting-spinner"></div>
+        <p style="font-size:14px;color:var(--ink-soft);margin:0 0 6px;">Waiting for owner approval…</p>
+        <div class="waiting-email-badge" id="waitingEmailBadge"></div>
+        <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 16px;">An email has been sent to the owner.<br>This page will update automatically.</p>
+        <div class="eg-status-msg" id="waitingStatusMsg"></div>
+        <button class="eg-back" id="egBackBtn">← Use a different email</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: PIN entry (shown after approval) -->
+    <div id="pinStep" style="display:none;">
+      <p class="lock-sub">Access approved! Enter your PIN</p>
+      <div class="lock-role-tabs">
+        <button class="lock-tab active" data-lock-role="admin">Admin</button>
+        <button class="lock-tab" data-lock-role="editor">Editor</button>
+        <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+        <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only" style="border-color:#C4A0E8;color:#5C1A8A;">🔑</button>
+      </div>
+      <div class="lock-pin-dots" id="lockPinDots">
+        <span class="pin-dot" id="dot0"></span>
+        <span class="pin-dot" id="dot1"></span>
+        <span class="pin-dot" id="dot2"></span>
+        <span class="pin-dot" id="dot3"></span>
+      </div>
+      <div class="lock-keypad">
+        <button class="key-btn" data-key="1">1</button><button class="key-btn" data-key="2">2</button><button class="key-btn" data-key="3">3</button>
+        <button class="key-btn" data-key="4">4</button><button class="key-btn" data-key="5">5</button><button class="key-btn" data-key="6">6</button>
+        <button class="key-btn" data-key="7">7</button><button class="key-btn" data-key="8">8</button><button class="key-btn" data-key="9">9</button>
+        <button class="key-btn key-clear" data-key="clear">⌫</button><button class="key-btn" data-key="0">0</button><button class="key-btn key-enter" data-key="enter">✓</button>
+      </div>
+      <div class="lock-remember">
+        <label><input type="checkbox" id="lockRemember"> Stay signed in on this device</label>
+      </div>
+      <div class="lock-error" id="lockError"></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════ MAIN APP (shown after login) ═══════ -->
+<div id="mainApp" style="display:none;">
+
+<!-- TOP BAR -->
 <div class="topbar">
   <div class="topbar-left">
     <button class="btn-back" id="btnBack" onclick="showDash()">← Back</button>
@@ -178,12 +492,39 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min
       <div class="topbar-sub" id="topSub">Loading...</div>
     </div>
   </div>
-  <div class="sync-dot" id="syncDot" title="Data loaded"></div>
+  <div class="topbar-right">
+    <span class="sync-dot" id="syncDot"></span>
+  </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     DASHBOARD
-     ════════════════════════════════════════ -->
+<!-- GOOGLE SIGN-IN BAR -->
+<div class="google-signin-bar" id="googleSigninBar">
+  <div id="googleSignedOut">
+    <div style="font-size:12px;font-weight:600;color:var(--maroon);margin-bottom:6px;">Sign in with Google to sync your data</div>
+    <button class="btn-goog" id="btnGoogleSignIn" onclick="initGoogleAuth()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:14px;height:14px;vertical-align:-2px;margin-right:6px;">Sign in with Google
+    </button>
+  </div>
+  <div id="googleSignedIn" style="display:none;width:100%;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="google-user-info">
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--maroon);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:11px;font-weight:700;" id="googleAvatar">?</div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--ink);" id="googleUserName">Signed in</div>
+          <div style="font-size:10px;color:var(--ink-soft);" id="googleUserEmailDisplay"></div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div class="sync-status" id="syncStatusBar">✅ Synced</div>
+        <button class="btn-goog-out" onclick="signOutGoogle()">Sign out</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     DASHBOARD VIEW
+     ═══════════════════════════════════ -->
 <div class="view active" id="vDash">
   <div class="sum-bar">
     <div class="sum-item"><div class="sum-val" id="sBudget">₹0</div><div class="sum-lbl">Budget</div></div>
@@ -192,102 +533,51 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min
     <div class="sum-item"><div class="sum-val" id="sAlerts">0</div><div class="sum-lbl">Alerts</div></div>
   </div>
   <div class="dash-grid">
-    <div class="dash-card cBudget" onclick="showSec('budget')">
-      <span class="dc-icon">💰</span>
-      <div class="dc-name">Budget</div>
-      <div class="dc-stats"><span class="dc-stat" id="dB1">—</span><span class="dc-stat" id="dB2">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cVendor" onclick="showSec('vendor')">
-      <span class="dc-icon">🏪</span>
-      <div class="dc-name">Vendors</div>
-      <div class="dc-stats"><span class="dc-stat" id="dV1">—</span><span class="dc-stat" id="dV2">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cGuest" onclick="showSec('guest')">
-      <span class="dc-icon">👥</span>
-      <div class="dc-name">Guests</div>
-      <div class="dc-stats"><span class="dc-stat" id="dG1">—</span><span class="dc-stat" id="dG2">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cKankotri" onclick="showSec('kankotri')">
-      <span class="dc-icon">𖥸</span>
-      <div class="dc-name">Kankotri</div>
-      <div class="dc-stats"><span class="dc-stat" id="dK1">—</span><span class="dc-stat" id="dK2">—</span></div>
-      <span class="dc-arrow" style="color:rgba(212,164,76,0.4);">→</span>
-    </div>
-    <div class="dash-card cReminder" onclick="showSec('reminder')">
-      <span class="dc-icon">🔔</span>
-      <div class="dc-name">Reminders</div>
-      <div class="dc-stats"><span class="dc-stat" id="dR1">—</span><span class="dc-stat" id="dR2">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cTimeline" onclick="showSec('timeline')">
-      <span class="dc-icon">📅</span>
-      <div class="dc-name">Timeline</div>
-      <div class="dc-stats"><span class="dc-stat" id="dT1">—</span><span class="dc-stat" id="dT2">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cNotes" onclick="showSec('notes')">
-      <span class="dc-icon">📝</span>
-      <div class="dc-name">Notes</div>
-      <div class="dc-stats"><span class="dc-stat" id="dN1">—</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
-    <div class="dash-card cCatering" onclick="showSec('catering')">
-      <span class="dc-icon">🍽️</span>
-      <div class="dc-name">Catering</div>
-      <div class="dc-stats"><span class="dc-stat">Calculator</span><span class="dc-stat">Tap to open →</span></div>
-      <span class="dc-arrow">→</span>
-    </div>
+    <div class="dash-card cBudget" onclick="showSec('budget')"><span class="dc-icon">💰</span><div class="dc-name">Budget</div><div class="dc-stats"><span class="dc-stat" id="dB1">—</span><span class="dc-stat" id="dB2">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cVendor" onclick="showSec('vendor')"><span class="dc-icon">🏪</span><div class="dc-name">Vendors</div><div class="dc-stats"><span class="dc-stat" id="dV1">—</span><span class="dc-stat" id="dV2">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cGuest" onclick="showSec('guest')"><span class="dc-icon">👥</span><div class="dc-name">Guests</div><div class="dc-stats"><span class="dc-stat" id="dG1">—</span><span class="dc-stat" id="dG2">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cKankotri" onclick="showSec('kankotri')"><span class="dc-icon">𖥸</span><div class="dc-name">Kankotri</div><div class="dc-stats"><span class="dc-stat" id="dK1">—</span><span class="dc-stat" id="dK2">—</span></div><span class="dc-arrow" style="color:rgba(212,164,76,0.4);">→</span></div>
+    <div class="dash-card cReminder" onclick="showSec('reminder')"><span class="dc-icon">🔔</span><div class="dc-name">Reminders</div><div class="dc-stats"><span class="dc-stat" id="dR1">—</span><span class="dc-stat" id="dR2">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cTimeline" onclick="showSec('timeline')"><span class="dc-icon">📅</span><div class="dc-name">Timeline</div><div class="dc-stats"><span class="dc-stat" id="dT1">—</span><span class="dc-stat" id="dT2">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cNotes" onclick="showSec('notes')"><span class="dc-icon">📝</span><div class="dc-name">Notes</div><div class="dc-stats"><span class="dc-stat" id="dN1">—</span></div><span class="dc-arrow">→</span></div>
+    <div class="dash-card cCatering" onclick="showSec('catering')"><span class="dc-icon">🍽️</span><div class="dc-name">Catering</div><div class="dc-stats"><span class="dc-stat">Calculator</span><span class="dc-stat">Tap to open →</span></div><span class="dc-arrow">→</span></div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     BUDGET
-     ════════════════════════════════════════ -->
+<!-- ═══════ BUDGET ═══════ -->
 <div class="view" id="vBudget">
   <div class="sec-head" style="background:linear-gradient(135deg,#856404,#C8960E);">
     <div class="sec-head-title">💰 Budget & Payment Tracking</div>
-    <div class="sec-head-sub">Track spend, advances and dues</div>
+    <div class="sec-head-sub">Track spend, advances and outstanding dues</div>
     <div class="sec-badges" id="budgetBadges"></div>
   </div>
   <div class="budget-cards" id="budgetCards"></div>
   <div class="acc-wrap" id="budgetList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     VENDORS
-     ════════════════════════════════════════ -->
+<!-- ═══════ VENDORS ═══════ -->
 <div class="view" id="vVendor">
   <div class="sec-head" style="background:linear-gradient(135deg,#1A3A8A,#2952C4);">
     <div class="sec-head-title">🏪 Vendor Management</div>
-    <div class="sec-head-sub">Caterers, photographers, decorators</div>
+    <div class="sec-head-sub">Caterers, photographers, decorators — tap to view details</div>
     <div class="sec-badges" id="vendorBadges"></div>
   </div>
-  <div class="search-bar"><input id="vendorSearch" placeholder="Search vendor..." oninput="renderVendors()"></div>
+  <div class="search-bar"><input id="vendorSearch" placeholder="Search vendor or category..." oninput="renderVendors()"></div>
   <div class="acc-wrap" id="vendorList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     GUESTS
-     ════════════════════════════════════════ -->
+<!-- ═══════ GUESTS ═══════ -->
 <div class="view" id="vGuest">
   <div class="sec-head" style="background:linear-gradient(135deg,#5C1A2B,#8A2A3F);">
     <div class="sec-head-title">👥 Guest List</div>
-    <div class="sec-head-sub">Call, WhatsApp, confirm headcount</div>
+    <div class="sec-head-sub">Call · WhatsApp · Confirm headcount — tap any family</div>
     <div class="sec-badges" id="guestBadges"></div>
   </div>
-  <div class="search-bar"><input id="guestSearch" placeholder="Search family..." oninput="renderGuests()"></div>
+  <div class="search-bar"><input id="guestSearch" placeholder="Search family or phone..." oninput="renderGuests()"></div>
   <div class="acc-wrap" id="guestList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Manage →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     KANKOTRI
-     ════════════════════════════════════════ -->
+<!-- ═══════ KANKOTRI ═══════ -->
 <div class="view" id="vKankotri">
   <div class="sec-head" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);">
     <div class="sec-head-title" style="color:var(--gold);">𖥸 Kankotri Invitations</div>
@@ -295,25 +585,19 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min
     <div class="sec-badges" id="kankotriBadges"></div>
   </div>
   <div class="acc-wrap" id="kankotriList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Assign Tiers →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     REMINDERS
-     ════════════════════════════════════════ -->
+<!-- ═══════ REMINDERS ═══════ -->
 <div class="view" id="vReminder">
   <div class="sec-head" style="background:linear-gradient(135deg,#5C1A8A,#8A2AC4);">
     <div class="sec-head-title">🔔 Reminders & Alerts</div>
-    <div class="sec-head-sub">Auto email at 8:00 AM IST daily</div>
+    <div class="sec-head-sub">Auto email at 8:00 AM IST · 7, 3, 2, 1 days before events</div>
     <div class="sec-badges" id="reminderBadges"></div>
   </div>
   <div class="acc-wrap" id="reminderList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Add Reminders →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     TIMELINE
-     ════════════════════════════════════════ -->
+<!-- ═══════ TIMELINE ═══════ -->
 <div class="view" id="vTimeline">
   <div class="sec-head" style="background:linear-gradient(135deg,#1A5C5C,#2E8B8B);">
     <div class="sec-head-title">📅 Wedding Event Timeline</div>
@@ -321,98 +605,869 @@ body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--ivory); min
     <div class="sec-badges" id="timelineBadges"></div>
   </div>
   <div class="tl-wrap" id="timelineList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Edit Timeline →</a>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Edit Timeline in Full Tool →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     NOTES
-     ════════════════════════════════════════ -->
+<!-- ═══════ NOTES ═══════ -->
 <div class="view" id="vNotes">
   <div class="sec-head" style="background:linear-gradient(135deg,#2E6B1A,#4A9B2A);">
     <div class="sec-head-title">📝 Notes & References</div>
-    <div class="sec-head-sub">Linked to vendors or guests</div>
+    <div class="sec-head-sub">Linked to vendors or guests — synced to Google Sheets</div>
     <div class="sec-badges" id="notesBadges"></div>
   </div>
   <div class="acc-wrap" id="notesList"></div>
-  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Full Tool to Add Notes →</a>
+  <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Add Notes in Full Tool →</a>
 </div>
 
-<!-- ════════════════════════════════════════
-     CATERING
-     ════════════════════════════════════════ -->
+<!-- ═══════ CATERING ═══════ -->
 <div class="view" id="vCatering">
   <div class="sec-head" style="background:linear-gradient(135deg,#C45000,#E67300);">
     <div class="sec-head-title">🍽️ Guest & Catering Calculator</div>
     <div class="sec-head-sub">Estimate quantities per event</div>
   </div>
-  <div class="empty">
-    <p style="font-size:32px;margin-bottom:12px;">🍽️</p>
-    <p>Open the full tool to use the catering calculator with all event details.</p>
-  </div>
+  <div class="empty"><div class="empty-icon">🍽️</div><p>Open the full tool to use the catering calculator with all event details.</p></div>
   <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Vivaah Ledger →</a>
 </div>
 
-<!-- ── BOTTOM NAV ── -->
+<!-- ═══════ BOTTOM NAV ═══════ -->
 <div class="bottomnav">
-  <div class="nav-item active" id="navHome" onclick="showDash()">
-    <span class="nav-icon">🏠</span><span class="nav-lbl">Home</span>
+  <div class="nav-item active" id="navHome" onclick="showDash()"><span class="nav-icon">🏠</span><span class="nav-lbl">Home</span></div>
+  <div class="nav-item" id="navVendor" onclick="showSec('vendor')"><span class="nav-icon">🏪</span><span class="nav-lbl">Vendors</span></div>
+  <div class="nav-item" id="navGuest" onclick="showSec('guest')"><span class="nav-icon">👥</span><span class="nav-lbl">Guests</span></div>
+  <div class="nav-item" id="navReminder" onclick="showSec('reminder')"><span class="nav-icon">🔔</span><span class="nav-lbl">Alerts</span></div>
+  <div class="nav-item" id="navKankotri" onclick="showSec('kankotri')"><span class="nav-icon">𖥸</span><span class="nav-lbl">Kankotri</span></div>
+</div>
+
+</div><!-- end mainApp -->
+
+<!-- ═══════ GUEST DETAIL SHEET ═══════ -->
+<div class="detail-overlay" id="guestDetailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-sheet" id="guestDetailSheet">
+    <div class="detail-handle"></div>
+    <div class="detail-title" id="guestDetailName">—</div>
+    <div class="detail-sub" id="guestDetailSub">—</div>
+    <div id="guestDetailRows"></div>
+    <div class="detail-actions" id="guestDetailActions"></div>
   </div>
-  <div class="nav-item" id="navVendor" onclick="showSec('vendor')">
-    <span class="nav-icon">🏪</span><span class="nav-lbl">Vendors</span>
+</div>
+
+<!-- ═══════ CONFIRM HEADCOUNT MODAL ═══════ -->
+<div class="detail-overlay" id="confirmOverlay" onclick="if(event.target===this)closeConfirm()">
+  <div class="confirm-modal">
+    <div class="detail-handle"></div>
+    <div class="detail-title">✓ Confirm Headcount</div>
+    <div class="detail-sub" id="confirmGuestName" style="margin-bottom:12px;">—</div>
+    <span class="confirm-label">Adults confirmed</span>
+    <input type="number" id="confirmAdults" class="confirm-input" min="0" max="50" placeholder="0">
+    <span class="confirm-label">Kids confirmed</span>
+    <input type="number" id="confirmKids" class="confirm-input" min="0" max="50" placeholder="0">
+    <span class="confirm-label">Status</span>
+    <select id="confirmStatus" class="status-select">
+      <option value="">— Select status —</option>
+      <option value="confirmed">✅ Confirmed Attending</option>
+      <option value="declined">❌ Declined</option>
+      <option value="maybe">🤔 Maybe</option>
+      <option value="no_answer">📵 No Answer</option>
+    </select>
+    <div class="detail-actions">
+      <button class="btn-detail btn-close-detail" onclick="closeConfirm()" style="flex:1;">Cancel</button>
+      <button class="btn-detail btn-confirm" onclick="saveConfirm()" style="flex:2;">Save Confirmation</button>
+    </div>
   </div>
-  <div class="nav-item" id="navGuest" onclick="showSec('guest')">
-    <span class="nav-icon">👥</span><span class="nav-lbl">Guests</span>
-  </div>
-  <div class="nav-item" id="navReminder" onclick="showSec('reminder')">
-    <span class="nav-icon">🔔</span><span class="nav-lbl">Alerts</span>
-  </div>
-  <div class="nav-item" id="navKankotri" onclick="showSec('kankotri')">
-    <span class="nav-icon">𖥸</span><span class="nav-lbl">Kankotri</span>
+</div>
+
+<!-- ═══════ VENDOR DETAIL SHEET ═══════ -->
+<div class="detail-overlay" id="vendorDetailOverlay" onclick="if(event.target===this)closeVendorDetail()">
+  <div class="detail-sheet" id="vendorDetailSheet">
+    <div class="detail-handle"></div>
+    <div class="detail-title" id="vendorDetailName">—</div>
+    <div class="detail-sub" id="vendorDetailSub">—</div>
+    <div id="vendorDetailRows"></div>
+    <div class="detail-actions" id="vendorDetailActions"></div>
   </div>
 </div>
 
 <script>
-// ── DATA ──────────────────────────────────────────────────────
-let guests=[], vendors=[], reminders={}, notes=[], timeline={};
+// ════════════════════════════════════════════════════════════
+//  CONSTANTS & STATE
+// ════════════════════════════════════════════════════════════
+const GOOGLE_CLIENT_ID = '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com';
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file';
+let googleAccessToken = null;
+let googleTokenClient = null;
+let googleUserEmail = null; // signed-in user's Gmail
+let sheetId = null;
+let isSyncing = false;
+let cloudSaveTimer = null;
+const SHEET_DATA_RANGE = 'Data!A1';   // main data (vendors, guests, functions, reminders, branding text)
+const SHEET_LOGO_RANGE = 'Data!B1';   // logos only (compressed base64, separate cell to stay under 50k char limit)
+const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! // ← UPDATE THIS
 
-function fmt(n){
-  n=Number(n)||0;
-  return '₹'+(n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':n);
+
+
+const uid = () => 'v_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+function fmt(n){ n=Number(n)||0; return '₹'+(n>=100000?(n/100000).toFixed(1)+'L':n>=1000?(n/1000).toFixed(0)+'K':String(n)); }
+
+let currentRole = null;
+let googleAccessToken = null;
+let googleUserEmail = null;
+let sheetId = null;
+let tokenExpiresAt = 0;
+let cloudSaveTimer = null;
+let pollingTimer = null;
+let approvedEmail = null;
+
+let vendors = [];
+let guests = [];
+let reminders = {};
+let notes = [];
+let eventTimeline = {};
+let functions = [];
+let branding = {title:'', tagline:'', logo:''};
+let kankotriCards = {};
+
+let currentGuestId = null;
+let currentVendorId = null;
+
+// ════════════════════════════════════════════════════════════
+//  UTILITY FUNCTIONS
+// ════════════════════════════════════════════════════════════
+async function egRequestAccess(){
+  const input = document.getElementById('egEmailInput');
+  const email = input.value.trim().toLowerCase();
+  const statusEl = document.getElementById('egStatusMsg');
+  const btn = document.getElementById('egRequestBtn');
+
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    statusEl.textContent = 'Please enter a valid email address.';
+    statusEl.className = 'eg-status-msg error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  statusEl.textContent = '';
+
+  try{
+    const resp = await fetch('/api/request-access', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email})
+    });
+    const data = await resp.json();
+
+    if(data.status === 'approved'){
+      // Owner or already approved — go straight to PIN
+      egCurrentEmail = email;
+      localStorage.setItem('vivaah-approved-email', email);
+      showLockStep('pin');
+    } else if(data.status === 'pending'){
+      egCurrentEmail = email;
+      document.getElementById('waitingEmailBadge').textContent = email;
+      showLockStep('waiting');
+      egStartPolling();
+    } else {
+      statusEl.textContent = data.error || 'Something went wrong. Please try again.';
+      statusEl.className = 'eg-status-msg error';
+    }
+  } catch(e){
+    console.error('Request access error:', e);
+    statusEl.textContent = 'Network error: ' + (e.message || 'Could not reach server. Try refreshing the page.');
+    statusEl.className = 'eg-status-msg error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Request Access →';
+  }
 }
 
-function loadAll(){
-  try{ const r=localStorage.getItem('wedding-guests'); if(r) guests=JSON.parse(r); }catch(e){ guests=[]; }
-  try{ const r=localStorage.getItem('wedding-vendors'); if(r) vendors=JSON.parse(r); }catch(e){ vendors=[]; }
-  try{ const r=localStorage.getItem('wedding-reminders'); if(r) reminders=JSON.parse(r); }catch(e){ reminders={}; }
-  try{ const r=localStorage.getItem('wedding-notes'); if(r) notes=JSON.parse(r); }catch(e){ notes=[]; }
-  try{ const r=localStorage.getItem('wedding-timeline'); if(r) timeline=JSON.parse(r); }catch(e){ timeline={}; }
+function egStartPolling(){
+  egStopPolling();
+  egPollingInterval = setInterval(egCheckStatus, 5000);
+}
+
+async function egCheckStatus(){
+  if(!egCurrentEmail) return;
+  try{
+    const resp = await fetch('/api/check-status', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email: egCurrentEmail})
+    });
+    const data = await resp.json();
+    const statusEl = document.getElementById('waitingStatusMsg');
+
+    if(data.status === 'approved'){
+      egStopPolling();
+      localStorage.setItem('vivaah-approved-email', egCurrentEmail);
+      statusEl.textContent = '✅ Approved! Loading PIN screen…';
+      statusEl.className = 'eg-status-msg success';
+      setTimeout(()=>{ showLockStep('pin'); }, 800);
+    } else if(data.status === 'rejected'){
+      egStopPolling();
+      statusEl.textContent = '❌ Access was rejected by the owner.';
+      statusEl.className = 'eg-status-msg error';
+      setTimeout(()=>{
+        showLockStep('email');
+        document.getElementById('egStatusMsg').textContent = 'Your request was rejected. Contact the owner.';
+        document.getElementById('egStatusMsg').className = 'eg-status-msg error';
+      }, 2000);
+    }
+    // 'pending' or 'none' → keep polling silently
+  } catch(e){ /* network hiccup — keep polling */ }
+}
+
+function egStopPolling(){
+  if(egPollingInterval){ clearInterval(egPollingInterval); egPollingInterval = null; }
+}
+
+function showLockStep(step){ // 'email' | 'waiting' | 'pin'
+  document.getElementById('emailGateStep').style.display = step==='email' ? '' : 'none';
+  document.getElementById('waitingStep').style.display   = step==='waiting' ? '' : 'none';
+  document.getElementById('pinStep').style.display       = step==='pin' ? '' : 'none';
+}
+
+async function tryUnlock(){
+  if(lockPinEntry.length < 4){ lockError('Enter 4 digits'); return; }
+  if(lockSelectedRole === 'owner'){
+    const storedOwnerHash = await storageGet('pin-hash-owner').catch(()=>null);
+    let ok = false;
+    if(storedOwnerHash){ ok = (await sha256(lockPinEntry)) === storedOwnerHash; }
+    else { ok = lockPinEntry === OWNER_PIN; }
+    if(ok){
+      setRole('owner');
+      const remember = document.getElementById('lockRemember').checked;
+      if(remember) localStorage.setItem('vivaah-role','owner');
+      sessionStorage.setItem('vivaah-role','owner');
+      document.getElementById('lockOverlay').classList.add('hidden');
+      // Always load data + render — ensures ticker and all sections appear immediately
+      await loadData();
+    } else { lockError('Wrong owner PIN'); }
+    return;
+  }
+  const ok = await checkPin(lockSelectedRole, lockPinEntry);
+  if(ok){
+    setRole(lockSelectedRole);
+    const remember = document.getElementById('lockRemember').checked;
+    if(remember) localStorage.setItem('vivaah-role', lockSelectedRole);
+    sessionStorage.setItem('vivaah-role', lockSelectedRole);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    // Always load data + render — ensures ticker and all sections appear immediately
+    await loadData();
+  } else {
+    lockError('Wrong PIN — try again');
+  }
+}
+
+function setRole(role){
+  currentRole = role;
+  document.body.className = document.body.className.replace(/role-\w+/g,'').trim() + ' role-' + role;
+  const badge = document.getElementById('roleBadge');
+  const labels = {owner:'🔑 Owner', admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
+  badge.textContent = labels[role] || role;
+  badge.className = 'role-badge role-' + role;
+  const isOwner = role === 'owner';
+  const isAdmin = role === 'admin' || isOwner;
+  document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
+  document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
+  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
+  applyRoleRestrictions();
+}
+
+function initGoogleAuth(){
+  if(typeof google === 'undefined' || !google.accounts){
+    setTimeout(initGoogleAuth, 400);
+    return;
+  }
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SHEETS_SCOPE,
+    callback: async (resp)=>{
+      if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
+      if(resp.error){ 
+        setSyncStatus(null,'');
+        storageSet('google-token-cache','');
+        showToast('Google sign-in failed — please try again'); 
+        return; 
+      }
+      googleAccessToken = resp.access_token;
+      await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
+      // Get signed-in user's email from Google
+      try {
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+        });
+        const info = await userInfo.json();
+        googleUserEmail = info.email || null;
+        console.log('Signed in as:', googleUserEmail);
+      } catch(e) { console.error('Could not get user email:', e); }
+      await onSignedIn();
+    }
+  });
+}
+
+async function onSignedIn(){
+  setSyncStatus('saving','Connecting…');
+  try{
+    let cachedId = await storageGet('wedding-sheet-id');
+    sheetId = cachedId || await findOrCreateSheet();
+    await storageSet('wedding-sheet-id', sheetId);
+    const cloudData = await pullFromSheet();
+    if(cloudData){
+      // Logos: prefer cloud (by ID), fall back to local
+      const cloudLogos = cloudData._logos || {};
+      const localLogoById = {};
+      vendors.forEach(v=>{ if(v.logo) localLogoById[v.id]=v.logo; });
+      vendors = (cloudData.vendors||vendors).map(v=>({
+        ...v,
+        logo: (cloudLogos.vendorLogos&&cloudLogos.vendorLogos[v.id])
+              ? cloudLogos.vendorLogos[v.id]
+              : (localLogoById[v.id]||'')
+      }));
+      functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
+      guests = cloudData.guests||guests;
+      reminders = cloudData.reminders||reminders;
+      notes = cloudData.notes||notes;
+      // Save notes to localStorage so they persist after sign-out
+      await storageSet('wedding-notes', JSON.stringify(notes));
+      // Branding logo: prefer cloud, fall back to local
+      branding = {
+        ...(cloudData.branding||branding),
+        logo: (cloudLogos.brandingLogo||branding.logo||'')
+      };
+      // Save restored branding to localStorage so it persists after sign-out
+      await storageSet('wedding-branding', JSON.stringify(branding));
+      // Timeline: merge cloud data but keep local menu images (too large for cloud)
+      if(cloudData.timeline){
+        Object.entries(cloudData.timeline).forEach(([ev,t])=>{
+          const localMenu = eventTimeline[ev]
+            ? {menuData:eventTimeline[ev].menuData, menuFileName:eventTimeline[ev].menuFileName, menuFileType:eventTimeline[ev].menuFileType}
+            : {};
+          eventTimeline[ev] = {...t, ...localMenu};
+        });
+      }
+      applyBranding();
+    } else {
+      await pushToSheet();
+    }
+    setSyncStatus('ok','Synced just now');
+    render();
+    renderTimeline();
+    renderInvTable(); // refresh invitation distribution after cloud data loads
+    notes = cloudData.notes || notes;
+    await storageSet('wedding-notes', JSON.stringify(notes));
+    renderNotes();
+    updateSectionBadges();
+  }catch(e){
+    console.error(e);
+    setSyncStatus('error','Connection issue — data saved locally');
+    showToast('Could not connect to Google Sheets: '+e.message);
+  }
+}
+
+async function pullFromSheet(){
+  try{
+    const res = await sheetsApi(`/${sheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_DATA_RANGE)}&ranges=${encodeURIComponent(SHEET_LOGO_RANGE)}&ranges=${encodeURIComponent('Data!C1')}`);
+    const vr = res.valueRanges || [];
+    const mainRaw  = vr[0]&&vr[0].values&&vr[0].values[0]&&vr[0].values[0][0];
+    const logoRaw  = vr[1]&&vr[1].values&&vr[1].values[0]&&vr[1].values[0][0];
+    const guestRaw = vr[2]&&vr[2].values&&vr[2].values[0]&&vr[2].values[0][0];
+    if(!mainRaw) return null;
+    const mainData = JSON.parse(mainRaw);
+    let logoData = null;
+    if(logoRaw){ try{ logoData = JSON.parse(logoRaw); }catch(e){} }
+    // Guests: prefer the dedicated C1 cell (compressed format), fall back to legacy A1 embedded guests
+    let cloudGuests = [];
+    if(guestRaw){
+      try{
+        const compressed = JSON.parse(guestRaw);
+        cloudGuests = expandGuests(compressed);
+      }catch(e){ cloudGuests = mainData.guests || []; }
+    } else {
+      cloudGuests = mainData.guests || [];
+    }
+    return {...mainData, guests: cloudGuests, _logos: logoData};
+  }catch(e){
+    console.error('pull failed', e);
+    return null;
+  }
+}
+
+async function pushToSheet(){
+  if(!googleAccessToken || !sheetId) return;
+  const vendorsForSync = vendors.map(({logo,...rest})=>rest);
+  const brandingForSync = {...branding, logo:''};
+  const timelineForSync = Object.fromEntries(
+    Object.entries(eventTimeline).map(([ev,t])=>{
+      const {menuData,_open,...rest} = t||{};
+      return [ev, rest];
+    })
+  );
+  const mainPayload = JSON.stringify({
+    vendors:vendorsForSync, functions, reminders,
+    branding:brandingForSync, timeline:timelineForSync,
+    notes:notes,
+    savedAt:new Date().toISOString()
+  });
+  const logosPayload = JSON.stringify({
+    vendorLogos:Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id,v.logo])),
+    brandingLogo:branding.logo||''
+  });
+  const guestPayload = JSON.stringify(compressGuests(guests));
+  try{
+    await sheetsApi(`/${sheetId}/values:batchUpdate`,{
+      method:'POST',
+      body:JSON.stringify({
+        valueInputOption:'RAW',
+        data:[
+          {range:SHEET_DATA_RANGE, values:[[mainPayload]]},
+          {range:SHEET_LOGO_RANGE, values:[[logosPayload]]},
+          {range:'Data!C1',        values:[[guestPayload]]}
+        ]
+      })
+    });
+    setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){
+    console.error('push failed',e);
+    if(e.message&&(e.message.includes('401')||e.message.includes('403'))){
+      googleAccessToken=null;
+      await storageSet('google-token-cache','');
+      setSyncStatus('error','Google session expired — please sign in again');
+    } else {
+      setSyncStatus('error','Sync failed — data saved locally');
+    }
+  }
+}
+
+function queueCloudSave(){
+  if(!googleAccessToken || !sheetId) return;
+  setSyncStatus('saving', 'Saving…');
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = setTimeout(()=>{ pushToSheet(); }, 1200);
+}
+
+function setSyncStatus(state, text){
+  const banner = document.getElementById('syncBanner');
+  const metaEl = document.getElementById('syncMeta');
+  const textEl = document.getElementById('syncBannerText');
+  metaEl.className = 'sync-meta' + (state ? ' '+state : '');
+  metaEl.textContent = text || '';
+  if(state==='ok'){
+    banner.classList.add('connected');
+    textEl.innerHTML = '⛁ Connected to Google Sheets — your ledger syncs automatically across every device you sign in on.';
+    document.getElementById('btnGoogleSignIn').style.display = 'none';
+    document.getElementById('btnOpenSheet').style.display = 'inline-flex';
+    document.getElementById('btnSignOut').style.display = 'inline-flex';
+  } else {
+    banner.classList.remove('connected');
+    textEl.innerHTML = '⟲ Sign in with Google to save your ledger online — it\'ll then load automatically on every device, no exporting or uploading needed.';
+    document.getElementById('btnGoogleSignIn').style.display = 'inline-flex';
+    document.getElementById('btnOpenSheet').style.display = 'none';
+    document.getElementById('btnSignOut').style.display = 'none';
+  }
+}
+
+async function storageGet(key){
+  if(hasArtifactStorage){
+    try{
+      const res = await window.storage.get(key);
+      return res && res.value ? res.value : null;
+    }catch(e){ return null; }
+  }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+
+async function storageSet(key, value){
+  if(hasArtifactStorage){
+    try{ await window.storage.set(key, value); return; }catch(e){ /* fall through to localStorage */ }
+  }
+  try{ localStorage.setItem(key, value); }catch(e){ console.error('storage save failed', e); }
+}
+
+function sheetsApi(path, options={}
+
+function compressGuests(guestArr){
+  return guestArr.map(g=>{
+    const evArr = WEDDING_EVENTS.map(ev=>{
+      const e = g.events && g.events[ev];
+      return e ? [e.adults||0, e.kids||0, e.ladies||0, e.writer||0] : null;
+    });
+    // Format: [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent]
+    return [
+      g.id, g.name, g.phone||'', g.side||'', evArr,
+      g.city||'', g.state||'', g.country||'',
+      g.needsAccommodation ? 1 : 0,
+      g.rooms||0, g.beds||0,
+      g.kankotriTier||'', g.kankotriSent ? 1 : 0,
+      g.invTier||'', g.invCards||0, g.invSent ? 1 : 0,
+      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||''
+    ];
+  });
+}
+
+function expandGuests(compressed){
+  return (compressed||[]).map(arr=>{
+    if(!Array.isArray(arr)) return arr;
+    const [id, name, phone, side, evArr, city, state, country, needsAccom, rooms, beds, kankotriTier, kankotriSent, invTier, invCards, invSent] = arr;
+    const events={};
+    (evArr||[]).forEach((e,i)=>{
+      if(e && (e[0]>0||e[1]>0||e[3]>0)){
+        events[WEDDING_EVENTS[i]] = {adults:e[0]||0, kids:e[1]||0, ladies:e[2]||0, writer:e[3]||0};
+      }
+    });
+    return {
+      id, name, phone, side, events,
+      city:city||'', state:state||'', country:country||'',
+      needsAccommodation:!!needsAccom, rooms:rooms||0, beds:beds||0,
+      kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
+      invTier:invTier||'', invCards:invCards||0, invSent:!!invSent,
+      confirmedAdults:Number(arr[16])||0, confirmedKids:Number(arr[17])||0,
+      callStatus:arr[18]||'', waCustomMsg:arr[19]||''
+    };
+  });
+}
+
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function vendorPaid(v){ return (v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0); }
+
+function vendorStatus(v){
+  const paid = vendorPaid(v), q = Number(v.quoted||0);
+  if(q<=0) return 'unpaid';
+  if(paid<=0) return 'unpaid';
+  if(paid>=q) return 'settled';
+  return 'partial';
+}
+
+function vendorOutstanding(v){ return Math.max(0, Number(v.quoted||0) - vendorPaid(v)); }
+
+function formatShortDate(d){const dt=new Date(d);return isNaN(dt)?'':dt.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
+
+async function loadData(){
+  try{
+    const v = await storageGet('wedding-vendors');
+    if(v){ vendors = JSON.parse(v); }
+  }catch(e){ vendors = []; }
+  try{
+    const f = await storageGet('wedding-functions');
+    if(f){ functions = JSON.parse(f); }
+  }catch(e){ functions = []; }
+  try{
+    const m = await storageGet('wedding-sync-meta');
+    if(m){ lastExportAt = JSON.parse(m).lastExportAt || null; }
+  }catch(e){ lastExportAt = null; }
+  try{
+    const b = await storageGet('wedding-branding');
+    if(b){
+      branding = {...branding, ...JSON.parse(b)};
+      applyBranding(); // Apply immediately so logo shows before Google sign-in
+    }
+  }catch(e){ /* keep defaults */ }
+  try{
+    const g = await storageGet('wedding-guests');
+    if(g){ guests = JSON.parse(g); }
+  }catch(e){ guests = []; }
+  try{
+    const r = await storageGet('wedding-reminders');
+    if(r){ reminders = {...reminders, ...JSON.parse(r)}; }
+  }catch(e){ /* keep defaults */ }
+  try{
+    const tl = await storageGet('wedding-timeline');
+    if(tl){ eventTimeline = JSON.parse(tl); }
+  }catch(e){ eventTimeline = {}; }
+  try{
+    const kc = await storageGet('wedding-kankotri-cards');
+    if(kc){ kankotriCards = {...kankotriCards, ...JSON.parse(kc)}; }
+  }catch(e){ /* keep defaults */ }
+  try{
+    const nt = await storageGet('wedding-notes');
+    if(nt){ notes = JSON.parse(nt); }
+  }catch(e){ notes = []; }
+  if(functions.length===0){
+    functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
+  }
+  applyBranding();
+  renderKankotriCardPreviews();
+  renderInvTable();
+  render();
+  await loadNotes();  // ensure notes loaded before rendering
+  renderNotes();
+  updateSectionBadges();
+  // Extra safety: re-render notes after short delay in case DOM wasn't ready
+  setTimeout(() => { if(notes && notes.length > 0) renderNotes(); }, 300);
+}
+
+async function saveBranding(){
+  await storageSet('wedding-branding', JSON.stringify(branding));
+  // Push immediately — don't queue/debounce for branding (logo needs to sync now)
+  if(googleAccessToken && sheetId){
+    try{
+      const logosPayload = JSON.stringify({
+        vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id,v.logo])),
+        brandingLogo: branding.logo||''
+      });
+      const brandingForSync = {...branding, logo:''};
+      // Update both main payload and logos cell
+      const mainRaw = await storageGet('wedding-branding');
+      await sheetsApi(`/${sheetId}/values:batchUpdate`,{
+        method:'POST',
+        body:JSON.stringify({
+          valueInputOption:'RAW',
+          data:[
+            {range:SHEET_LOGO_RANGE, values:[[logosPayload]]}
+          ]
+        })
+      });
+      setSyncStatus('ok','Branding synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    } catch(e){
+      console.error('Branding sync failed:', e);
+    }
+  }
+  queueCloudSave();
+}
+
+function applyBranding(){
+  document.getElementById('brandTitle').textContent = branding.title || 'Vivaah Ledger';
+  document.getElementById('brandTagline').textContent = branding.tagline || 'Wedding vendor budget & payment intelligence';
+  document.title = (branding.title || 'Vivaah Ledger') + ' — Wedding Vendor Budget';
+  const defaultLogo = document.getElementById('defaultLogo');
+  const customLogo = document.getElementById('customLogo');
+  if(branding.logo){
+    customLogo.src = branding.logo;
+    customLogo.style.display = 'block';
+    defaultLogo.style.display = 'none';
+  } else {
+    customLogo.style.display = 'none';
+    defaultLogo.style.display = 'block';
+  }
+}
+
+async function saveGuests(){
+  renderInvTable();
+  await storageSet('wedding-guests', JSON.stringify(guests));
+  queueCloudSave();
+  setTimeout(updateSectionBadges, 200);
+}
+
+async function saveReminders(){
+  await storageSet('wedding-reminders', JSON.stringify(reminders));
+  queueCloudSave();
+  // Sync reminders to Cloudflare KV so cron job can send alerts
+  if(googleUserEmail){
+    try{
+      await fetch('/api/save-reminders', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ email: googleUserEmail, reminders })
+      });
+    } catch(e){ console.log('Reminder KV sync skipped:', e.message); }
+  }
+}
+
+async function saveNotes() {
+  await storageSet('wedding-notes', JSON.stringify(notes));
+  queueCloudSave();
+  renderNotes();
+}
+
+async function loadNotes() {
+  try {
+    const raw = await storageGet('wedding-notes');
+    notes = raw ? JSON.parse(raw) : [];
+  } catch(e) { notes = []; }
+}
+
+function checkReminders() {
+  // Only check once per day
+  const lastCheck = await storageGet(REMINDER_CHECK_KEY);
+  const today = new Date().toDateString();
+  if (lastCheck === today) return;
+  await storageSet(REMINDER_CHECK_KEY, today);
+
+  if (!reminders || reminders.length === 0) return;
+  const now = new Date();
+
+  // Get signed-in user's email to send reminder to them
+  const userEmail = googleUserEmail || null;
+
+  for (const rem of reminders) {
+    if (!rem.date || !rem.title) continue;
+    const eventDate = new Date(rem.date);
+    const daysLeft = Math.ceil((eventDate - now) / (1000 * 60 * 60 * 24));
+
+    // Fire at 7 days and 3 days before, or on the day at the reminder time
+    const isReminderDay = daysLeft === 0 && rem.time && now.toTimeString().slice(0,5) >= rem.time;
+    if (daysLeft === 7 || daysLeft === 3 || isReminderDay) {
+      const timeStr = rem.time ? ` at ${rem.time}` : '';
+      const title = daysLeft === 0 ? `🌸 ${rem.text||rem.title} — Today${timeStr}!` : `🌸 ${rem.text||rem.title} — ${daysLeft} days to go!`;
+      const body  = daysLeft === 0 
+        ? `Reminder: ${rem.text||rem.title} is scheduled for today${timeStr}.`
+        : `${rem.text||rem.title} is on ${eventDate.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}${timeStr}. Only ${daysLeft} days left!`;
+
+      // Push notification (always fires)
+      sendPushNotification(title, body);
+
+      // Email alert — only to signed-in user's own Gmail
+      if (userEmail) {
+        await sendReminderEmail(
+          `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
+          body,
+          userEmail
+        );
+      }
+    }
+  }
+}
+
+async function sendReminderEmail(subject, bodyText, userEmail) {
+  // Send to the signed-in user's own Google email — not owner
+  const toEmail = userEmail || googleUserEmail || null;
+  if (!toEmail) {
+    console.log('No user email for reminder — push notification only');
+    return;
+  }
+  try {
+    await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        service_id: 'service_rrh49ga',
+        template_id: 'template_nkz7qec',
+        user_id: '84IAbs0-O2AoJTARe',
+        template_params: {
+          to_email: toEmail,
+          subject: subject,
+          requester_email: 'Vivaah Ledger Reminder',
+          approve_url: 'https://vivaah-ledger.pages.dev',
+          reject_url: 'https://vivaah-ledger.pages.dev',
+          app_url: 'https://vivaah-ledger.pages.dev',
+          time: bodyText,
+        },
+      }),
+    });
+    console.log('Reminder email sent to:', toEmail);
+  } catch(e) { console.error('Reminder email failed:', e); }
+}
+
+// Extra utilities
+function vendorPaid(v){ return (v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0); }
+function vendorOutstanding(v){ return Math.max(0, Number(v.quoted||0) - vendorPaid(v)); }
+function vendorStatus(v){ const p=vendorPaid(v); const q=Number(v.quoted||0); return p>=q&&q>0?'settled':p>0?'partial':'unpaid'; }
+
+// Override setSyncStatus for mobile
+function setSyncStatus(type, msg){
+  const bar = document.getElementById('syncStatusBar');
+  const dot = document.getElementById('syncDot');
+  if(!bar) return;
+  if(type==='ok'){ bar.textContent='✅ '+msg; dot.className='sync-dot'; }
+  else if(type==='error'){ bar.textContent='❌ '+msg; dot.className='sync-dot'; }
+  else { bar.textContent='🔄 '+msg; dot.className='sync-dot syncing'; }
+}
+
+// ════════════════════════════════════════════════════════════
+//  AFTER LOGIN — show main app
+// ════════════════════════════════════════════════════════════
+async function afterLogin(){
+  document.getElementById('lockOverlay').classList.add('hidden');
+  document.getElementById('mainApp').style.display = 'block';
+  await loadData();
   updateDash();
+  
+  // Try Google sign-in
+  const cached = await storageGet('google-token-cache');
+  if(cached){
+    try{
+      const t = JSON.parse(cached);
+      if(t.token && t.expiresAt > Date.now() + 60000){
+        googleAccessToken = t.token;
+        tokenExpiresAt = t.expiresAt;
+        await fetchGoogleUserInfo();
+        showGoogleSignedIn();
+        await onSignedIn();
+      }
+    }catch(e){}
+  }
 }
 
+async function fetchGoogleUserInfo(){
+  if(!googleAccessToken) return;
+  try{
+    const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {'Authorization':'Bearer '+googleAccessToken}
+    });
+    const info = await r.json();
+    googleUserEmail = info.email || null;
+    const name = info.name || info.email || 'Signed in';
+    document.getElementById('googleAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('googleUserName').textContent = name;
+    document.getElementById('googleUserEmailDisplay').textContent = info.email || '';
+  }catch(e){}
+}
+
+function showGoogleSignedIn(){
+  document.getElementById('googleSignedOut').style.display = 'none';
+  document.getElementById('googleSignedIn').style.display = 'block';
+}
+
+function signOutGoogle(){
+  googleAccessToken = null;
+  googleUserEmail = null;
+  sheetId = null;
+  storageSet('google-token-cache','');
+  document.getElementById('googleSignedOut').style.display = 'block';
+  document.getElementById('googleSignedIn').style.display = 'none';
+  setSyncStatus(null,'Signed out');
+}
+
+// Override onSignedIn to also update mobile UI
+const _origOnSignedIn = onSignedIn;
+async function onSignedIn(){
+  showGoogleSignedIn();
+  await fetchGoogleUserInfo();
+  setSyncStatus('syncing','Syncing...');
+  const cloudData = await pullFromSheet();
+  if(cloudData){
+    vendors = (cloudData.vendors||vendors).map(v=>({...v, logo: (cloudData._logos?.vendorLogos?.[v.id]||v.logo||'')}))||vendors;
+    functions = cloudData.functions&&cloudData.functions.length?cloudData.functions:functions;
+    guests = cloudData.guests||guests;
+    reminders = cloudData.reminders||reminders;
+    notes = cloudData.notes||notes;
+    await storageSet('wedding-notes', JSON.stringify(notes));
+    branding = {...(cloudData.branding||branding), logo:(cloudData._logos?.brandingLogo||branding.logo||'')};
+    await storageSet('wedding-branding', JSON.stringify(branding));
+    if(cloudData.timeline) Object.entries(cloudData.timeline).forEach(([ev,t])=>{ if(eventTimeline[ev]) Object.assign(eventTimeline[ev],t); });
+    setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+  } else {
+    setSyncStatus('error','Sync failed');
+  }
+  updateDash();
+  checkReminders();
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════
 function updateDash(){
   const totalB=vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
-  const totalP=vendors.reduce((s,v)=>s+(v.payments||[]).reduce((ps,p)=>ps+Number(p.amount||0),0),0);
+  const totalP=vendors.reduce((s,v)=>s+vendorPaid(v),0);
   const totalD=totalB-totalP;
-  const pending=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)>p;}).length;
+  const pending=vendors.filter(v=>vendorOutstanding(v)>0).length;
   const confirmed=guests.filter(g=>g.callStatus==='confirmed').length;
   const allRem=[...(reminders.trial||[]),...(reminders.clothes||[]),...(reminders.guest||[])].filter(r=>!r.done);
   const vip=guests.filter(g=>g.invTier==='vip').length;
   const prem=guests.filter(g=>g.invTier==='premium').length;
   const norm=guests.filter(g=>g.invTier==='normal').length;
   const cards=guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0);
-  const evCount=Object.values(timeline).filter(e=>e&&e.date).length;
-  const upcoming=Object.entries(timeline).filter(([k,e])=>e&&e.date&&new Date(e.date)>=new Date()).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
-  const branding = (() => { try{ const b=localStorage.getItem('wedding-branding'); return b?JSON.parse(b):{}; }catch(e){ return {}; } })();
+  const evCount=Object.values(eventTimeline).filter(e=>e&&e.date).length;
+  const upcoming=Object.entries(eventTimeline).filter(([k,e])=>e&&e.date&&new Date(e.date)>=new Date()).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
+  const brandingData = branding || {};
 
-  document.getElementById('topSub').textContent = branding.title || 'Shah Family Wedding';
-
-  // Summary
+  document.getElementById('topSub').textContent = brandingData.title || 'Wedding Planner';
   document.getElementById('sBudget').textContent=fmt(totalB);
   document.getElementById('sVendors').textContent=vendors.length;
   document.getElementById('sGuests').textContent=guests.length;
   document.getElementById('sAlerts').textContent=allRem.length;
-
-  // Cards
   document.getElementById('dB1').textContent=fmt(totalB)+' total budget';
   document.getElementById('dB2').textContent=fmt(totalP)+' paid · '+fmt(totalD)+' due';
   document.getElementById('dV1').textContent=vendors.length+' vendors tracked';
@@ -428,19 +1483,21 @@ function updateDash(){
   document.getElementById('dN1').textContent=notes.length+' notes saved';
 }
 
-// ── ACCORDION HELPER ─────────────────────────────────────────
-function accGroup(title, color, bgColor, items, renderFn, startOpen=false){
-  const id='acc_'+Math.random().toString(36).slice(2);
-  const openClass=startOpen?' open':'';
+// ════════════════════════════════════════════════════════════
+//  ACCORDION HELPER
+// ════════════════════════════════════════════════════════════
+let accCounter = 0;
+function accGroup(title, headBg, headColor, countBg, countColor, items, renderFn, startOpen=false){
+  const id='acc'+(++accCounter);
   return `<div class="acc-group">
-    <div class="acc-head" style="background:${bgColor||'#fff'};" onclick="toggleAcc('${id}')">
+    <div class="acc-head" style="background:${headBg||'#fff'};" onclick="toggleAcc('${id}')">
       <div class="acc-head-left">
-        <span class="acc-head-title" style="color:${color||'var(--maroon)'};">${title}</span>
-        <span class="acc-head-count">(${items.length})</span>
+        <span class="acc-head-title" style="color:${headColor||'var(--maroon)'}">${title}</span>
+        <span class="acc-head-count" style="background:${countBg||'var(--ivory-deep)'};;color:${countColor||'var(--ink-soft)'};">${items.length}</span>
       </div>
       <span class="acc-arrow${startOpen?' open':''}" id="arr_${id}">▶</span>
     </div>
-    <div class="acc-body${openClass}" id="${id}">
+    <div class="acc-body${startOpen?' open':''}" id="${id}">
       ${items.length===0?'<div class="empty">Nothing here yet</div>':items.map(renderFn).join('')}
     </div>
   </div>`;
@@ -449,17 +1506,19 @@ function accGroup(title, color, bgColor, items, renderFn, startOpen=false){
 function toggleAcc(id){
   const body=document.getElementById(id);
   const arr=document.getElementById('arr_'+id);
+  if(!body||!arr) return;
   body.classList.toggle('open');
   arr.classList.toggle('open');
 }
 
-// ── RENDER SECTIONS ──────────────────────────────────────────
-
+// ════════════════════════════════════════════════════════════
+//  RENDER SECTIONS
+// ════════════════════════════════════════════════════════════
 function renderBudget(){
   const totalB=vendors.reduce((s,v)=>s+Number(v.quoted||0),0);
-  const totalP=vendors.reduce((s,v)=>s+(v.payments||[]).reduce((ps,p)=>ps+Number(p.amount||0),0),0);
+  const totalP=vendors.reduce((s,v)=>s+vendorPaid(v),0);
   const totalD=totalB-totalP;
-  const settled=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)<=p;}).length;
+  const settled=vendors.filter(v=>vendorStatus(v)==='settled').length;
 
   document.getElementById('budgetBadges').innerHTML=
     `<span class="sec-badge">${fmt(totalB)} total</span><span class="sec-badge">${fmt(totalP)} paid</span><span class="sec-badge">${fmt(totalD)} due</span>`;
@@ -470,51 +1529,51 @@ function renderBudget(){
     <div class="budget-card"><div class="bc-val" style="color:#C62828;">${fmt(totalD)}</div><div class="bc-lbl">Outstanding</div></div>
     <div class="budget-card"><div class="bc-val">${settled}/${vendors.length}</div><div class="bc-lbl">Vendors Settled</div></div>`;
 
-  const settled_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)<=p;});
-  const partial_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return p>0&&Number(v.quoted||0)>p;});
-  const unpaid_v=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return p===0&&Number(v.quoted||0)>0;});
-
-  const renderVRow=(v)=>{
-    const paid=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);
-    const due=Number(v.quoted||0)-paid;
-    const status=due<=0?'b-settled':'b-partial';
-    return `<div class="row-item">
-      <div><div class="row-name">${v.name||'—'}</div><div class="row-sub">${v.category||''}</div></div>
-      <div class="row-right"><span class="badge b-unpaid">${fmt(due)} due</span></div>
+  const renderVR=(v)=>{
+    const due=vendorOutstanding(v);
+    const st=vendorStatus(v);
+    const cls=st==='settled'?'b-settled':st==='partial'?'b-partial':'b-unpaid';
+    const lbl=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial':'⏳ Unpaid';
+    return `<div class="row-item" onclick="openVendorDetail('${v.id}')">
+      <div><div class="row-name">${escapeHtml(v.name||'—')}</div><div class="row-sub">${v.category||''}</div></div>
+      <div class="row-right"><span class="badge ${cls}">${lbl}</span><span style="font-size:10px;color:var(--ink-soft);">${fmt(due)} due</span></div>
     </div>`;
   };
 
+  const unpaid=vendors.filter(v=>vendorStatus(v)==='unpaid');
+  const partial=vendors.filter(v=>vendorStatus(v)==='partial');
+  const settledV=vendors.filter(v=>vendorStatus(v)==='settled');
+
+  accCounter=0;
   document.getElementById('budgetList').innerHTML=
-    accGroup('⏳ Unpaid ('+unpaid_v.length+')','#C62828','#FFEBEE',unpaid_v,renderVRow,true)+
-    accGroup('⚡ Partial Payment','#C45000','#FFF3E0',partial_v,renderVRow)+
-    accGroup('✅ Settled','#2E7D32','#E8F5E9',settled_v,renderVRow);
+    accGroup('⏳ Unpaid','#FFEBEE','#C62828','#FFC5C5','#C62828',unpaid,renderVR,true)+
+    accGroup('⚡ Partial','#FFF8E1','#C45000','#FFE08A','#C45000',partial,renderVR)+
+    accGroup('✅ Settled','#E8F5E9','#2E7D32','#C8E6C9','#2E7D32',settledV,renderVR);
 }
 
 function renderVendors(){
   const q=(document.getElementById('vendorSearch')?.value||'').toLowerCase();
   const filtered=q?vendors.filter(v=>(v.name||'').toLowerCase().includes(q)||(v.category||'').toLowerCase().includes(q)):vendors;
-
-  const cats=[...new Set(filtered.map(v=>v.category||'Uncategorized'))].sort();
-  const pending=vendors.filter(v=>{const p=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);return Number(v.quoted||0)>p;}).length;
+  const pending=vendors.filter(v=>vendorOutstanding(v)>0).length;
 
   document.getElementById('vendorBadges').innerHTML=
-    `<span class="sec-badge">${vendors.length} vendors</span><span class="sec-badge">${pending} pending</span>`;
+    `<span class="sec-badge">${vendors.length} vendors</span><span class="sec-badge">${pending} pending payment</span>`;
 
+  const cats=[...new Set(filtered.map(v=>v.category||'Uncategorized'))].sort();
   const renderV=(v)=>{
-    const paid=(v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0);
-    const due=Number(v.quoted||0)-paid;
-    const cls=due<=0?'b-settled':paid>0?'b-partial':'b-unpaid';
-    const statusTxt=due<=0?'✅ Settled':paid>0?'⚡ Partial':'⏳ Unpaid';
-    return `<div class="row-item">
-      <div><div class="row-name">${v.name||'—'}</div><div class="row-sub">${fmt(v.quoted||0)} quoted${v.phone?'  ·  '+v.phone:''}</div></div>
-      <div class="row-right"><span class="badge ${cls}">${statusTxt}</span><span style="font-size:10px;color:var(--gray);">${fmt(due)} due</span></div>
+    const st=vendorStatus(v);
+    const cls=st==='settled'?'b-settled':st==='partial'?'b-partial':'b-unpaid';
+    const lbl=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial':'⏳ Unpaid';
+    return `<div class="row-item" onclick="openVendorDetail('${v.id}')">
+      <div><div class="row-name">${escapeHtml(v.name||'—')}</div><div class="row-sub">${fmt(v.quoted||0)} quoted · ${v.contact||v.phone||''}</div></div>
+      <div class="row-right"><span class="badge ${cls}">${lbl}</span></div>
     </div>`;
   };
-
+  accCounter=0;
   document.getElementById('vendorList').innerHTML=cats.map(cat=>{
-    const catV=filtered.filter(v=>(v.category||'Uncategorized')===cat);
-    return accGroup(cat,'var(--maroon)','#fff',catV,renderV,cats.length===1);
-  }).join('')||(filtered.length===0?'<div class="empty">No vendors found</div>':'');
+    const cv=filtered.filter(v=>(v.category||'Uncategorized')===cat);
+    return accGroup(cat,'#fff','var(--maroon)','var(--ivory-deep)','var(--ink-soft)',cv,renderV,cats.length===1);
+  }).join('')||(filtered.length===0?'<div class="empty"><div class="empty-icon">🏪</div><p>No vendors found</p></div>':'');
 }
 
 function renderGuests(){
@@ -526,22 +1585,22 @@ function renderGuests(){
     `<span class="sec-badge">${guests.length} families</span><span class="sec-badge">${confirmed} confirmed</span><span class="sec-badge">${guests.length-confirmed} pending</span>`;
 
   const renderG=(g)=>{
-    const cls=g.callStatus==='confirmed'?'b-conf':g.callStatus==='declined'?'b-unpaid':'b-pend';
-    const statusTxt=g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':'⏳ Pending';
-    return `<div class="row-item">
-      <div><div class="row-name">${g.name||'—'}</div><div class="row-sub">${g.phone||''}${g.confirmedAdults?'  ·  '+g.confirmedAdults+' adults':''}</div></div>
-      <div class="row-right"><span class="badge ${cls}">${statusTxt}</span></div>
+    const cls=g.callStatus==='confirmed'?'b-conf':g.callStatus==='declined'?'b-decl':'b-pend';
+    const lbl=g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':'⏳ Pending';
+    return `<div class="row-item" onclick="openGuestDetail('${g.id}')">
+      <div><div class="row-name">${escapeHtml(g.name||'—')}</div><div class="row-sub">${g.phone||''}${g.confirmedAdults?' · '+g.confirmedAdults+' adults':''}</div></div>
+      <div class="row-right"><span class="badge ${cls}">${lbl}</span></div>
     </div>`;
   };
 
   const bride=filtered.filter(g=>g.side==='Bride');
   const groom=filtered.filter(g=>g.side==='Groom');
   const both=filtered.filter(g=>g.side!=='Bride'&&g.side!=='Groom');
-
+  accCounter=0;
   document.getElementById('guestList').innerHTML=
-    (bride.length>0?accGroup('👰 Bride Side','#5C1A2B','#FAF0F2',bride,renderG,true):'')+
-    (groom.length>0?accGroup('🤵 Groom Side','#1A3A8A','#F0F4FF',groom,renderG):'')+
-    (both.length>0?accGroup('Both Sides','#555','#F5F5F5',both,renderG):'');
+    (bride.length>0?accGroup('👰 Bride Side','#FAF0F2','#5C1A2B','#F7D4DB','#5C1A2B',bride,renderG,true):'')+
+    (groom.length>0?accGroup('🤵 Groom Side','#F0F4FF','#1A3A8A','#C5D5F7','#1A3A8A',groom,renderG):'')+
+    (both.length>0?accGroup('Both Sides','#F5F5F5','#555','#E0E0E0','#555',both,renderG):'');
 }
 
 function renderKankotri(){
@@ -557,18 +1616,18 @@ function renderKankotri(){
 
   const renderK=(g)=>{
     const sentCls=g.invSent?'b-sent':'b-unsent';
-    const sentTxt=g.invSent?'✅ Sent':'⏳ Pending';
+    const sentLbl=g.invSent?'✅ Sent':'⏳ Pending';
     return `<div class="row-item">
-      <div><div class="row-name">${g.name||'—'}</div><div class="row-sub">${g.side||''} side  ·  ${g.invCards||0} cards</div></div>
-      <div class="row-right"><span class="badge ${sentCls}">${sentTxt}</span></div>
+      <div><div class="row-name">${escapeHtml(g.name||'—')}</div><div class="row-sub">${g.side||''} side · ${g.invCards||0} cards</div></div>
+      <div class="row-right"><span class="badge ${sentCls}">${sentLbl}</span></div>
     </div>`;
   };
-
+  accCounter=0;
   document.getElementById('kankotriList').innerHTML=
-    accGroup('👑 VIP Premium','#856404','#FFF8E8',vip,renderK,true)+
-    accGroup('⭐ Premium','#1A3A8A','#F0F4FF',prem,renderK)+
-    accGroup('🎟 Normal','#555','#F5F5F5',norm,renderK)+
-    accGroup('⭕ Unassigned','#999','#fafafa',unassigned,renderK);
+    accGroup('👑 VIP Premium','#FFF8E8','#856404','#FFE082','#856404',vip,renderK,true)+
+    accGroup('⭐ Premium','#F0F4FF','#1A3A8A','#BBCEF8','#1A3A8A',prem,renderK)+
+    accGroup('🎟 Normal','#F5F5F5','#555','#E0E0E0','#555',norm,renderK)+
+    accGroup('⭕ Unassigned','#FAFAFA','#999','#EEEEEE','#999',unassigned,renderK);
 }
 
 function renderReminders(){
@@ -576,35 +1635,35 @@ function renderReminders(){
   const trial=(reminders.trial||[]).filter(r=>!r.done);
   const clothes=(reminders.clothes||[]).filter(r=>!r.done);
   const guest=(reminders.guest||[]).filter(r=>!r.done);
-  const all=[...trial,...clothes,...guest];
 
   document.getElementById('reminderBadges').innerHTML=
     `<span class="sec-badge">🥻 Trial: ${trial.length}</span><span class="sec-badge">👗 Clothes: ${clothes.length}</span><span class="sec-badge">📋 Guest: ${guest.length}</span>`;
 
-  const renderR=(r,emoji)=>{
+  const renderR=(emoji)=>(r)=>{
     const d=new Date(r.date||''); d.setHours(0,0,0,0);
-    const days=isNaN(d)?99:Math.round((d-now)/(1000*60*60*24));
-    const cls=days<=0?'d-today':days<=3?'d-soon':'d-ok';
+    const days=isNaN(d.getTime())?99:Math.round((d-now)/(1000*60*60*24));
+    const cls=days<0?'d-over':days===0?'d-today':days<=3?'d-soon':'d-ok';
     const daysTxt=days<0?'Overdue':days===0?'Today!':days===1?'Tomorrow':days+'d left';
     return `<div class="rem-row">
       <div class="rem-emoji">${emoji}</div>
-      <div style="flex:1"><div class="rem-title">${r.text||'Reminder'}</div><div class="rem-sub">${r.date||''}${r.time?' at '+r.time:''}</div></div>
+      <div style="flex:1"><div class="rem-title">${escapeHtml(r.text||'Reminder')}</div><div class="rem-sub">${r.date||''}${r.time?' at '+r.time:''}</div></div>
       <span class="rem-days ${cls}">${daysTxt}</span>
     </div>`;
   };
-
+  accCounter=0;
   document.getElementById('reminderList').innerHTML=
-    accGroup('🥻 Trial Reminders','#5C1A8A','#F5F0FF',trial,r=>renderR(r,'🥻'),true)+
-    accGroup('👗 Clothes Reminders','#5C1A8A','#F5F0FF',clothes,r=>renderR(r,'👗'))+
-    accGroup('📋 Guest Reminders','#5C1A8A','#F5F0FF',guest,r=>renderR(r,'📋'));
+    accGroup('🥻 Trial Reminders','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',trial,renderR('🥻'),true)+
+    accGroup('👗 Clothes Reminders','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',clothes,renderR('👗'))+
+    accGroup('📋 Guest Reminders','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',guest,renderR('📋'));
+  if(trial.length===0&&clothes.length===0&&guest.length===0){
+    document.getElementById('reminderList').innerHTML='<div class="empty"><div class="empty-icon">🔔</div><p>No active reminders.<br>Add reminders in the full tool.</p></div>';
+  }
 }
 
 function renderTimeline(){
-  const entries=Object.entries(timeline).filter(([k,e])=>e&&e.date).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
+  const entries=Object.entries(eventTimeline).filter(([k,e])=>e&&e.date).sort((a,b)=>new Date(a[1].date)-new Date(b[1].date));
   const now=new Date();
-
   document.getElementById('timelineBadges').innerHTML=`<span class="sec-badge">${entries.length} events</span>`;
-
   document.getElementById('timelineList').innerHTML=entries.map(([name,ev])=>{
     const d=new Date(ev.date);
     const isPast=d<now;
@@ -612,66 +1671,249 @@ function renderTimeline(){
     const dotCls=isPast?'tl-past':isNext?'tl-next':'tl-future';
     return `<div class="tl-row">
       <div class="tl-dot ${dotCls}"></div>
-      <div><div class="tl-name">${name}</div>
+      <div><div class="tl-name">${escapeHtml(name)}</div>
       <div class="tl-date">${d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</div>
-      ${ev.venue?`<div class="tl-venue">📍 ${ev.venue}</div>`:''}
+      ${ev.venue?`<div class="tl-venue">📍 ${escapeHtml(ev.venue)}</div>`:''}
       </div>
     </div>`;
-  }).join('')||'<div class="empty">No events added yet</div>';
+  }).join('')||'<div class="empty"><div class="empty-icon">📅</div><p>No events added yet</p></div>';
 }
 
 function renderNotes(){
   const tagNames={general:'📌 General',vendor:'🏪 Vendor',guest:'👥 Guest',budget:'💰 Budget',urgent:'🔴 Urgent'};
   document.getElementById('notesBadges').innerHTML=`<span class="sec-badge">${notes.length} notes</span>`;
-  document.getElementById('notesList').innerHTML=notes.length===0?'<div class="empty">No notes yet</div>':
+  document.getElementById('notesList').innerHTML=notes.length===0?
+    '<div class="empty"><div class="empty-icon">📝</div><p>No notes yet. Add notes in the full tool.</p></div>':
     notes.sort((a,b)=>b.createdAt-a.createdAt).map(n=>`
       <div class="note-card">
         <span class="note-tag">${tagNames[n.tag]||'📌 General'}</span>
-        <div class="note-title">${n.title||''}</div>
-        <div class="note-content">${n.content||''}</div>
+        <div class="note-title">${escapeHtml(n.title||'')}</div>
+        <div class="note-content">${escapeHtml(n.content||'')}</div>
         <div class="note-meta">${new Date(n.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</div>
       </div>`).join('');
 }
 
-// ── NAVIGATION ──────────────────────────────────────────────
-const SEC_CONFIG = {
-  budget:   { title:'💰 Budget',      navId:null,          render:renderBudget   },
-  vendor:   { title:'🏪 Vendors',     navId:'navVendor',   render:renderVendors  },
-  guest:    { title:'👥 Guests',      navId:'navGuest',    render:renderGuests   },
-  kankotri: { title:'𖥸 Kankotri',    navId:'navKankotri', render:renderKankotri },
-  reminder: { title:'🔔 Reminders',   navId:'navReminder', render:renderReminders},
-  timeline: { title:'📅 Timeline',    navId:null,          render:renderTimeline },
-  notes:    { title:'📝 Notes',       navId:null,          render:renderNotes    },
-  catering: { title:'🍽️ Catering',   navId:null,          render:null           },
+// ════════════════════════════════════════════════════════════
+//  GUEST DETAIL SHEET
+// ════════════════════════════════════════════════════════════
+function openGuestDetail(guestId){
+  const g=guests.find(x=>x.id===guestId);
+  if(!g) return;
+  currentGuestId=guestId;
+
+  document.getElementById('guestDetailName').textContent=g.name||'—';
+  document.getElementById('guestDetailSub').textContent=(g.side||'')+(g.city?' · '+g.city:'');
+
+  const statusLabel=g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':g.callStatus==='maybe'?'🤔 Maybe':g.callStatus==='no_answer'?'📵 No Answer':'⏳ Pending';
+  document.getElementById('guestDetailRows').innerHTML=`
+    <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">${g.phone||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Side</span><span class="detail-val">${g.side||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">City</span><span class="detail-val">${g.city||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val">${statusLabel}</span></div>
+    <div class="detail-row"><span class="detail-label">Adults confirmed</span><span class="detail-val">${g.confirmedAdults||0}</span></div>
+    <div class="detail-row"><span class="detail-label">Kids confirmed</span><span class="detail-val">${g.confirmedKids||0}</span></div>
+    <div class="detail-row"><span class="detail-label">Accommodation</span><span class="detail-val">${g.needsAccom?'Yes — '+g.rooms+' rooms':'Not needed'}</span></div>
+  `;
+
+  const phone=g.phone||'';
+  const waMsg=encodeURIComponent((g.waCustomMsg||'Dear '+g.name+', we warmly invite you to our wedding celebration. — Shah Family'));
+  document.getElementById('guestDetailActions').innerHTML=`
+    ${phone?`<a href="tel:${phone}" class="btn-detail btn-call">📞 Call</a>`:''}
+    ${phone?`<a href="https://wa.me/${phone.replace(/[^0-9]/g,'')}?text=${waMsg}" target="_blank" class="btn-detail btn-wa">💬 WhatsApp</a>`:''}
+    <button class="btn-detail btn-confirm" onclick="openConfirmModal('${guestId}')">✓ Confirm</button>
+    <button class="btn-detail btn-close-detail" onclick="closeDetail()">Close</button>
+  `;
+
+  document.getElementById('guestDetailOverlay').classList.add('show');
+}
+
+function closeDetail(){
+  document.getElementById('guestDetailOverlay').classList.remove('show');
+  currentGuestId=null;
+}
+
+// ════════════════════════════════════════════════════════════
+//  HEADCOUNT CONFIRM MODAL
+// ════════════════════════════════════════════════════════════
+function openConfirmModal(guestId){
+  const g=guests.find(x=>x.id===guestId);
+  if(!g) return;
+  currentGuestId=guestId;
+  document.getElementById('confirmGuestName').textContent=g.name||'—';
+  document.getElementById('confirmAdults').value=g.confirmedAdults||0;
+  document.getElementById('confirmKids').value=g.confirmedKids||0;
+  document.getElementById('confirmStatus').value=g.callStatus||'';
+  closeDetail();
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+
+function closeConfirm(){
+  document.getElementById('confirmOverlay').classList.remove('show');
+  currentGuestId=null;
+}
+
+async function saveConfirm(){
+  const g=guests.find(x=>x.id===currentGuestId);
+  if(!g) return;
+  g.confirmedAdults=parseInt(document.getElementById('confirmAdults').value)||0;
+  g.confirmedKids=parseInt(document.getElementById('confirmKids').value)||0;
+  g.callStatus=document.getElementById('confirmStatus').value||'';
+  await saveGuests();
+  updateDash();
+  renderGuests();
+  closeConfirm();
+  setSyncStatus('ok','Headcount saved · Syncing...');
+  queueCloudSave();
+}
+
+// ════════════════════════════════════════════════════════════
+//  VENDOR DETAIL SHEET
+// ════════════════════════════════════════════════════════════
+function openVendorDetail(vendorId){
+  const v=vendors.find(x=>x.id===vendorId);
+  if(!v) return;
+  currentVendorId=vendorId;
+
+  const paid=vendorPaid(v);
+  const due=vendorOutstanding(v);
+  const st=vendorStatus(v);
+  const stLabel=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial Payment':'⏳ Unpaid';
+
+  document.getElementById('vendorDetailName').textContent=v.name||'—';
+  document.getElementById('vendorDetailSub').textContent=(v.category||'')+(v.contact?' · '+v.contact:'');
+
+  const pmts=(v.payments||[]);
+  const pmtHTML=pmts.length>0?pmts.map(p=>`
+    <div class="detail-row"><span class="detail-label">${p.date||'—'}</span><span class="detail-val">${fmt(p.amount||0)}</span></div>
+  `).join(''):'<div class="detail-row"><span class="detail-label">No payments yet</span></div>';
+
+  document.getElementById('vendorDetailRows').innerHTML=`
+    <div class="detail-row"><span class="detail-label">Category</span><span class="detail-val">${v.category||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-val">${v.phone||v.contact||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Quoted Amount</span><span class="detail-val">${fmt(v.quoted||0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Total Paid</span><span class="detail-val" style="color:#2E7D32;">${fmt(paid)}</span></div>
+    <div class="detail-row"><span class="detail-label">Balance Due</span><span class="detail-val" style="color:#C62828;">${fmt(due)}</span></div>
+    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-val">${stLabel}</span></div>
+    <div style="margin-top:10px;font-size:11px;font-weight:600;color:var(--ink-soft);margin-bottom:4px;">Payment History</div>
+    ${pmtHTML}
+    ${v.notes?`<div class="detail-row"><span class="detail-label">Notes</span><span class="detail-val" style="max-width:180px;word-break:break-word;">${escapeHtml(v.notes)}</span></div>`:''}
+  `;
+
+  const phone=v.phone||v.contact||'';
+  document.getElementById('vendorDetailActions').innerHTML=`
+    ${phone&&phone.match(/[0-9]{7,}/)?`<a href="tel:${phone}" class="btn-detail btn-call">📞 Call</a>`:''}
+    ${phone&&phone.match(/[0-9]{7,}/)?`<a href="https://wa.me/${phone.replace(/[^0-9]/g,'')}" target="_blank" class="btn-detail btn-wa">💬 WhatsApp</a>`:''}
+    <button class="btn-detail btn-close-detail" onclick="closeVendorDetail()" style="flex:2;">Close</button>
+  `;
+
+  document.getElementById('vendorDetailOverlay').classList.add('show');
+}
+
+function closeVendorDetail(){
+  document.getElementById('vendorDetailOverlay').classList.remove('show');
+  currentVendorId=null;
+}
+
+// ════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════════════════
+const SEC_MAP = {
+  budget:  {title:'💰 Budget',     nav:null,         render:renderBudget},
+  vendor:  {title:'🏪 Vendors',    nav:'navVendor',  render:renderVendors},
+  guest:   {title:'👥 Guests',     nav:'navGuest',   render:renderGuests},
+  kankotri:{title:'𖥸 Kankotri',   nav:'navKankotri',render:renderKankotri},
+  reminder:{title:'🔔 Reminders',  nav:'navReminder',render:renderReminders},
+  timeline:{title:'📅 Timeline',   nav:null,         render:renderTimeline},
+  notes:   {title:'📝 Notes',      nav:null,         render:renderNotes},
+  catering:{title:'🍽️ Catering',  nav:null,         render:null},
 };
 
 function showDash(){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('vDash').classList.add('active');
   document.getElementById('topTitle').textContent='🌸 Vivaah Ledger';
-  document.getElementById('topSub').textContent = (() => { try{ const b=JSON.parse(localStorage.getItem('wedding-branding')||'{}'); return b.title||'Shah Family Wedding'; }catch(e){ return 'Shah Family Wedding'; } })();
+  document.getElementById('topSub').textContent=branding.title||'Wedding Planner';
   document.getElementById('btnBack').classList.remove('show');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('navHome').classList.add('active');
+  updateDash();
+  window.scrollTo(0,0);
 }
 
 function showSec(sec){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  const cfg=SEC_CONFIG[sec];
+  const cfg=SEC_MAP[sec];
+  if(!cfg) return;
   const viewId='v'+sec.charAt(0).toUpperCase()+sec.slice(1);
-  document.getElementById(viewId).classList.add('active');
+  const el=document.getElementById(viewId);
+  if(el) el.classList.add('active');
   document.getElementById('topTitle').textContent=cfg.title;
   document.getElementById('topSub').textContent='Tap ← to return home';
   document.getElementById('btnBack').classList.add('show');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  if(cfg.navId) document.getElementById(cfg.navId).classList.add('active');
+  if(cfg.nav) document.getElementById(cfg.nav).classList.add('active');
   if(cfg.render) cfg.render();
   window.scrollTo(0,0);
 }
 
-// ── INIT ────────────────────────────────────────────────────
-loadAll();
-setInterval(loadAll, 30000);
+// ════════════════════════════════════════════════════════════
+//  AUTH HOOKS — called by lock screen functions
+// ════════════════════════════════════════════════════════════
+// After setRole is called by tryUnlock, show main app
+const _origSetRole = setRole;
+function setRole(role){
+  _origSetRole(role);
+  afterLogin();
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+(async function init(){
+  // Wire email gate buttons
+  document.getElementById('egRequestBtn')?.addEventListener('click', egRequestAccess);
+  document.getElementById('egEmailInput')?.addEventListener('keydown', e=>{if(e.key==='Enter') egRequestAccess();});
+  document.getElementById('egBackBtn')?.addEventListener('click', ()=>showLockStep('email'));
+
+  // Wire keypad
+  document.querySelectorAll('.key-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const key=btn.dataset.key;
+      if(key==='clear'){
+        if(window._pin) window._pin=window._pin.slice(0,-1);
+      } else if(key==='enter'){
+        tryUnlock();
+      } else {
+        if(!window._pin) window._pin='';
+        if(window._pin.length<4) window._pin+=key;
+      }
+      // Update dots
+      const dots=document.querySelectorAll('.pin-dot');
+      dots.forEach((dot,i)=>dot.classList.toggle('filled', i<(window._pin?.length||0)));
+    });
+  });
+
+  // Wire role tabs
+  document.querySelectorAll('.lock-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.lock-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      window._pin='';
+      document.querySelectorAll('.pin-dot').forEach(d=>d.classList.remove('filled'));
+    });
+  });
+
+  // Check if already logged in
+  const savedRole = await storageGet('vivaah-role');
+  const savedEmail = await storageGet('vivaah-approved-email');
+  if(savedRole && savedEmail){
+    approvedEmail = savedEmail;
+    setRole(savedRole);
+  } else {
+    showLockStep('email');
+    initGoogleAuth();
+  }
+})();
 </script>
 </body>
 </html>
