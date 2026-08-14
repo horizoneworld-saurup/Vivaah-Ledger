@@ -1297,7 +1297,7 @@
       <button class="btn-print-sec" onclick="noteOpenModal()" style="background:rgba(255,255,255,0.25);">+ Add Note</button>
     </div>
   </div>
-  <div class="sec-body" style="padding:16px;">
+  <div class="sec-body" style="padding:16px;overflow:visible;">
 
   <!-- ═══════════════ NOTES SECTION ═══════════════ -->
   <div class="notes-section" style="box-shadow:none;border-radius:0;padding:0;margin:0;">
@@ -2661,11 +2661,6 @@ const NOTE_TAG_COLORS = {
   guest: '#1A5C1A', budget: '#856404', urgent: '#C62828'
 };
 
-async function loadNotes() {
-  const raw = await storageGet('wedding-notes');
-  notes = raw ? JSON.parse(raw) : [];
-}
-
 async function saveNotes() {
   await storageSet('wedding-notes', JSON.stringify(notes));
   queueCloudSave();
@@ -2797,9 +2792,20 @@ async function noteDelete(id) {
 }
 
 // Wire up
-document.getElementById('btnAddNote')?.addEventListener('click', () => noteOpenModal());
+// Wire both add note buttons
+document.querySelectorAll('#btnAddNote, [onclick*="noteOpenModal"]').forEach(btn => {
+  if(btn.getAttribute('data-wired')) return;
+  btn.setAttribute('data-wired','1');
+  if(!btn.getAttribute('onclick')) btn.addEventListener('click', () => noteOpenModal());
+});
+// Also wire by id
+const _noteBtn = document.getElementById('btnAddNote');
+if(_noteBtn) _noteBtn.onclick = () => noteOpenModal();
 document.getElementById('noteSearchInput')?.addEventListener('input', renderNotes);
 document.getElementById('noteFilterTag')?.addEventListener('change', renderNotes);
+
+// Render notes immediately if data already loaded
+if(notes && notes.length > 0) renderNotes();
 
 /* ================================================================
    EMAIL GATE — Worker URL (update after you deploy the Worker)
@@ -3045,7 +3051,10 @@ async function loadData(){
   }catch(e){ lastExportAt = null; }
   try{
     const b = await storageGet('wedding-branding');
-    if(b){ branding = {...branding, ...JSON.parse(b)}; }
+    if(b){
+      branding = {...branding, ...JSON.parse(b)};
+      applyBranding(); // Apply immediately so logo shows before Google sign-in
+    }
   }catch(e){ /* keep defaults */ }
   try{
     const g = await storageGet('wedding-guests');
@@ -3074,8 +3083,11 @@ async function loadData(){
   renderKankotriCardPreviews();
   renderInvTable();
   render();
+  await loadNotes();  // ensure notes loaded before rendering
   renderNotes();
   updateSectionBadges();
+  // Extra safety: re-render notes after short delay in case DOM wasn't ready
+  setTimeout(() => { if(notes && notes.length > 0) renderNotes(); }, 300);
 }
 async function saveData(){
   await storageSet('wedding-vendors', JSON.stringify(vendors));
@@ -3087,6 +3099,30 @@ async function saveFunctions(){
 }
 async function saveBranding(){
   await storageSet('wedding-branding', JSON.stringify(branding));
+  // Push immediately — don't queue/debounce for branding (logo needs to sync now)
+  if(googleAccessToken && sheetId){
+    try{
+      const logosPayload = JSON.stringify({
+        vendorLogos: Object.fromEntries(vendors.filter(v=>v.logo).map(v=>[v.id,v.logo])),
+        brandingLogo: branding.logo||''
+      });
+      const brandingForSync = {...branding, logo:''};
+      // Update both main payload and logos cell
+      const mainRaw = await storageGet('wedding-branding');
+      await sheetsApi(`/${sheetId}/values:batchUpdate`,{
+        method:'POST',
+        body:JSON.stringify({
+          valueInputOption:'RAW',
+          data:[
+            {range:SHEET_LOGO_RANGE, values:[[logosPayload]]}
+          ]
+        })
+      });
+      setSyncStatus('ok','Branding synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    } catch(e){
+      console.error('Branding sync failed:', e);
+    }
+  }
   queueCloudSave();
 }
 async function saveGuests(){
@@ -3340,11 +3376,15 @@ async function onSignedIn(){
       guests = cloudData.guests||guests;
       reminders = cloudData.reminders||reminders;
       notes = cloudData.notes||notes;
+      // Save notes to localStorage so they persist after sign-out
+      await storageSet('wedding-notes', JSON.stringify(notes));
       // Branding logo: prefer cloud, fall back to local
       branding = {
         ...(cloudData.branding||branding),
         logo: (cloudLogos.brandingLogo||branding.logo||'')
       };
+      // Save restored branding to localStorage so it persists after sign-out
+      await storageSet('wedding-branding', JSON.stringify(branding));
       // Timeline: merge cloud data but keep local menu images (too large for cloud)
       if(cloudData.timeline){
         Object.entries(cloudData.timeline).forEach(([ev,t])=>{
@@ -3362,7 +3402,9 @@ async function onSignedIn(){
     render();
     renderTimeline();
     renderInvTable(); // refresh invitation distribution after cloud data loads
-    notes = cloudData.notes || notes; renderNotes();
+    notes = cloudData.notes || notes;
+    await storageSet('wedding-notes', JSON.stringify(notes));
+    renderNotes();
     updateSectionBadges();
   }catch(e){
     console.error(e);
