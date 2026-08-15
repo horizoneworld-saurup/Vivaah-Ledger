@@ -315,9 +315,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
   <div class="topbar">
     <div class="topbar-left">
       <button class="btn-back" id="btnBack" onclick="showDash()">← Back</button>
-      <div>
-        <div class="topbar-title" id="topTitle">🌸 Vivaah Ledger</div>
-        <div class="topbar-sub" id="topSub">Wedding Planner</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <img id="topLogo" src="" alt="" style="height:32px;width:auto;display:none;border-radius:4px;">
+        <div>
+          <div class="topbar-title" id="topTitle">🌸 Vivaah Ledger</div>
+          <div class="topbar-sub" id="topSub">Wedding Planner</div>
+        </div>
       </div>
     </div>
     <span class="sync-dot" id="syncDot"></span>
@@ -810,7 +813,7 @@ async function loadLocalData() {
   try { var r5 = lsGet('wedding-timeline'); if (r5) eventTimeline = JSON.parse(r5); } catch(e) { eventTimeline = {}; }
   try { var r6 = lsGet('wedding-branding'); if (r6) branding = JSON.parse(r6); } catch(e) { branding = { title:'', tagline:'', logo:'' }; }
   try { var r7 = lsGet('wedding-functions'); if (r7) functions = JSON.parse(r7); } catch(e) { functions = []; }
-  document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
+  applyBranding();
 }
 
 // ═══════════════════════════════════════
@@ -947,7 +950,7 @@ async function syncFromSheets() {
         });
       }
     }
-    document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
+    applyBranding();
     setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
     updateDash();
     var av = document.querySelector('.view.active');
@@ -1044,6 +1047,24 @@ function vStat(v) { var p = vPaid(v), q = Number(v.quoted || 0); return p >= q &
 // ═══════════════════════════════════════
 // DASHBOARD
 // ═══════════════════════════════════════
+function applyBranding() {
+  var logo = document.getElementById('topLogo');
+  var title = document.getElementById('topTitle');
+  var sub = document.getElementById('topSub');
+  if (branding.logo && logo) {
+    logo.src = branding.logo;
+    logo.style.display = 'block';
+  } else if (logo) {
+    logo.style.display = 'none';
+  }
+  if (title) {
+    title.textContent = branding.title || 'Vivaah Ledger';
+  }
+  if (sub && !sub.textContent.includes('Tap')) {
+    sub.textContent = branding.tagline || '';
+  }
+}
+
 function updateDash() {
   var totalB = vendors.reduce(function(s, v) { return s + Number(v.quoted || 0); }, 0);
   var totalP = vendors.reduce(function(s, v) { return s + vPaid(v); }, 0);
@@ -1060,7 +1081,7 @@ function updateDash() {
     .filter(function(kv) { return kv[1] && kv[1].date && new Date(kv[1].date) >= new Date(); })
     .sort(function(a, b) { return new Date(a[1].date) - new Date(b[1].date); });
 
-  document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
+  applyBranding();
   document.getElementById('sB').textContent = fmt(totalB);
   document.getElementById('sV').textContent = vendors.length;
   document.getElementById('sG').textContent = guests.length;
@@ -1490,7 +1511,7 @@ function showDash() {
   document.querySelectorAll('.view').forEach(function(v) { v.classList.remove('active'); });
   document.getElementById('vDash').classList.add('active');
   document.getElementById('topTitle').textContent = '\ud83c\udf38 Vivaah Ledger';
-  document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
+  applyBranding();
   document.getElementById('btnBack').classList.remove('show');
   document.querySelectorAll('.bnav-item').forEach(function(n) { n.classList.remove('active'); });
   document.getElementById('navHome').classList.add('active');
