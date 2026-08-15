@@ -745,23 +745,15 @@ async function verifyPin() {
   var pin = pinEntry;
   var ok = false;
 
-  if (role === 'owner') {
-    var storedHash = lsGet('pin-hash-owner');
-    if (storedHash) {
-      ok = (await sha256(pin)) === storedHash;
-    } else {
-      ok = pin === OWNER_PIN;
-    }
+  // Check stored hash first, fall back to default PINs
+  // Default PINs match what main tool ships with
+  var DEFAULT_PINS = { owner: OWNER_PIN, admin: '1234', editor: '5678', viewer: '9999' };
+  var storedHash = lsGet('pin-hash-' + role);
+  if (storedHash) {
+    ok = (await sha256(pin)) === storedHash;
   } else {
-    var storedRoleHash = lsGet('pin-hash-' + role);
-    if (storedRoleHash) {
-      ok = (await sha256(pin)) === storedRoleHash;
-    } else {
-      document.getElementById('pinErr').textContent = 'PIN not set. Please use the desktop tool first.';
-      pinEntry = '';
-      updatePinDots();
-      return;
-    }
+    // No hash stored on this device — check against default PIN
+    ok = pin === DEFAULT_PINS[role];
   }
 
   if (ok) {
@@ -932,6 +924,12 @@ async function syncFromSheets() {
       lsSet('wedding-reminders', JSON.stringify(reminders));
       lsSet('wedding-notes', JSON.stringify(notes));
       lsSet('wedding-branding', JSON.stringify(branding));
+      // Restore PIN hashes from Sheets so correct PIN works on this device
+      if (mainData.pinHashes) {
+        Object.keys(mainData.pinHashes).forEach(function(role) {
+          lsSet('pin-hash-' + role, mainData.pinHashes[role]);
+        });
+      }
     }
     document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
     setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));

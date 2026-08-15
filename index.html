@@ -3376,6 +3376,12 @@ async function onSignedIn(){
       guests = cloudData.guests||guests;
       reminders = cloudData.reminders||reminders;
       notes = cloudData.notes||notes;
+      // Restore PIN hashes so PIN works on mobile after Google sign-in
+      if (cloudData.pinHashes) {
+        for (const [role, hash] of Object.entries(cloudData.pinHashes)) {
+          await storageSet('pin-hash-'+role, hash);
+        }
+      }
       // Save notes to localStorage so they persist after sign-out
       await storageSet('wedding-notes', JSON.stringify(notes));
       // Branding logo: prefer cloud, fall back to local
@@ -3451,10 +3457,16 @@ async function pushToSheet(){
       return [ev, rest];
     })
   );
+  // Include PIN hashes so mobile devices can sync them after Google sign-in
+  const pinHashes = {};
+  for (const role of ['admin','editor','viewer','owner']) {
+    const h = await storageGet('pin-hash-'+role).catch(()=>null);
+    if (h) pinHashes[role] = h;
+  }
   const mainPayload = JSON.stringify({
     vendors:vendorsForSync, functions, reminders,
     branding:brandingForSync, timeline:timelineForSync,
-    notes:notes,
+    notes:notes, pinHashes:pinHashes,
     savedAt:new Date().toISOString()
   });
   const logosPayload = JSON.stringify({
