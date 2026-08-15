@@ -891,17 +891,25 @@ async function syncFromSheets() {
   try {
     if (!sheetId) sheetId = await findOrCreateSheet();
     var res = await sheetsCall('/' + sheetId + '/values:batchGet?ranges=' +
-      encodeURIComponent(SHEET_DATA_RANGE) + '&ranges=' + encodeURIComponent(SHEET_LOGO_RANGE));
+      encodeURIComponent(SHEET_DATA_RANGE) + '&ranges=' + encodeURIComponent(SHEET_LOGO_RANGE) +
+      '&ranges=' + encodeURIComponent('Data!C1'));
     var mainRaw = res.valueRanges && res.valueRanges[0] && res.valueRanges[0].values && res.valueRanges[0].values[0] && res.valueRanges[0].values[0][0];
     var logoRaw = res.valueRanges && res.valueRanges[1] && res.valueRanges[1].values && res.valueRanges[1].values[0] && res.valueRanges[1].values[0][0];
+    var guestRaw = res.valueRanges && res.valueRanges[2] && res.valueRanges[2].values && res.valueRanges[2].values[0] && res.valueRanges[2].values[0][0];
     if (mainRaw) {
       var mainData = JSON.parse(mainRaw);
       var logoData = null;
       if (logoRaw) { try { logoData = JSON.parse(logoRaw); } catch(e) {} }
-      // Restore guests — handle compressed or plain format
-      var cloudGuests = mainData.guests || [];
-      if (cloudGuests.length > 0 && Array.isArray(cloudGuests[0])) {
-        cloudGuests = expandGuests(cloudGuests);
+      // Restore guests — prefer C1 (dedicated cell), fallback to A1 embedded
+      var cloudGuests = [];
+      if (guestRaw) {
+        try {
+          var compressed = JSON.parse(guestRaw);
+          cloudGuests = expandGuests(compressed);
+        } catch(e) {}
+      }
+      if (cloudGuests.length === 0 && mainData.guests && mainData.guests.length > 0) {
+        cloudGuests = Array.isArray(mainData.guests[0]) ? expandGuests(mainData.guests) : mainData.guests;
       }
       vendors = (mainData.vendors || vendors).map(function(v) {
         return Object.assign({}, v, { logo: (logoData && logoData.vendorLogos && logoData.vendorLogos[v.id]) || v.logo || '' });
@@ -914,9 +922,8 @@ async function syncFromSheets() {
         logo: (logoData && logoData.brandingLogo) || (mainData.branding && mainData.branding.logo) || branding.logo || ''
       });
       if (mainData.timeline) {
-        Object.keys(mainData.timeline).forEach(function(ev) {
-          if (eventTimeline[ev]) Object.assign(eventTimeline[ev], mainData.timeline[ev]);
-        });
+        // Replace entire timeline from cloud — don't filter by existing keys
+        eventTimeline = mainData.timeline;
       }
       // Save to localStorage
       lsSet('wedding-guests', JSON.stringify(guests));
@@ -924,6 +931,7 @@ async function syncFromSheets() {
       lsSet('wedding-reminders', JSON.stringify(reminders));
       lsSet('wedding-notes', JSON.stringify(notes));
       lsSet('wedding-branding', JSON.stringify(branding));
+      lsSet('wedding-timeline', JSON.stringify(eventTimeline));
       // Restore PIN hashes from Sheets so correct PIN works on this device
       if (mainData.pinHashes) {
         Object.keys(mainData.pinHashes).forEach(function(role) {
