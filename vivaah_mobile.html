@@ -342,6 +342,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       </div>
       <div style="text-align:right;">
         <div class="g-sync" id="gSync">✅ Synced</div>
+        <button class="btn-signout" onclick="syncFromSheets()" style="color:var(--maroon);font-weight:700;">Sync Now</button>
         <button class="btn-signout" onclick="googleSignOut()">Sign out</button>
       </div>
     </div>
@@ -482,7 +483,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       <div class="sec-head-title">🍽️ Guest & Catering Calculator</div>
       <div class="sec-head-sub">Estimate food quantities per event</div>
     </div>
-    <div class="empty"><div class="empty-icon">🍽️</div><p>Open the full tool to use the catering calculator.</p></div>
+    <div class="sec-badges" id="caterBadges" style="padding:8px 14px 0;"></div>
+    <div id="caterList" style="padding:10px;"></div>
     <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Vivaah Ledger →</a>
   </div>
 
@@ -948,6 +950,8 @@ async function syncFromSheets() {
     document.getElementById('topSub').textContent = branding.title || 'Wedding Planner';
     setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
     updateDash();
+    var av = document.querySelector('.view.active');
+    if (av) { var sid = av.id.replace('v','').toLowerCase(); if (SEC[sid] && SEC[sid].render) SEC[sid].render(); }
   } catch(e) {
     setSync('error', 'Sync failed');
     console.error('Sync error:', e);
@@ -1438,6 +1442,39 @@ function closeVendor() { document.getElementById('vendorOverlay').classList.remo
 // ═══════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════
+
+function renderCatering() {
+  var badges = document.getElementById('caterBadges');
+  var list = document.getElementById('caterList');
+  if (!list) return;
+  if (!functions || functions.length === 0) {
+    if (badges) badges.innerHTML = '';
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><p>No events added yet.<br>Add them in the full desktop tool.</p></div>';
+    return;
+  }
+  var totalG = functions.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
+  if (badges) badges.innerHTML = '<span class="sbadge">' + functions.length + ' events</span><span class="sbadge">' + totalG + ' total guests</span>';
+  list.innerHTML = functions.map(function(f) {
+    var g = parseInt(f.guests)||0;
+    var rate = parseInt(f.rate)||0;
+    var total = g*rate;
+    var rice=Math.ceil(g*0.15), dal=Math.ceil(g*0.08), veg=Math.ceil(g*0.12), sweet=Math.ceil(g*0.1);
+    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--line);">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--maroon);">' + esc(f.name||'Function') + '</div>' +
+        '<span class="badge bpd">' + g + ' guests</span>' +
+      '</div>' +
+      (rate>0?'<div style="font-size:11px;color:var(--soft);margin-bottom:8px;">' + fmt(rate) + '/plate → <strong style="color:var(--maroon);">' + fmt(total) + '</strong></div>':'') +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
+        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🍚 Rice</div><div style="font-size:13px;font-weight:700;">' + rice + ' kg</div></div>' +
+        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🫘 Dal</div><div style="font-size:13px;font-weight:700;">' + dal + ' kg</div></div>' +
+        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🥬 Vegetables</div><div style="font-size:13px;font-weight:700;">' + veg + ' kg</div></div>' +
+        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🍬 Sweets</div><div style="font-size:13px;font-weight:700;">' + sweet + ' kg</div></div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
 var SEC = {
   budget:   { title: '\ud83d\udcb0 Budget',    nav: null,       render: renderBudget   },
   vendor:   { title: '\ud83c\udfe2 Vendors',   nav: 'navVend',  render: renderVendors  },
@@ -1446,7 +1483,7 @@ var SEC = {
   reminder: { title: '\ud83d\udd14 Reminders', nav: 'navRem',   render: renderReminders},
   timeline: { title: '\ud83d\udcc5 Timeline',  nav: null,       render: renderTimeline },
   notes:    { title: '\ud83d\udcdd Notes',     nav: null,       render: renderNotes    },
-  catering: { title: '\ud83c\udf7d\ufe0f Catering', nav: null, render: null           }
+  catering: { title: '\ud83c\udf7d\ufe0f Catering', nav: null, render: renderCatering           }
 };
 
 function showDash() {
