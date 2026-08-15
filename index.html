@@ -1564,9 +1564,8 @@
         <table style="width:100%;border-collapse:collapse;font-size:13px;" id="invTable">
           <thead>
             <tr style="background:var(--maroon);color:#fff;text-align:left;">
-              <th style="padding:9px 12px;border-radius:8px 0 0 0;" id="invChkHeader" class="inv-chk-col" style="display:none;"></th>
-              <th style="padding:9px 12px;">#</th>
-              <th style="padding:9px 12px;">Family / Guest Name</th>
+              <th id="invChkHeader" class="inv-chk-col" style="padding:0;width:0;display:none;"></th>
+              <th style="padding:9px 12px;border-radius:8px 0 0 0;">Family / Guest Name</th>
               <th style="padding:9px 12px;">Phone</th>
               <th style="padding:9px 12px;">Side</th>
               <th style="padding:9px 12px;">Tier</th>
@@ -5510,9 +5509,8 @@ function renderInvTable(){
     const isChecked = bulkSelected && bulkSelected.has(g.id);
     const rowHighlight = isChecked ? 'background:#FFF8DC !important;' : '';
     return `<tr style="background:${rowBg};border-bottom:1px solid var(--line);${rowHighlight}">
-      ${bulkMode ? `<td style="padding:8px 12px;text-align:center;"><input type="checkbox" class="inv-checkbox" data-bulk-id="${g.id}" ${isChecked?'checked':''}></td>` : ''}
-      <td style="padding:8px 12px;color:var(--ink-soft);font-size:12px;">${i+1}</td>
-      <td style="padding:8px 12px;font-weight:600;">${escapeHtml(g.name)}</td>
+      ${bulkMode ? `<td style="padding:8px 12px;text-align:center;"><input type="checkbox" class="inv-checkbox" data-bulk-id="${g.id}" ${isChecked?'checked':''}></td>` : '<td style="padding:0;width:0;display:none;"></td>'}
+      <td style="padding:8px 12px;font-weight:600;">${i+1}. ${escapeHtml(g.name)}</td>
       <td style="padding:8px 12px;color:var(--ink-soft);">${escapeHtml(g.phone||'—')}</td>
       <td style="padding:8px 12px;">${escapeHtml(g.side||'—')}</td>
       <td style="padding:8px 12px;">

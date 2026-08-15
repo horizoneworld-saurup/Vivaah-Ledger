@@ -146,7 +146,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 .acc-arr{font-size:12px;color:var(--soft);transition:transform .2s;}
 .acc-arr.open{transform:rotate(90deg);}
 .acc-bd{max-height:0;overflow:hidden;transition:max-height .3s ease;}
-.acc-bd.open{max-height:1500px;}
+.acc-bd.open{max-height:none;}
 
 /* ── ROW ITEMS ── */
 .row-item{padding:10px 12px;border-top:1px solid var(--ivory2);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
@@ -192,6 +192,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 .bud-card{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line);}
 .bud-val{font-size:16px;font-weight:700;color:var(--maroon);}
 .bud-lbl{font-size:10px;color:var(--soft);margin-top:3px;}
+
+/* ── ACTION BUTTONS IN ROWS ── */
+.act-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:none;font-size:16px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+.act-call{background:#E8F5E9;}
+.act-wa{background:#E8F5E9;}
+.act-tick{background:var(--ivory2);font-size:14px;}
 
 /* ── OPEN FULL ── */
 .open-full{display:block;margin:10px;padding:12px;background:var(--maroon);color:var(--gold);border:none;border-radius:12px;font-size:13px;font-weight:700;text-align:center;cursor:pointer;text-decoration:none;}
@@ -1177,11 +1183,20 @@ function renderGuests() {
     '<span class="sbadge">' + (guests.length - conf) + ' pending</span>';
   function rG(g) {
     var cls = g.callStatus === 'confirmed' ? 'bc' : g.callStatus === 'declined' ? 'bd' : 'bpd';
-    var lbl = g.callStatus === 'confirmed' ? '\u2705 Confirmed' : g.callStatus === 'declined' ? '\u274c Declined' : '\u23f3 Pending';
-    return '<div class="row-item" onclick="openGuestDetail(\'' + g.id + '\')">' +
-      '<div><div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
-      '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + ' adults' : '') + '</div></div>' +
-      '<div class="row-right"><span class="badge ' + cls + '">' + lbl + '</span></div></div>';
+    var lbl = g.callStatus === 'confirmed' ? '\u2705' : g.callStatus === 'declined' ? '\u274c' : '\u23f3';
+    var ph = (g.phone || '').replace(/\D/g, '');
+    var waMsg = encodeURIComponent(g.waCustomMsg || ('Dear ' + g.name + ', we warmly invite you to our wedding celebration.'));
+    return '<div class="row-item" style="flex-wrap:wrap;gap:6px;cursor:default;">' +
+      '<div style="flex:1;min-width:120px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
+        '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
+        '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + 'A' : '') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">' +
+        (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa">\ud83d\udcac</a>' : '') +
+        '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
+      '</div>' +
+    '</div>';
   }
   var bride = filtered.filter(function(g) { return g.side === 'Bride'; });
   var groom = filtered.filter(function(g) { return g.side === 'Groom'; });
@@ -1211,12 +1226,18 @@ function renderKankotri() {
     '<span class="sbadge gold">\ud83d\udce6 ' + cards + ' cards</span>' +
     '<span class="sbadge gold">\u2705 ' + sent + ' sent</span>';
   function rK(g) {
-    var cls = g.invSent ? 'bsent' : 'buns';
-    var lbl = g.invSent ? '\u2705 Sent' : '\u23f3 Pending';
-    return '<div class="row-item">' +
-      '<div><div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
-      '<div class="row-sub">' + (g.side || '') + ' \u00b7 ' + (g.invCards || 0) + ' cards</div></div>' +
-      '<div class="row-right"><span class="badge ' + cls + '">' + lbl + '</span></div></div>';
+    var sentCls = g.invSent ? 'bsent' : 'buns';
+    var sentLbl = g.invSent ? '\u2705 Sent' : '\u23f3 Pending';
+    var tierLbl = g.invTier === 'vip' ? '\ud83d\udc51 VIP' : g.invTier === 'premium' ? '\u2b50 Premium' : g.invTier === 'normal' ? '\ud83c\udf9f Normal' : '';
+    return '<div class="row-item" style="flex-wrap:wrap;gap:4px;">' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
+        '<div class="row-sub">' + (g.side || '') + ' \u00b7 ' + (g.invCards || 0) + ' cards' + (tierLbl ? ' \u00b7 ' + tierLbl : '') + '</div>' +
+      '</div>' +
+      '<div class="row-right">' +
+        '<button onclick="toggleSent(event,\'' + g.id + '\')" class="badge ' + sentCls + '" style="border:none;cursor:pointer;padding:5px 10px;">' + sentLbl + '</button>' +
+      '</div>' +
+    '</div>';
   }
   accN = 0;
   document.getElementById('kankList').innerHTML =
@@ -1341,6 +1362,16 @@ function openGuestDetail(id) {
     '<button class="dbtn dbtn-close" onclick="closeGuest()">Close</button>';
   document.getElementById('guestOverlay').classList.add('show');
 }
+async function toggleSent(evt, guestId) {
+  evt.stopPropagation();
+  var g = guests.find(function(x) { return x.id === guestId; });
+  if (!g) return;
+  g.invSent = !g.invSent;
+  await saveGuests();
+  renderKankotri();
+  updateDash();
+}
+
 function closeGuest() { document.getElementById('guestOverlay').classList.remove('show'); currentGuestId = null; }
 
 // ═══════════════════════════════════════
