@@ -487,6 +487,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       <div class="sec-head-sub">Estimate food quantities per event</div>
     </div>
     <div class="sec-badges" id="caterBadges" style="padding:8px 14px 0;"></div>
+    <div class="bud-cards" id="caterSummary"></div>
     <div id="caterList" style="padding:10px;"></div>
     <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Open Vivaah Ledger →</a>
   </div>
@@ -1470,27 +1471,49 @@ function renderCatering() {
   if (!list) return;
   if (!functions || functions.length === 0) {
     if (badges) badges.innerHTML = '';
-    list.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><p>No events added yet.<br>Add them in the full desktop tool.</p></div>';
+    list.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><p>No functions added yet.<br>Add them in the full desktop tool.</p></div>';
     return;
   }
   var totalG = functions.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
-  if (badges) badges.innerHTML = '<span class="sbadge">' + functions.length + ' events</span><span class="sbadge">' + totalG + ' total guests</span>';
+  var totalCost = functions.reduce(function(s,f){return s+((parseInt(f.guests)||0)*(parseInt(f.rate)||0));},0);
+  if (badges) badges.innerHTML =
+    '<span class="sbadge">' + functions.length + ' functions</span>' +
+    '<span class="sbadge">' + totalG + ' total guests</span>' +
+    '<span class="sbadge">' + fmt(totalCost) + ' total cost</span>';
+  // Summary cards at top
+  var totalGuests = functions.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
+  var totalCost = functions.reduce(function(s,f){return s+((parseInt(f.guests)||0)*(parseInt(f.rate)||0));},0);
+  var avgRate = totalGuests > 0 ? Math.round(totalCost / totalGuests) : 0;
+  var summaryEl = document.getElementById('caterSummary');
+  if (summaryEl) {
+    summaryEl.innerHTML =
+      '<div class="bud-card"><div class="bud-val">' + functions.length + '</div><div class="bud-lbl">Functions</div></div>' +
+      '<div class="bud-card"><div class="bud-val">' + totalGuests + '</div><div class="bud-lbl">Total Guests</div></div>' +
+      '<div class="bud-card"><div class="bud-val" style="color:#2E7D32;">' + fmt(totalCost) + '</div><div class="bud-lbl">Total Budget</div></div>' +
+      '<div class="bud-card"><div class="bud-val">' + (avgRate > 0 ? fmt(avgRate) : '—') + '</div><div class="bud-lbl">Avg / Plate</div></div>';
+  }
+
   list.innerHTML = functions.map(function(f) {
     var g = parseInt(f.guests)||0;
     var rate = parseInt(f.rate)||0;
-    var total = g*rate;
-    var rice=Math.ceil(g*0.15), dal=Math.ceil(g*0.08), veg=Math.ceil(g*0.12), sweet=Math.ceil(g*0.1);
-    return '<div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--line);">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;">' +
-        '<div style="font-size:14px;font-weight:700;color:var(--maroon);">' + esc(f.name||'Function') + '</div>' +
-        '<span class="badge bpd">' + g + ' guests</span>' +
+    var cost = g * rate;
+    return '<div style="background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid var(--line);overflow:hidden;">' +
+      '<div style="background:linear-gradient(135deg,#C45000,#E67300);padding:10px 14px;">' +
+        '<div style="font-size:14px;font-weight:700;color:#fff;">' + esc(f.name || 'Function') + '</div>' +
       '</div>' +
-      (rate>0?'<div style="font-size:11px;color:var(--soft);margin-bottom:8px;">' + fmt(rate) + '/plate → <strong style="color:var(--maroon);">' + fmt(total) + '</strong></div>':'') +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🍚 Rice</div><div style="font-size:13px;font-weight:700;">' + rice + ' kg</div></div>' +
-        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🫘 Dal</div><div style="font-size:13px;font-weight:700;">' + dal + ' kg</div></div>' +
-        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🥬 Vegetables</div><div style="font-size:13px;font-weight:700;">' + veg + ' kg</div></div>' +
-        '<div style="background:var(--ivory);border-radius:8px;padding:8px;"><div style="font-size:10px;color:var(--soft);">🍬 Sweets</div><div style="font-size:13px;font-weight:700;">' + sweet + ' kg</div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;">' +
+        '<div style="padding:12px;border-right:1px solid var(--line);text-align:center;">' +
+          '<div style="font-size:10px;color:var(--soft);margin-bottom:2px;">Guests</div>' +
+          '<div style="font-size:18px;font-weight:700;color:var(--maroon);">' + g + '</div>' +
+        '</div>' +
+        '<div style="padding:12px;border-right:1px solid var(--line);text-align:center;">' +
+          '<div style="font-size:10px;color:var(--soft);margin-bottom:2px;">Per Plate</div>' +
+          '<div style="font-size:18px;font-weight:700;color:var(--maroon);">' + (rate > 0 ? fmt(rate) : '—') + '</div>' +
+        '</div>' +
+        '<div style="padding:12px;text-align:center;">' +
+          '<div style="font-size:10px;color:var(--soft);margin-bottom:2px;">Total Cost</div>' +
+          '<div style="font-size:18px;font-weight:700;color:' + (cost>0?'#2E7D32':'var(--soft)') + ';">' + (cost > 0 ? fmt(cost) : '—') + '</div>' +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
