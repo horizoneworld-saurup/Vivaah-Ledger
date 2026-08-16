@@ -397,7 +397,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       </div>
       <div class="dash-card cC" onclick="showSec('catering')">
         <span class="dc-icon">🍽️</span><div class="dc-name">Catering</div>
-        <div><span class="dc-stat">Calculator</span></div>
+        <div><span class="dc-stat" id="dC1">—</span><span class="dc-stat" id="dC2"></span></div>
         <span class="dc-arr">→</span>
       </div>
     </div>
@@ -1100,6 +1100,11 @@ function updateDash() {
   document.getElementById('dT1').textContent = evCount + ' events';
   document.getElementById('dT2').textContent = upcoming.length > 0 ? 'Next: ' + upcoming[0][0] : 'No upcoming events';
   document.getElementById('dN1').textContent = notes.length + ' notes saved';
+  // Catering stats
+  var caterTotal = functions.reduce(function(s,f){return s+((parseInt(f.guests)||0)*(parseInt(f.rate)||0));},0);
+  var caterGuests = functions.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
+  document.getElementById('dC1').textContent = functions.length > 0 ? fmt(caterTotal) + ' total' : 'No functions yet';
+  document.getElementById('dC2').textContent = functions.length > 0 ? caterGuests + ' guests · ' + functions.length + ' events' : 'Add in full tool';
 }
 
 // ═══════════════════════════════════════
