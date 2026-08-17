@@ -2366,14 +2366,9 @@ async function checkReminders() {
       // Push notification (always fires)
       sendPushNotification(title, body);
 
-      // Email alert — only to signed-in user's own Gmail
-      if (userEmail) {
-        await sendReminderEmail(
-          `🔔 Vivaah Reminder: ${rem.title} in ${daysLeft} days`,
-          body,
-          userEmail
-        );
-      }
+      // NOTE: Email reminders are sent by the Cloudflare Worker cron at 8:00 AM IST
+      // Do NOT send from browser — worker handles all reminder emails to avoid duplicates
+      // Browser only shows push notification (above)
     }
   }
 }
