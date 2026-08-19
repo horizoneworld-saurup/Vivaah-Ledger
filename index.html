@@ -4359,7 +4359,7 @@ function renderGuests(){
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
-              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#E8F5E9':'#FFF8E1'};border:1px solid ${g.stdSent?'#2E7D32':'#D4A24C'};color:${g.stdSent?'#2E7D32':'#856404'};padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '✅ STD' : '💌 STD'}</button>` : ''}
+              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}

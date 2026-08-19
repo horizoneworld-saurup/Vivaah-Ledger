@@ -1291,7 +1291,7 @@ function renderGuests() {
         (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
         (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
         (g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0 && ph ?
-          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2705 STD':'\ud83d\udc8c STD') + '</a>' : '') +
+          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2764\ufe0f':'\ud83d\udc8c STD') + '</a>' : '') +
         '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';
