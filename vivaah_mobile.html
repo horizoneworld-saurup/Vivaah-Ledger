@@ -1091,7 +1091,8 @@ function updateDash() {
   document.getElementById('dB2').textContent = fmt(totalP) + ' paid \u00b7 ' + fmt(totalD) + ' due';
   document.getElementById('dV1').textContent = vendors.length + ' vendors tracked';
   document.getElementById('dV2').textContent = pending + ' pending payment';
-  document.getElementById('dG1').textContent = guests.length + ' families';
+  var invitedCount = guests.filter(function(g) { return g.invitationSent; }).length;
+  document.getElementById('dG1').textContent = guests.length + ' families · ' + invitedCount + ' invited';
   document.getElementById('dG2').textContent = conf + ' confirmed \u00b7 ' + (guests.length - conf) + ' pending';
   document.getElementById('dK1').textContent = '\ud83d\udc51 ' + vip + ' \u00b7 \u2b50 ' + prem + ' \u00b7 \ud83c\udf9f ' + norm;
   document.getElementById('dK2').textContent = '\ud83d\udce6 ' + cards + ' total cards';
@@ -1208,15 +1209,17 @@ function renderGuests() {
     return (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q);
   }) : guests;
   var conf = guests.filter(function(g) { return g.callStatus === 'confirmed'; }).length;
+  var sentCount = guests.filter(function(g) { return g.invitationSent; }).length;
   document.getElementById('guestBadges').innerHTML =
     '<span class="sbadge">' + guests.length + ' families</span>' +
     '<span class="sbadge">' + conf + ' confirmed</span>' +
-    '<span class="sbadge">' + (guests.length - conf) + ' pending</span>';
+    '<span class="sbadge">' + (guests.length - conf) + ' pending</span>' +
+    '<span class="sbadge" style="background:rgba(76,175,80,0.3);">' + sentCount + ' invited</span>';
   function rG(g) {
     var cls = g.callStatus === 'confirmed' ? 'bc' : g.callStatus === 'declined' ? 'bd' : 'bpd';
     var lbl = g.callStatus === 'confirmed' ? '\u2705' : g.callStatus === 'declined' ? '\u274c' : '\u23f3';
     var ph = (g.phone || '').replace(/\D/g, '');
-    var waMsg = encodeURIComponent(g.waCustomMsg || ('Dear ' + g.name + ', we warmly invite you to our wedding celebration.'));
+    var waMsg = encodeURIComponent(g.waCustomMsg || generateInviteMsg(g));
     return '<div class="row-item" style="flex-wrap:wrap;gap:6px;cursor:default;">' +
       '<div style="flex:1;min-width:120px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
@@ -1224,7 +1227,7 @@ function renderGuests() {
       '</div>' +
       '<div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">' +
         (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
-        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa">\ud83d\udcac</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
         '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';
@@ -1401,6 +1404,33 @@ async function toggleSent(evt, guestId) {
   await saveGuests();
   renderKankotri();
   updateDash();
+}
+
+function generateInviteMsg(g) {
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var invited = ALL_EVENTS.filter(function(ev) {
+    var e = g.events && g.events[ev];
+    return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+  });
+  if (invited.length === 0) return 'Dear '+(g.name||'')+',\n\nWe warmly invite you to our wedding celebration.\n\nThank you! 🌸\n— Shah Family';
+  var lines = invited.map(function(ev) {
+    var t = eventTimeline[ev]||{};
+    var line = (EMOJIS[ev]||'📅')+' *'+ev+'*';
+    if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' · '+t.startTime; }
+    if (t.venue) line += '\n📍 '+t.venue;
+    return line;
+  }).join('\n\n');
+  return 'Dear *'+(g.name||'')+'* 🌸\n\nWe joyfully invite you to celebrate\n\n✨ *Mrishana & Spandan\'s Wedding!* ✨\n\n'+lines+'\n\nYour presence will make our celebration truly special 🙏\n\n*— Shah Family* 🌸';
+}
+
+async function markInvited(guestId) {
+  var g = guests.find(function(x) { return x.id === guestId; });
+  if (!g) return;
+  g.invitationSent = true;
+  await saveGuests();
+  updateDash();
+  renderGuests();
 }
 
 function closeGuest() { document.getElementById('guestOverlay').classList.remove('show'); currentGuestId = null; }
