@@ -942,7 +942,7 @@
       <input type="password" id="newViewerPin" maxlength="4" placeholder="••••" inputmode="numeric">
     </div>
     <div style="background:var(--ivory-deep); border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;">
-      ⚠ Defaults — Owner: 2772 · Admin: 1234 · Editor: 5678 · Viewer: 9999
+      ⚠ Defaults — Owner: 0000 · Admin: 1234 · Editor: 5678 · Viewer: 9999
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="adminSettingsCancelBtn">Cancel</button>
@@ -1830,7 +1830,7 @@ const DEFAULT_PINS = {admin:'1234', editor:'5678', viewer:'9999'};
    OWNER PIN — Change this before delivering to a customer.
    The customer never sees this PIN. It only unlocks the Owner Panel.
    ================================================================ */
-const OWNER_PIN = '0000'; // ← CHANGE THIS before delivery
+const OWNER_PIN = '2772'; // ← CHANGE THIS before delivery
 
 /* ================================================================
    PLATFORM VENDORS — Paid advertisers always visible in the ticker.
@@ -3148,7 +3148,7 @@ async function loadData(){
     if(nt){ notes = JSON.parse(nt); }
   }catch(e){ notes = []; }
   if(functions.length===0){
-    functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
+    functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200, vendorId:''}];
   }
   applyBranding();
   renderKankotriCardPreviews();
@@ -3661,6 +3661,13 @@ function renderCatering(){
         <label>Function cost</label>
         <input type="text" value="${fmt((f.guests||0)*(f.rate||0))}" disabled style="background:var(--ivory-deep); color:var(--ink-soft); font-weight:600;">
       </div>
+      <div class="field-mini">
+        <label>Caterer</label>
+        <select data-fn-field="vendorId" data-fn-id="${f.id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;">
+          <option value="">— Select —</option>
+          ${vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater')).map(v=>`<option value="${v.id}" ${f.vendorId===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}
+        </select>
+      </div>
       <button class="remove-fn" data-remove-fn="${f.id}" title="Remove function">✕</button>
     </div>
   `).join('');
@@ -3738,7 +3745,7 @@ function updateCateringSummaryOnly(){
 }
 
 document.getElementById('btnAddFunction').onclick = ()=>{
-  functions.push({id:uid(), name:'New function', guests:0, rate:0});
+  functions.push({id:uid(), name:'New function', guests:0, rate:0, vendorId:''});
   saveFunctions(); renderCatering();
 };
 
@@ -3748,6 +3755,17 @@ document.getElementById('functionGrid').addEventListener('click', (e)=>{
     functions = functions.filter(f=>f.id!==rm.dataset.removeFn);
     saveFunctions(); renderCatering();
   }
+});
+
+document.getElementById('functionGrid').addEventListener('change', (e)=>{
+  const field = e.target.dataset.fnField;
+  const fid = e.target.dataset.fnId;
+  if(!field || !fid) return;
+  const f = functions.find(x=>x.id===fid);
+  if(!f) return;
+  f[field] = e.target.value;
+  saveFunctions();
+  renderCateringStats();
 });
 
 document.getElementById('functionGrid').addEventListener('input', (e)=>{
@@ -3772,10 +3790,16 @@ document.getElementById('btnApplyCatering').onclick = ()=>{
   if(!vid){ showToast('Choose a vendor to link first'); return; }
   const v = vendors.find(x=>x.id===vid);
   if(!v) return;
-  const totalCost = functions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
-  v.quoted = Math.round(totalCost);
+  // Sum only functions that have this vendor selected in their own row
+  const myFunctions = functions.filter(f => f.vendorId === vid);
+  if(myFunctions.length === 0){
+    showToast('Please select "' + v.name + '" in the vendor column of each function row you want to apply, then click Apply.');
+    return;
+  }
+  const cost = myFunctions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
+  v.quoted = Math.round(cost);
   saveData(); render();
-  showToast(`Set ${v.name}'s quoted amount to ${fmt(totalCost)}`);
+  showToast('Set ' + v.name + '’s quote to ' + fmt(cost) + ' (' + myFunctions.length + ' function' + (myFunctions.length>1?'s':'') + ')');
 };
 
 /* ---------------- Vendor advertising ticker ---------------- */
@@ -4359,7 +4383,7 @@ function renderGuests(){
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
-              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#E8F5E9':'#FFF8E1'};border:1px solid ${g.stdSent?'#2E7D32':'#D4A24C'};color:${g.stdSent?'#2E7D32':'#856404'};padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '✅ STD' : '💌 STD'}</button>` : ''}
+              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
