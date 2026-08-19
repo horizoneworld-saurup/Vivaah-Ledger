@@ -431,6 +431,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       <div class="sec-head-title">👥 Guest List</div>
       <div class="sec-head-sub">Tap any family to call, WhatsApp or confirm headcount</div>
       <div class="sec-badges" id="guestBadges"></div>
+      <button id="copyNumsBtn" onclick="copyMarriageNumbers()" style="margin-top:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.5);color:var(--gold);padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">📋 Copy All Marriage Guest Numbers</button>
     </div>
     <div class="srch"><input id="guestSearch" placeholder="Search family name or phone…" oninput="renderGuests()"></div>
     <div class="acc-wrap" id="guestList"></div>
@@ -981,7 +982,7 @@ function expandGuests(arr) {
       kankotriTier: r[11]||'', kankotriSent: !!r[12],
       invTier: r[13]||'', invCards: r[14]||0, invSent: !!r[15],
       confirmedAdults: r[16]||0, confirmedKids: r[17]||0,
-      callStatus: r[18]||'', waCustomMsg: r[19]||''
+      callStatus: r[18]||'', waCustomMsg: r[19]||'', invitationSent: !!r[20], stdSent: !!r[21]
     };
   });
 }
@@ -1091,7 +1092,9 @@ function updateDash() {
   document.getElementById('dB2').textContent = fmt(totalP) + ' paid \u00b7 ' + fmt(totalD) + ' due';
   document.getElementById('dV1').textContent = vendors.length + ' vendors tracked';
   document.getElementById('dV2').textContent = pending + ' pending payment';
-  document.getElementById('dG1').textContent = guests.length + ' families';
+  var mrgInv = guests.filter(function(g){var e=g.events&&g.events['Marriage'];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+  var stdSnt = guests.filter(function(g){return g.stdSent;}).length;
+  document.getElementById('dG1').textContent = guests.length + ' families · ' + mrgInv + ' marriage';
   document.getElementById('dG2').textContent = conf + ' confirmed \u00b7 ' + (guests.length - conf) + ' pending';
   document.getElementById('dK1').textContent = '\ud83d\udc51 ' + vip + ' \u00b7 \u2b50 ' + prem + ' \u00b7 \ud83c\udf9f ' + norm;
   document.getElementById('dK2').textContent = '\ud83d\udce6 ' + cards + ' total cards';
@@ -1135,6 +1138,63 @@ function toggleAcc(id) {
 // ═══════════════════════════════════════
 // RENDER BUDGET
 // ═══════════════════════════════════════
+function generateInviteMsg(g) {
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var ALL = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var invited = ALL.filter(function(ev) {
+    var e = g.events && g.events[ev];
+    return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0))>0;
+  });
+  if (invited.length === 0) return 'Dear '+(g.name||'')+',\n\nWe warmly invite you to our wedding celebration.\nKindly confirm your attendance.\n\nThank you! 🌸\n— Shah Family';
+  var lines = invited.map(function(ev) {
+    var t = eventTimeline[ev]||{};
+    var line = (EMOJIS[ev]||'📅')+' *'+ev+'*';
+    if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' · '+t.startTime; }
+    if (t.venue) line += '\n📍 '+t.venue;
+    return line;
+  }).join('\n\n');
+  return 'Dear *'+(g.name||'')+'* 🌸\n\nWe joyfully invite you to celebrate\n\n✨ *Mrishana & Spandan\'s Wedding!* ✨\n\n'+lines+'\n\nYour presence will make our celebration truly special 🙏\n\n*— Shah Family* 🌸';
+}
+
+function generateStdMsg(g) {
+  var t = eventTimeline['Marriage']||{};
+  var ds = t.date ? new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
+  var ts = t.startTime ? t.startTime+' onwards' : '';
+  var vs = t.venue||'';
+  return '🌸 *Save the Date* 🌸\n\nDear *'+(g.name||'')+'*,\n\nWith great joy we announce the wedding of\n\n✨ *Mrishana & Spandan* ✨\n\n💍 *Marriage Ceremony*\n'+
+    (ds ? '📅 '+ds+'\n' : '')+(ts ? '🕖 '+ts+'\n' : '')+(vs ? '📍 '+vs+'\n' : '')+
+    '\nPlease save this date and grace us with your presence 🙏\n\n_(Formal invitation to follow)_\n\n*— Shah Family* 🌸';
+}
+
+async function markStdSent(guestId) {
+  var g = guests.find(function(x){return x.id===guestId;});
+  if (!g) return;
+  g.stdSent = true;
+  await saveGuests(); updateDash(); renderGuests();
+}
+
+async function markInvited(guestId) {
+  var g = guests.find(function(x){return x.id===guestId;});
+  if (!g) return;
+  g.invitationSent = true;
+  await saveGuests(); updateDash(); renderGuests();
+}
+
+function copyMarriageNumbers() {
+  var nums = guests.filter(function(g) {
+    var e = g.events && g.events['Marriage'];
+    return e && (Number(e.adults||0)+Number(e.kids||0))>0 && g.phone;
+  }).map(function(g) {
+    return g.phone.replace(/\D/g,'');
+  }).filter(Boolean);
+  if (nums.length === 0) { alert('No Marriage guests with phone numbers found.'); return; }
+  navigator.clipboard.writeText(nums.join('\n')).then(function() {
+    var btn = document.getElementById('copyNumsBtn');
+    if (btn) { btn.textContent = '✅ '+nums.length+' numbers copied!'; btn.style.background='#E8F5E9'; btn.style.color='#2E7D32';
+      setTimeout(function(){ btn.textContent='📋 Copy Marriage Numbers'; btn.style.background=''; btn.style.color=''; }, 3000); }
+  });
+}
+
 function renderBudget() {
   var totalB = vendors.reduce(function(s, v) { return s + Number(v.quoted || 0); }, 0);
   var totalP = vendors.reduce(function(s, v) { return s + vPaid(v); }, 0);
@@ -1208,15 +1268,20 @@ function renderGuests() {
     return (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q);
   }) : guests;
   var conf = guests.filter(function(g) { return g.callStatus === 'confirmed'; }).length;
+  var invCnt = guests.filter(function(g){return g.invitationSent;}).length;
+  var stdCnt = guests.filter(function(g){return g.stdSent;}).length;
+  var mrgCnt = guests.filter(function(g){ var e=g.events&&g.events['Marriage']; return e&&(Number(e.adults||0)+Number(e.kids||0))>0; }).length;
   document.getElementById('guestBadges').innerHTML =
     '<span class="sbadge">' + guests.length + ' families</span>' +
     '<span class="sbadge">' + conf + ' confirmed</span>' +
-    '<span class="sbadge">' + (guests.length - conf) + ' pending</span>';
+    '<span class="sbadge">' + (guests.length - conf) + ' pending</span>' +
+    '<span class="sbadge" style="background:rgba(37,211,102,0.25);">' + mrgCnt + ' marriage</span>' +
+    '<span class="sbadge" style="background:rgba(212,164,76,0.25);color:var(--gold);">' + stdCnt + ' STD sent</span>';
   function rG(g) {
     var cls = g.callStatus === 'confirmed' ? 'bc' : g.callStatus === 'declined' ? 'bd' : 'bpd';
     var lbl = g.callStatus === 'confirmed' ? '\u2705' : g.callStatus === 'declined' ? '\u274c' : '\u23f3';
     var ph = (g.phone || '').replace(/\D/g, '');
-    var waMsg = encodeURIComponent(g.waCustomMsg || ('Dear ' + g.name + ', we warmly invite you to our wedding celebration.'));
+    var waMsg = encodeURIComponent(g.waCustomMsg || generateInviteMsg(g));
     return '<div class="row-item" style="flex-wrap:wrap;gap:6px;cursor:default;">' +
       '<div style="flex:1;min-width:120px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
@@ -1224,7 +1289,9 @@ function renderGuests() {
       '</div>' +
       '<div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">' +
         (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
-        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa">\ud83d\udcac</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
+        (g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0 && ph ?
+          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2705 STD':'\ud83d\udc8c STD') + '</a>' : '') +
         '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';

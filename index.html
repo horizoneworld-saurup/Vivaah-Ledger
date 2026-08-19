@@ -1590,6 +1590,9 @@
             <span class="sec-badge" id="guestHeaderTotal">0 families</span>
             <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
             <span class="sec-badge" id="guestHeaderPending">0 pending</span>
+            <span class="sec-badge" style="background:rgba(76,175,80,0.25);color:#C8E6C9;" id="guestInvitedBadge">0 Invited</span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.25);color:#FFF8E1;" id="guestStdBadge">0 STD Sent</span>
+            <button onclick="copyMarriageNumbers()" style="margin-left:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.4);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">📋 Copy Marriage Numbers</button>
           </div>
         </div>
       </div>
@@ -2216,6 +2219,59 @@ We warmly invite you to our wedding celebration. Kindly confirm your attendance 
 Thank you! 🌸
 — Shah Family`;
 
+function copyMarriageNumbers() {
+  var marriageGuests = guests.filter(function(g) {
+    var e = g.events && g.events['Marriage'];
+    return e && (Number(e.adults||0)+Number(e.kids||0))>0 && g.phone;
+  });
+  if (marriageGuests.length === 0) { showToast('No Marriage guests with phone numbers found.'); return; }
+  var nums = marriageGuests.map(function(g) { return g.phone.replace(/[^0-9]/g,''); }).filter(Boolean);
+  navigator.clipboard.writeText(nums.join('\n')).then(function() {
+    showToast('✅ ' + nums.length + ' Marriage guest numbers copied to clipboard!');
+  });
+}
+
+function generateStdMsg(g) {
+  var t = eventTimeline['Marriage'] || {};
+  var dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
+  var timeStr = t.startTime ? t.startTime + ' onwards' : '';
+  var venueStr = t.venue || '';
+  return '\ud83c\udf38 *Save the Date* \ud83c\udf38\n\n' +
+    'Dear *' + (g.name||'') + '*,\n\n' +
+    'With great joy we announce the wedding of\n\n' +
+    '\u2728 *Mrishana & Spandan* \u2728\n\n' +
+    '\ud83d\udc8d *Marriage Ceremony*\n' +
+    (dateStr ? '\ud83d\udcc5 ' + dateStr + '\n' : '') +
+    (timeStr ? '\ud83d\udd56 ' + timeStr + '\n' : '') +
+    (venueStr ? '\ud83d\udccd ' + venueStr + '\n' : '') +
+    '\nPlease save this date and grace us\nwith your presence \ud83d\ude4f\n\n' +
+    '_(Formal invitation to follow)_\n\n' +
+    '*\u2014 Shah Family* \ud83c\udf38';
+}
+
+function generateInviteMsg(g) {
+  var EMOJIS = {'Kankotri':'\ud83d\udcee','Ganesh-Grahshanti-Mosalu':'\ud83d\udd6f\ufe0f','Mehendi':'\ud83c\udf3f','Haldi':'\ud83d\udc9b','Sangeet':'\ud83c\udfb6','Marriage':'\ud83d\udc8d','Reception':'\ud83c\udf8a'};
+  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var invited = ALL_EVENTS.filter(function(ev) {
+    var e = g.events && g.events[ev];
+    return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+  });
+  if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'');
+  var lines = invited.map(function(ev) {
+    var t = eventTimeline[ev]||{};
+    var line = (EMOJIS[ev]||'\ud83d\udcc5')+' *'+ev+'*';
+    if (t.date) { var d=new Date(t.date); line += '\n\ud83d\udcc5 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' \u00b7 '+t.startTime; }
+    if (t.venue) line += '\n\ud83d\udccd '+t.venue;
+    return line;
+  }).join('\n\n');
+  return 'Dear *'+(g.name||'')+'* \ud83c\udf38\n\n' +
+    'We joyfully invite you to celebrate\n\n' +
+    '\u2728 *Mrishana & Spandan\'s Wedding!* \u2728\n\n' +
+    lines+'\n\n' +
+    'Your presence will make our celebration truly special \ud83d\ude4f\n\n' +
+    '*\u2014 Shah Family* \ud83c\udf38';
+}
+
 let waCurrentGuestId = null;
 let hcCurrentGuestId = null;
 
@@ -2227,8 +2283,18 @@ function waOpen(guestId) {
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
   // Restore saved custom message or use default
-  document.getElementById('waMessageText').value = g.waCustomMsg || DEFAULT_WA_MSG;
+  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
   document.getElementById('waModalOverlay').classList.add('show');
+}
+
+function openStd(guestId) {
+  var g = guests.find(function(x){ return x.id === guestId; });
+  if (!g) return;
+  waCurrentGuestId = guestId;
+  if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '\ud83c\udf38 Save the Date \u2014 ' + (g.name||'');
+  document.getElementById('waMessageText').value = generateStdMsg(g);
+  document.getElementById('waModalOverlay').classList.add('show');
+  window._pendingStd = guestId;
 }
 
 function waSend() {
@@ -2237,6 +2303,8 @@ function waSend() {
   const rawMsg = document.getElementById('waMessageText').value;
   // Save custom message per guest
   g.waCustomMsg = rawMsg;
+  g.invitationSent = true;
+  if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
   saveGuests();
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
@@ -2462,6 +2530,13 @@ function updateSectionBadges() {
 
   // Kankotri badges
   const vipCount = guests ? guests.filter(g=>g.invTier==='vip').length : 0;
+  const invitedSentCount = guests ? guests.filter(g=>g.invitationSent).length : 0;
+  const stdSentCount = guests ? guests.filter(g=>g.stdSent).length : 0;
+  if(document.getElementById('guestInvitedBadge')) document.getElementById('guestInvitedBadge').textContent = invitedSentCount + ' Invited';
+  if(document.getElementById('guestStdBadge')) document.getElementById('guestStdBadge').textContent = stdSentCount + ' STD Sent';
+  if(document.getElementById('guestHeaderTotal')) document.getElementById('guestHeaderTotal').textContent = (guests?guests.length:0) + ' families';
+  if(document.getElementById('guestHeaderConfirmed')) document.getElementById('guestHeaderConfirmed').textContent = (guests?guests.filter(g=>g.callStatus==='confirmed').length:0) + ' confirmed';
+  if(document.getElementById('guestHeaderPending')) document.getElementById('guestHeaderPending').textContent = (guests?guests.filter(g=>g.callStatus!=='confirmed').length:0) + ' pending';
   const premCount = guests ? guests.filter(g=>g.invTier==='premium').length : 0;
   const normCount = guests ? guests.filter(g=>g.invTier==='normal').length : 0;
   const totalCards = guests ? guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
@@ -3266,7 +3341,9 @@ function compressGuests(guestArr){
       g.rooms||0, g.beds||0,
       g.kankotriTier||'', g.kankotriSent ? 1 : 0,
       g.invTier||'', g.invCards||0, g.invSent ? 1 : 0,
-      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||''
+      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||'',
+      g.invitationSent?1:0,
+      g.stdSent?1:0
     ];
   });
 }
@@ -4282,6 +4359,7 @@ function renderGuests(){
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
+              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#E8F5E9':'#FFF8E1'};border:1px solid ${g.stdSent?'#2E7D32':'#D4A24C'};color:${g.stdSent?'#2E7D32':'#856404'};padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '✅ STD' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
