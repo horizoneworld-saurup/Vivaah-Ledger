@@ -3148,7 +3148,7 @@ async function loadData(){
     if(nt){ notes = JSON.parse(nt); }
   }catch(e){ notes = []; }
   if(functions.length===0){
-    functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200}];
+    functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200, vendorId:''}];
   }
   applyBranding();
   renderKankotriCardPreviews();
@@ -3661,6 +3661,13 @@ function renderCatering(){
         <label>Function cost</label>
         <input type="text" value="${fmt((f.guests||0)*(f.rate||0))}" disabled style="background:var(--ivory-deep); color:var(--ink-soft); font-weight:600;">
       </div>
+      <div class="field-mini">
+        <label>Caterer</label>
+        <select data-fn-field="vendorId" data-fn-id="${f.id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;">
+          <option value="">— Select —</option>
+          ${vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater')).map(v=>`<option value="${v.id}" ${f.vendorId===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}
+        </select>
+      </div>
       <button class="remove-fn" data-remove-fn="${f.id}" title="Remove function">✕</button>
     </div>
   `).join('');
@@ -3738,7 +3745,7 @@ function updateCateringSummaryOnly(){
 }
 
 document.getElementById('btnAddFunction').onclick = ()=>{
-  functions.push({id:uid(), name:'New function', guests:0, rate:0});
+  functions.push({id:uid(), name:'New function', guests:0, rate:0, vendorId:''});
   saveFunctions(); renderCatering();
 };
 
@@ -3748,6 +3755,17 @@ document.getElementById('functionGrid').addEventListener('click', (e)=>{
     functions = functions.filter(f=>f.id!==rm.dataset.removeFn);
     saveFunctions(); renderCatering();
   }
+});
+
+document.getElementById('functionGrid').addEventListener('change', (e)=>{
+  const field = e.target.dataset.fnField;
+  const fid = e.target.dataset.fnId;
+  if(!field || !fid) return;
+  const f = functions.find(x=>x.id===fid);
+  if(!f) return;
+  f[field] = e.target.value;
+  saveFunctions();
+  renderCateringStats();
 });
 
 document.getElementById('functionGrid').addEventListener('input', (e)=>{
@@ -3772,10 +3790,16 @@ document.getElementById('btnApplyCatering').onclick = ()=>{
   if(!vid){ showToast('Choose a vendor to link first'); return; }
   const v = vendors.find(x=>x.id===vid);
   if(!v) return;
-  const totalCost = functions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
-  v.quoted = Math.round(totalCost);
+  // Sum only functions that have this vendor selected in their own row
+  const myFunctions = functions.filter(f => f.vendorId === vid);
+  if(myFunctions.length === 0){
+    showToast('Please select "' + v.name + '" in the vendor column of each function row you want to apply, then click Apply.');
+    return;
+  }
+  const cost = myFunctions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
+  v.quoted = Math.round(cost);
   saveData(); render();
-  showToast(`Set ${v.name}'s quoted amount to ${fmt(totalCost)}`);
+  showToast('Set ' + v.name + '’s quote to ' + fmt(cost) + ' (' + myFunctions.length + ' function' + (myFunctions.length>1?'s':'') + ')');
 };
 
 /* ---------------- Vendor advertising ticker ---------------- */
