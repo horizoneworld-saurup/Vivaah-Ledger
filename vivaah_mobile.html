@@ -148,6 +148,64 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 .acc-bd{max-height:0;overflow:hidden;transition:max-height .3s ease;}
 .acc-bd.open{max-height:none;}
 
+/* ── Countdown Timer ── */
+.cd-wrap{background:linear-gradient(135deg,#5C1A2B,#8B2A3F);border-radius:14px;padding:14px 18px;margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid rgba(212,164,76,0.3);}
+.cd-left{display:flex;align-items:center;gap:10px;}
+.cd-title{color:rgba(255,255,255,0.7);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
+.cd-event{color:#D4A24C;font-size:13px;font-weight:700;}
+.cd-units{display:flex;gap:6px;}
+.cd-unit{text-align:center;}
+.cd-num{background:rgba(255,255,255,0.15);border:1px solid rgba(212,164,76,0.3);border-radius:8px;padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#fff;display:block;line-height:1;}
+.cd-lbl{color:rgba(255,255,255,0.5);font-size:9px;margin-top:3px;text-transform:uppercase;}
+.cd-hide{display:none!important;}
+.cd-done{color:#D4A24C;font-size:14px;font-weight:700;}
+
+/* ── Budget Chart ── */
+.chart-wrap{background:#fff;border-radius:14px;padding:16px 16px 12px;margin:0 12px 14px;border:1px solid #E0C8A0;box-shadow:0 2px 8px rgba(92,26,43,0.06);}
+.chart-title{font-size:13px;font-weight:700;color:var(--maroon);margin-bottom:10px;}
+.chart-legend{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.chart-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--soft);}
+.chart-leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.chart-bar-row{margin-bottom:10px;}
+.chart-bar-label{display:flex;justify-content:space-between;font-size:10px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.chart-bar-label span{color:var(--soft);font-weight:400;font-size:10px;}
+.chart-bar-bg{background:#F5EDE0;border-radius:6px;height:16px;overflow:hidden;position:relative;}
+.chart-bar-q{position:absolute;top:0;left:0;height:100%;background:rgba(212,164,76,0.3);border-radius:6px;transition:width 0.5s;}
+.chart-bar-p{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#2E7D32,#4CAF50);border-radius:6px;transition:width 0.5s;}
+.chart-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #E0C8A0;}
+.chart-total-card{text-align:center;padding:8px 4px;border-radius:8px;}
+.chart-total-val{font-size:13px;font-weight:700;}
+.chart-total-lbl{font-size:9px;color:var(--soft);margin-top:2px;}
+
+/* ── Vendor Star Rating ── */
+.star-row{display:flex;gap:6px;margin:8px 0;}
+.mob-star{font-size:22px;cursor:pointer;filter:grayscale(1);opacity:0.35;border:none;background:none;padding:0;transition:all 0.15s;}
+.mob-star.active{filter:none;opacity:1;transform:scale(1.1);}
+.star-lbl{font-size:11px;color:var(--soft);font-style:italic;margin-left:4px;align-self:center;}
+
+/* ── Submit Review ── */
+.submit-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1200;display:flex;align-items:flex-end;justify-content:center;}
+.submit-sheet{background:#fff;border-radius:20px 20px 0 0;padding:22px 20px 30px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.submit-sheet-title{font-size:16px;font-weight:700;color:var(--maroon);margin-bottom:8px;}
+.submit-privacy{font-size:11px;color:var(--soft);background:#F0F4FF;border-radius:8px;padding:8px 10px;margin-bottom:12px;line-height:1.5;border-left:3px solid #1A3A8A;}
+.submit-stars{display:flex;gap:8px;justify-content:center;margin:10px 0;}
+.submit-star-btn{font-size:26px;filter:grayscale(1);opacity:0.3;border:none;background:none;cursor:pointer;transition:all 0.15s;}
+.submit-star-btn.active{filter:none;opacity:1;}
+.submit-textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;font-size:13px;resize:none;font-family:inherit;margin-bottom:12px;background:var(--ivory);}
+
+/* ── Admin Reviews ── */
+.admin-rev-wrap{background:#fff;border-radius:14px;padding:16px;margin:0 12px 14px;border:1px solid #E0C8A0;}
+.admin-rev-title{font-size:14px;font-weight:700;color:var(--maroon);margin-bottom:10px;}
+.admin-vcard{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--ivory);}
+.admin-vname{font-size:13px;font-weight:700;color:var(--maroon);}
+.admin-rv-item{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;}
+.admin-rv-pending{border-left:3px solid #D4A24C;}
+.admin-rv-approved{border-left:3px solid #2E7D32;}
+
+/* ── Payment Edit ── */
+.pay-edit-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
+.pay-edit-input{border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;flex:1;min-width:100px;}
+
 /* ── ROW ITEMS ── */
 .row-item{padding:10px 12px;border-top:1px solid var(--ivory2);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
 .row-item:active{background:var(--ivory);}
@@ -326,6 +384,24 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
     <span class="sync-dot" id="syncDot"></span>
   </div>
 
+  <!-- COUNTDOWN TIMER -->
+  <div class="cd-wrap cd-hide" id="mobCdWrap">
+    <div class="cd-left">
+      <span style="font-size:22px;">🌸</span>
+      <div>
+        <div class="cd-title">Countdown to</div>
+        <div class="cd-event" id="mobCdEvent">Marriage</div>
+      </div>
+    </div>
+    <div class="cd-units" id="mobCdUnits">
+      <div class="cd-unit"><span class="cd-num" id="mobCdD">00</span><div class="cd-lbl">Days</div></div>
+      <div class="cd-unit"><span class="cd-num" id="mobCdH">00</span><div class="cd-lbl">Hrs</div></div>
+      <div class="cd-unit"><span class="cd-num" id="mobCdM">00</span><div class="cd-lbl">Min</div></div>
+      <div class="cd-unit"><span class="cd-num" id="mobCdS">00</span><div class="cd-lbl">Sec</div></div>
+    </div>
+    <div class="cd-done cd-hide" id="mobCdDone">💍 The Big Day! 🌸</div>
+  </div>
+
   <!-- GOOGLE BAR -->
   <div class="gbar">
     <div class="gbar-signed-out" id="gOut">
@@ -405,6 +481,19 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 
   <!-- BUDGET -->
   <div class="view" id="vBudget">
+    <div class="chart-wrap" id="mobChartWrap" style="display:none;">
+      <div class="chart-title">📊 Budget vs Actual</div>
+      <div class="chart-legend">
+        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#D4A24C;"></div>Quoted</div>
+        <div class="chart-leg-item"><div class="chart-leg-dot" style="background:#4CAF50;"></div>Paid</div>
+      </div>
+      <div id="mobChartBars"></div>
+      <div class="chart-totals">
+        <div class="chart-total-card" style="background:#FFF8E1;"><div class="chart-total-val" style="color:#856404;" id="mobChartQ">₹0</div><div class="chart-total-lbl">Quoted</div></div>
+        <div class="chart-total-card" style="background:#E8F5E9;"><div class="chart-total-val" style="color:#2E7D32;" id="mobChartP">₹0</div><div class="chart-total-lbl">Paid</div></div>
+        <div class="chart-total-card" style="background:#FFE4E8;"><div class="chart-total-val" style="color:#8B2A3F;" id="mobChartO">₹0</div><div class="chart-total-lbl">Due</div></div>
+      </div>
+    </div>
     <div class="sec-head" style="background:linear-gradient(135deg,#856404,#C8960E);">
       <div class="sec-head-title">💰 Budget & Payment Tracking</div>
       <div class="sec-head-sub">Total spend, advances and outstanding dues</div>
@@ -416,6 +505,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 
   <!-- VENDORS -->
   <div class="view" id="vVendor">
+    <div class="admin-rev-wrap" id="mobAdminRevWrap" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="admin-rev-title">🌸 Vivaah Directory</div>
+        <button onclick="mobLoadAdminReviews()" style="background:var(--maroon);color:var(--gold);border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;">🔄 Refresh</button>
+      </div>
+      <div id="mobAdminRevSummary" style="font-size:11px;color:var(--soft);margin-bottom:8px;"></div>
+      <div id="mobAdminRevContent"><div style="text-align:center;padding:14px;color:var(--soft);">Tap Refresh to load reviews</div></div>
+    </div>
     <div class="sec-head" style="background:linear-gradient(135deg,#1A3A8A,#2952C4);">
       <div class="sec-head-title">🏪 Vendor Management</div>
       <div class="sec-head-sub">Tap any vendor to call, WhatsApp or view payments</div>
@@ -505,7 +602,28 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 </div><!-- /mainApp -->
 
 <!-- GUEST DETAIL SHEET -->
-<div class="detail-overlay" id="guestOverlay" onclick="if(event.target===this)closeGuest()">
+<!-- SUBMIT REVIEW OVERLAY -->
+  <div class="submit-overlay" id="mobSubmitOverlay" style="display:none;" onclick="if(event.target===this)closeMobSubmit()">
+    <div class="submit-sheet">
+      <div class="submit-sheet-title">⭐ Rate for Vivaah Community</div>
+      <div id="mobSubmitVendorInfo" style="font-size:13px;font-weight:600;color:var(--ink);padding:8px 10px;background:var(--ivory);border-radius:8px;margin-bottom:10px;"></div>
+      <div class="submit-privacy">🔒 Only rating, review &amp; wedding month shared. Your email visible to RMS only.</div>
+      <div class="submit-stars" id="mobSubmitStars">
+        <button class="submit-star-btn" data-ss="1">⭐</button>
+        <button class="submit-star-btn" data-ss="2">⭐</button>
+        <button class="submit-star-btn" data-ss="3">⭐</button>
+        <button class="submit-star-btn" data-ss="4">⭐</button>
+        <button class="submit-star-btn" data-ss="5">⭐</button>
+      </div>
+      <div id="mobSubmitStarLbl" style="text-align:center;font-size:12px;color:var(--soft);margin-bottom:10px;min-height:16px;font-style:italic;"></div>
+      <textarea class="submit-textarea" id="mobSubmitReview" rows="3" placeholder="Optional: How was the service?..."></textarea>
+      <div style="font-size:11px;color:var(--soft);margin-bottom:14px;">Wedding month: <strong id="mobSubmitMonth"></strong></div>
+      <button onclick="mobSubmitReview()" style="width:100%;background:var(--maroon);color:var(--gold);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🌸 Submit to Vivaah Directory</button>
+      <button onclick="closeMobSubmit()" style="width:100%;background:none;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <div class="detail-overlay" id="guestOverlay"  onclick="if(event.target===this)closeGuest()">
   <div class="detail-sheet">
     <div class="detail-handle"></div>
     <div class="detail-title" id="gdTitle">—</div>
@@ -955,6 +1073,11 @@ async function syncFromSheets() {
     applyBranding();
     setSync('ok', 'Synced ' + new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
     updateDash();
+    mobStartCountdown();
+    mobRenderBudgetChart();
+    // Show admin section for owner
+    var adminWrap = document.getElementById('mobAdminRevWrap');
+    if (adminWrap) adminWrap.style.display = (currentRole==='owner') ? 'block' : 'none';
     var av = document.querySelector('.view.active');
     if (av) { var sid = av.id.replace('v','').toLowerCase(); if (SEC[sid] && SEC[sid].render) SEC[sid].render(); }
   } catch(e) {
@@ -1138,6 +1261,234 @@ function toggleAcc(id) {
 // ═══════════════════════════════════════
 // RENDER BUDGET
 // ═══════════════════════════════════════
+// ── Countdown Timer ──────────────────────────────────────────────────────
+var _mobCdInterval = null;
+function mobStartCountdown() {
+  var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
+  var target = null, name = 'Marriage';
+  for (var i=0; i<order.length; i++) {
+    var t = eventTimeline[order[i]];
+    if (t && t.date) {
+      var d = new Date(t.date);
+      if (t.startTime) { var p=t.startTime.split(':'); d.setHours(Number(p[0])||20,Number(p[1])||0,0,0); }
+      else d.setHours(20,0,0,0);
+      if (d > new Date()) { target=d; name=order[i]; break; }
+    }
+  }
+  var wrap = document.getElementById('mobCdWrap');
+  if (!wrap) return;
+  if (!target) { wrap.classList.add('cd-hide'); return; }
+  wrap.classList.remove('cd-hide');
+  document.getElementById('mobCdEvent').textContent = name;
+  if (_mobCdInterval) clearInterval(_mobCdInterval);
+  function tick() {
+    var diff = target - new Date();
+    if (diff <= 0) {
+      clearInterval(_mobCdInterval);
+      document.getElementById('mobCdUnits').classList.add('cd-hide');
+      document.getElementById('mobCdDone').classList.remove('cd-hide');
+      return;
+    }
+    document.getElementById('mobCdD').textContent = String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('mobCdH').textContent = String(Math.floor(diff%86400000/3600000)).padStart(2,'0');
+    document.getElementById('mobCdM').textContent = String(Math.floor(diff%3600000/60000)).padStart(2,'0');
+    document.getElementById('mobCdS').textContent = String(Math.floor(diff%60000/1000)).padStart(2,'0');
+  }
+  tick(); _mobCdInterval = setInterval(tick, 1000);
+}
+
+// ── Budget Chart ──────────────────────────────────────────────────────────
+function mobRenderBudgetChart() {
+  var wrap = document.getElementById('mobChartWrap');
+  var barsEl = document.getElementById('mobChartBars');
+  if (!wrap || !barsEl || !vendors || vendors.length===0) { if(wrap) wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  var cats = {};
+  vendors.forEach(function(v) {
+    var cat = (v.category||'Other').trim();
+    if (!cats[cat]) cats[cat]={quoted:0,paid:0};
+    cats[cat].quoted += Number(v.quoted||0);
+    cats[cat].paid   += (v.payments||[]).reduce(function(s,p){return s+Number(p.amount||0);},0);
+  });
+  var allQ = Object.values(cats).reduce(function(s,c){return s+c.quoted;},0);
+  var allP = Object.values(cats).reduce(function(s,c){return s+c.paid;},0);
+  document.getElementById('mobChartQ').textContent = fmt(allQ);
+  document.getElementById('mobChartP').textContent = fmt(allP);
+  document.getElementById('mobChartO').textContent = fmt(Math.max(0,allQ-allP));
+  var maxV = Math.max.apply(null, Object.values(cats).map(function(c){return c.quoted;})) || 1;
+  var emojis = {'catering':'🍽️','decoration':'🌸','photography':'📸','videography':'🎥','venue':'🏛️','mehendi':'🌿','other':'📦'};
+  barsEl.innerHTML = Object.entries(cats).sort(function(a,b){return b[1].quoted-a[1].quoted;}).map(function(e) {
+    var cat=e[0],vals=e[1], out=Math.max(0,vals.quoted-vals.paid);
+    var qP=(vals.quoted/maxV*100).toFixed(1), pP=(vals.paid/maxV*100).toFixed(1);
+    var em = emojis[cat.toLowerCase()]||'📦';
+    return '<div class="chart-bar-row"><div class="chart-bar-label"><span>'+em+' '+cat+'</span><span>Q:'+fmt(vals.quoted)+' P:'+fmt(vals.paid)+'</span></div><div class="chart-bar-bg"><div class="chart-bar-q" style="width:'+qP+'%"></div><div class="chart-bar-p" style="width:'+pP+'%"></div></div></div>';
+  }).join('');
+}
+
+// ── Vendor Star Rating ────────────────────────────────────────────────────
+var _mobVendorStar = 0;
+var _mobStarLabels = ['','Poor','Fair','Good','Very Good','Excellent'];
+function mobSetStar(n) {
+  _mobVendorStar = n;
+  document.querySelectorAll('#mobVendStars .mob-star').forEach(function(b){ b.classList.toggle('active', Number(b.dataset.ms)<=n); });
+  var lbl = document.getElementById('mobStarLbl');
+  if(lbl) lbl.textContent = _mobStarLabels[n]||'';
+}
+function mobLoadStars(rating) {
+  _mobVendorStar = rating||0;
+  document.querySelectorAll('#mobVendStars .mob-star').forEach(function(b){ b.classList.toggle('active', Number(b.dataset.ms)<=(rating||0)); });
+  var lbl = document.getElementById('mobStarLbl');
+  if(lbl) lbl.textContent = _mobStarLabels[rating||0]||'';
+}
+
+// ── Submit Community Review ───────────────────────────────────────────────
+var _mobSubmitVid = null, _mobSubmitStarVal = 0;
+var _mobSubmitStarLabels = ['','Poor','Fair','Good','Very Good','Excellent'];
+
+function openMobSubmit(vid) {
+  var v = vendors.find(function(x){return x.id===vid;});
+  if (!v) return;
+  _mobSubmitVid = vid;
+  _mobSubmitStarVal = v.rating||0;
+  var infoEl = document.getElementById('mobSubmitVendorInfo');
+  if(infoEl) infoEl.textContent = v.name + (v.category ? ' · '+v.category : '') + (v.phone ? ' · '+v.phone : '');
+  setMobSubmitStar(_mobSubmitStarVal);
+  var ta = document.getElementById('mobSubmitReview');
+  if(ta) ta.value = v.review||'';
+  var mEl = document.getElementById('mobSubmitMonth');
+  if(mEl) {
+    var t = eventTimeline['Marriage']||eventTimeline['Reception']||{};
+    mEl.textContent = t.date ? new Date(t.date).toLocaleDateString('en-IN',{month:'long',year:'numeric'}) : new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  }
+  document.getElementById('mobSubmitOverlay').style.display = 'flex';
+}
+
+function closeMobSubmit() {
+  document.getElementById('mobSubmitOverlay').style.display = 'none';
+  _mobSubmitVid = null; _mobSubmitStarVal = 0;
+}
+
+function setMobSubmitStar(n) {
+  _mobSubmitStarVal = n;
+  document.querySelectorAll('#mobSubmitStars .submit-star-btn').forEach(function(b){ b.classList.toggle('active', Number(b.dataset.ss)<=n); });
+  var lbl = document.getElementById('mobSubmitStarLbl');
+  if(lbl) lbl.textContent = _mobSubmitStarLabels[n]||'Tap a star to rate';
+}
+
+async function mobSubmitReview() {
+  if (!_mobSubmitVid || !_mobSubmitStarVal) { alert('Please select a star rating first'); return; }
+  var v = vendors.find(function(x){return x.id===_mobSubmitVid;});
+  if (!v) return;
+  var review = (document.getElementById('mobSubmitReview')?.value||'').trim();
+  var wm = document.getElementById('mobSubmitMonth')?.textContent||'';
+  var submittedBy = lsGet('signed-in-email') || 'anonymous';
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/submit-review', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({vendorName:v.name, category:v.category||'', phone:v.phone||'', rating:_mobSubmitStarVal, review:review, submittedBy:submittedBy, weddingMonth:wm})
+    });
+    var data = await resp.json();
+    if (data.success) { alert('🌸 Thank you! Rating submitted to Vivaah community.'); closeMobSubmit(); }
+    else alert('Error: '+(data.error||'Please try again'));
+  } catch(e) { alert('Network error. Please try again.'); }
+}
+
+// Submit star click handler
+document.addEventListener('click', function(e) {
+  var b = e.target.closest('.submit-star-btn');
+  if (b && b.dataset.ss) setMobSubmitStar(Number(b.dataset.ss));
+  var ms = e.target.closest('.mob-star');
+  if (ms && ms.dataset.ms) mobSetStar(Number(ms.dataset.ms));
+});
+
+// ── Admin Reviews ─────────────────────────────────────────────────────────
+async function mobLoadAdminReviews() {
+  var ownerEmail = lsGet('signed-in-email')||'';
+  var content = document.getElementById('mobAdminRevContent');
+  var summary = document.getElementById('mobAdminRevSummary');
+  if (!content) return;
+  content.innerHTML = '<div style="text-align:center;padding:14px;color:var(--soft);">Loading...</div>';
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-reviews?owner='+encodeURIComponent(ownerEmail));
+    var data = await resp.json();
+    if (!data.success) { content.innerHTML = '<div style="color:red;padding:10px;">'+(data.error||'Unauthorized')+'</div>'; return; }
+    var vds = data.vendors||[];
+    if(summary) summary.textContent = vds.length+' vendors · '+vds.reduce(function(s,v){return s+v.reviews.length;},0)+' reviews · '+vds.reduce(function(s,v){return s+v.reviews.filter(function(r){return r.approved;}).length;},0)+' approved';
+    if(vds.length===0) { content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--soft);">No reviews yet</div>'; return; }
+    content.innerHTML = vds.map(function(vd) {
+      return '<div class="admin-vcard"><div class="admin-vname">🏪 '+esc(vd.name)+'</div><div style="font-size:11px;color:var(--soft);">'+esc(vd.category||'')+(vd.phone?' · '+esc(vd.phone):'')+(vd.avgRating?' · ⭐'+vd.avgRating.toFixed(1):'')+'</div>' +
+        (vd.reviews||[]).map(function(r) {
+          var ds = r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-IN') : '';
+          return '<div class="admin-rv-item '+(r.approved?'admin-rv-approved':'admin-rv-pending')+'">'+
+            '<div style="font-size:12px;">'+'⭐'.repeat(r.rating)+(r.review?' "'+esc(r.review)+'"':'')+'</div>'+
+            '<div style="font-size:10px;color:var(--soft);">'+esc(r.submittedBy)+' · '+ds+(r.weddingMonth?' · '+r.weddingMonth:'')+'</div>'+
+            '<div style="font-size:10px;color:'+(r.approved?'#2E7D32':'#856404')+';">'+(r.approved?'✅ Approved':'⏳ Pending')+'</div>'+
+          '</div>';
+        }).join('') + '</div>';
+    }).join('');
+  } catch(e) { content.innerHTML = '<div style="color:red;padding:10px;">Error: '+e.message+'</div>'; }
+}
+
+async function mobApproveReview(vName, submittedBy, approved) {
+  var ownerEmail = lsGet('signed-in-email')||'';
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-approve-review', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ownerEmail:ownerEmail, vendorName:decodeURIComponent(vName), submittedBy:decodeURIComponent(submittedBy), approved:approved})
+    });
+    var data = await resp.json();
+    if(data.success) { alert(approved?'✅ Approved!':'↩ Unpublished'); mobLoadAdminReviews(); }
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+// ── Payment Note Edit ─────────────────────────────────────────────────────
+function mobEditPayment(vid, pid) {
+  var v = vendors.find(function(x){return x.id===vid;});
+  if (!v) return;
+  var p = (v.payments||[]).find(function(x){return x.id===pid;});
+  if (!p) return;
+  var row = document.getElementById('mobPayRow-'+pid);
+  if (!row || row.querySelector('.pay-edit-row')) return;
+  row.querySelector('.pay-meta').style.display = 'none';
+  var form = document.createElement('div');
+  form.className = 'pay-edit-row';
+  var di = document.createElement('input'); di.type='date'; di.value=p.date||''; di.className='pay-edit-input'; di.id='mpdi-'+pid;
+  var ni = document.createElement('input'); ni.type='text'; ni.value=p.note||''; ni.placeholder='Cash/Cheque/NEFT/UPI'; ni.className='pay-edit-input'; ni.id='mpni-'+pid;
+  var sb = document.createElement('button'); sb.textContent='Save'; sb.style.cssText='background:var(--maroon);color:var(--gold);border:none;border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;';
+  sb.onclick = function(){ mobSavePayment(vid,pid); };
+  var cb = document.createElement('button'); cb.textContent='✕'; cb.style.cssText='background:none;border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;';
+  cb.onclick = function(){ form.remove(); row.querySelector('.pay-meta').style.display=''; };
+  form.appendChild(di); form.appendChild(ni); form.appendChild(sb); form.appendChild(cb);
+  row.appendChild(form);
+}
+
+async function mobSavePayment(vid, pid) {
+  var v = vendors.find(function(x){return x.id===vid;});
+  if (!v) return;
+  var p = (v.payments||[]).find(function(x){return x.id===pid;});
+  if (!p) return;
+  var di = document.getElementById('mpdi-'+pid);
+  var ni = document.getElementById('mpni-'+pid);
+  if(di) p.date = di.value;
+  if(ni) p.note = ni.value.trim();
+  await saveVendors();
+  openVendorDetail(vid);
+}
+
+// ── Per-user PIN ──────────────────────────────────────────────────────────
+function getMobPinKey(role) {
+  var email = lsGet('signed-in-email')||'';
+  var ek = email.replace(/[^a-z0-9]/gi,'-');
+  return ek ? 'pin-hash-'+ek+'-'+role : 'pin-hash-'+role;
+}
+function getMobPinHash(role) {
+  return lsGet(getMobPinKey(role)) || lsGet('pin-hash-'+role);
+}
+function setMobPinHash(role, hash) {
+  lsSet(getMobPinKey(role), hash);
+  lsSet('pin-hash-'+role, hash); // also set shared for backward compat
+}
+
 function generateInviteMsg(g) {
   var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
   var ALL = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
@@ -1512,18 +1863,27 @@ function openVendorDetail(id) {
   document.getElementById('vdTitle').textContent = v.name || '\u2014';
   document.getElementById('vdSub').textContent = (v.category || '') + (v.contact ? ' \u00b7 ' + v.contact : '');
   var pmts = (v.payments || []).map(function(p) {
-    return drow(p.date || '\u2014', fmt(p.amount || 0));
+    return '<div class="drow" id="mobPayRow-' + p.id + '">' +
+      '<span class="pay-meta"><span class="drow-lbl">' + (p.date||'—') + (p.note ? ' · '+p.note : '') + '</span></span>' +
+      '<span style="display:flex;align-items:center;gap:6px;">' +
+        '<span class="drow-val">' + fmt(p.amount||0) + '</span>' +
+        '<button onclick="mobEditPayment(\'' + v.id + '\',\'' + p.id + '\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--soft);">✎</button>' +
+      '</span></div>';
   }).join('');
+  var starsDisplay = v.rating ? ('⭐'.repeat(v.rating) + ' <span style="font-size:11px;color:var(--soft);">'+['','Poor','Fair','Good','Very Good','Excellent'][v.rating]+'</span>') : '';
   document.getElementById('vdRows').innerHTML =
-    drow('Category', v.category || '\u2014') +
-    drow('Phone', v.phone || v.contact || '\u2014') +
+    drow('Category', v.category || '—') +
+    drow('Phone', v.phone || v.contact || '—') +
     drow('Quoted Amount', fmt(v.quoted || 0)) +
     '<div class="drow"><span class="drow-lbl">Total Paid</span><span class="drow-val" style="color:var(--green);">' + fmt(paid) + '</span></div>' +
     '<div class="drow"><span class="drow-lbl">Balance Due</span><span class="drow-val" style="color:var(--rust);">' + fmt(due) + '</span></div>' +
     drow('Status', stLbl) +
     '<div style="margin-top:10px;font-size:11px;font-weight:600;color:var(--soft);margin-bottom:2px;">Payment History</div>' +
     (pmts || drow('No payments yet', '')) +
-    (v.notes ? drow('Notes', v.notes) : '');
+    (v.notes ? drow('Notes', v.notes) : '') +
+    (starsDisplay ? '<div class="drow"><span class="drow-lbl">Your Rating</span><span class="drow-val">' + starsDisplay + '</span></div>' : '') +
+    (v.review ? '<div class="drow"><span class="drow-lbl">Review</span><span class="drow-val" style="font-style:italic;">"' + esc(v.review) + '"</span></div>' : '') +
+    (v.rating ? '<button onclick="openMobSubmit(\'' + v.id + '\')" style="width:100%;background:linear-gradient(135deg,#5C1A2B,#8B2A3F);color:var(--gold);border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px;">🌸 Submit to Vivaah Directory</button>' : '<div style="font-size:11px;color:var(--soft);text-align:center;margin-top:8px;">Rate in settings to submit to Vivaah Directory</div>');
   var ph = (v.phone || '').replace(/\D/g, '');
   document.getElementById('vdActions').innerHTML =
     (ph ? '<a href="tel:+' + ph + '" class="dbtn dbtn-call">\ud83d\udcde Call</a>' : '') +
