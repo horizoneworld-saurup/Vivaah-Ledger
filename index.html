@@ -2607,22 +2607,28 @@ async function submitCommunityReview() {
 
   var review = (document.getElementById('submitReviewText')?.value || '').trim();
   var weddingMonth = document.getElementById('submitWeddingMonth')?.textContent || '';
-  var submittedBy = currentUserEmail || 'anonymous';
+  // Use googleUserEmail (the actual signed-in email)
+  var submittedBy = googleUserEmail || window._vivaahUserEmail || 'anonymous';
+  
+  if (!submittedBy || submittedBy === 'anonymous') {
+    showToast('Please sign in with Google first, then submit your rating.');
+    return;
+  }
 
   var btn = document.querySelector('#submitReviewOverlay .btn-gold');
-  if (btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+  if (btn) { btn.textContent = '🌸 Submitting...'; btn.disabled = true; }
 
   try {
     var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/submit-review', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        vendorName:  v.name,
-        category:    v.category || '',
-        phone:       v.phone || '',
-        rating:      _submitStarRating,
-        review:      review,
-        submittedBy: submittedBy,
+        vendorName:   v.name,
+        category:     v.category || '',
+        phone:        v.phone || '',
+        rating:       _submitStarRating,
+        review:       review,
+        submittedBy:  submittedBy,
         weddingMonth: weddingMonth
       })
     });
@@ -2630,13 +2636,13 @@ async function submitCommunityReview() {
     if (data.success) {
       showToast('🌸 Thank you! Rating submitted to Vivaah community.');
       closeSubmitReview();
-      // Refresh community ratings
       setTimeout(function(){ loadCommunityRatings(); }, 1000);
     } else {
       showToast('Could not submit: ' + (data.error || 'Please try again'));
     }
   } catch(e) {
-    showToast('Network error. Please try again.');
+    showToast('Network error — ' + e.message + '. Please try again.');
+    console.error('Submit review error:', e);
   } finally {
     if (btn) { btn.textContent = '🌸 Submit to Vivaah Directory'; btn.disabled = false; }
   }
@@ -2675,7 +2681,7 @@ function showCommunityRating(vendorName) {
 
 // Admin: Load all reviews from KV
 async function loadAdminReviews() {
-  var ownerEmail = currentUserEmail || '';
+  var ownerEmail = googleUserEmail || window._vivaahUserEmail || '';
   var content = document.getElementById('adminReviewContent');
   var summary = document.getElementById('adminReviewSummary');
   if (!content) return;
@@ -2732,7 +2738,7 @@ function adminApproveFromBtn(btn) {
 }
 
 async function adminApproveReview(vendorName, submittedBy, approved) {
-  var ownerEmail = currentUserEmail || '';
+  var ownerEmail = googleUserEmail || egEmail || '';
   try {
     var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-approve-review', {
       method: 'POST',
@@ -3526,6 +3532,7 @@ function showLockStep(step){ // 'email' | 'waiting' | 'pin'
 async function egRequestAccess(){
   const input = document.getElementById('egEmailInput');
   const email = input.value.trim().toLowerCase();
+  window._vivaahUserEmail = email; // save for community rating submit
   const statusEl = document.getElementById('egStatusMsg');
   const btn = document.getElementById('egRequestBtn');
 
