@@ -2614,10 +2614,22 @@ async function submitCommunityReview() {
   var review = (document.getElementById('submitReviewText')?.value || '').trim();
   var weddingMonth = document.getElementById('submitWeddingMonth')?.textContent || '';
   // Use googleUserEmail (the actual signed-in email)
-  var submittedBy = googleUserEmail || window._vivaahUserEmail || 'anonymous';
+  // Use any available email identifier
+  var submittedBy = googleUserEmail 
+    || window._vivaahUserEmail 
+    || (document.getElementById('egEmailInput') ? document.getElementById('egEmailInput').value.trim() : '')
+    || 'anonymous';
   
+  // If still anonymous, try to get from storage
   if (!submittedBy || submittedBy === 'anonymous') {
-    showToast('Please sign in with Google first, then submit your rating.');
+    try { 
+      var stored = await storageGet('approval-email') || await storageGet('user-email');
+      if (stored) submittedBy = stored;
+    } catch(e) {}
+  }
+
+  if (!submittedBy || submittedBy === 'anonymous') {
+    showToast('Could not identify your account. Please refresh and try again.');
     return;
   }
 
@@ -3930,6 +3942,8 @@ function initGoogleAuth(){
         });
         const info = await userInfo.json();
         googleUserEmail = info.email || null;
+        window.googleUserEmail = googleUserEmail;
+        if(googleUserEmail) storageSet('approval-email', googleUserEmail).catch(()=>{});
         console.log('Signed in as:', googleUserEmail);
       } catch(e) { console.error('Could not get user email:', e); }
       await onSignedIn();
