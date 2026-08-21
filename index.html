@@ -2585,6 +2585,11 @@ function openSubmitReview(vid) {
     }
   }
 
+  // Set email from Google session (restored from cache)
+  var emailEl = document.getElementById('submitReviewEmail');
+  if (emailEl) {
+    emailEl.value = googleUserEmail || window._vivaahUserEmail || window._vivaahUserEmail || '';
+  }
   document.getElementById('submitReviewOverlay').style.display = 'flex';
 }
 
@@ -2614,22 +2619,25 @@ async function submitCommunityReview() {
   var review = (document.getElementById('submitReviewText')?.value || '').trim();
   var weddingMonth = document.getElementById('submitWeddingMonth')?.textContent || '';
   // Use googleUserEmail (the actual signed-in email)
-  // Use any available email identifier
-  var submittedBy = googleUserEmail 
+  // Get email from the input field in popup (most reliable)
+  var emailInput = document.getElementById('submitReviewEmail');
+  var submittedBy = (emailInput ? emailInput.value.trim() : '')
+    || googleUserEmail 
     || window._vivaahUserEmail 
-    || (document.getElementById('egEmailInput') ? document.getElementById('egEmailInput').value.trim() : '')
-    || 'anonymous';
-  
-  // If still anonymous, try to get from storage
-  if (!submittedBy || submittedBy === 'anonymous') {
-    try { 
-      var stored = await storageGet('approval-email') || await storageGet('user-email');
-      if (stored) submittedBy = stored;
+    || '';
+
+  if (!submittedBy) {
+    // Try one more time from cache
+    try {
+      var cached = await storageGet('google-token-cache');
+      if (cached) {
+        var cp = JSON.parse(cached);
+        if (cp.email) { submittedBy = cp.email; window.googleUserEmail = cp.email; googleUserEmail = cp.email; }
+      }
     } catch(e) {}
   }
-
-  if (!submittedBy || submittedBy === 'anonymous') {
-    showToast('Could not identify your account. Please refresh and try again.');
+  if (!submittedBy) {
+    showToast('Could not get your email. Please sign out and sign in with Google again.');
     return;
   }
 
@@ -3934,18 +3942,22 @@ function initGoogleAuth(){
         return; 
       }
       googleAccessToken = resp.access_token;
-      await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
       // Get signed-in user's email from Google
       try {
         const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+          headers: { 'Authorization': 'Bearer ' + resp.access_token }
         });
         const info = await userInfo.json();
         googleUserEmail = info.email || null;
         window.googleUserEmail = googleUserEmail;
-        if(googleUserEmail) storageSet('approval-email', googleUserEmail).catch(()=>{});
         console.log('Signed in as:', googleUserEmail);
       } catch(e) { console.error('Could not get user email:', e); }
+      // Save email WITH token cache so it's restored on next session
+      await storageSet('google-token-cache', JSON.stringify({
+        token: resp.access_token,
+        expiresAt: Date.now() + (resp.expires_in||3500)*1000,
+        email: googleUserEmail || null
+      }));
       await onSignedIn();
     }
   });
@@ -3958,6 +3970,11 @@ async function tryRestoreGoogleSession(){
       const parsed = JSON.parse(cached);
       if(parsed.token && parsed.expiresAt > Date.now()+30000){
         googleAccessToken = parsed.token;
+        // Restore email from cache
+        if(parsed.email) {
+          googleUserEmail = parsed.email;
+          window.googleUserEmail = parsed.email;
+        }
         await onSignedIn();
         return;
       } else if(parsed.token && googleTokenClient){
@@ -6710,9 +6727,11 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div id="submitStarLabel" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;font-style:italic;min-height:18px;"></div>
     <textarea class="submit-review-textarea" id="submitReviewText" rows="3"
       placeholder="Optional: How was the service? Food quality? Punctuality?..."></textarea>
-    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
       Wedding month: <strong id="submitWeddingMonth"></strong>
     </div>
+    <!-- email captured automatically from Google sign-in -->
+    <input type="hidden" id="submitReviewEmail">
     <div class="submit-review-actions">
       <button class="btn btn-ghost" onclick="closeSubmitReview()">Cancel</button>
       <button class="btn btn-gold" onclick="submitCommunityReview()">
