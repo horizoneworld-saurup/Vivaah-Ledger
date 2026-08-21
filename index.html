@@ -2429,6 +2429,79 @@ function loadVendorStars(rating) {
   if(lbl) lbl.textContent = STAR_LABELS[rating||0]||'';
 }
 
+// ── Payment Note Editor ─────────────────────────────────────────────────
+function editPaymentNote(vid, pid) {
+  var v = vendors.find(function(x){ return x.id === vid; });
+  if (!v) return;
+  var p = (v.payments||[]).find(function(x){ return x.id === pid; });
+  if (!p) return;
+
+  var row = document.getElementById('payrow-' + pid);
+  if (!row) return;
+
+  // Check if already editing
+  if (row.querySelector('.pay-edit-form')) return;
+
+  var metaEl = document.getElementById('paymeta-' + pid);
+  if (metaEl) metaEl.style.display = 'none';
+
+  // Build inline edit form
+  var form = document.createElement('div');
+  form.className = 'pay-edit-form';
+  form.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;';
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = 'Save';
+  saveBtn.style.cssText = 'background:var(--maroon);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;';
+  saveBtn.onclick = function(){ savePaymentNote(vid, pid); };
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.style.cssText = 'background:none;border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;';
+  cancelBtn.onclick = function(){ cancelPaymentEdit(pid); };
+
+  var dateInput = document.createElement('input');
+  dateInput.type = 'date'; dateInput.value = p.date||''; dateInput.id = 'pedit-date-'+pid;
+  dateInput.style.cssText = 'border:1.5px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;';
+
+  var noteInput = document.createElement('input');
+  noteInput.type = 'text'; noteInput.value = p.note||''; noteInput.id = 'pedit-note-'+pid;
+  noteInput.placeholder = 'Cash / Cheque / NEFT / UPI / Online';
+  noteInput.style.cssText = 'flex:1;min-width:140px;border:1.5px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;';
+
+  form.appendChild(dateInput);
+  form.appendChild(noteInput);
+  form.appendChild(saveBtn);
+  form.appendChild(cancelBtn);
+  form.innerHTML = '';
+  form.appendChild(dateInput); form.appendChild(noteInput); form.appendChild(saveBtn); form.appendChild(cancelBtn);
+  row.insertBefore(form, row.querySelector('span[style]') || row.firstChild.nextSibling);
+}
+
+function savePaymentNote(vid, pid) {
+  var v = vendors.find(function(x){ return x.id === vid; });
+  if (!v) return;
+  var p = (v.payments||[]).find(function(x){ return x.id === pid; });
+  if (!p) return;
+
+  var newDate = document.getElementById('pedit-date-' + pid);
+  var newNote = document.getElementById('pedit-note-' + pid);
+  if (newDate) p.date = newDate.value;
+  if (newNote) p.note = newNote.value.trim();
+
+  saveData();
+  render();
+  showToast('Payment updated!');
+}
+
+function cancelPaymentEdit(pid) {
+  var row = document.getElementById('payrow-' + pid);
+  if (!row) return;
+  var form = row.querySelector('.pay-edit-form');
+  if (form) form.remove();
+  var meta = document.getElementById('paymeta-' + pid);
+  if (meta) meta.style.display = '';
+}
+
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
   var wrap = document.getElementById('budgetChartWrap');
@@ -4175,10 +4248,11 @@ function renderTable(){
                 <ul class="pay-list" id="paylist-${v.id}">
                   ${(v.payments||[]).length===0 ? '<div style="font-size:12.5px;color:var(--ink-soft);">No payments recorded yet.</div>' :
                     (v.payments||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date)).map(p=>`
-                    <li class="pay-item">
-                      <span class="meta">${p.date || '—'}${p.note? ' · '+escapeHtml(p.note):''}</span>
-                      <span style="display:flex; align-items:center; gap:8px;">
+                    <li class="pay-item" id="payrow-${p.id}">
+                      <span class="meta" id="paymeta-${p.id}">${p.date || '—'}${p.note? ' · '+escapeHtml(p.note):''}</span>
+                      <span style="display:flex; align-items:center; gap:6px;">
                         <span class="amt">${fmt(p.amount)}</span>
+                        <button style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--ink-soft);padding:2px 4px;border-radius:4px;" title="Edit note" onclick="editPaymentNote('${v.id}','${p.id}')">✎</button>
                         <button class="del" data-del-payment="${v.id}|${p.id}" title="Remove">✕</button>
                       </span>
                     </li>`).join('')
