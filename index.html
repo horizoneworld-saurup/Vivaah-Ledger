@@ -2092,6 +2092,12 @@ const PLATFORM_VENDORS = [
 let currentRole = null;
 let lockPinEntry = '';
 let lockSelectedRole = 'admin';
+// currentUserEmail — always reads from googleUserEmail (set after Google sign-in)
+// Used in PIN hashing, pushToSheet, and community rating submit
+Object.defineProperty(window, 'currentUserEmail', {
+  get: function() { return window.googleUserEmail || window._vivaahUserEmail || null; },
+  configurable: true
+});
 let platformVendors = [...PLATFORM_VENDORS]; // runtime-editable copy
 let editingPvId = null;
 let pendingPvLogo = undefined;
