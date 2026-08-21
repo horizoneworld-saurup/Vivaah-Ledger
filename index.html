@@ -246,7 +246,7 @@
     align-items:center; justify-content:center; z-index:50; padding:20px;
   }
   .modal-overlay.show{display:flex;}
-  .modal{
+  .modal{max-height:90vh;overflow-y:auto;
     background:var(--ivory); border-radius:var(--r-lg); padding:26px 26px 22px; width:100%; max-width:460px;
     box-shadow:0 24px 60px -10px rgba(42,31,26,0.35); border:1px solid var(--line);
     max-height:88vh; overflow-y:auto;
@@ -295,6 +295,43 @@
   .btn-tiny{padding:6px 11px; font-size:12px;}
 
   /* ---------- Guest & catering calculator ---------- */
+  /* ── Caterer Auto-Tally ── */
+  .caterer-tally-wrap{
+    margin-top:16px; border-top:1.5px solid var(--line); padding-top:14px;
+  }
+  .caterer-tally-title{
+    font-size:12px; font-weight:700; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px;
+  }
+  .caterer-tally-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-radius:10px; margin-bottom:8px;
+    background:var(--ivory); border:1px solid var(--line);
+  }
+  .caterer-tally-name{
+    font-size:13px; font-weight:600; color:var(--maroon);
+    display:flex; align-items:center; gap:8px;
+  }
+  .caterer-tally-fns{
+    font-size:11px; color:var(--ink-soft); margin-top:2px;
+  }
+  .caterer-tally-cost{
+    font-size:15px; font-weight:700; color:var(--maroon);
+    font-family:'Cormorant Garamond',serif;
+  }
+  .caterer-tally-updated{
+    font-size:10px; color:var(--sage); margin-top:2px; text-align:right;
+  }
+  .caterer-tally-bar{
+    height:4px; border-radius:4px; background:var(--line);
+    margin-top:8px; overflow:hidden;
+  }
+  .caterer-tally-bar-fill{
+    height:100%; border-radius:4px;
+    background:linear-gradient(90deg,#5C1A2B,#D4A24C);
+    transition:width 0.4s ease;
+  }
+
   .catering-card{
     background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
     box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
@@ -635,102 +672,43 @@
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
   .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
 
-  /* ── Vendor Star Rating ── */
-  .vendor-rating{ display:flex; align-items:center; gap:4px; margin-top:4px; }
-  .star-btn{
-    font-size:18px; cursor:pointer; transition:transform 0.1s;
-    background:none; border:none; padding:0; line-height:1;
-    filter:grayscale(1); opacity:0.4;
-  }
-  .star-btn.active{ filter:none; opacity:1; }
-  .star-btn:hover{ transform:scale(1.2); filter:none; opacity:1; }
-  .vendor-review-row{ margin-top:8px; }
-  .vendor-review-input{
-    width:100%; border:1.5px solid var(--line); border-radius:8px;
-    padding:8px 12px; font-size:12px; color:var(--ink); resize:none;
-    background:var(--ivory); font-family:inherit;
-  }
-  .vendor-review-input:focus{ outline:none; border-color:var(--maroon); }
-  .vendor-card-stars{ font-size:13px; margin-top:2px; letter-spacing:1px; }
+  /* Section header colors */
+  /* ── Countdown Timer ── */
+  .countdown-wrap{background:linear-gradient(135deg,#5C1A2B 0%,#8B2A3F 50%,#5C1A2B 100%);border-radius:16px;padding:22px 28px;margin:0 0 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(92,26,43,0.25);border:1px solid rgba(212,164,76,0.3);flex-wrap:wrap;gap:16px;}
+  .countdown-left{display:flex;align-items:center;gap:14px;}
+  .countdown-flower{font-size:32px;}
+  .countdown-title{color:rgba(255,255,255,0.75);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .countdown-event{color:#D4A24C;font-size:17px;font-weight:700;font-family:'Cormorant Garamond',serif;}
+  .countdown-units{display:flex;gap:10px;}
+  .countdown-unit{text-align:center;}
+  .countdown-num{background:rgba(255,255,255,0.12);border:1px solid rgba(212,164,76,0.35);border-radius:10px;padding:8px 14px;min-width:54px;font-size:26px;font-weight:700;color:#fff;display:block;line-height:1;letter-spacing:1px;}
+  .countdown-label{color:rgba(255,255,255,0.55);font-size:10px;margin-top:5px;letter-spacing:0.5px;text-transform:uppercase;}
+  .countdown-done{color:#D4A24C;font-size:18px;font-weight:700;font-family:'Cormorant Garamond',serif;}
+  .countdown-hide{display:none!important;}
 
   /* ── Budget Chart ── */
-  .budget-chart-wrap{
-    background:#fff; border-radius:14px; padding:22px 24px 18px;
-    box-shadow:0 2px 12px rgba(92,26,43,0.07);
-    border:1px solid var(--line); margin-bottom:16px;
-  }
-  .budget-chart-title{
-    font-size:15px; font-weight:700; color:var(--maroon);
-    font-family:'Cormorant Garamond',serif; margin-bottom:16px;
-    display:flex; align-items:center; gap:8px;
-  }
-  .budget-chart-legend{
-    display:flex; gap:16px; margin-bottom:14px; flex-wrap:wrap;
-  }
-  .legend-item{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ink-soft); }
-  .legend-dot{ width:10px; height:10px; border-radius:3px; flex-shrink:0; }
-  .chart-row{ margin-bottom:14px; }
-  .chart-row-label{
-    display:flex; justify-content:space-between; align-items:center;
-    font-size:12px; color:var(--ink); font-weight:600; margin-bottom:5px;
-  }
-  .chart-row-label span{ color:var(--ink-soft); font-weight:400; font-size:11px; }
-  .chart-bar-bg{
-    background:#F5EDE0; border-radius:8px; height:22px;
-    overflow:hidden; position:relative;
-  }
-  .chart-bar-quoted{
-    position:absolute; top:0; left:0; height:100%;
-    background:rgba(212,164,76,0.25); border-radius:8px;
-    transition:width 0.6s ease;
-  }
-  .chart-bar-paid{
-    position:absolute; top:0; left:0; height:100%;
-    background:linear-gradient(90deg,#2E7D32,#4CAF50);
-    border-radius:8px; transition:width 0.6s ease;
-  }
-  .chart-bar-outstanding{
-    position:absolute; top:0; left:0; height:100%;
-    background:linear-gradient(90deg,#5C1A2B,#8B2A3F);
-    border-radius:8px; transition:width 0.6s ease;
-  }
-  .chart-summary{
-    display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
-    margin-top:18px; padding-top:16px;
-    border-top:1px solid var(--line);
-  }
-  .chart-sum-card{
-    text-align:center; padding:12px 8px; border-radius:10px;
-  }
-  .chart-sum-val{ font-size:16px; font-weight:700; font-family:'Cormorant Garamond',serif; }
-  .chart-sum-lbl{ font-size:10px; color:var(--ink-soft); margin-top:3px; letter-spacing:0.3px; }
+  .budget-chart-wrap{background:#fff;border-radius:14px;padding:22px 24px 18px;box-shadow:0 2px 12px rgba(92,26,43,0.07);border:1px solid var(--line);margin-bottom:16px;}
+  .budget-chart-title{font-size:15px;font-weight:700;color:var(--maroon);font-family:'Cormorant Garamond',serif;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .budget-chart-legend{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .chart-row{margin-bottom:14px;}
+  .chart-row-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--ink);font-weight:600;margin-bottom:5px;}
+  .chart-row-label span{color:var(--ink-soft);font-weight:400;font-size:11px;}
+  .chart-bar-bg{background:#F5EDE0;border-radius:8px;height:22px;overflow:hidden;position:relative;}
+  .chart-bar-quoted{position:absolute;top:0;left:0;height:100%;background:rgba(212,164,76,0.25);border-radius:8px;transition:width 0.6s ease;}
+  .chart-bar-paid{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#2E7D32,#4CAF50);border-radius:8px;transition:width 0.6s ease;}
+  .chart-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line);}
+  .chart-sum-card{text-align:center;padding:12px 8px;border-radius:10px;}
+  .chart-sum-val{font-size:16px;font-weight:700;font-family:'Cormorant Garamond',serif;}
+  .chart-sum-lbl{font-size:10px;color:var(--ink-soft);margin-top:3px;letter-spacing:0.3px;}
 
-  /* ── Countdown Timer ── */
-  .countdown-wrap{
-    background:linear-gradient(135deg,#5C1A2B 0%,#8B2A3F 50%,#5C1A2B 100%);
-    border-radius:16px; padding:22px 28px; margin:0 0 20px;
-    display:flex; align-items:center; justify-content:space-between;
-    box-shadow:0 4px 20px rgba(92,26,43,0.25);
-    border:1px solid rgba(212,164,76,0.3);
-    flex-wrap:wrap; gap:16px;
-  }
-  .countdown-left{ display:flex; align-items:center; gap:14px; }
-  .countdown-flower{ font-size:32px; }
-  .countdown-title{ color:rgba(255,255,255,0.75); font-size:12px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
-  .countdown-event{ color:#D4A24C; font-size:17px; font-weight:700; font-family:'Cormorant Garamond',serif; }
-  .countdown-units{ display:flex; gap:10px; }
-  .countdown-unit{ text-align:center; }
-  .countdown-num{
-    background:rgba(255,255,255,0.12); border:1px solid rgba(212,164,76,0.35);
-    border-radius:10px; padding:8px 14px; min-width:54px;
-    font-size:26px; font-weight:700; color:#fff; font-variant-numeric:tabular-nums;
-    display:block; line-height:1; letter-spacing:1px;
-  }
-  .countdown-label{ color:rgba(255,255,255,0.55); font-size:10px; margin-top:5px; letter-spacing:0.5px; text-transform:uppercase; }
-  .countdown-done{ color:#D4A24C; font-size:18px; font-weight:700; font-family:'Cormorant Garamond',serif; }
-  .countdown-hide{ display:none !important; }
+  /* ── Vendor Star Rating ── */
+  .vendor-rating{display:flex;align-items:center;gap:4px;margin-top:4px;}
+  .star-btn{font-size:18px;cursor:pointer;transition:transform 0.1s;background:none;border:none;padding:0;line-height:1;filter:grayscale(1);opacity:0.4;}
+  .star-btn.active{filter:none;opacity:1;}
+  .star-btn:hover{transform:scale(1.2);filter:none;opacity:1;}
 
-  /* Section header colors */
   .sec-budget{background:linear-gradient(135deg,#856404,#B8860B);}
   .sec-timeline{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
   .sec-vendor{background:linear-gradient(135deg,#1A3A8A,#2952C4);}
@@ -1243,22 +1221,10 @@
       </div>
     </div>
     <div class="countdown-units" id="countdownUnits">
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdDays">00</span>
-        <div class="countdown-label">Days</div>
-      </div>
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdHours">00</span>
-        <div class="countdown-label">Hours</div>
-      </div>
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdMins">00</span>
-        <div class="countdown-label">Mins</div>
-      </div>
-      <div class="countdown-unit">
-        <span class="countdown-num" id="cdSecs">00</span>
-        <div class="countdown-label">Secs</div>
-      </div>
+      <div class="countdown-unit"><span class="countdown-num" id="cdDays">00</span><div class="countdown-label">Days</div></div>
+      <div class="countdown-unit"><span class="countdown-num" id="cdHours">00</span><div class="countdown-label">Hours</div></div>
+      <div class="countdown-unit"><span class="countdown-num" id="cdMins">00</span><div class="countdown-label">Mins</div></div>
+      <div class="countdown-unit"><span class="countdown-num" id="cdSecs">00</span><div class="countdown-label">Secs</div></div>
     </div>
     <div class="countdown-done countdown-hide" id="countdownDone">💍 The Big Day is Here! 🌸</div>
   </div>
@@ -1527,9 +1493,12 @@
       <div class="catering-stat"><div class="v" id="cateringTotalCost">₹0</div><div class="l">Estimated catering cost</div></div>
       <div class="catering-stat"><div class="v" id="cateringVendorCompare">—</div><div class="l">vs. linked vendor quote</div></div>
     </div>
-    <div class="catering-actions">
-      <select id="cateringVendorSelect"><option value="">Link to a catering vendor…</option></select>
-      <button class="btn btn-gold" id="btnApplyCatering">Apply estimate to vendor quote</button>
+    <div class="caterer-tally-wrap" id="catererTallyWrap" style="display:none;">
+      <div class="caterer-tally-title">🍽️ Auto-Tally per Caterer</div>
+      <div id="catererTallyRows"></div>
+    </div>
+    <div class="catering-actions" style="margin-top:12px;">
+      <select id="cateringVendorSelect"><option value="">Compare with vendor quote…</option></select>
       <span class="catering-link-msg" id="cateringLinkMsg"></span>
     </div>
   </div>
@@ -1918,20 +1887,20 @@
         <input type="text" id="vTagline" placeholder="e.g. 20% off for early bookings" maxlength="60">
       </div>
     </div>
-    <div class="field">
-      <label>Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(rate after the event)</span></label>
-      <div class="vendor-rating" id="vStarRating">
+    <div class="field" style="margin-top:8px;">
+      <label style="font-weight:600;color:var(--maroon);">Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(rate after the event)</span></label>
+      <div class="vendor-rating" id="vStarRating" style="margin-top:8px;">
         <button class="star-btn" data-star="1" onclick="setVendorStar(1)" title="Poor">⭐</button>
         <button class="star-btn" data-star="2" onclick="setVendorStar(2)" title="Fair">⭐</button>
         <button class="star-btn" data-star="3" onclick="setVendorStar(3)" title="Good">⭐</button>
         <button class="star-btn" data-star="4" onclick="setVendorStar(4)" title="Very Good">⭐</button>
         <button class="star-btn" data-star="5" onclick="setVendorStar(5)" title="Excellent">⭐</button>
-        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:6px;"></span>
+        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:8px;font-style:italic;"></span>
       </div>
     </div>
     <div class="field">
-      <label>Review <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(optional notes after event)</span></label>
-      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, on-time, great food quality…" style="resize:none;"></textarea>
+      <label style="font-weight:600;color:var(--maroon);">Review <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(optional notes after event)</span></label>
+      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, food quality great, on-time delivery…" style="resize:none;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="vendorCancelBtn">Cancel</button>
@@ -2441,136 +2410,96 @@ let waCurrentGuestId = null;
 let hcCurrentGuestId = null;
 
 // ── Vendor Star Rating ───────────────────────────────────────────────────
-let _currentVendorStar = 0;
-const STAR_LABELS = ['','Poor','Fair','Good','Very Good','Excellent'];
-
+var _currentVendorStar = 0;
+var STAR_LABELS = ['','Poor','Fair','Good','Very Good','Excellent'];
 function setVendorStar(n) {
   _currentVendorStar = n;
-  document.querySelectorAll('#vStarRating .star-btn').forEach(btn => {
+  document.querySelectorAll('#vStarRating .star-btn').forEach(function(btn){
     btn.classList.toggle('active', Number(btn.dataset.star) <= n);
   });
-  document.getElementById('vStarLabel').textContent = STAR_LABELS[n] || '';
+  var lbl = document.getElementById('vStarLabel');
+  if(lbl) lbl.textContent = STAR_LABELS[n]||'';
 }
-
 function loadVendorStars(rating) {
-  _currentVendorStar = rating || 0;
-  document.querySelectorAll('#vStarRating .star-btn').forEach(btn => {
+  _currentVendorStar = rating||0;
+  document.querySelectorAll('#vStarRating .star-btn').forEach(function(btn){
     btn.classList.toggle('active', Number(btn.dataset.star) <= (rating||0));
   });
-  document.getElementById('vStarLabel').textContent = STAR_LABELS[rating||0] || '';
-}
-
-function getStarDisplay(rating) {
-  if (!rating) return '';
-  return '⭐'.repeat(rating) + '<span style="color:var(--ink-soft);font-size:10px;margin-left:4px;">' + STAR_LABELS[rating] + '</span>';
+  var lbl = document.getElementById('vStarLabel');
+  if(lbl) lbl.textContent = STAR_LABELS[rating||0]||'';
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
-  const wrap = document.getElementById('budgetChartWrap');
-  const barsEl = document.getElementById('budgetChartBars');
-  if (!wrap || !barsEl || !vendors || vendors.length === 0) {
-    if (wrap) wrap.style.display = 'none';
-    return;
-  }
+  var wrap = document.getElementById('budgetChartWrap');
+  var barsEl = document.getElementById('budgetChartBars');
+  if (!wrap || !barsEl || !vendors || vendors.length === 0) { if(wrap) wrap.style.display='none'; return; }
   wrap.style.display = 'block';
-
-  // Group vendors by category
-  const cats = {};
-  vendors.forEach(v => {
-    const cat = (v.category || 'Other').trim();
-    if (!cats[cat]) cats[cat] = { quoted:0, paid:0 };
-    cats[cat].quoted += Number(v.quoted || 0);
-    cats[cat].paid   += (v.payments||[]).reduce((s,p) => s + Number(p.amount||0), 0);
+  var cats = {};
+  vendors.forEach(function(v) {
+    var cat = (v.category||'Other').trim();
+    if(!cats[cat]) cats[cat]={quoted:0,paid:0};
+    cats[cat].quoted += Number(v.quoted||0);
+    cats[cat].paid   += (v.payments||[]).reduce(function(s,p){return s+Number(p.amount||0);},0);
   });
-
-  const allQuoted = Object.values(cats).reduce((s,c) => s+c.quoted, 0);
-  const allPaid   = Object.values(cats).reduce((s,c) => s+c.paid, 0);
-  const allOut    = Math.max(0, allQuoted - allPaid);
-
-  // Update summary cards
-  document.getElementById('chartTotalQuoted').textContent = fmt(allQuoted);
-  document.getElementById('chartTotalPaid').textContent   = fmt(allPaid);
-  document.getElementById('chartTotalOutstanding').textContent = fmt(allOut);
-
-  // Build bars
-  const maxVal = Math.max(...Object.values(cats).map(c => c.quoted), 1);
-  const catEmojis = {
-    'catering':'🍽️','decoration':'🌸','photography':'📸',
-    'videography':'🎥','music':'🎵','makeup':'💄',
-    'venue':'🏛️','transport':'🚗','jewellery':'💍',
-    'clothing':'👗','mehendi':'🌿','pandit':'🙏','other':'📦'
-  };
-
-  barsEl.innerHTML = Object.entries(cats)
-    .sort((a,b) => b[1].quoted - a[1].quoted)
-    .map(([cat, vals]) => {
-      const outstanding = Math.max(0, vals.quoted - vals.paid);
-      const qPct  = (vals.quoted / maxVal * 100).toFixed(1);
-      const pPct  = (vals.paid   / maxVal * 100).toFixed(1);
-      const oPct  = (outstanding / maxVal * 100).toFixed(1);
-      const emoji = catEmojis[cat.toLowerCase()] || '📦';
+  var allQuoted = Object.values(cats).reduce(function(s,c){return s+c.quoted;},0);
+  var allPaid   = Object.values(cats).reduce(function(s,c){return s+c.paid;},0);
+  document.getElementById('chartTotalQuoted').textContent      = fmt(allQuoted);
+  document.getElementById('chartTotalPaid').textContent        = fmt(allPaid);
+  document.getElementById('chartTotalOutstanding').textContent = fmt(Math.max(0,allQuoted-allPaid));
+  var maxVal = Math.max.apply(null, Object.values(cats).map(function(c){return c.quoted;}));
+  maxVal = maxVal||1;
+  var catEmojis = {'catering':'🍽️','decoration':'🌸','photography':'📸','videography':'🎥',
+    'music':'🎵','makeup':'💄','venue':'🏛️','transport':'🚗','mehendi':'🌿','other':'📦'};
+  barsEl.innerHTML = Object.entries(cats).sort(function(a,b){return b[1].quoted-a[1].quoted;})
+    .map(function(entry){
+      var cat=entry[0], vals=entry[1];
+      var outstanding = Math.max(0,vals.quoted-vals.paid);
+      var qPct = (vals.quoted/maxVal*100).toFixed(1);
+      var pPct = (vals.paid/maxVal*100).toFixed(1);
+      var emoji = catEmojis[cat.toLowerCase()]||'📦';
       var row = '<div class="chart-row">';
-    row += '<div class="chart-row-label">';
-    row += '<span style="color:var(--ink);font-weight:600;">' + emoji + ' ' + cat + '</span>';
-    row += '<span>Quoted ' + fmt(vals.quoted) + ' · Paid ' + fmt(vals.paid) + ' · Due ' + fmt(outstanding) + '</span>';
-    row += '</div>';
-    row += '<div class="chart-bar-bg">';
-    row += '<div class="chart-bar-quoted" style="width:' + qPct + '%"></div>';
-    row += '<div class="chart-bar-paid" style="width:' + pPct + '%"></div>';
-    row += '</div></div>';
-    return row;
+      row += '<div class="chart-row-label"><span style="color:var(--ink);font-weight:600;">'+emoji+' '+cat+'</span>';
+      row += '<span>Quoted '+fmt(vals.quoted)+' · Paid '+fmt(vals.paid)+' · Due '+fmt(outstanding)+'</span></div>';
+      row += '<div class="chart-bar-bg"><div class="chart-bar-quoted" style="width:'+qPct+'%"></div>';
+      row += '<div class="chart-bar-paid" style="width:'+pPct+'%"></div></div></div>';
+      return row;
     }).join('');
 }
 
-// ── Wedding Countdown Timer ─────────────────────────────────────────────────
-let _countdownInterval = null;
-
+// ── Wedding Countdown Timer ───────────────────────────────────────────────
+var _countdownInterval = null;
 function startCountdown() {
-  // Find next upcoming event from timeline — prefer Marriage
-  const preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
-  let targetDate = null, targetName = 'Marriage';
-
-  for (const ev of preferOrder) {
-    const t = eventTimeline[ev];
+  var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
+  var targetDate = null, targetName = 'Marriage';
+  for (var i=0; i<preferOrder.length; i++) {
+    var ev = preferOrder[i];
+    var t = eventTimeline[ev];
     if (t && t.date) {
-      const d = new Date(t.date);
-      // Add start time if available
-      if (t.startTime) {
-        const [hh, mm] = t.startTime.split(':').map(Number);
-        if (!isNaN(hh)) { d.setHours(hh, mm || 0, 0, 0); }
-      } else { d.setHours(20, 0, 0, 0); }
-      if (d > new Date()) { targetDate = d; targetName = ev; break; }
+      var d = new Date(t.date);
+      if (t.startTime) { var parts=t.startTime.split(':'); d.setHours(Number(parts[0])||20, Number(parts[1])||0, 0, 0); }
+      else d.setHours(20,0,0,0);
+      if (d > new Date()) { targetDate=d; targetName=ev; break; }
     }
   }
-
-  const wrap = document.getElementById('countdownWrap');
+  var wrap = document.getElementById('countdownWrap');
   if (!wrap) return;
-
   if (!targetDate) { wrap.classList.add('countdown-hide'); return; }
-
   wrap.classList.remove('countdown-hide');
   document.getElementById('countdownEventName').textContent = targetName;
-
   if (_countdownInterval) clearInterval(_countdownInterval);
-
   function tick() {
-    const now = new Date();
-    const diff = targetDate - now;
+    var diff = targetDate - new Date();
     if (diff <= 0) {
       clearInterval(_countdownInterval);
       document.getElementById('countdownUnits').classList.add('countdown-hide');
       document.getElementById('countdownDone').classList.remove('countdown-hide');
       return;
     }
-    const days  = Math.floor(diff / (1000*60*60*24));
-    const hours = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
-    const mins  = Math.floor((diff % (1000*60*60)) / (1000*60));
-    const secs  = Math.floor((diff % (1000*60)) / 1000);
-    document.getElementById('cdDays').textContent  = String(days).padStart(2,'0');
-    document.getElementById('cdHours').textContent = String(hours).padStart(2,'0');
-    document.getElementById('cdMins').textContent  = String(mins).padStart(2,'0');
-    document.getElementById('cdSecs').textContent  = String(secs).padStart(2,'0');
+    document.getElementById('cdDays').textContent  = String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('cdHours').textContent = String(Math.floor(diff%86400000/3600000)).padStart(2,'0');
+    document.getElementById('cdMins').textContent  = String(Math.floor(diff%3600000/60000)).padStart(2,'0');
+    document.getElementById('cdSecs').textContent  = String(Math.floor(diff%60000/1000)).padStart(2,'0');
   }
   tick();
   _countdownInterval = setInterval(tick, 1000);
@@ -4009,6 +3938,73 @@ function renderCatering(){
     compareEl.style.color = 'var(--ink)';
     linkMsg.textContent = '';
   }
+  // Auto-apply caterer costs to vendor quotes
+  setTimeout(autoApplyCaterers, 0);
+}
+
+// ── Auto-apply caterer costs to vendor quotes ─────────────────────────────
+function autoApplyCaterers() {
+  // Group functions by vendorId
+  var byVendor = {};
+  functions.forEach(function(f) {
+    if (!f.vendorId) return;
+    if (!byVendor[f.vendorId]) byVendor[f.vendorId] = [];
+    byVendor[f.vendorId].push(f);
+  });
+
+  // Update each caterer vendor's quoted amount
+  var updated = false;
+  Object.keys(byVendor).forEach(function(vid) {
+    var v = vendors.find(function(x){ return x.id === vid; });
+    if (!v) return;
+    var cost = byVendor[vid].reduce(function(s,f){
+      return s + Number(f.guests||0) * Number(f.rate||0);
+    }, 0);
+    v.quoted = Math.round(cost);
+    updated = true;
+  });
+
+  if (updated) saveData();
+
+  // Render tally section
+  var tallyWrap = document.getElementById('catererTallyWrap');
+  var tallyRows = document.getElementById('catererTallyRows');
+  if (!tallyWrap || !tallyRows) return;
+
+  if (Object.keys(byVendor).length === 0) {
+    tallyWrap.style.display = 'none';
+    return;
+  }
+  tallyWrap.style.display = 'block';
+
+  var totalAllCaterers = Object.values(byVendor).reduce(function(s, fns) {
+    return s + fns.reduce(function(ss,f){ return ss + Number(f.guests||0)*Number(f.rate||0); }, 0);
+  }, 0);
+
+  tallyRows.innerHTML = Object.keys(byVendor).map(function(vid) {
+    var v = vendors.find(function(x){ return x.id === vid; });
+    var vName = v ? v.name : 'Unknown';
+    var fns = byVendor[vid];
+    var cost = fns.reduce(function(s,f){ return s + Number(f.guests||0)*Number(f.rate||0); }, 0);
+    var pct = totalAllCaterers > 0 ? (cost / totalAllCaterers * 100).toFixed(0) : 0;
+    var fnNames = fns.map(function(f){ return f.name || 'Function'; }).join(' · ');
+    var paid = v ? (v.payments||[]).reduce(function(s,p){ return s+Number(p.amount||0); }, 0) : 0;
+    var outstanding = Math.max(0, cost - paid);
+    return '<div class="caterer-tally-row">' +
+      '<div>' +
+        '<div class="caterer-tally-name">🍽️ ' + escapeHtml(vName) +
+          '<span style="font-size:10px;background:rgba(92,26,43,0.1);color:var(--maroon);padding:2px 6px;border-radius:10px;">' + fns.length + ' function' + (fns.length>1?'s':'') + '</span>' +
+        '</div>' +
+        '<div class="caterer-tally-fns">' + escapeHtml(fnNames) + '</div>' +
+        '<div class="caterer-tally-bar"><div class="caterer-tally-bar-fill" style="width:' + pct + '%"></div></div>' +
+      '</div>' +
+      '<div style="text-align:right;">' +
+        '<div class="caterer-tally-cost">' + fmt(cost) + '</div>' +
+        '<div class="caterer-tally-updated" style="color:var(--sage);">✅ Vendor quote updated</div>' +
+        (outstanding > 0 ? '<div style="font-size:10px;color:var(--rust);">Due: ' + fmt(outstanding) + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 function updateCateringSummaryOnly(){
@@ -4068,7 +4064,8 @@ document.getElementById('functionGrid').addEventListener('change', (e)=>{
   if(!f) return;
   f[field] = e.target.value;
   saveFunctions();
-  renderCateringStats();
+  renderCateringStats ? renderCateringStats() : null;
+  if (field === 'vendorId') { autoApplyCaterers(); renderCatering(); }
 });
 
 document.getElementById('functionGrid').addEventListener('input', (e)=>{
@@ -4081,29 +4078,14 @@ document.getElementById('functionGrid').addEventListener('input', (e)=>{
   else { f[field] = e.target.value; }
   saveFunctions();
   updateCateringSummaryOnly();
+  autoApplyCaterers();
 });
 
 document.getElementById('functionGrid').addEventListener('change', renderCatering);
 
 document.getElementById('cateringVendorSelect').addEventListener('change', renderCatering);
 
-document.getElementById('btnApplyCatering').onclick = ()=>{
-  const select = document.getElementById('cateringVendorSelect');
-  const vid = select.value;
-  if(!vid){ showToast('Choose a vendor to link first'); return; }
-  const v = vendors.find(x=>x.id===vid);
-  if(!v) return;
-  // Sum only functions that have this vendor selected in their own row
-  const myFunctions = functions.filter(f => f.vendorId === vid);
-  if(myFunctions.length === 0){
-    showToast('Please select "' + v.name + '" in the vendor column of each function row you want to apply, then click Apply.');
-    return;
-  }
-  const cost = myFunctions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
-  v.quoted = Math.round(cost);
-  saveData(); render();
-  showToast('Set ' + v.name + '’s quote to ' + fmt(cost) + ' (' + myFunctions.length + ' function' + (myFunctions.length>1?'s':'') + ')');
-};
+// Apply button removed — auto-apply now handles this via autoApplyCaterers()
 
 /* ---------------- Vendor advertising ticker ---------------- */
 function renderTicker(){
@@ -4231,7 +4213,7 @@ function renderTable(){
     return `
       <tr class="vendor-row" data-row-id="${v.id}">
         <td><span class="chev ${isOpen?'open':''}">›</span></td>
-        <td class="name">${escapeHtml(v.name)} ${v.featured ? '<span class="featured-badge" title="Featured in advertisement banner">📢</span>' : ''} ${v.rating ? '<span style="font-size:11px;letter-spacing:0px;" title="' + (STAR_LABELS[v.rating]||'') + '">' + '⭐'.repeat(v.rating) + '</span>' : ''}</td>
+        <td class="name">${escapeHtml(v.name)} ${v.featured ? '<span class="featured-badge" title="Featured in advertisement banner">📢</span>' : ''} ${v.rating ? '<span style="font-size:11px;" title="'+(['','Poor','Fair','Good','Very Good','Excellent'][v.rating]||'')+'">'+'⭐'.repeat(v.rating)+'</span>' : ''}</td>
         <td class="cat"><span class="cat-pill">${escapeHtml(v.category||'Uncategorized')}</span></td>
         <td class="num">${fmt(q)}</td>
         <td class="num">${fmt(paid)}</td>
@@ -4358,23 +4340,20 @@ document.getElementById('vendorSaveBtn').onclick = ()=>{
   if(website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
   const tagline = document.getElementById('vTagline').value.trim();
 
-  const notes   = ''; // notes field removed from modal — using review instead
-  const review  = (document.getElementById('vReview')?.value || '').trim();
-  const rating  = _currentVendorStar || 0;
-
   if(editingVendorId){
     const v = vendors.find(x=>x.id===editingVendorId);
     if(v){
       v.name=name; v.category=category; v.quoted=quoted; v.contact=contact; v.phone=phone;
       v.featured=featured; v.website=website; v.tagline=tagline;
-      v.review=review; v.rating=rating;
+      v.review=(document.getElementById('vReview')?document.getElementById('vReview').value.trim():'');
+      v.rating=_currentVendorStar||0;
       if(pendingVendorLogo !== undefined) v.logo = pendingVendorLogo || '';
     }
   } else {
     const initialPaid = Number(document.getElementById('vInitialPaid').value)||0;
     const newVendor = {
       id: uid(), name, category, quoted, contact, phone, notes:'',
-      review, rating, featured, website, tagline, logo: pendingVendorLogo || '',
+      featured, website, tagline, logo: pendingVendorLogo || '',
       payments: initialPaid>0 ? [{id:uid(), date:new Date().toISOString().slice(0,10), amount:initialPaid, note:'Initial advance'}] : []
     };
     vendors.push(newVendor);
@@ -5114,7 +5093,7 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
         } else {
           const id = uid();
           nameToId[name.toLowerCase()] = id;
-          const vendor = {id, name, category, quoted, contact, phone, notes, review, rating, featured, website, tagline, logo:'', payments:[]};
+          const vendor = {id, name, category, quoted, contact, phone, notes, featured, website, tagline, logo:'', payments:[]};
           if(!hasPaymentSheet && paidDirect>0){
             vendor.payments.push({id:uid(), date:new Date().toISOString().slice(0,10), amount:paidDirect, note:'Imported balance'});
           }
