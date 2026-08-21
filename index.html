@@ -1079,7 +1079,10 @@
 <div class="modal-overlay" id="adminSettingsOverlay">
   <div class="modal" style="max-width:380px;">
     <h3>Admin settings — Change PINs</h3>
-    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 18px;">Leave blank to keep the current PIN. Owner PIN change takes effect immediately in this session only — update <code>OWNER_PIN</code> in the file source to make it permanent.</p>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin:0 0 8px;">Leave blank to keep the current PIN. PINs are now <strong>per user</strong> — each person sets their own.</p>
+    <div style="background:#E8F5E9;border-radius:8px;padding:8px 12px;font-size:12px;color:#2E7D32;margin-bottom:14px;" id="pinChangeUserInfo">
+      Setting PIN for: <strong id="pinChangeEmail">your account</strong>
+    </div>
     <div class="field">
       <label>🔑 Owner PIN (4 digits)</label>
       <input type="password" id="newOwnerPin" maxlength="4" placeholder="••••" inputmode="numeric">
@@ -2101,6 +2104,13 @@ async function sha256(text){
 
 async function getStoredHash(role){
   try{
+    // Check email-specific PIN first (per-user PIN)
+    const emailKey = (currentUserEmail||'').replace(/[^a-z0-9]/gi,'-');
+    if(emailKey){
+      const emailStored = await storageGet('pin-hash-'+emailKey+'-'+role);
+      if(emailStored) return emailStored;
+    }
+    // Fall back to shared role PIN
     const stored = await storageGet('pin-hash-'+role);
     if(stored) return stored;
   }catch(e){}
@@ -2116,6 +2126,10 @@ async function checkPin(role, pin){
 
 async function savePin(role, pin){
   const hash = await sha256(pin);
+  // Store locally with email prefix so each user has their own PIN
+  const emailKey = (currentUserEmail||'default').replace(/[^a-z0-9]/gi,'-');
+  await storageSet('pin-hash-'+emailKey+'-'+role, hash);
+  // Also store without prefix for backward compat
   await storageSet('pin-hash-'+role, hash);
 }
 
@@ -4153,7 +4167,10 @@ async function pushToSheet(){
   // Include PIN hashes so mobile devices can sync them after Google sign-in
   const pinHashes = {};
   for (const role of ['admin','editor','viewer','owner']) {
-    const h = await storageGet('pin-hash-'+role).catch(()=>null);
+    const emailKey = (currentUserEmail||'').replace(/[^a-z0-9]/gi,'-');
+    const emailHash = emailKey ? await storageGet('pin-hash-'+emailKey+'-'+role).catch(()=>null) : null;
+    const sharedHash = await storageGet('pin-hash-'+role).catch(()=>null);
+    const h = emailHash || sharedHash;
     if (h) pinHashes[role] = h;
   }
   const mainPayload = JSON.stringify({
@@ -5975,7 +5992,12 @@ document.getElementById('btnDownloadUpdatedFile').onclick=()=>{
    ADMIN SETTINGS — PIN management
    ================================================================ */
 document.getElementById('btnAdminSettings').onclick=()=>{
-  ['Admin','Editor','Viewer'].forEach(r=>document.getElementById('new'+r+'Pin').value='');
+  ['Admin','Editor','Viewer','Owner'].forEach(r=>{
+    const el = document.getElementById('new'+r+'Pin');
+    if(el) el.value='';
+  });
+  const emailEl = document.getElementById('pinChangeEmail');
+  if(emailEl) emailEl.textContent = currentUserEmail || 'your account';
   document.getElementById('adminSettingsOverlay').classList.add('show');
 };
 document.getElementById('adminSettingsCancelBtn').onclick=()=>document.getElementById('adminSettingsOverlay').classList.remove('show');
