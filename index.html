@@ -4680,6 +4680,12 @@ function openVendorModal(vendor){
   document.getElementById('vTagline').value = vendor ? (vendor.tagline||'') : '';
   refreshVendorLogoPreview(vendor ? (vendor.logo||null) : null);
   toggleFeaturedFields();
+  // ── Always reset rating/review to THIS vendor's values (never carry over from previous) ──
+  var thisRating = vendor ? (Number(vendor.rating)||0) : 0;
+  var thisReview = vendor ? (vendor.review||'') : '';
+  loadVendorStars(thisRating);
+  var vReviewEl = document.getElementById('vReview');
+  if (vReviewEl) vReviewEl.value = thisReview;
   document.getElementById('vendorModalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('vName').focus(), 50);
 }
@@ -4774,8 +4780,11 @@ document.getElementById('vendorSaveBtn').onclick = ()=>{
     }
   } else {
     const initialPaid = Number(document.getElementById('vInitialPaid').value)||0;
+    const vendorReview = document.getElementById('vReview') ? document.getElementById('vReview').value.trim() : '';
+    const vendorRating = _currentVendorStar || 0;
     const newVendor = {
       id: uid(), name, category, quoted, contact, phone, notes:'',
+      review: vendorReview, rating: vendorRating,
       featured, website, tagline, logo: pendingVendorLogo || '',
       payments: initialPaid>0 ? [{id:uid(), date:new Date().toISOString().slice(0,10), amount:initialPaid, note:'Initial advance'}] : []
     };
