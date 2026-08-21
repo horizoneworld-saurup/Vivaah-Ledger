@@ -703,6 +703,88 @@
   .chart-sum-val{font-size:16px;font-weight:700;font-family:'Cormorant Garamond',serif;}
   .chart-sum-lbl{font-size:10px;color:var(--ink-soft);margin-top:3px;letter-spacing:0.3px;}
 
+  /* ── Vivaah Community Rating ── */
+  .community-badge{
+    display:inline-flex; align-items:center; gap:5px;
+    background:linear-gradient(135deg,#FFF8E1,#FFF0C0);
+    border:1px solid #D4A24C; border-radius:20px;
+    padding:3px 10px; font-size:11px; color:#856404; font-weight:600;
+    cursor:pointer; margin-left:6px; vertical-align:middle;
+  }
+  .community-badge:hover{ background:linear-gradient(135deg,#FFF0C0,#FFE082); }
+  .submit-review-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1200;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .submit-review-box{
+    background:#fff; border-radius:20px; padding:28px 28px 22px; width:100%;
+    max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    border:1px solid rgba(212,164,76,0.3);
+  }
+  .submit-review-title{
+    font-size:18px; font-weight:700; color:var(--maroon);
+    font-family:'Cormorant Garamond',serif; margin-bottom:6px;
+  }
+  .submit-review-vendor{
+    font-size:14px; color:var(--ink); margin-bottom:16px;
+    padding:10px 14px; background:var(--ivory); border-radius:10px;
+    border:1px solid var(--line);
+  }
+  .submit-review-privacy{
+    font-size:11px; color:var(--ink-soft); background:#F0F4FF;
+    border-radius:8px; padding:10px 12px; margin-bottom:16px;
+    line-height:1.6; border-left:3px solid #1A3A8A;
+  }
+  .submit-star-row{
+    display:flex; gap:8px; margin:10px 0 16px; justify-content:center;
+  }
+  .submit-star{
+    font-size:28px; cursor:pointer; filter:grayscale(1); opacity:0.3;
+    transition:all 0.15s; border:none; background:none; padding:0;
+  }
+  .submit-star.active{ filter:none; opacity:1; transform:scale(1.1); }
+  .submit-star:hover{ filter:none; opacity:0.8; }
+  .submit-review-textarea{
+    width:100%; border:1.5px solid var(--line); border-radius:10px;
+    padding:10px 14px; font-size:13px; resize:none; font-family:inherit;
+    color:var(--ink); background:var(--ivory); margin-bottom:16px;
+  }
+  .submit-review-textarea:focus{ outline:none; border-color:var(--maroon); }
+  .submit-review-actions{
+    display:flex; gap:10px; justify-content:flex-end;
+  }
+
+  /* ── Admin Review Dashboard ── */
+  .admin-review-wrap{
+    background:#fff; border-radius:14px; padding:22px 24px;
+    border:1px solid var(--line); margin-bottom:20px;
+    box-shadow:0 2px 12px rgba(92,26,43,0.07);
+  }
+  .admin-review-title{
+    font-size:16px; font-weight:700; color:var(--maroon);
+    font-family:'Cormorant Garamond',serif; margin-bottom:4px;
+  }
+  .admin-vendor-card{
+    border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    margin-bottom:12px; background:var(--ivory);
+  }
+  .admin-vendor-name{
+    font-size:14px; font-weight:700; color:var(--maroon); margin-bottom:4px;
+  }
+  .admin-vendor-meta{
+    font-size:11px; color:var(--ink-soft); margin-bottom:10px;
+  }
+  .admin-review-item{
+    background:#fff; border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; margin-bottom:8px; display:flex;
+    justify-content:space-between; align-items:flex-start; gap:10px;
+  }
+  .admin-review-pending{ border-left:3px solid #D4A24C; }
+  .admin-review-approved{ border-left:3px solid #2E7D32; }
+  .admin-review-actions{ display:flex; gap:6px; flex-shrink:0; }
+  .btn-approve{ background:#2E7D32; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; }
+  .btn-reject-r{ background:#C62828; color:#fff; border:none; border-radius:6px; padding:4px 10px; font-size:11px; cursor:pointer; }
+
   /* ── Vendor Star Rating ── */
   .vendor-rating{display:flex;align-items:center;gap:4px;margin-top:4px;}
   .star-btn{font-size:18px;cursor:pointer;transition:transform 0.1s;background:none;border:none;padding:0;line-height:1;filter:grayscale(1);opacity:0.4;}
@@ -1227,6 +1309,22 @@
       <div class="countdown-unit"><span class="countdown-num" id="cdSecs">00</span><div class="countdown-label">Secs</div></div>
     </div>
     <div class="countdown-done countdown-hide" id="countdownDone">💍 The Big Day is Here! 🌸</div>
+  </div>
+
+  <!-- ADMIN VENDOR DIRECTORY (Owner only) -->
+  <div id="adminReviewSection" style="display:none;" class="admin-only">
+    <div class="admin-review-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div class="admin-review-title">🌸 Vivaah Vendor Directory — Admin</div>
+          <div style="font-size:12px;color:var(--ink-soft);" id="adminReviewSummary">Loading reviews...</div>
+        </div>
+        <button class="btn btn-gold" onclick="loadAdminReviews()" style="font-size:12px;">🔄 Refresh</button>
+      </div>
+      <div id="adminReviewContent">
+        <div style="text-align:center;padding:20px;color:var(--ink-soft);">Click Refresh to load submitted reviews</div>
+      </div>
+    </div>
   </div>
 
   <!-- BUDGET vs ACTUAL CHART -->
@@ -2429,6 +2527,213 @@ function loadVendorStars(rating) {
   if(lbl) lbl.textContent = STAR_LABELS[rating||0]||'';
 }
 
+// ── Vivaah Community Rating System ──────────────────────────────────────
+var _submitVendorId = null;
+var _submitStarRating = 0;
+var SUBMIT_STAR_LABELS = ['','Poor','Fair','Good','Very Good','Excellent'];
+var _communityRatings = {}; // cache: vendorName -> {avgRating, reviewCount}
+
+// Open submit review popup
+function openSubmitReview(vid) {
+  var v = vendors.find(function(x){ return x.id === vid; });
+  if (!v) return;
+  _submitVendorId = vid;
+  _submitStarRating = v.rating || 0;
+
+  // Set vendor info
+  var info = document.getElementById('submitReviewVendorInfo');
+  if (info) info.innerHTML = '<strong>' + escapeHtml(v.name) + '</strong>' +
+    (v.category ? ' &nbsp;·&nbsp; ' + escapeHtml(v.category) : '') +
+    (v.phone ? ' &nbsp;·&nbsp; ' + escapeHtml(v.phone) : '');
+
+  // Set stars from existing rating
+  setSubmitStar(_submitStarRating);
+
+  // Set review text
+  var ta = document.getElementById('submitReviewText');
+  if (ta) ta.value = v.review || '';
+
+  // Set wedding month from Marriage timeline
+  var wm = document.getElementById('submitWeddingMonth');
+  if (wm) {
+    var t = eventTimeline['Marriage'] || eventTimeline['Reception'] || {};
+    if (t.date) {
+      var d = new Date(t.date);
+      wm.textContent = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    } else {
+      wm.textContent = new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    }
+  }
+
+  document.getElementById('submitReviewOverlay').style.display = 'flex';
+}
+
+function closeSubmitReview() {
+  document.getElementById('submitReviewOverlay').style.display = 'none';
+  _submitVendorId = null;
+  _submitStarRating = 0;
+}
+
+function setSubmitStar(n) {
+  _submitStarRating = n;
+  document.querySelectorAll('#submitStarRow .submit-star').forEach(function(btn) {
+    btn.classList.toggle('active', Number(btn.dataset.sstar) <= n);
+  });
+  var lbl = document.getElementById('submitStarLabel');
+  if (lbl) lbl.textContent = SUBMIT_STAR_LABELS[n] || 'Tap a star to rate';
+}
+
+// Submit review to central KV via worker
+async function submitCommunityReview() {
+  if (!_submitVendorId) return;
+  if (!_submitStarRating) { showToast('Please select a star rating first'); return; }
+
+  var v = vendors.find(function(x){ return x.id === _submitVendorId; });
+  if (!v) return;
+
+  var review = (document.getElementById('submitReviewText')?.value || '').trim();
+  var weddingMonth = document.getElementById('submitWeddingMonth')?.textContent || '';
+  var submittedBy = currentUserEmail || 'anonymous';
+
+  var btn = document.querySelector('#submitReviewOverlay .btn-gold');
+  if (btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/submit-review', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        vendorName:  v.name,
+        category:    v.category || '',
+        phone:       v.phone || '',
+        rating:      _submitStarRating,
+        review:      review,
+        submittedBy: submittedBy,
+        weddingMonth: weddingMonth
+      })
+    });
+    var data = await resp.json();
+    if (data.success) {
+      showToast('🌸 Thank you! Rating submitted to Vivaah community.');
+      closeSubmitReview();
+      // Refresh community ratings
+      setTimeout(function(){ loadCommunityRatings(); }, 1000);
+    } else {
+      showToast('Could not submit: ' + (data.error || 'Please try again'));
+    }
+  } catch(e) {
+    showToast('Network error. Please try again.');
+  } finally {
+    if (btn) { btn.textContent = '🌸 Submit to Vivaah Directory'; btn.disabled = false; }
+  }
+}
+
+// Load community ratings for all vendors (runs on page load)
+async function loadCommunityRatings() {
+  if (!vendors || vendors.length === 0) return;
+  for (var i = 0; i < vendors.length; i++) {
+    var v = vendors[i];
+    try {
+      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name));
+      var data = await resp.json();
+      if (data.found && data.approvedCount > 0) {
+        v._communityRating = data.avgRating;
+        v._communityCount  = data.approvedCount;
+        _communityRatings[v.name] = data;
+      }
+    } catch(e) {}
+  }
+  render();
+}
+
+function showCommunityRating(vendorName) {
+  var data = _communityRatings[vendorName];
+  if (!data) return;
+  var stars = '⭐'.repeat(Math.round(data.avgRating));
+  var msg = vendorName + '\n' + stars + ' ' + data.avgRating.toFixed(1) + ' (' + data.approvedCount + ' reviews)';
+  if (data.reviews && data.reviews.length > 0) {
+    data.reviews.slice(0,3).forEach(function(r) {
+      if (r.review) msg += '\n"' + r.review + '" — ' + (r.weddingMonth||'');
+    });
+  }
+  alert(msg);
+}
+
+// Admin: Load all reviews from KV
+async function loadAdminReviews() {
+  var ownerEmail = currentUserEmail || '';
+  var content = document.getElementById('adminReviewContent');
+  var summary = document.getElementById('adminReviewSummary');
+  if (!content) return;
+  content.innerHTML = '<div style="text-align:center;padding:20px;color:var(--ink-soft);">Loading...</div>';
+
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-reviews?owner=' + encodeURIComponent(ownerEmail));
+    var data = await resp.json();
+    if (!data.success) { content.innerHTML = '<div style="color:var(--rust);padding:12px;">'+( data.error||'Unauthorized')+'</div>'; return; }
+
+    var vendors_data = data.vendors || [];
+    if (summary) summary.textContent = vendors_data.length + ' vendors · ' +
+      vendors_data.reduce(function(s,v){return s+v.reviews.length;},0) + ' total reviews · ' +
+      vendors_data.reduce(function(s,v){return s+v.reviews.filter(function(r){return r.approved;}).length;},0) + ' approved';
+
+    if (vendors_data.length === 0) {
+      content.innerHTML = '<div style="text-align:center;padding:30px;color:var(--ink-soft);">No reviews submitted yet.<br>Reviews will appear here when clients submit ratings.</div>';
+      return;
+    }
+
+    content.innerHTML = vendors_data.map(function(vd) {
+      var avgStr = vd.avgRating ? vd.avgRating.toFixed(1) : '—';
+      var reviewsHtml = (vd.reviews||[]).map(function(r) {
+        var dateStr = r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('en-IN') : '—';
+        return '<div class="admin-review-item ' + (r.approved ? 'admin-review-approved' : 'admin-review-pending') + '">' +
+          '<div style="flex:1;">' +
+            '<div style="font-size:12px;font-weight:600;">' + '⭐'.repeat(r.rating) + ' &nbsp; ' + (r.review ? escapeHtml(r.review) : '<em style="color:var(--ink-soft)">No review text</em>') + '</div>' +
+            '<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">📧 ' + escapeHtml(r.submittedBy) + ' &nbsp;·&nbsp; ' + dateStr + (r.weddingMonth ? ' &nbsp;·&nbsp; ' + r.weddingMonth : '') + '</div>' +
+            '<div style="font-size:10px;margin-top:4px;color:' + (r.approved ? '#2E7D32' : '#856404') + ';">' + (r.approved ? '✅ Approved — visible to all clients' : '⏳ Pending — only you can see this') + '</div>' +
+          '</div>' +
+          '<div class="admin-review-actions">' +
+            (!r.approved ? '<button class="btn-approve" data-av="'+encodeURIComponent(vd.name)+'" data-as="'+encodeURIComponent(r.submittedBy)+'" data-aa="1" onclick="adminApproveFromBtn(this)">✅ Approve</button>' : '') +
+            (r.approved ? '<button class="btn-reject-r" data-av="'+encodeURIComponent(vd.name)+'" data-as="'+encodeURIComponent(r.submittedBy)+'" data-aa="0" onclick="adminApproveFromBtn(this)">↩ Unpublish</button>' : '') +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      return '<div class="admin-vendor-card">' +
+        '<div class="admin-vendor-name">🏪 ' + escapeHtml(vd.name) + '</div>' +
+        '<div class="admin-vendor-meta">' + escapeHtml(vd.category||'—') + (vd.phone ? ' · ' + escapeHtml(vd.phone) : '') + ' · ⭐ ' + avgStr + ' avg · ' + vd.reviews.length + ' review(s)</div>' +
+        reviewsHtml +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    content.innerHTML = '<div style="color:var(--rust);padding:12px;">Error: ' + e.message + '</div>';
+  }
+}
+
+function adminApproveFromBtn(btn) {
+  var vendorName = decodeURIComponent(btn.dataset.av||'');
+  var submittedBy = decodeURIComponent(btn.dataset.as||'');
+  var approved = btn.dataset.aa === '1';
+  adminApproveReview(vendorName, submittedBy, approved);
+}
+
+async function adminApproveReview(vendorName, submittedBy, approved) {
+  var ownerEmail = currentUserEmail || '';
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-approve-review', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ ownerEmail, vendorName, submittedBy, approved })
+    });
+    var data = await resp.json();
+    if (data.success) {
+      showToast(approved ? '✅ Review approved — now visible to all clients!' : '↩ Review unpublished');
+      loadAdminReviews();
+      if (approved) loadCommunityRatings();
+    }
+  } catch(e) { showToast('Error: ' + e.message); }
+}
+
 // ── Payment Note Editor ─────────────────────────────────────────────────
 function editPaymentNote(vid, pid) {
   var v = vendors.find(function(x){ return x.id === vid; });
@@ -2501,6 +2806,12 @@ function cancelPaymentEdit(pid) {
   var meta = document.getElementById('paymeta-' + pid);
   if (meta) meta.style.display = '';
 }
+
+// Submit star click handler
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.submit-star');
+  if (btn && btn.dataset.sstar) setSubmitStar(Number(btn.dataset.sstar));
+});
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
@@ -3785,6 +4096,10 @@ async function onSignedIn(){
     renderTimeline();
     startCountdown();
     renderBudgetChart();
+    loadCommunityRatings();
+    // Show admin review section for owner only
+    var adminSec = document.getElementById('adminReviewSection');
+    if (adminSec) adminSec.style.display = (currentRole === 'owner') ? 'block' : 'none';
     renderInvTable(); // refresh invitation distribution after cloud data loads
     notes = cloudData.notes || notes;
     await storageSet('wedding-notes', JSON.stringify(notes));
@@ -4278,6 +4593,18 @@ function renderTable(){
                 <div class="notes-box">
                   <textarea data-field="notes" data-vendor="${v.id}" placeholder="Contract terms, deadlines, follow-ups…">${escapeHtml(v.notes||'')}</textarea>
                 </div>
+                ${v.rating ? `
+                <div style="margin-top:12px;padding:10px 14px;background:var(--ivory);border-radius:10px;border:1px solid var(--line);">
+                  <div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;font-weight:600;">YOUR RATING</div>
+                  <div style="font-size:16px;letter-spacing:2px;">${'⭐'.repeat(v.rating)} <span style="font-size:12px;color:var(--ink-soft);">${['','Poor','Fair','Good','Very Good','Excellent'][v.rating]||''}</span></div>
+                  ${v.review ? `<div style="font-size:12px;color:var(--ink);margin-top:6px;font-style:italic;">"${escapeHtml(v.review)}"</div>` : ''}
+                  <button onclick="openSubmitReview('${v.id}')" style="margin-top:10px;background:linear-gradient(135deg,#5C1A2B,#8B2A3F);color:#D4A24C;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;width:100%;">
+                    🌸 Submit to Vivaah Vendor Directory
+                  </button>
+                </div>` : `
+                <div style="margin-top:12px;font-size:12px;color:var(--ink-soft);text-align:center;padding:8px;">
+                  ⭐ Rate this vendor in the Edit modal to submit to Vivaah Directory
+                </div>`}
               </div>
             </div>
           </div>
@@ -4287,7 +4614,12 @@ function renderTable(){
     return `
       <tr class="vendor-row" data-row-id="${v.id}">
         <td><span class="chev ${isOpen?'open':''}">›</span></td>
-        <td class="name">${escapeHtml(v.name)} ${v.featured ? '<span class="featured-badge" title="Featured in advertisement banner">📢</span>' : ''} ${v.rating ? '<span style="font-size:11px;" title="'+(['','Poor','Fair','Good','Very Good','Excellent'][v.rating]||'')+'">'+'⭐'.repeat(v.rating)+'</span>' : ''}</td>
+        <td class="name">
+          ${escapeHtml(v.name)}
+          ${v.featured ? '<span class="featured-badge" title="Featured in advertisement banner">📢</span>' : ''}
+          ${v.rating ? '<span style="font-size:11px;" title="'+(['','Poor','Fair','Good','Very Good','Excellent'][v.rating]||'')+'">'+'⭐'.repeat(v.rating)+'</span>' : ''}
+          ${v._communityRating ? '<span class="community-badge" data-vn="'+encodeURIComponent(v.name)+'" onclick="event.stopPropagation();showCommunityRating(decodeURIComponent(this.dataset.vn))" title="Vivaah community rating">\ud83c\udf38 '+v._communityRating.toFixed(1)+'\u2b50 community</span>' : ''}
+        </td>
         <td class="cat"><span class="cat-pill">${escapeHtml(v.category||'Uncategorized')}</span></td>
         <td class="num">${fmt(q)}</td>
         <td class="num">${fmt(paid)}</td>
@@ -6300,6 +6632,38 @@ function runGlobalSearch(q, gsInput, gsResults){
 }
 </script>
 <!-- ── WhatsApp Message Editor Modal ── -->
+<!-- SUBMIT TO VIVAAH DIRECTORY POPUP -->
+<div class="submit-review-overlay" id="submitReviewOverlay" style="display:none;">
+  <div class="submit-review-box">
+    <div class="submit-review-title">⭐ Rate for Vivaah Community</div>
+    <div class="submit-review-vendor" id="submitReviewVendorInfo">Vendor name</div>
+    <div class="submit-review-privacy">
+      🔒 <strong>Privacy:</strong> Only your rating, review and wedding month will be shared.
+      Your name is visible to RMS only — never shown to other clients.
+    </div>
+    <label style="font-size:12px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;text-align:center;">Your Rating</label>
+    <div class="submit-star-row" id="submitStarRow">
+      <button class="submit-star" data-sstar="1">⭐</button>
+      <button class="submit-star" data-sstar="2">⭐</button>
+      <button class="submit-star" data-sstar="3">⭐</button>
+      <button class="submit-star" data-sstar="4">⭐</button>
+      <button class="submit-star" data-sstar="5">⭐</button>
+    </div>
+    <div id="submitStarLabel" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;font-style:italic;min-height:18px;"></div>
+    <textarea class="submit-review-textarea" id="submitReviewText" rows="3"
+      placeholder="Optional: How was the service? Food quality? Punctuality?..."></textarea>
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
+      Wedding month: <strong id="submitWeddingMonth"></strong>
+    </div>
+    <div class="submit-review-actions">
+      <button class="btn btn-ghost" onclick="closeSubmitReview()">Cancel</button>
+      <button class="btn btn-gold" onclick="submitCommunityReview()">
+        🌸 Submit to Vivaah Directory
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="wa-modal-overlay" id="waModalOverlay">
   <div class="wa-modal">
     <h3>💬 WhatsApp Message</h3>
