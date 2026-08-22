@@ -149,14 +149,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 .acc-bd.open{max-height:none;}
 
 /* ── Countdown Timer ── */
-.cd-wrap{background:linear-gradient(135deg,#fce4ec,#f8bbd0,#fce4ec);border-radius:14px;padding:14px 18px;margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:2px solid #e8892a;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(232,137,42,.2);}
+.cd-wrap{background:linear-gradient(135deg,#5C1A2B,#8B2A3F);border-radius:14px;padding:14px 18px;margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid rgba(212,164,76,0.3);}
 .cd-left{display:flex;align-items:center;gap:10px;}
-.cd-title{color:#7a1838;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
-.cd-event{color:#4a0826;font-size:13px;font-weight:700;}
+.cd-title{color:rgba(255,255,255,0.7);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
+.cd-event{color:#D4A24C;font-size:13px;font-weight:700;}
 .cd-units{display:flex;gap:6px;}
 .cd-unit{text-align:center;}
-.cd-num{background:rgba(255,255,255,0.92);border:2px solid #e8892a;border-radius:8px;padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#4a0826;display:block;line-height:1;box-shadow:0 2px 8px rgba(232,137,42,.2);}
-.cd-lbl{color:#9a2a58;font-size:9px;margin-top:3px;text-transform:uppercase;}
+.cd-num{background:rgba(255,255,255,0.15);border:1px solid rgba(212,164,76,0.3);border-radius:8px;padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#fff;display:block;line-height:1;}
+.cd-lbl{color:rgba(255,255,255,0.5);font-size:9px;margin-top:3px;text-transform:uppercase;}
 .cd-hide{display:none!important;}
 .cd-done{color:#D4A24C;font-size:14px;font-weight:700;}
 
@@ -205,10 +205,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 /* ── Payment Edit ── */
 .pay-edit-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
 .pay-edit-input{border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;flex:1;min-width:100px;}
-
-/* ── Petals ── */
-.petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;}
-@keyframes rFall{0%{transform:translateY(-30px) rotate(0deg);opacity:0;}10%{opacity:.85;}90%{opacity:.65;}100%{transform:translateY(500px) rotate(360deg);opacity:0;}}
 
 /* ── ROW ITEMS ── */
 .row-item{padding:10px 12px;border-top:1px solid var(--ivory2);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
@@ -390,7 +386,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 
   <!-- COUNTDOWN TIMER -->
   <div class="cd-wrap cd-hide" id="mobCdWrap">
-    <div id="mobPetals" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;"></div>
     <div class="cd-left">
       <span style="font-size:22px;">🌸</span>
       <div>
@@ -1268,19 +1263,6 @@ function toggleAcc(id) {
 // ═══════════════════════════════════════
 // ── Countdown Timer ──────────────────────────────────────────────────────
 var _mobCdInterval = null;
-function initMobPetals() {
-  var wrap = document.getElementById('mobPetals');
-  if (!wrap || wrap.children.length > 0) return;
-  var emojis = ['🌸','🌺','🌹','🌼','🪷'];
-  for (var i = 0; i < 18; i++) {
-    var p = document.createElement('div');
-    p.className = 'petal';
-    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-    p.style.cssText = 'left:'+Math.random()*96+'%;top:0;font-size:'+(12+Math.random()*10)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
-    wrap.appendChild(p);
-  }
-}
-
 function mobStartCountdown() {
   var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
   var target = null, name = 'Marriage';
@@ -1313,7 +1295,6 @@ function mobStartCountdown() {
     document.getElementById('mobCdS').textContent = String(Math.floor(diff%60000/1000)).padStart(2,'0');
   }
   tick(); _mobCdInterval = setInterval(tick, 1000);
-  initMobPetals();
 }
 
 // ── Budget Chart ──────────────────────────────────────────────────────────
@@ -1657,12 +1638,11 @@ function renderGuests() {
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
         '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + 'A' : '') + '</div>' +
       '</div>' +
-      '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%;justify-content:flex-start;margin-top:2px;">' +
-        (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
-        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
-        (g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0 && ph ?
-          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2764\ufe0f':'\ud83d\udc8c STD') + '</a>' : '<span></span>') +
-        '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
+      '<div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">' +
+        (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call" style="flex:1;text-align:center;">\ud83d\udcde</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" style="flex:1;text-align:center;" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" style="flex:1;text-align:center;background:' + (g.stdSent ? '#FFE4E8' : '#FFF0F8') + ';border:1px solid ' + (g.stdSent ? '#C62828' : '#c0527a') + ';border-radius:8px;padding:6px 2px;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;color:' + (g.stdSent ? '#C62828' : '#7a1838') + ';font-size:11px;font-weight:700;gap:1px;"><span style=\"font-size:16px;\">' + (g.stdSent ? '\u2764\ufe0f' : '\ud83d\udc8c') + '</span><span>STD</span></a>' : '') +
+        '<button class="act-btn act-tick" style="flex:1;text-align:center;" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';
   }
