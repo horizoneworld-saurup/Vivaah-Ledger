@@ -670,7 +670,13 @@
   .sec-header-actions{display:flex;gap:8px;align-items:center;}
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
-  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
+  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;transition:max-height 0.35s ease;}
+  .sec-body.collapsed{max-height:0!important;overflow:hidden;margin-bottom:4px;}
+  .sec-header{cursor:pointer;user-select:none;position:relative;}
+  .sec-header::after{content:'▼';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:12px;transition:transform 0.3s;}
+  .sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
+  .sec-collapse-icon{margin-left:auto;font-size:14px;transition:transform 0.3s;color:rgba(255,255,255,0.7);}
+  .sec-collapsed .sec-collapse-icon{transform:rotate(-90deg);}
 
   /* Section header colors */
   /* ── Rangoli Countdown Timer ── */
@@ -1663,6 +1669,70 @@
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
+    <!-- Guest List Section Header -->
+    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
+      <div class="sec-header-left">
+        <div class="sec-header-icon">👥</div>
+        <div>
+          <div class="sec-header-title" style="color:#fff;">Guest List</div>
+          <div class="sec-header-sub" style="color:#F0C0C8;">All families — call, WhatsApp, confirm headcount, track accommodation</div>
+          <div class="sec-header-badges">
+            <span class="sec-badge" id="guestHeaderTotal">0 families</span>
+            <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
+            <span class="sec-badge" id="guestHeaderPending">0 pending</span>
+            <span class="sec-badge" style="background:rgba(76,175,80,0.25);color:#C8E6C9;" id="guestInvitedBadge">0 Invited</span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.25);color:#FFF8E1;" id="guestStdBadge">0 STD Sent</span>
+            <button onclick="copyMarriageNumbers()" style="margin-left:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.4);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">📋 Copy Marriage Numbers</button>
+          </div>
+        </div>
+      </div>
+      <div class="sec-header-actions">
+        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
+      </div>
+    </div>
+
+    <!-- Guest backup bar -->
+    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
+      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
+        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
+      </div>
+    </div>
+
+    <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
+      <table class="guest-table" id="guestTable">
+        <thead>
+          <tr>
+            <th style="width:24px;"></th>
+            <th>Family / Guest name</th>
+            <th>Phone</th>
+            <th>Side</th>
+            <th>Invited to</th>
+            <th class="num" id="thAdults">Adults</th>
+            <th class="num" id="thLadies">Ladies</th>
+            <th class="num" id="thKids">Kids</th>
+            <th id="thTier" style="display:none;">Kankotri Tier</th>
+            <th id="thDispatch" style="display:none;">Dispatch</th>
+            <th style="width:36px;"></th>
+          </tr>
+        </thead>
+        <tbody id="guestTableBody"></tbody>
+      </table>
+      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
+    </div>
+    <div class="guest-add-row">
+      <input type="text" id="newGuestName" placeholder="Family / guest name">
+      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
+      <select id="newGuestSide">
+        <option value="Bride">Bride's side</option>
+        <option value="Groom">Groom's side</option>
+        <option value="Both">Both</option>
+      </select>
+      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
+    </div>
+  </div>
+
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
     <div class="sec-header" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
@@ -1841,70 +1911,6 @@
       <div id="invEmptyMsg" style="display:none;text-align:center;padding:28px;color:var(--ink-soft);font-size:13px;">No guests in main list yet — add guests first.</div>
     </div>
 
-    <!-- Guest List Section Header -->
-    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
-      <div class="sec-header-left">
-        <div class="sec-header-icon">👥</div>
-        <div>
-          <div class="sec-header-title" style="color:#fff;">Guest List</div>
-          <div class="sec-header-sub" style="color:#F0C0C8;">All families — call, WhatsApp, confirm headcount, track accommodation</div>
-          <div class="sec-header-badges">
-            <span class="sec-badge" id="guestHeaderTotal">0 families</span>
-            <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
-            <span class="sec-badge" id="guestHeaderPending">0 pending</span>
-            <span class="sec-badge" style="background:rgba(76,175,80,0.25);color:#C8E6C9;" id="guestInvitedBadge">0 Invited</span>
-            <span class="sec-badge" style="background:rgba(212,164,76,0.25);color:#FFF8E1;" id="guestStdBadge">0 STD Sent</span>
-            <button onclick="copyMarriageNumbers()" style="margin-left:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.4);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">📋 Copy Marriage Numbers</button>
-          </div>
-        </div>
-      </div>
-      <div class="sec-header-actions">
-        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
-      </div>
-    </div>
-
-    <!-- Guest backup bar -->
-    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
-      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
-        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
-      </div>
-    </div>
-
-    <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
-      <table class="guest-table" id="guestTable">
-        <thead>
-          <tr>
-            <th style="width:24px;"></th>
-            <th>Family / Guest name</th>
-            <th>Phone</th>
-            <th>Side</th>
-            <th>Invited to</th>
-            <th class="num" id="thAdults">Adults</th>
-            <th class="num" id="thLadies">Ladies</th>
-            <th class="num" id="thKids">Kids</th>
-            <th id="thTier" style="display:none;">Kankotri Tier</th>
-            <th id="thDispatch" style="display:none;">Dispatch</th>
-            <th style="width:36px;"></th>
-          </tr>
-        </thead>
-        <tbody id="guestTableBody"></tbody>
-      </table>
-      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
-    </div>
-    <div class="guest-add-row">
-      <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
-      <select id="newGuestSide">
-        <option value="Bride">Bride's side</option>
-        <option value="Groom">Groom's side</option>
-        <option value="Both">Both</option>
-      </select>
-      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
-    </div>
-  </div>
-
   <!-- VENDOR SECTION HEADER -->
   <div class="sec-header sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
     <div class="sec-header-left">
@@ -2030,21 +2036,7 @@
         <input type="text" id="vTagline" placeholder="e.g. 20% off for early bookings" maxlength="60">
       </div>
     </div>
-    <div class="field" style="margin-top:8px;">
-      <label style="font-weight:600;color:var(--maroon);">Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(rate after the event)</span></label>
-      <div class="vendor-rating" id="vStarRating" style="margin-top:8px;">
-        <button class="star-btn" data-star="1" onclick="setVendorStar(1)" title="Poor">⭐</button>
-        <button class="star-btn" data-star="2" onclick="setVendorStar(2)" title="Fair">⭐</button>
-        <button class="star-btn" data-star="3" onclick="setVendorStar(3)" title="Good">⭐</button>
-        <button class="star-btn" data-star="4" onclick="setVendorStar(4)" title="Very Good">⭐</button>
-        <button class="star-btn" data-star="5" onclick="setVendorStar(5)" title="Excellent">⭐</button>
-        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:8px;font-style:italic;"></span>
-      </div>
-    </div>
-    <div class="field">
-      <label style="font-weight:600;color:var(--maroon);">Review <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(optional notes after event)</span></label>
-      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, food quality great, on-time delivery…" style="resize:none;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;"></textarea>
-    </div>
+
     <div class="modal-actions">
       <button class="btn btn-ghost" id="vendorCancelBtn">Cancel</button>
       <button class="btn btn-primary" id="vendorSaveBtn">Save vendor</button>
@@ -2901,6 +2893,23 @@ document.addEventListener('click', function(e) {
   if (btn && btn.dataset.sstar) setSubmitStar(Number(btn.dataset.sstar));
 });
 
+// ── Collapsible Sections ────────────────────────────────────────────────
+(function() {
+  document.addEventListener('click', function(e) {
+    var hdr = e.target.closest('.sec-header');
+    if (!hdr) return;
+    // Don't collapse if clicking a button inside header
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select')) return;
+    var body = hdr.nextElementSibling;
+    while (body && !body.classList.contains('sec-body')) {
+      body = body.nextElementSibling;
+    }
+    if (!body) return;
+    body.classList.toggle('collapsed');
+    hdr.classList.toggle('sec-collapsed');
+  });
+})();
+
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
   var wrap = document.getElementById('budgetChartWrap');
@@ -2976,6 +2985,19 @@ document.addEventListener('click', function _firstClick() {
   document.removeEventListener('click', _firstClick);
 });
 
+function initRangoliPetals() {
+  var wrap = document.getElementById('rangoliPetals');
+  if (!wrap || wrap.children.length > 0) return;
+  var emojis = ['🌸','🌺','🌹','🌼','🪷'];
+  for (var i = 0; i < 24; i++) {
+    var p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.cssText = 'left:'+Math.random()*96+'%;top:0;font-size:'+(13+Math.random()*11)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*10)+'s;';
+    wrap.appendChild(p);
+  }
+}
+
 function startCountdown() {
   var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
   var targetDate = null, targetName = 'Marriage';
@@ -3010,6 +3032,7 @@ function startCountdown() {
   }
   tick();
   _countdownInterval = setInterval(tick, 1000);
+  initRangoliPetals();
 }
 
 // ── WhatsApp functions ────────────────────────────────────────────
