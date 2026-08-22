@@ -149,16 +149,16 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 .acc-bd.open{max-height:none;}
 
 /* ── Countdown Timer ── */
-.cd-wrap{background:linear-gradient(135deg,#5C1A2B,#8B2A3F);border-radius:14px;padding:14px 18px;margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid rgba(212,164,76,0.3);}
+.cd-wrap{background:linear-gradient(135deg,#fce4ec,#f8bbd0,#fce4ec);border:2px solid #e8892a;border-radius:14px;padding:14px 18px;margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border:1px solid rgba(212,164,76,0.3);}
 .cd-left{display:flex;align-items:center;gap:10px;}
-.cd-title{color:rgba(255,255,255,0.7);font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
-.cd-event{color:#D4A24C;font-size:13px;font-weight:700;}
+.cd-title{color:#7a1838;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
+.cd-event{color:#4a0826;font-size:13px;font-weight:700;}
 .cd-units{display:flex;gap:6px;}
 .cd-unit{text-align:center;}
-.cd-num{background:rgba(255,255,255,0.15);border:1px solid rgba(212,164,76,0.3);border-radius:8px;padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#fff;display:block;line-height:1;}
-.cd-lbl{color:rgba(255,255,255,0.5);font-size:9px;margin-top:3px;text-transform:uppercase;}
+.cd-num{background:rgba(255,255,255,0.92);border:2px solid #e8892a;border-radius:8px;padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#4a0826;display:block;line-height:1;box-shadow:0 2px 8px rgba(232,137,42,.2);}
+.cd-lbl{color:#9a2a58;font-size:9px;margin-top:3px;text-transform:uppercase;}
 .cd-hide{display:none!important;}
-.cd-done{color:#D4A24C;font-size:14px;font-weight:700;}
+.cd-done{color:#4a0826;font-size:14px;font-weight:700;}
 
 /* ── Budget Chart ── */
 .chart-wrap{background:#fff;border-radius:14px;padding:16px 16px 12px;margin:0 12px 14px;border:1px solid #E0C8A0;box-shadow:0 2px 8px rgba(92,26,43,0.06);}
@@ -205,6 +205,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 /* ── Payment Edit ── */
 .pay-edit-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
 .pay-edit-input{border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font-size:12px;flex:1;min-width:100px;}
+
+/* ── Falling Petals ── */
+.mob-petal{position:absolute;animation:mobFall linear infinite;opacity:0;pointer-events:none;z-index:3;}
+@keyframes mobFall{0%{transform:translateY(-20px) rotate(0deg);opacity:0;}10%{opacity:.9;}90%{opacity:.6;}100%{transform:translateY(500px) rotate(360deg);opacity:0;}}
 
 /* ── ROW ITEMS ── */
 .row-item{padding:10px 12px;border-top:1px solid var(--ivory2);display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
@@ -385,7 +389,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
   </div>
 
   <!-- COUNTDOWN TIMER -->
-  <div class="cd-wrap cd-hide" id="mobCdWrap">
+  <div class="cd-wrap cd-hide" id="mobCdWrap" style="position:relative;overflow:hidden;">
+    <audio id="mobWeddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <button id="mobMusicBtn" onclick="mobToggleMusic()" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:3px 8px;font-size:13px;cursor:pointer;color:#7a1838;">🎵</button>
+    <div id="mobPetals" style="position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;"></div>
     <div class="cd-left">
       <span style="font-size:22px;">🌸</span>
       <div>
@@ -1110,6 +1117,20 @@ function expandGuests(arr) {
   });
 }
 
+document.addEventListener('click', function _mobFirstClick() {
+  var audio = document.getElementById('mobWeddingMusic');
+  var wrap = document.getElementById('mobCdWrap');
+  if (audio && wrap && !wrap.classList.contains('cd-hide') && !_mobMusicPlaying) {
+    audio.volume = 0.45;
+    audio.play().then(function() {
+      _mobMusicPlaying = true;
+      var btn = document.getElementById('mobMusicBtn');
+      if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
+    }).catch(function(){});
+  }
+  document.removeEventListener('click', _mobFirstClick);
+});
+
 async function saveGuests() {
   lsSet('wedding-guests', JSON.stringify(guests));
   queueSave();
@@ -1263,6 +1284,39 @@ function toggleAcc(id) {
 // ═══════════════════════════════════════
 // ── Countdown Timer ──────────────────────────────────────────────────────
 var _mobCdInterval = null;
+function initMobPetals() {
+  var wrap = document.getElementById('mobPetals');
+  if (!wrap || wrap.children.length > 0) return;
+  var emojis = ['🌸','🌺','🌹','🌼','🪷'];
+  for (var i = 0; i < 18; i++) {
+    var p = document.createElement('div');
+    p.className = 'mob-petal';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.cssText = 'left:'+Math.random()*96+'%;top:0;font-size:'+(12+Math.random()*10)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
+    wrap.appendChild(p);
+  }
+}
+
+var _mobMusicPlaying = false;
+function mobToggleMusic() {
+  var audio = document.getElementById('mobWeddingMusic');
+  var btn = document.getElementById('mobMusicBtn');
+  if (!audio) return;
+  if (_mobMusicPlaying) {
+    audio.pause(); _mobMusicPlaying = false;
+    if (btn) { btn.textContent = '🎵'; btn.style.background = 'rgba(255,255,255,0.85)'; }
+  } else {
+    audio.volume = 0.45;
+    var p = audio.play();
+    if (p !== undefined) {
+      p.then(function() {
+        _mobMusicPlaying = true;
+        if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
+      }).catch(function(e) { if (btn) btn.textContent = '▶'; });
+    }
+  }
+}
+
 function mobStartCountdown() {
   var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
   var target = null, name = 'Marriage';
@@ -1295,6 +1349,7 @@ function mobStartCountdown() {
     document.getElementById('mobCdS').textContent = String(Math.floor(diff%60000/1000)).padStart(2,'0');
   }
   tick(); _mobCdInterval = setInterval(tick, 1000);
+  initMobPetals();
 }
 
 // ── Budget Chart ──────────────────────────────────────────────────────────
