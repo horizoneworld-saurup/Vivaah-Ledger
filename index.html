@@ -332,6 +332,23 @@
     transition:width 0.4s ease;
   }
 
+  /* ── Compact Catering Table ── */
+  .fn-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;}
+  .fn-table th{text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1.5px solid var(--line);background:var(--ivory-deep);}
+  .fn-table td{padding:6px 6px;border-bottom:0.5px solid var(--line);vertical-align:middle;}
+  .fn-table tr:last-child td{border-bottom:none;}
+  .fn-table tr:hover td{background:var(--ivory);}
+  .fn-inp{width:100%;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px;background:#fff;color:var(--ink);font-family:inherit;}
+  .fn-inp:focus{outline:none;border-color:var(--maroon);}
+  .fn-sel{width:100%;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px;background:#fff;color:var(--ink);}
+  .fn-cost-cell{font-weight:700;color:var(--maroon);font-size:13px;white-space:nowrap;font-family:'Cormorant Garamond',serif;}
+  .fn-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;opacity:0.5;}
+  .fn-del:hover{color:var(--rust);opacity:1;}
+  .fn-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+  .fn-sum-card{text-align:center;padding:10px 8px;border-radius:10px;border:1px solid var(--line);background:var(--ivory);}
+  .fn-sum-val{font-size:16px;font-weight:700;color:var(--maroon);font-family:'Cormorant Garamond',serif;}
+  .fn-sum-lbl{font-size:10px;color:var(--ink-soft);margin-top:2px;letter-spacing:0.3px;}
+
   .catering-card{
     background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
     box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
@@ -670,21 +687,38 @@
   .sec-header-actions{display:flex;gap:8px;align-items:center;}
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
-  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
+  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;transition:max-height 0.35s ease;}
+  .sec-body.collapsed{max-height:0!important;overflow:hidden;margin-bottom:4px;}
+  .sec-header{cursor:pointer;user-select:none;position:relative;}
+  .sec-header::after{content:'▼';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:12px;transition:transform 0.3s;}
+  .sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
+  .sec-collapse-icon{margin-left:auto;font-size:14px;transition:transform 0.3s;color:rgba(255,255,255,0.7);}
+  .sec-collapsed .sec-collapse-icon{transform:rotate(-90deg);}
 
   /* Section header colors */
-  /* ── Countdown Timer ── */
-  .countdown-wrap{background:linear-gradient(135deg,#5C1A2B 0%,#8B2A3F 50%,#5C1A2B 100%);border-radius:16px;padding:22px 28px;margin:0 0 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(92,26,43,0.25);border:1px solid rgba(212,164,76,0.3);flex-wrap:wrap;gap:16px;}
-  .countdown-left{display:flex;align-items:center;gap:14px;}
-  .countdown-flower{font-size:32px;}
-  .countdown-title{color:rgba(255,255,255,0.75);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-  .countdown-event{color:#D4A24C;font-size:17px;font-weight:700;font-family:'Cormorant Garamond',serif;}
-  .countdown-units{display:flex;gap:10px;}
-  .countdown-unit{text-align:center;}
-  .countdown-num{background:rgba(255,255,255,0.12);border:1px solid rgba(212,164,76,0.35);border-radius:10px;padding:8px 14px;min-width:54px;font-size:26px;font-weight:700;color:#fff;display:block;line-height:1;letter-spacing:1px;}
-  .countdown-label{color:rgba(255,255,255,0.55);font-size:10px;margin-top:5px;letter-spacing:0.5px;text-transform:uppercase;}
-  .countdown-done{color:#D4A24C;font-size:18px;font-weight:700;font-family:'Cormorant Garamond',serif;}
+  /* ── Rangoli Countdown Timer ── */
   .countdown-hide{display:none!important;}
+  .rangoli-wrap{margin:0 0 20px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;}
+  .rangoli-wrap .card{border-radius:20px;padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;background:#fce4ec;border:2px solid #e8aac0;min-height:320px;}
+  .rangoli-wrap .bg-svg{position:absolute;inset:0;width:100%;height:100%;}
+  .rangoli-wrap .petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;}
+  @keyframes rFall{0%{transform:translateY(-30px) rotate(0deg);opacity:0;}10%{opacity:.85;}90%{opacity:.65;}100%{transform:translateY(420px) rotate(360deg);opacity:0;}}
+  .rangoli-wrap .inner{position:relative;z-index:5;}
+  .rangoli-wrap .top-icon{font-size:24px;margin-bottom:8px;}
+  .rangoli-wrap .r-title{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#4a0826;text-shadow:0 0 12px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.7);margin-bottom:3px;}
+  .rangoli-wrap .r-sub{font-size:10px;color:#7a1838;letter-spacing:3px;text-transform:uppercase;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.85);margin-bottom:18px;}
+  .rangoli-wrap .boxes{display:flex;justify-content:center;gap:10px;margin-bottom:16px;}
+  .rangoli-wrap .box{background:rgba(255,255,255,0.92);border:2.5px solid #e8892a;border-radius:50% 50% 14px 14px;padding:10px 13px 9px;min-width:60px;box-shadow:0 2px 14px rgba(232,137,42,.25);position:relative;overflow:hidden;}
+  .rangoli-wrap .box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e8892a,#f9a8c9,#e8892a);}
+  .rangoli-wrap .num{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:32px;font-weight:700;color:#4a0826;line-height:1;}
+  .rangoli-wrap .lbl{font-size:9px;color:#9a2a58;letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-weight:700;}
+  .rangoli-wrap .sep{color:#c0527a;font-size:24px;align-self:center;font-weight:700;}
+  .rangoli-wrap .names{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:20px;color:#4a0826;font-style:italic;font-weight:700;text-shadow:0 0 12px rgba(255,255,255,.9),0 0 22px rgba(255,255,255,.7);margin-bottom:5px;}
+  .rangoli-wrap .date-txt{font-size:11px;color:#7a1838;letter-spacing:2px;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.85);}
+  .rangoli-wrap .garland{font-size:15px;letter-spacing:3px;margin-top:12px;}
+  /* Music button */
+  .music-btn{position:absolute;top:12px;right:14px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:#7a1838;font-weight:700;}
+  .music-btn:hover{background:#fff;}
 
   /* ── Budget Chart ── */
   .budget-chart-wrap{background:#fff;border-radius:14px;padding:22px 24px 18px;box-shadow:0 2px 12px rgba(92,26,43,0.07);border:1px solid var(--line);margin-bottom:16px;}
@@ -1296,41 +1330,72 @@
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 
-  <!-- WEDDING COUNTDOWN TIMER -->
-  <div class="countdown-wrap countdown-hide" id="countdownWrap">
-    <div class="countdown-left">
-      <div class="countdown-flower">🌸</div>
-      <div>
-        <div class="countdown-title">Countdown to</div>
-        <div class="countdown-event" id="countdownEventName">Marriage</div>
-      </div>
-    </div>
-    <div class="countdown-units" id="countdownUnits">
-      <div class="countdown-unit"><span class="countdown-num" id="cdDays">00</span><div class="countdown-label">Days</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdHours">00</span><div class="countdown-label">Hours</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdMins">00</span><div class="countdown-label">Mins</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdSecs">00</span><div class="countdown-label">Secs</div></div>
-    </div>
-    <div class="countdown-done countdown-hide" id="countdownDone">💍 The Big Day is Here! 🌸</div>
-  </div>
-
-  <!-- ADMIN VENDOR DIRECTORY (Owner only) -->
-  <div id="adminReviewSection" style="display:none;" class="admin-only">
-    <div class="admin-review-wrap">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div>
-          <div class="admin-review-title">🌸 Vivaah Vendor Directory — Admin</div>
-          <div style="font-size:12px;color:var(--ink-soft);" id="adminReviewSummary">Loading reviews...</div>
+    <!-- RANGOLI COUNTDOWN TIMER -->
+  <div class="rangoli-wrap countdown-hide" id="countdownWrap">
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
+    <audio id="weddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <div class="card">
+      <svg class="bg-svg" viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="rg1c" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f48fb1" stop-opacity=".7"/><stop offset="100%" stop-color="#e8892a" stop-opacity=".08"/></radialGradient>
+          <radialGradient id="rg2c" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f8bbd0" stop-opacity=".8"/><stop offset="100%" stop-color="#c0527a" stop-opacity=".15"/></radialGradient>
+        </defs>
+        <rect width="660" height="340" fill="#fce4ec"/>
+        <g transform="translate(330,170)">
+          <circle r="130" fill="url(#rg1c)"/><circle r="90" fill="url(#rg2c)"/><circle r="50" fill="#f48fb1" fill-opacity=".45"/><circle r="22" fill="#e8892a" fill-opacity=".55"/><circle r="8" fill="#c06a1a" fill-opacity=".7"/>
+          <g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width="1">
+            <ellipse rx="13" ry="36" transform="rotate(0) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(22.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(45) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(67.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(90) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(112.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(135) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(157.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(180) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(202.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(225) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(247.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(270) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(292.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(315) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(337.5) translate(0,-78)"/>
+          </g>
+          <g fill="#e8892a" fill-opacity=".45" stroke="#c06a1a" stroke-width=".8">
+            <ellipse rx="9" ry="22" transform="rotate(0) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-46)"/>
+          </g>
+          <g fill="none" stroke="#c0527a" stroke-width="1" stroke-opacity=".5">
+            <circle r="130"/><circle r="90"/><circle r="50"/><circle r="22"/>
+            <line x1="-130" y1="0" x2="130" y2="0"/><line x1="0" y1="-130" x2="0" y2="130"/>
+            <line x1="-92" y1="-92" x2="92" y2="92"/><line x1="92" y1="-92" x2="-92" y2="92"/>
+          </g>
+          <g fill="#c0527a" fill-opacity=".7"><circle cx="132" cy="0" r="4"/><circle cx="93" cy="93" r="4"/><circle cx="0" cy="132" r="4"/><circle cx="-93" cy="93" r="4"/><circle cx="-132" cy="0" r="4"/><circle cx="-93" cy="-93" r="4"/><circle cx="0" cy="-132" r="4"/><circle cx="93" cy="-93" r="4"/></g>
+          <g fill="#e8892a" fill-opacity=".6"><circle cx="92" cy="0" r="3"/><circle cx="65" cy="65" r="3"/><circle cx="0" cy="92" r="3"/><circle cx="-65" cy="65" r="3"/><circle cx="-92" cy="0" r="3"/><circle cx="-65" cy="-65" r="3"/><circle cx="0" cy="-92" r="3"/><circle cx="65" cy="-65" r="3"/></g>
+          <polygon points="0,-13 2.5,-5 10,-5 4,1 6,9 0,4 -6,9 -4,1 -10,-5 -2.5,-5" fill="#c06a1a" fill-opacity=".8"/>
+        </g>
+        <g transform="translate(55,55)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/><circle r="46" fill="none" stroke="#c0527a" stroke-width=".8" stroke-opacity=".55"/></g>
+        <g transform="translate(605,55)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/><circle r="46" fill="none" stroke="#c0527a" stroke-width=".8" stroke-opacity=".55"/></g>
+        <g transform="translate(55,285)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(60) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(120) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(240) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(300) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/></g>
+        <g transform="translate(605,285)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(60) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(120) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(240) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(300) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/></g>
+        <g fill="none" stroke="#c0527a" stroke-width="1.3" stroke-opacity=".5">
+          <path d="M0,18 Q60,5 120,18 Q180,31 240,18 Q300,5 360,18 Q420,31 480,18 Q540,5 600,18 Q640,18 660,18"/>
+          <path d="M0,322 Q60,335 120,322 Q180,309 240,322 Q300,335 360,322 Q420,309 480,322 Q540,335 600,322 Q640,322 660,322"/>
+        </g>
+        <g fill="#f48fb1" fill-opacity=".7" stroke="#c0527a" stroke-width=".8">
+          <ellipse cx="120" cy="12" rx="7" ry="11" transform="rotate(-20 120 12)"/><ellipse cx="240" cy="23" rx="7" ry="11" transform="rotate(15 240 23)"/><ellipse cx="360" cy="12" rx="7" ry="11" transform="rotate(-10 360 12)"/><ellipse cx="480" cy="23" rx="7" ry="11" transform="rotate(20 480 23)"/>
+          <ellipse cx="120" cy="328" rx="7" ry="11" transform="rotate(20 120 328)"/><ellipse cx="240" cy="317" rx="7" ry="11" transform="rotate(-15 240 317)"/><ellipse cx="360" cy="328" rx="7" ry="11" transform="rotate(10 360 328)"/><ellipse cx="480" cy="317" rx="7" ry="11" transform="rotate(-20 480 317)"/>
+        </g>
+        <rect x="10" y="10" width="640" height="320" rx="14" fill="none" stroke="#c0527a" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="7 4"/>
+        <rect x="18" y="18" width="624" height="304" rx="11" fill="none" stroke="#e8892a" stroke-width="1" stroke-opacity=".32" stroke-dasharray="3 6"/>
+      </svg>
+      <div id="rangoliPetals" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;"></div>
+      <div class="inner">
+        <div class="top-icon">🌺 🕉️ 🌺</div>
+        <div class="r-title">Until We Say "I Do"</div>
+        <div class="r-sub" id="countdownEventName">Mangalsutra Moment</div>
+        <div class="boxes">
+          <div class="box"><div class="num" id="cdDays">00</div><div class="lbl">Days</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdHours">00</div><div class="lbl">Hours</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdMins">00</div><div class="lbl">Mins</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdSecs">00</div><div class="lbl">Secs</div></div>
         </div>
-        <button class="btn btn-gold" onclick="loadAdminReviews()" style="font-size:12px;">🔄 Refresh</button>
-      </div>
-      <div id="adminReviewContent">
-        <div style="text-align:center;padding:20px;color:var(--ink-soft);">Click Refresh to load submitted reviews</div>
+        <div class="names" id="countdownCoupleNames">🪔 Mrishana &amp; Spandan 🪔</div>
+        <div class="date-txt" id="countdownDateTxt">27 November 2026 · Shubh Vivah</div>
+        <div class="garland">🌸 🌼 🌹 🌼 🌸</div>
+        <div class="countdown-hide" id="countdownDone" style="color:#4a0826;font-size:20px;font-weight:700;margin-top:10px;">💍 The Big Day is Here! 🌸</div>
       </div>
     </div>
   </div>
 
-  <!-- BUDGET vs ACTUAL CHART -->
+    <!-- BUDGET vs ACTUAL CHART -->
   <div class="budget-chart-wrap" id="budgetChartWrap" style="display:none;">
     <div class="budget-chart-title">📊 Budget vs Actual — By Category</div>
     <div class="budget-chart-legend">
@@ -1588,11 +1653,10 @@
       <button class="btn btn-ghost" id="btnAddFunction">+ Add function</button>
     </div>
     <div class="function-grid" id="functionGrid"></div>
-    <div class="catering-summary">
-      <div class="catering-stat"><div class="v" id="cateringTotalGuests">0</div><div class="l">Total guest-plates</div></div>
-      <div class="catering-stat"><div class="v" id="cateringAvgRate">₹0</div><div class="l">Avg. rate / plate</div></div>
-      <div class="catering-stat"><div class="v" id="cateringTotalCost">₹0</div><div class="l">Estimated catering cost</div></div>
-      <div class="catering-stat"><div class="v" id="cateringVendorCompare">—</div><div class="l">vs. linked vendor quote</div></div>
+    <div class="fn-summary">
+      <div class="fn-sum-card"><div class="fn-sum-val" id="cateringTotalGuests">0</div><div class="fn-sum-lbl">Total guest-plates</div></div>
+      <div class="fn-sum-card"><div class="fn-sum-val" id="cateringAvgRate">₹0</div><div class="fn-sum-lbl">Avg rate / plate</div></div>
+      <div class="fn-sum-card" style="background:#FFF8E1;border-color:#D4A24C;"><div class="fn-sum-val" style="color:#856404;" id="cateringTotalCost">₹0</div><div class="fn-sum-lbl">Total catering cost</div></div>
     </div>
     <div class="caterer-tally-wrap" id="catererTallyWrap" style="display:none;">
       <div class="caterer-tally-title">🍽️ Auto-Tally per Caterer</div>
@@ -1621,6 +1685,70 @@
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
+    <!-- Guest List Section Header -->
+    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
+      <div class="sec-header-left">
+        <div class="sec-header-icon">👥</div>
+        <div>
+          <div class="sec-header-title" style="color:#fff;">Guest List</div>
+          <div class="sec-header-sub" style="color:#F0C0C8;">All families — call, WhatsApp, confirm headcount, track accommodation</div>
+          <div class="sec-header-badges">
+            <span class="sec-badge" id="guestHeaderTotal">0 families</span>
+            <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
+            <span class="sec-badge" id="guestHeaderPending">0 pending</span>
+            <span class="sec-badge" style="background:rgba(76,175,80,0.25);color:#C8E6C9;" id="guestInvitedBadge">0 Invited</span>
+            <span class="sec-badge" style="background:rgba(212,164,76,0.25);color:#FFF8E1;" id="guestStdBadge">0 STD Sent</span>
+            <button onclick="copyMarriageNumbers()" style="margin-left:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.4);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">📋 Copy Marriage Numbers</button>
+          </div>
+        </div>
+      </div>
+      <div class="sec-header-actions">
+        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
+      </div>
+    </div>
+
+    <!-- Guest backup bar -->
+    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
+      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
+        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
+      </div>
+    </div>
+
+    <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
+      <table class="guest-table" id="guestTable">
+        <thead>
+          <tr>
+            <th style="width:24px;"></th>
+            <th>Family / Guest name</th>
+            <th>Phone</th>
+            <th>Side</th>
+            <th>Invited to</th>
+            <th class="num" id="thAdults">Adults</th>
+            <th class="num" id="thLadies">Ladies</th>
+            <th class="num" id="thKids">Kids</th>
+            <th id="thTier" style="display:none;">Kankotri Tier</th>
+            <th id="thDispatch" style="display:none;">Dispatch</th>
+            <th style="width:36px;"></th>
+          </tr>
+        </thead>
+        <tbody id="guestTableBody"></tbody>
+      </table>
+      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
+    </div>
+    <div class="guest-add-row">
+      <input type="text" id="newGuestName" placeholder="Family / guest name">
+      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
+      <select id="newGuestSide">
+        <option value="Bride">Bride's side</option>
+        <option value="Groom">Groom's side</option>
+        <option value="Both">Both</option>
+      </select>
+      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
+    </div>
+  </div>
+
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
     <div class="sec-header" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
@@ -1799,70 +1927,6 @@
       <div id="invEmptyMsg" style="display:none;text-align:center;padding:28px;color:var(--ink-soft);font-size:13px;">No guests in main list yet — add guests first.</div>
     </div>
 
-    <!-- Guest List Section Header -->
-    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
-      <div class="sec-header-left">
-        <div class="sec-header-icon">👥</div>
-        <div>
-          <div class="sec-header-title" style="color:#fff;">Guest List</div>
-          <div class="sec-header-sub" style="color:#F0C0C8;">All families — call, WhatsApp, confirm headcount, track accommodation</div>
-          <div class="sec-header-badges">
-            <span class="sec-badge" id="guestHeaderTotal">0 families</span>
-            <span class="sec-badge" id="guestHeaderConfirmed">0 confirmed</span>
-            <span class="sec-badge" id="guestHeaderPending">0 pending</span>
-            <span class="sec-badge" style="background:rgba(76,175,80,0.25);color:#C8E6C9;" id="guestInvitedBadge">0 Invited</span>
-            <span class="sec-badge" style="background:rgba(212,164,76,0.25);color:#FFF8E1;" id="guestStdBadge">0 STD Sent</span>
-            <button onclick="copyMarriageNumbers()" style="margin-left:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.4);color:var(--gold);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;">📋 Copy Marriage Numbers</button>
-          </div>
-        </div>
-      </div>
-      <div class="sec-header-actions">
-        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
-      </div>
-    </div>
-
-    <!-- Guest backup bar -->
-    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
-      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
-        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
-      </div>
-    </div>
-
-    <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
-      <table class="guest-table" id="guestTable">
-        <thead>
-          <tr>
-            <th style="width:24px;"></th>
-            <th>Family / Guest name</th>
-            <th>Phone</th>
-            <th>Side</th>
-            <th>Invited to</th>
-            <th class="num" id="thAdults">Adults</th>
-            <th class="num" id="thLadies">Ladies</th>
-            <th class="num" id="thKids">Kids</th>
-            <th id="thTier" style="display:none;">Kankotri Tier</th>
-            <th id="thDispatch" style="display:none;">Dispatch</th>
-            <th style="width:36px;"></th>
-          </tr>
-        </thead>
-        <tbody id="guestTableBody"></tbody>
-      </table>
-      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
-    </div>
-    <div class="guest-add-row">
-      <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
-      <select id="newGuestSide">
-        <option value="Bride">Bride's side</option>
-        <option value="Groom">Groom's side</option>
-        <option value="Both">Both</option>
-      </select>
-      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
-    </div>
-  </div>
-
   <!-- VENDOR SECTION HEADER -->
   <div class="sec-header sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
     <div class="sec-header-left">
@@ -1988,20 +2052,18 @@
         <input type="text" id="vTagline" placeholder="e.g. 20% off for early bookings" maxlength="60">
       </div>
     </div>
-    <div class="field" style="margin-top:8px;">
-      <label style="font-weight:600;color:var(--maroon);">Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(rate after the event)</span></label>
-      <div class="vendor-rating" id="vStarRating" style="margin-top:8px;">
+
+    <div class="field" style="background:var(--ivory-deep);border-radius:10px;padding:12px 14px;border:1px solid var(--line);margin-top:4px;">
+      <label style="font-weight:600;color:var(--maroon);font-size:13px;">⭐ Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(after event)</span></label>
+      <div id="vStarRating" style="display:flex;align-items:center;gap:4px;margin:8px 0 6px;">
         <button class="star-btn" data-star="1" onclick="setVendorStar(1)" title="Poor">⭐</button>
         <button class="star-btn" data-star="2" onclick="setVendorStar(2)" title="Fair">⭐</button>
         <button class="star-btn" data-star="3" onclick="setVendorStar(3)" title="Good">⭐</button>
         <button class="star-btn" data-star="4" onclick="setVendorStar(4)" title="Very Good">⭐</button>
         <button class="star-btn" data-star="5" onclick="setVendorStar(5)" title="Excellent">⭐</button>
-        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:8px;font-style:italic;"></span>
+        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:6px;font-style:italic;"></span>
       </div>
-    </div>
-    <div class="field">
-      <label style="font-weight:600;color:var(--maroon);">Review <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(optional notes after event)</span></label>
-      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, food quality great, on-time delivery…" style="resize:none;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;"></textarea>
+      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, on-time, great food…" style="resize:none;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="vendorCancelBtn">Cancel</button>
@@ -2092,6 +2154,12 @@ const PLATFORM_VENDORS = [
 let currentRole = null;
 let lockPinEntry = '';
 let lockSelectedRole = 'admin';
+// currentUserEmail — always reads from googleUserEmail (set after Google sign-in)
+// Used in PIN hashing, pushToSheet, and community rating submit
+Object.defineProperty(window, 'currentUserEmail', {
+  get: function() { return window.googleUserEmail || window._vivaahUserEmail || null; },
+  configurable: true
+});
 let platformVendors = [...PLATFORM_VENDORS]; // runtime-editable copy
 let editingPvId = null;
 let pendingPvLogo = undefined;
@@ -2579,6 +2647,11 @@ function openSubmitReview(vid) {
     }
   }
 
+  // Set email from Google session (restored from cache)
+  var emailEl = document.getElementById('submitReviewEmail');
+  if (emailEl) {
+    emailEl.value = googleUserEmail || window._vivaahUserEmail || window._vivaahUserEmail || '';
+  }
   document.getElementById('submitReviewOverlay').style.display = 'flex';
 }
 
@@ -2607,22 +2680,43 @@ async function submitCommunityReview() {
 
   var review = (document.getElementById('submitReviewText')?.value || '').trim();
   var weddingMonth = document.getElementById('submitWeddingMonth')?.textContent || '';
-  var submittedBy = currentUserEmail || 'anonymous';
+  // Use googleUserEmail (the actual signed-in email)
+  // Get email from the input field in popup (most reliable)
+  var emailInput = document.getElementById('submitReviewEmail');
+  var submittedBy = (emailInput ? emailInput.value.trim() : '')
+    || googleUserEmail 
+    || window._vivaahUserEmail 
+    || '';
+
+  if (!submittedBy) {
+    // Try one more time from cache
+    try {
+      var cached = await storageGet('google-token-cache');
+      if (cached) {
+        var cp = JSON.parse(cached);
+        if (cp.email) { submittedBy = cp.email; window.googleUserEmail = cp.email; googleUserEmail = cp.email; }
+      }
+    } catch(e) {}
+  }
+  if (!submittedBy) {
+    showToast('Could not get your email. Please sign out and sign in with Google again.');
+    return;
+  }
 
   var btn = document.querySelector('#submitReviewOverlay .btn-gold');
-  if (btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+  if (btn) { btn.textContent = '🌸 Submitting...'; btn.disabled = true; }
 
   try {
     var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/submit-review', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        vendorName:  v.name,
-        category:    v.category || '',
-        phone:       v.phone || '',
-        rating:      _submitStarRating,
-        review:      review,
-        submittedBy: submittedBy,
+        vendorName:   v.name,
+        category:     v.category || '',
+        phone:        v.phone || '',
+        rating:       _submitStarRating,
+        review:       review,
+        submittedBy:  submittedBy,
         weddingMonth: weddingMonth
       })
     });
@@ -2630,13 +2724,13 @@ async function submitCommunityReview() {
     if (data.success) {
       showToast('🌸 Thank you! Rating submitted to Vivaah community.');
       closeSubmitReview();
-      // Refresh community ratings
       setTimeout(function(){ loadCommunityRatings(); }, 1000);
     } else {
       showToast('Could not submit: ' + (data.error || 'Please try again'));
     }
   } catch(e) {
-    showToast('Network error. Please try again.');
+    showToast('Network error — ' + e.message + '. Please try again.');
+    console.error('Submit review error:', e);
   } finally {
     if (btn) { btn.textContent = '🌸 Submit to Vivaah Directory'; btn.disabled = false; }
   }
@@ -2675,7 +2769,7 @@ function showCommunityRating(vendorName) {
 
 // Admin: Load all reviews from KV
 async function loadAdminReviews() {
-  var ownerEmail = currentUserEmail || '';
+  var ownerEmail = googleUserEmail || window._vivaahUserEmail || '';
   var content = document.getElementById('adminReviewContent');
   var summary = document.getElementById('adminReviewSummary');
   if (!content) return;
@@ -2732,7 +2826,7 @@ function adminApproveFromBtn(btn) {
 }
 
 async function adminApproveReview(vendorName, submittedBy, approved) {
-  var ownerEmail = currentUserEmail || '';
+  var ownerEmail = googleUserEmail || egEmail || '';
   try {
     var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/admin-approve-review', {
       method: 'POST',
@@ -2827,6 +2921,23 @@ document.addEventListener('click', function(e) {
   if (btn && btn.dataset.sstar) setSubmitStar(Number(btn.dataset.sstar));
 });
 
+// ── Collapsible Sections ────────────────────────────────────────────────
+(function() {
+  document.addEventListener('click', function(e) {
+    var hdr = e.target.closest('.sec-header');
+    if (!hdr) return;
+    // Don't collapse if clicking a button inside header
+    if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select')) return;
+    var body = hdr.nextElementSibling;
+    while (body && !body.classList.contains('sec-body')) {
+      body = body.nextElementSibling;
+    }
+    if (!body) return;
+    body.classList.toggle('collapsed');
+    hdr.classList.toggle('sec-collapsed');
+  });
+})();
+
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
   var wrap = document.getElementById('budgetChartWrap');
@@ -2867,6 +2978,54 @@ function renderBudgetChart() {
 
 // ── Wedding Countdown Timer ───────────────────────────────────────────────
 var _countdownInterval = null;
+var _musicPlaying = false;
+
+function toggleMusic() {
+  var audio = document.getElementById('weddingMusic');
+  var btn = document.getElementById('musicBtn');
+  if (!audio) return;
+  if (_musicPlaying) {
+    audio.pause(); _musicPlaying = false;
+    if (btn) { btn.textContent = '🎵 Music'; btn.style.background = 'rgba(255,255,255,0.85)'; }
+  } else {
+    audio.volume = 0.45;
+    var p = audio.play();
+    if (p !== undefined) {
+      p.then(function() {
+        _musicPlaying = true;
+        if (btn) { btn.textContent = '🔇 Mute'; btn.style.background = '#f9a8c9'; }
+      }).catch(function(e) { console.error('Music error:', e); if (btn) { btn.textContent = '❌ ' + e.message.substring(0,20); } });
+    }
+  }
+}
+
+document.addEventListener('click', function _firstClick() {
+  var audio = document.getElementById('weddingMusic');
+  var wrap = document.getElementById('countdownWrap');
+  if (audio && wrap && !wrap.classList.contains('countdown-hide') && !_musicPlaying) {
+    audio.volume = 0.45;
+    audio.play().then(function() {
+      _musicPlaying = true;
+      var btn = document.getElementById('musicBtn');
+      if (btn) { btn.textContent = '🔇 Mute'; btn.style.background = '#f9a8c9'; }
+    }).catch(function(){});
+  }
+  document.removeEventListener('click', _firstClick);
+});
+
+function initRangoliPetals() {
+  var wrap = document.getElementById('rangoliPetals');
+  if (!wrap || wrap.children.length > 0) return;
+  var emojis = ['🌸','🌺','🌹','🌼','🪷'];
+  for (var i = 0; i < 24; i++) {
+    var p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.cssText = 'left:'+Math.random()*96+'%;top:0;font-size:'+(13+Math.random()*11)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*10)+'s;';
+    wrap.appendChild(p);
+  }
+}
+
 function startCountdown() {
   var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
   var targetDate = null, targetName = 'Marriage';
@@ -2901,6 +3060,7 @@ function startCountdown() {
   }
   tick();
   _countdownInterval = setInterval(tick, 1000);
+  initRangoliPetals();
 }
 
 // ── WhatsApp functions ────────────────────────────────────────────
@@ -3511,6 +3671,7 @@ if(notes && notes.length > 0) renderNotes();
    ================================================================ */
 const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! // ← UPDATE THIS
 const OWNER_EMAIL_CLIENT = 'horizoneworld@gmail.com';
+const OWNER_EMAIL_CLIENT_2 = 'rmsfincoresolutions@gmail.com';
 
 let egCurrentEmail = '';
 let egPollingInterval = null;
@@ -3526,6 +3687,7 @@ function showLockStep(step){ // 'email' | 'waiting' | 'pin'
 async function egRequestAccess(){
   const input = document.getElementById('egEmailInput');
   const email = input.value.trim().toLowerCase();
+  window._vivaahUserEmail = email; // save for community rating submit
   const statusEl = document.getElementById('egStatusMsg');
   const btn = document.getElementById('egRequestBtn');
 
@@ -3909,16 +4071,22 @@ function initGoogleAuth(){
         return; 
       }
       googleAccessToken = resp.access_token;
-      await storageSet('google-token-cache', JSON.stringify({token:resp.access_token, expiresAt: Date.now() + (resp.expires_in||3500)*1000}));
       // Get signed-in user's email from Google
       try {
         const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { 'Authorization': 'Bearer ' + googleAccessToken }
+          headers: { 'Authorization': 'Bearer ' + resp.access_token }
         });
         const info = await userInfo.json();
         googleUserEmail = info.email || null;
+        window.googleUserEmail = googleUserEmail;
         console.log('Signed in as:', googleUserEmail);
       } catch(e) { console.error('Could not get user email:', e); }
+      // Save email WITH token cache so it's restored on next session
+      await storageSet('google-token-cache', JSON.stringify({
+        token: resp.access_token,
+        expiresAt: Date.now() + (resp.expires_in||3500)*1000,
+        email: googleUserEmail || null
+      }));
       await onSignedIn();
     }
   });
@@ -3931,6 +4099,11 @@ async function tryRestoreGoogleSession(){
       const parsed = JSON.parse(cached);
       if(parsed.token && parsed.expiresAt > Date.now()+30000){
         googleAccessToken = parsed.token;
+        // Restore email from cache
+        if(parsed.email) {
+          googleUserEmail = parsed.email;
+          window.googleUserEmail = parsed.email;
+        }
         await onSignedIn();
         return;
       } else if(parsed.token && googleTokenClient){
@@ -4280,41 +4453,38 @@ function safeUrl(url){
 /* ---------------- Guest & catering calculator ---------------- */
 function renderCatering(){
   const grid = document.getElementById('functionGrid');
-  grid.innerHTML = functions.map(f=>`
-    <div class="function-row" data-fn="${f.id}">
-      <div class="field-mini">
-        <label>Function name</label>
-        <input type="text" data-fn-field="name" data-fn-id="${f.id}" value="${escapeHtml(f.name)}" placeholder="e.g. Sangeet">
-      </div>
-      <div class="field-mini">
-        <label>Guest count</label>
-        <input type="number" data-fn-field="guests" data-fn-id="${f.id}" value="${f.guests||0}" min="0">
-      </div>
-      <div class="field-mini">
-        <label>Rate / plate (₹)</label>
-        <input type="number" data-fn-field="rate" data-fn-id="${f.id}" value="${f.rate||0}" min="0">
-      </div>
-      <div class="field-mini">
-        <label>Function cost</label>
-        <input type="text" value="${fmt((f.guests||0)*(f.rate||0))}" disabled style="background:var(--ivory-deep); color:var(--ink-soft); font-weight:600;">
-      </div>
-      <div class="field-mini">
-        <label>Caterer</label>
-        <select data-fn-field="vendorId" data-fn-id="${f.id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;">
-          <option value="">— Select —</option>
-          ${vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater')).map(v=>`<option value="${v.id}" ${f.vendorId===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}
-        </select>
-      </div>
-      <button class="remove-fn" data-remove-fn="${f.id}" title="Remove function">✕</button>
-    </div>
-  `).join('');
+  const caterVendors = vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater'));
+  const caterOptions = '<option value="">— Caterer —</option>' +
+    caterVendors.map(v=>'<option value="'+v.id+'">'+escapeHtml(v.name)+'</option>').join('');
+
+  grid.innerHTML = '<table class="fn-table"><thead><tr>' +
+    '<th style="width:25%">Function</th>' +
+    '<th style="width:11%">Guests</th>' +
+    '<th style="width:13%">Rate/plate (₹)</th>' +
+    '<th style="width:14%">Cost</th>' +
+    '<th style="width:30%">Caterer</th>' +
+    '<th style="width:4%"></th>' +
+    '</tr></thead><tbody>' +
+    functions.map(f=>{
+      const cost = (Number(f.guests||0)*Number(f.rate||0));
+      const opts = caterOptions.replace('value="'+f.vendorId+'"','value="'+f.vendorId+'" selected');
+      return '<tr>' +
+        '<td><input class="fn-inp" type="text" data-fn-field="name" data-fn-id="'+f.id+'" value="'+escapeHtml(f.name)+'" placeholder="e.g. Sangeet"></td>' +
+        '<td><input class="fn-inp" type="number" data-fn-field="guests" data-fn-id="'+f.id+'" value="'+(f.guests||0)+'" min="0" style="width:70px"></td>' +
+        '<td><input class="fn-inp" type="number" data-fn-field="rate" data-fn-id="'+f.id+'" value="'+(f.rate||0)+'" min="0" style="width:80px"></td>' +
+        '<td><span class="fn-cost-cell">'+fmt(cost)+'</span></td>' +
+        '<td><select class="fn-sel" data-fn-field="vendorId" data-fn-id="'+f.id+'">'+opts+'</select></td>' +
+        '<td><button class="fn-del" data-remove-fn="'+f.id+'" title="Remove">✕</button></td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
 
   const totalGuests = functions.reduce((s,f)=>s+Number(f.guests||0),0);
   const totalCost = functions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
   const avgRate = totalGuests>0 ? totalCost/totalGuests : 0;
 
   document.getElementById('cateringTotalGuests').textContent = totalGuests.toLocaleString('en-IN');
-  document.getElementById('cateringAvgRate').textContent = fmt(avgRate);
+  document.getElementById('cateringAvgRate').textContent = fmt(Math.round(avgRate));
   document.getElementById('cateringTotalCost').textContent = fmt(totalCost);
 
   const select = document.getElementById('cateringVendorSelect');
@@ -4328,21 +4498,8 @@ function renderCatering(){
   select.value = curSelected;
 
   const linkedId = select.value;
-  const compareEl = document.getElementById('cateringVendorCompare');
   const linkMsg = document.getElementById('cateringLinkMsg');
-  if(linkedId){
-    const v = vendors.find(x=>x.id===linkedId);
-    if(v){
-      const diff = totalCost - Number(v.quoted||0);
-      compareEl.textContent = (diff===0 ? 'matches quote' : (diff>0?'+':'') + fmt(diff));
-      compareEl.style.color = diff===0 ? 'var(--sage)' : diff>0 ? 'var(--rust)' : 'var(--sage)';
-      linkMsg.textContent = diff===0 ? 'Estimate matches this vendor\'s quoted amount.' : '';
-    }
-  } else {
-    compareEl.textContent = '—';
-    compareEl.style.color = 'var(--ink)';
-    linkMsg.textContent = '';
-  }
+  if(linkMsg) linkMsg.textContent = '';
   // Auto-apply caterer costs to vendor quotes
   setTimeout(autoApplyCaterers, 0);
 }
@@ -4680,6 +4837,12 @@ function openVendorModal(vendor){
   document.getElementById('vTagline').value = vendor ? (vendor.tagline||'') : '';
   refreshVendorLogoPreview(vendor ? (vendor.logo||null) : null);
   toggleFeaturedFields();
+  // ── Always reset rating/review to THIS vendor's values (never carry over from previous) ──
+  var thisRating = vendor ? (Number(vendor.rating)||0) : 0;
+  var thisReview = vendor ? (vendor.review||'') : '';
+  loadVendorStars(thisRating);
+  var vReviewEl = document.getElementById('vReview');
+  if (vReviewEl) vReviewEl.value = thisReview;
   document.getElementById('vendorModalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('vName').focus(), 50);
 }
@@ -4774,8 +4937,11 @@ document.getElementById('vendorSaveBtn').onclick = ()=>{
     }
   } else {
     const initialPaid = Number(document.getElementById('vInitialPaid').value)||0;
+    const vendorReview = document.getElementById('vReview') ? document.getElementById('vReview').value.trim() : '';
+    const vendorRating = _currentVendorStar || 0;
     const newVendor = {
       id: uid(), name, category, quoted, contact, phone, notes:'',
+      review: vendorReview, rating: vendorRating,
       featured, website, tagline, logo: pendingVendorLogo || '',
       payments: initialPaid>0 ? [{id:uid(), date:new Date().toISOString().slice(0,10), amount:initialPaid, note:'Initial advance'}] : []
     };
@@ -6674,9 +6840,11 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div id="submitStarLabel" style="text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:12px;font-style:italic;min-height:18px;"></div>
     <textarea class="submit-review-textarea" id="submitReviewText" rows="3"
       placeholder="Optional: How was the service? Food quality? Punctuality?..."></textarea>
-    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:14px;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">
       Wedding month: <strong id="submitWeddingMonth"></strong>
     </div>
+    <!-- email captured automatically from Google sign-in -->
+    <input type="hidden" id="submitReviewEmail">
     <div class="submit-review-actions">
       <button class="btn btn-ghost" onclick="closeSubmitReview()">Cancel</button>
       <button class="btn btn-gold" onclick="submitCommunityReview()">
