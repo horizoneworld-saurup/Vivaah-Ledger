@@ -688,6 +688,14 @@
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
   .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;transition:max-height 0.35s ease;}
+  .sec-body.collapsed{display:none!important;}
+  .sec-header{cursor:pointer;user-select:none;position:relative;}
+  .sec-header::after{content:'▼';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:11px;transition:transform 0.3s;}
+  .sec-header.sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
+  .sec-filter-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ivory-deep);border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .sec-filter-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+  .sec-filter-select{border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;background:#fff;color:var(--ink);}
+  .sec-filter-count{font-size:11px;color:var(--ink-soft);}
   .sec-body.collapsed{max-height:0!important;overflow:hidden;margin-bottom:4px;}
   .sec-header{cursor:pointer;user-select:none;position:relative;}
   .sec-header::after{content:'▼';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:12px;transition:transform 0.3s;}
@@ -1437,7 +1445,7 @@
   </div>
 
   <!-- BUDGET SECTION HEADER -->
-  <div class="sec-header sec-budget" id="budgetSectionHeader">
+  <div class="sec-header sec-collapsed sec-budget" id="budgetSectionHeader">
     <div class="sec-header-left">
       <div class="sec-header-icon">💰</div>
       <div>
@@ -1454,7 +1462,7 @@
       <button class="btn-print-sec" onclick="printSection('budget')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body" id="budgetSectionBody">
+  <div class="sec-body collapsed" id="budgetSectionBody">
 
   <div class="dash">
     <div class="card budget">
@@ -1499,7 +1507,7 @@
       <button class="btn-print-sec" onclick="printSection('timeline')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body">
+  <div class="sec-body collapsed">
   <!-- EVENT TIMELINE -->
   <div class="event-timeline-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="event-timeline-head">
@@ -1529,7 +1537,7 @@
       <button class="btn-print-sec" onclick="printSection('reminders')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body" style="padding:16px;">
+  <div class="sec-body collapsed" style="padding:16px;">
 
   <div class="reminders-grid" id="remindersGrid">
     <div class="reminder-card" data-reminder="trial">
@@ -1595,7 +1603,7 @@
       <button class="btn-print-sec" onclick="noteOpenModal()" style="background:rgba(255,255,255,0.25);">+ Add Note</button>
     </div>
   </div>
-  <div class="sec-body" style="padding:16px;overflow:visible;">
+  <div class="sec-body collapsed" style="padding:16px;overflow:visible;">
 
   <!-- ═══════════════ NOTES SECTION ═══════════════ -->
   <div class="notes-section" style="box-shadow:none;border-radius:0;padding:0;margin:0;">
@@ -1658,7 +1666,7 @@
       <button class="btn-print-sec" onclick="printSection('catering')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body">
+  <div class="sec-body collapsed">
 
   <div class="catering-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="catering-head">
@@ -1702,7 +1710,7 @@
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
     <!-- Guest List Section Header -->
-    <div class="sec-header sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-collapsed sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">👥</div>
         <div>
@@ -1732,6 +1740,20 @@
       </div>
     </div>
 
+    <div class="sec-filter-bar">
+      <span class="sec-filter-label">Show guests for:</span>
+      <select class="sec-filter-select" id="guestEventFilter" onchange="filterGuestsByEvent(this.value)">
+        <option value="all">All Events</option>
+        <option value="Kankotri">📮 Kankotri</option>
+        <option value="Ganesh-Grahshanti-Mosalu">🪔 Ganesh</option>
+        <option value="Mehendi">🌿 Mehendi</option>
+        <option value="Sangeet">🎶 Sangeet</option>
+        <option value="Haldi">💛 Haldi</option>
+        <option value="Marriage">💍 Marriage</option>
+        <option value="Reception">🎊 Reception</option>
+      </select>
+      <span class="sec-filter-count" id="guestFilterCount"></span>
+    </div>
     <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
       <table class="guest-table" id="guestTable">
         <thead>
@@ -1767,7 +1789,7 @@
 
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
-    <div class="sec-header" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-collapsed" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">𖥸</div>
         <div>
@@ -1944,7 +1966,7 @@
     </div>
 
   <!-- VENDOR SECTION HEADER -->
-  <div class="sec-header sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
+  <div class="sec-header sec-collapsed sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
     <div class="sec-header-left">
       <div class="sec-header-icon">🏪</div>
       <div>
@@ -1977,6 +1999,20 @@
   </div>
 
   <div class="ledger">
+      <div class="sec-filter-bar">
+      <span class="sec-filter-label">Filter by category:</span>
+      <select class="sec-filter-select" id="vendorCategoryFilter" onchange="filterVendorsByCategory(this.value)">
+        <option value="all">All Categories</option>
+        <option value="catering">🍽️ Catering</option>
+        <option value="venue">🏛️ Venue</option>
+        <option value="photography">📸 Photography</option>
+        <option value="decoration">🌸 Decoration</option>
+        <option value="makeup">💄 Makeup</option>
+        <option value="music">🎵 Music</option>
+        <option value="mehendi">🌿 Mehendi</option>
+      </select>
+      <span class="sec-filter-count" id="vendorFilterCount"></span>
+    </div>
     <table id="ledgerTable">
       <thead>
         <tr>
@@ -2954,6 +2990,69 @@ document.addEventListener('click', function(e) {
     hdr.classList.toggle('sec-collapsed');
   });
 })();
+
+// ── Section Filter Functions ─────────────────────────────────────────────
+var _guestEventFilter = 'all';
+var _vendorCatFilter = 'all';
+
+function filterGuestsByEvent(ev) {
+  _guestEventFilter = ev;
+  renderGuests();
+  var countEl = document.getElementById('guestFilterCount');
+  if (countEl) {
+    if (ev === 'all') {
+      countEl.textContent = '';
+    } else {
+      var filtered = guests.filter(function(g) {
+        var e = g.events && g.events[ev];
+        return e && (Number(e.adults||0) + Number(e.kids||0)) > 0;
+      });
+      countEl.textContent = filtered.length + ' guests';
+    }
+  }
+}
+
+function filterVendorsByCategory(cat) {
+  _vendorCatFilter = cat;
+  // Sync with existing filterCategory select so renderTable picks it up
+  var existingFilter = document.getElementById('filterCategory');
+  if (existingFilter) {
+    // Find matching option or set to 'all'
+    var matched = false;
+    for (var i = 0; i < existingFilter.options.length; i++) {
+      if (cat === 'all' || existingFilter.options[i].value.toLowerCase() === cat.toLowerCase()) {
+        existingFilter.selectedIndex = (cat === 'all') ? 0 : i;
+        matched = true;
+        break;
+      }
+    }
+  }
+  renderTable();
+  var countEl = document.getElementById('vendorFilterCount');
+  if (countEl) {
+    if (cat === 'all') {
+      countEl.textContent = '';
+    } else {
+      var filtered = vendors.filter(function(v) {
+        return v.category && v.category.toLowerCase().includes(cat.toLowerCase());
+      });
+      countEl.textContent = filtered.length + ' vendors';
+    }
+  }
+}
+
+// ── Collapsible Sections ─────────────────────────────────────────────────
+document.addEventListener('click', function(e) {
+  var hdr = e.target.closest('.sec-header');
+  if (!hdr) return;
+  if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select') || e.target.closest('input')) return;
+  // Find next sec-body sibling
+  var el = hdr.nextElementSibling;
+  while (el && !el.classList.contains('sec-body')) { el = el.nextElementSibling; }
+  if (!el) return;
+  el.classList.toggle('collapsed');
+  hdr.classList.toggle('sec-collapsed');
+});
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
@@ -5067,6 +5166,14 @@ function guestTotalLadies(g){ return Math.max(0, ...LADIES_TRACKED_EVENTS.map(ev
 function guestTotalWriter(g){ return Math.max(0, ...WRITER_TRACKED_EVENTS.map(ev=>guestEventCounts(g,ev).writer), 0); }
 
 function renderGuests(){
+  // Apply event filter if set
+  var _filteredGuests = guests;
+  if (_guestEventFilter && _guestEventFilter !== 'all') {
+    _filteredGuests = guests.filter(function(g) {
+      var e = g.events && g.events[_guestEventFilter];
+      return e && (Number(e.adults||0) + Number(e.kids||0)) > 0;
+    });
+  }
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
   const chipsEl = document.getElementById('guestEventChips');
   const allCount = guests.length;
