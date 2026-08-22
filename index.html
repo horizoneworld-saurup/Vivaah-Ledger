@@ -673,18 +673,29 @@
   .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
 
   /* Section header colors */
-  /* ── Countdown Timer ── */
-  .countdown-wrap{background:linear-gradient(135deg,#5C1A2B 0%,#8B2A3F 50%,#5C1A2B 100%);border-radius:16px;padding:22px 28px;margin:0 0 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 4px 20px rgba(92,26,43,0.25);border:1px solid rgba(212,164,76,0.3);flex-wrap:wrap;gap:16px;}
-  .countdown-left{display:flex;align-items:center;gap:14px;}
-  .countdown-flower{font-size:32px;}
-  .countdown-title{color:rgba(255,255,255,0.75);font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-  .countdown-event{color:#D4A24C;font-size:17px;font-weight:700;font-family:'Cormorant Garamond',serif;}
-  .countdown-units{display:flex;gap:10px;}
-  .countdown-unit{text-align:center;}
-  .countdown-num{background:rgba(255,255,255,0.12);border:1px solid rgba(212,164,76,0.35);border-radius:10px;padding:8px 14px;min-width:54px;font-size:26px;font-weight:700;color:#fff;display:block;line-height:1;letter-spacing:1px;}
-  .countdown-label{color:rgba(255,255,255,0.55);font-size:10px;margin-top:5px;letter-spacing:0.5px;text-transform:uppercase;}
-  .countdown-done{color:#D4A24C;font-size:18px;font-weight:700;font-family:'Cormorant Garamond',serif;}
+  /* ── Rangoli Countdown Timer ── */
   .countdown-hide{display:none!important;}
+  .rangoli-wrap{margin:0 0 20px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;}
+  .rangoli-wrap .card{border-radius:20px;padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;background:#fce4ec;border:2px solid #e8aac0;min-height:320px;}
+  .rangoli-wrap .bg-svg{position:absolute;inset:0;width:100%;height:100%;}
+  .rangoli-wrap .petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;}
+  @keyframes rFall{0%{transform:translateY(-30px) rotate(0deg);opacity:0;}10%{opacity:.85;}90%{opacity:.65;}100%{transform:translateY(420px) rotate(360deg);opacity:0;}}
+  .rangoli-wrap .inner{position:relative;z-index:5;}
+  .rangoli-wrap .top-icon{font-size:24px;margin-bottom:8px;}
+  .rangoli-wrap .r-title{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#4a0826;text-shadow:0 0 12px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.7);margin-bottom:3px;}
+  .rangoli-wrap .r-sub{font-size:10px;color:#7a1838;letter-spacing:3px;text-transform:uppercase;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.85);margin-bottom:18px;}
+  .rangoli-wrap .boxes{display:flex;justify-content:center;gap:10px;margin-bottom:16px;}
+  .rangoli-wrap .box{background:rgba(255,255,255,0.92);border:2.5px solid #e8892a;border-radius:50% 50% 14px 14px;padding:10px 13px 9px;min-width:60px;box-shadow:0 2px 14px rgba(232,137,42,.25);position:relative;overflow:hidden;}
+  .rangoli-wrap .box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e8892a,#f9a8c9,#e8892a);}
+  .rangoli-wrap .num{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:32px;font-weight:700;color:#4a0826;line-height:1;}
+  .rangoli-wrap .lbl{font-size:9px;color:#9a2a58;letter-spacing:2px;text-transform:uppercase;margin-top:3px;font-weight:700;}
+  .rangoli-wrap .sep{color:#c0527a;font-size:24px;align-self:center;font-weight:700;}
+  .rangoli-wrap .names{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:20px;color:#4a0826;font-style:italic;font-weight:700;text-shadow:0 0 12px rgba(255,255,255,.9),0 0 22px rgba(255,255,255,.7);margin-bottom:5px;}
+  .rangoli-wrap .date-txt{font-size:11px;color:#7a1838;letter-spacing:2px;font-weight:700;text-shadow:0 0 10px rgba(255,255,255,.85);}
+  .rangoli-wrap .garland{font-size:15px;letter-spacing:3px;margin-top:12px;}
+  /* Music button */
+  .music-btn{position:absolute;top:12px;right:14px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;color:#7a1838;font-weight:700;}
+  .music-btn:hover{background:#fff;}
 
   /* ── Budget Chart ── */
   .budget-chart-wrap{background:#fff;border-radius:14px;padding:22px 24px 18px;box-shadow:0 2px 12px rgba(92,26,43,0.07);border:1px solid var(--line);margin-bottom:16px;}
@@ -1296,41 +1307,72 @@
     <div class="ticker-track" id="tickerTrack"></div>
   </div>
 
-  <!-- WEDDING COUNTDOWN TIMER -->
-  <div class="countdown-wrap countdown-hide" id="countdownWrap">
-    <div class="countdown-left">
-      <div class="countdown-flower">🌸</div>
-      <div>
-        <div class="countdown-title">Countdown to</div>
-        <div class="countdown-event" id="countdownEventName">Marriage</div>
-      </div>
-    </div>
-    <div class="countdown-units" id="countdownUnits">
-      <div class="countdown-unit"><span class="countdown-num" id="cdDays">00</span><div class="countdown-label">Days</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdHours">00</span><div class="countdown-label">Hours</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdMins">00</span><div class="countdown-label">Mins</div></div>
-      <div class="countdown-unit"><span class="countdown-num" id="cdSecs">00</span><div class="countdown-label">Secs</div></div>
-    </div>
-    <div class="countdown-done countdown-hide" id="countdownDone">💍 The Big Day is Here! 🌸</div>
-  </div>
-
-  <!-- ADMIN VENDOR DIRECTORY (Owner only) -->
-  <div id="adminReviewSection" style="display:none;" class="admin-only">
-    <div class="admin-review-wrap">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div>
-          <div class="admin-review-title">🌸 Vivaah Vendor Directory — Admin</div>
-          <div style="font-size:12px;color:var(--ink-soft);" id="adminReviewSummary">Loading reviews...</div>
+    <!-- RANGOLI COUNTDOWN TIMER -->
+  <div class="rangoli-wrap countdown-hide" id="countdownWrap">
+    <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
+    <audio id="weddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <div class="card">
+      <svg class="bg-svg" viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="rg1c" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f48fb1" stop-opacity=".7"/><stop offset="100%" stop-color="#e8892a" stop-opacity=".08"/></radialGradient>
+          <radialGradient id="rg2c" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f8bbd0" stop-opacity=".8"/><stop offset="100%" stop-color="#c0527a" stop-opacity=".15"/></radialGradient>
+        </defs>
+        <rect width="660" height="340" fill="#fce4ec"/>
+        <g transform="translate(330,170)">
+          <circle r="130" fill="url(#rg1c)"/><circle r="90" fill="url(#rg2c)"/><circle r="50" fill="#f48fb1" fill-opacity=".45"/><circle r="22" fill="#e8892a" fill-opacity=".55"/><circle r="8" fill="#c06a1a" fill-opacity=".7"/>
+          <g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width="1">
+            <ellipse rx="13" ry="36" transform="rotate(0) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(22.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(45) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(67.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(90) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(112.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(135) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(157.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(180) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(202.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(225) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(247.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(270) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(292.5) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(315) translate(0,-78)"/><ellipse rx="13" ry="36" transform="rotate(337.5) translate(0,-78)"/>
+          </g>
+          <g fill="#e8892a" fill-opacity=".45" stroke="#c06a1a" stroke-width=".8">
+            <ellipse rx="9" ry="22" transform="rotate(0) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-46)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-46)"/>
+          </g>
+          <g fill="none" stroke="#c0527a" stroke-width="1" stroke-opacity=".5">
+            <circle r="130"/><circle r="90"/><circle r="50"/><circle r="22"/>
+            <line x1="-130" y1="0" x2="130" y2="0"/><line x1="0" y1="-130" x2="0" y2="130"/>
+            <line x1="-92" y1="-92" x2="92" y2="92"/><line x1="92" y1="-92" x2="-92" y2="92"/>
+          </g>
+          <g fill="#c0527a" fill-opacity=".7"><circle cx="132" cy="0" r="4"/><circle cx="93" cy="93" r="4"/><circle cx="0" cy="132" r="4"/><circle cx="-93" cy="93" r="4"/><circle cx="-132" cy="0" r="4"/><circle cx="-93" cy="-93" r="4"/><circle cx="0" cy="-132" r="4"/><circle cx="93" cy="-93" r="4"/></g>
+          <g fill="#e8892a" fill-opacity=".6"><circle cx="92" cy="0" r="3"/><circle cx="65" cy="65" r="3"/><circle cx="0" cy="92" r="3"/><circle cx="-65" cy="65" r="3"/><circle cx="-92" cy="0" r="3"/><circle cx="-65" cy="-65" r="3"/><circle cx="0" cy="-92" r="3"/><circle cx="65" cy="-65" r="3"/></g>
+          <polygon points="0,-13 2.5,-5 10,-5 4,1 6,9 0,4 -6,9 -4,1 -10,-5 -2.5,-5" fill="#c06a1a" fill-opacity=".8"/>
+        </g>
+        <g transform="translate(55,55)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/><circle r="46" fill="none" stroke="#c0527a" stroke-width=".8" stroke-opacity=".55"/></g>
+        <g transform="translate(605,55)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(45) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(90) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(135) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(225) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(270) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(315) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/><circle r="46" fill="none" stroke="#c0527a" stroke-width=".8" stroke-opacity=".55"/></g>
+        <g transform="translate(55,285)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(60) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(120) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(240) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(300) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/></g>
+        <g transform="translate(605,285)" opacity=".85"><circle r="46" fill="#f48fb1" fill-opacity=".35"/><g fill="#f48fb1" fill-opacity=".55" stroke="#c0527a" stroke-width=".8"><ellipse rx="9" ry="22" transform="rotate(0) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(60) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(120) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(180) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(240) translate(0,-30)"/><ellipse rx="9" ry="22" transform="rotate(300) translate(0,-30)"/></g><circle r="12" fill="#e8892a" fill-opacity=".55"/></g>
+        <g fill="none" stroke="#c0527a" stroke-width="1.3" stroke-opacity=".5">
+          <path d="M0,18 Q60,5 120,18 Q180,31 240,18 Q300,5 360,18 Q420,31 480,18 Q540,5 600,18 Q640,18 660,18"/>
+          <path d="M0,322 Q60,335 120,322 Q180,309 240,322 Q300,335 360,322 Q420,309 480,322 Q540,335 600,322 Q640,322 660,322"/>
+        </g>
+        <g fill="#f48fb1" fill-opacity=".7" stroke="#c0527a" stroke-width=".8">
+          <ellipse cx="120" cy="12" rx="7" ry="11" transform="rotate(-20 120 12)"/><ellipse cx="240" cy="23" rx="7" ry="11" transform="rotate(15 240 23)"/><ellipse cx="360" cy="12" rx="7" ry="11" transform="rotate(-10 360 12)"/><ellipse cx="480" cy="23" rx="7" ry="11" transform="rotate(20 480 23)"/>
+          <ellipse cx="120" cy="328" rx="7" ry="11" transform="rotate(20 120 328)"/><ellipse cx="240" cy="317" rx="7" ry="11" transform="rotate(-15 240 317)"/><ellipse cx="360" cy="328" rx="7" ry="11" transform="rotate(10 360 328)"/><ellipse cx="480" cy="317" rx="7" ry="11" transform="rotate(-20 480 317)"/>
+        </g>
+        <rect x="10" y="10" width="640" height="320" rx="14" fill="none" stroke="#c0527a" stroke-width="1.5" stroke-opacity=".45" stroke-dasharray="7 4"/>
+        <rect x="18" y="18" width="624" height="304" rx="11" fill="none" stroke="#e8892a" stroke-width="1" stroke-opacity=".32" stroke-dasharray="3 6"/>
+      </svg>
+      <div id="rangoliPetals" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;"></div>
+      <div class="inner">
+        <div class="top-icon">🌺 🕉️ 🌺</div>
+        <div class="r-title">Until We Say "I Do"</div>
+        <div class="r-sub" id="countdownEventName">Mangalsutra Moment</div>
+        <div class="boxes">
+          <div class="box"><div class="num" id="cdDays">00</div><div class="lbl">Days</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdHours">00</div><div class="lbl">Hours</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdMins">00</div><div class="lbl">Mins</div></div>
+          <div class="sep">♡</div>
+          <div class="box"><div class="num" id="cdSecs">00</div><div class="lbl">Secs</div></div>
         </div>
-        <button class="btn btn-gold" onclick="loadAdminReviews()" style="font-size:12px;">🔄 Refresh</button>
-      </div>
-      <div id="adminReviewContent">
-        <div style="text-align:center;padding:20px;color:var(--ink-soft);">Click Refresh to load submitted reviews</div>
+        <div class="names" id="countdownCoupleNames">🪔 Mrishana &amp; Spandan 🪔</div>
+        <div class="date-txt" id="countdownDateTxt">26 November 2026 · Shubh Vivah</div>
+        <div class="garland">🌸 🌼 🌹 🌼 🌸</div>
+        <div class="countdown-hide" id="countdownDone" style="color:#4a0826;font-size:20px;font-weight:700;margin-top:10px;">💍 The Big Day is Here! 🌸</div>
       </div>
     </div>
   </div>
 
-  <!-- BUDGET vs ACTUAL CHART -->
+    <!-- BUDGET vs ACTUAL CHART -->
   <div class="budget-chart-wrap" id="budgetChartWrap" style="display:none;">
     <div class="budget-chart-title">📊 Budget vs Actual — By Category</div>
     <div class="budget-chart-legend">
