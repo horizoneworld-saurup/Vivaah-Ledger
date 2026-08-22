@@ -332,6 +332,23 @@
     transition:width 0.4s ease;
   }
 
+  /* ── Compact Catering Table ── */
+  .fn-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px;}
+  .fn-table th{text-align:left;padding:5px 8px;font-size:10px;font-weight:700;color:var(--ink-soft);letter-spacing:0.5px;text-transform:uppercase;border-bottom:1.5px solid var(--line);background:var(--ivory-deep);}
+  .fn-table td{padding:6px 6px;border-bottom:0.5px solid var(--line);vertical-align:middle;}
+  .fn-table tr:last-child td{border-bottom:none;}
+  .fn-table tr:hover td{background:var(--ivory);}
+  .fn-inp{width:100%;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px;background:#fff;color:var(--ink);font-family:inherit;}
+  .fn-inp:focus{outline:none;border-color:var(--maroon);}
+  .fn-sel{width:100%;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:12px;background:#fff;color:var(--ink);}
+  .fn-cost-cell{font-weight:700;color:var(--maroon);font-size:13px;white-space:nowrap;font-family:'Cormorant Garamond',serif;}
+  .fn-del{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;opacity:0.5;}
+  .fn-del:hover{color:var(--rust);opacity:1;}
+  .fn-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+  .fn-sum-card{text-align:center;padding:10px 8px;border-radius:10px;border:1px solid var(--line);background:var(--ivory);}
+  .fn-sum-val{font-size:16px;font-weight:700;color:var(--maroon);font-family:'Cormorant Garamond',serif;}
+  .fn-sum-lbl{font-size:10px;color:var(--ink-soft);margin-top:2px;letter-spacing:0.3px;}
+
   .catering-card{
     background:#fff; border:1px solid var(--line); border-radius:var(--r-lg);
     box-shadow:var(--card-shadow); padding:22px 24px; margin-bottom:30px;
@@ -1636,11 +1653,10 @@
       <button class="btn btn-ghost" id="btnAddFunction">+ Add function</button>
     </div>
     <div class="function-grid" id="functionGrid"></div>
-    <div class="catering-summary">
-      <div class="catering-stat"><div class="v" id="cateringTotalGuests">0</div><div class="l">Total guest-plates</div></div>
-      <div class="catering-stat"><div class="v" id="cateringAvgRate">₹0</div><div class="l">Avg. rate / plate</div></div>
-      <div class="catering-stat"><div class="v" id="cateringTotalCost">₹0</div><div class="l">Estimated catering cost</div></div>
-      <div class="catering-stat"><div class="v" id="cateringVendorCompare">—</div><div class="l">vs. linked vendor quote</div></div>
+    <div class="fn-summary">
+      <div class="fn-sum-card"><div class="fn-sum-val" id="cateringTotalGuests">0</div><div class="fn-sum-lbl">Total guest-plates</div></div>
+      <div class="fn-sum-card"><div class="fn-sum-val" id="cateringAvgRate">₹0</div><div class="fn-sum-lbl">Avg rate / plate</div></div>
+      <div class="fn-sum-card" style="background:#FFF8E1;border-color:#D4A24C;"><div class="fn-sum-val" style="color:#856404;" id="cateringTotalCost">₹0</div><div class="fn-sum-lbl">Total catering cost</div></div>
     </div>
     <div class="caterer-tally-wrap" id="catererTallyWrap" style="display:none;">
       <div class="caterer-tally-title">🍽️ Auto-Tally per Caterer</div>
@@ -2037,6 +2053,18 @@
       </div>
     </div>
 
+    <div class="field" style="background:var(--ivory-deep);border-radius:10px;padding:12px 14px;border:1px solid var(--line);margin-top:4px;">
+      <label style="font-weight:600;color:var(--maroon);font-size:13px;">⭐ Your Rating <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(after event)</span></label>
+      <div id="vStarRating" style="display:flex;align-items:center;gap:4px;margin:8px 0 6px;">
+        <button class="star-btn" data-star="1" onclick="setVendorStar(1)" title="Poor">⭐</button>
+        <button class="star-btn" data-star="2" onclick="setVendorStar(2)" title="Fair">⭐</button>
+        <button class="star-btn" data-star="3" onclick="setVendorStar(3)" title="Good">⭐</button>
+        <button class="star-btn" data-star="4" onclick="setVendorStar(4)" title="Very Good">⭐</button>
+        <button class="star-btn" data-star="5" onclick="setVendorStar(5)" title="Excellent">⭐</button>
+        <span id="vStarLabel" style="font-size:12px;color:var(--ink-soft);margin-left:6px;font-style:italic;"></span>
+      </div>
+      <textarea id="vReview" rows="2" placeholder="e.g. Excellent service, on-time, great food…" style="resize:none;width:100%;border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;"></textarea>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="vendorCancelBtn">Cancel</button>
       <button class="btn btn-primary" id="vendorSaveBtn">Save vendor</button>
@@ -3643,6 +3671,7 @@ if(notes && notes.length > 0) renderNotes();
    ================================================================ */
 const AUTH_WORKER_URL = ''; // uses same-domain /api/ routes — no CORS ever! // ← UPDATE THIS
 const OWNER_EMAIL_CLIENT = 'horizoneworld@gmail.com';
+const OWNER_EMAIL_CLIENT_2 = 'rmsfincoresolutions@gmail.com';
 
 let egCurrentEmail = '';
 let egPollingInterval = null;
@@ -4424,41 +4453,38 @@ function safeUrl(url){
 /* ---------------- Guest & catering calculator ---------------- */
 function renderCatering(){
   const grid = document.getElementById('functionGrid');
-  grid.innerHTML = functions.map(f=>`
-    <div class="function-row" data-fn="${f.id}">
-      <div class="field-mini">
-        <label>Function name</label>
-        <input type="text" data-fn-field="name" data-fn-id="${f.id}" value="${escapeHtml(f.name)}" placeholder="e.g. Sangeet">
-      </div>
-      <div class="field-mini">
-        <label>Guest count</label>
-        <input type="number" data-fn-field="guests" data-fn-id="${f.id}" value="${f.guests||0}" min="0">
-      </div>
-      <div class="field-mini">
-        <label>Rate / plate (₹)</label>
-        <input type="number" data-fn-field="rate" data-fn-id="${f.id}" value="${f.rate||0}" min="0">
-      </div>
-      <div class="field-mini">
-        <label>Function cost</label>
-        <input type="text" value="${fmt((f.guests||0)*(f.rate||0))}" disabled style="background:var(--ivory-deep); color:var(--ink-soft); font-weight:600;">
-      </div>
-      <div class="field-mini">
-        <label>Caterer</label>
-        <select data-fn-field="vendorId" data-fn-id="${f.id}" style="width:100%;padding:5px 8px;border:1.5px solid var(--line);border-radius:8px;font-size:12px;">
-          <option value="">— Select —</option>
-          ${vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater')).map(v=>`<option value="${v.id}" ${f.vendorId===v.id?'selected':''}>${escapeHtml(v.name)}</option>`).join('')}
-        </select>
-      </div>
-      <button class="remove-fn" data-remove-fn="${f.id}" title="Remove function">✕</button>
-    </div>
-  `).join('');
+  const caterVendors = vendors.filter(v=>v.category&&v.category.toLowerCase().includes('cater'));
+  const caterOptions = '<option value="">— Caterer —</option>' +
+    caterVendors.map(v=>'<option value="'+v.id+'">'+escapeHtml(v.name)+'</option>').join('');
+
+  grid.innerHTML = '<table class="fn-table"><thead><tr>' +
+    '<th style="width:25%">Function</th>' +
+    '<th style="width:11%">Guests</th>' +
+    '<th style="width:13%">Rate/plate (₹)</th>' +
+    '<th style="width:14%">Cost</th>' +
+    '<th style="width:30%">Caterer</th>' +
+    '<th style="width:4%"></th>' +
+    '</tr></thead><tbody>' +
+    functions.map(f=>{
+      const cost = (Number(f.guests||0)*Number(f.rate||0));
+      const opts = caterOptions.replace('value="'+f.vendorId+'"','value="'+f.vendorId+'" selected');
+      return '<tr>' +
+        '<td><input class="fn-inp" type="text" data-fn-field="name" data-fn-id="'+f.id+'" value="'+escapeHtml(f.name)+'" placeholder="e.g. Sangeet"></td>' +
+        '<td><input class="fn-inp" type="number" data-fn-field="guests" data-fn-id="'+f.id+'" value="'+(f.guests||0)+'" min="0" style="width:70px"></td>' +
+        '<td><input class="fn-inp" type="number" data-fn-field="rate" data-fn-id="'+f.id+'" value="'+(f.rate||0)+'" min="0" style="width:80px"></td>' +
+        '<td><span class="fn-cost-cell">'+fmt(cost)+'</span></td>' +
+        '<td><select class="fn-sel" data-fn-field="vendorId" data-fn-id="'+f.id+'">'+opts+'</select></td>' +
+        '<td><button class="fn-del" data-remove-fn="'+f.id+'" title="Remove">✕</button></td>' +
+        '</tr>';
+    }).join('') +
+    '</tbody></table>';
 
   const totalGuests = functions.reduce((s,f)=>s+Number(f.guests||0),0);
   const totalCost = functions.reduce((s,f)=>s+Number(f.guests||0)*Number(f.rate||0),0);
   const avgRate = totalGuests>0 ? totalCost/totalGuests : 0;
 
   document.getElementById('cateringTotalGuests').textContent = totalGuests.toLocaleString('en-IN');
-  document.getElementById('cateringAvgRate').textContent = fmt(avgRate);
+  document.getElementById('cateringAvgRate').textContent = fmt(Math.round(avgRate));
   document.getElementById('cateringTotalCost').textContent = fmt(totalCost);
 
   const select = document.getElementById('cateringVendorSelect');
@@ -4472,21 +4498,8 @@ function renderCatering(){
   select.value = curSelected;
 
   const linkedId = select.value;
-  const compareEl = document.getElementById('cateringVendorCompare');
   const linkMsg = document.getElementById('cateringLinkMsg');
-  if(linkedId){
-    const v = vendors.find(x=>x.id===linkedId);
-    if(v){
-      const diff = totalCost - Number(v.quoted||0);
-      compareEl.textContent = (diff===0 ? 'matches quote' : (diff>0?'+':'') + fmt(diff));
-      compareEl.style.color = diff===0 ? 'var(--sage)' : diff>0 ? 'var(--rust)' : 'var(--sage)';
-      linkMsg.textContent = diff===0 ? 'Estimate matches this vendor\'s quoted amount.' : '';
-    }
-  } else {
-    compareEl.textContent = '—';
-    compareEl.style.color = 'var(--ink)';
-    linkMsg.textContent = '';
-  }
+  if(linkMsg) linkMsg.textContent = '';
   // Auto-apply caterer costs to vendor quotes
   setTimeout(autoApplyCaterers, 0);
 }
