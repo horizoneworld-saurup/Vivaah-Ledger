@@ -1638,13 +1638,11 @@ function renderGuests() {
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
         '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + 'A' : '') + '</div>' +
       '</div>' +
-      '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">' +
-        (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call" style="flex:1;text-align:center;min-width:44px;">\ud83d\udcde<br><span style=\"font-size:9px\">Call</span></a>' : '') +
-        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" style="flex:1;text-align:center;min-width:44px;" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac<br><span style=\"font-size:9px\">Invite</span></a>' : '') +
-        (g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0 && ph ?
-          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" style="flex:1;text-align:center;min-width:44px;background:' + (g.stdSent?'#FFE4E8':'#FFF8E1') + ';border:1px solid ' + (g.stdSent?'#C62828':'#D4A24C') + ';border-radius:8px;padding:5px 4px;font-size:' + (g.stdSent?'18px':'12px') + ';text-decoration:none;display:inline-block;">' + (g.stdSent?'\u2764\ufe0f':'\ud83d\udc8c<br><span style=\"font-size:9px\">STD</span>') + '</a>'
-          : '') +
-        '<button class="act-btn act-tick" style="flex:1;text-align:center;min-width:44px;" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '<br><span style=\"font-size:9px\">Confirm</span></button>' +
+      '<div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">' +
+        (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call" style="flex:1;text-align:center;">\ud83d\udcde</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" style="flex:1;text-align:center;" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
+        (ph ? '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" style="flex:1;text-align:center;background:' + (g.stdSent ? '#FFE4E8' : '#FFF8E1') + ';border:1px solid ' + (g.stdSent ? '#C62828' : '#D4A24C') + ';border-radius:8px;font-size:' + (g.stdSent ? '18px' : '14px') + ';text-decoration:none;display:flex;align-items:center;justify-content:center;padding:4px;">' + (g.stdSent ? '\u2764\ufe0f' : '\ud83d\udc8c') + '</a>' : '') +
+        '<button class="act-btn act-tick" style="flex:1;text-align:center;" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';
   }
