@@ -1310,7 +1310,7 @@
     <!-- RANGOLI COUNTDOWN TIMER -->
   <div class="rangoli-wrap countdown-hide" id="countdownWrap">
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
-    <audio id="weddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <audio id="weddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
     <div class="card">
       <svg class="bg-svg" viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -1365,7 +1365,7 @@
           <div class="box"><div class="num" id="cdSecs">00</div><div class="lbl">Secs</div></div>
         </div>
         <div class="names" id="countdownCoupleNames">🪔 Mrishana &amp; Spandan 🪔</div>
-        <div class="date-txt" id="countdownDateTxt">26 November 2026 · Shubh Vivah</div>
+        <div class="date-txt" id="countdownDateTxt">27 November 2026 · Shubh Vivah</div>
         <div class="garland">🌸 🌼 🌹 🌼 🌸</div>
         <div class="countdown-hide" id="countdownDone" style="color:#4a0826;font-size:20px;font-weight:700;margin-top:10px;">💍 The Big Day is Here! 🌸</div>
       </div>
@@ -2941,6 +2941,41 @@ function renderBudgetChart() {
 
 // ── Wedding Countdown Timer ───────────────────────────────────────────────
 var _countdownInterval = null;
+var _musicPlaying = false;
+
+function toggleMusic() {
+  var audio = document.getElementById('weddingMusic');
+  var btn = document.getElementById('musicBtn');
+  if (!audio) return;
+  if (_musicPlaying) {
+    audio.pause(); _musicPlaying = false;
+    if (btn) { btn.textContent = '🎵 Music'; btn.style.background = 'rgba(255,255,255,0.85)'; }
+  } else {
+    audio.volume = 0.45;
+    var p = audio.play();
+    if (p !== undefined) {
+      p.then(function() {
+        _musicPlaying = true;
+        if (btn) { btn.textContent = '🔇 Mute'; btn.style.background = '#f9a8c9'; }
+      }).catch(function(e) { console.error('Music error:', e); if (btn) { btn.textContent = '❌ ' + e.message.substring(0,20); } });
+    }
+  }
+}
+
+document.addEventListener('click', function _firstClick() {
+  var audio = document.getElementById('weddingMusic');
+  var wrap = document.getElementById('countdownWrap');
+  if (audio && wrap && !wrap.classList.contains('countdown-hide') && !_musicPlaying) {
+    audio.volume = 0.45;
+    audio.play().then(function() {
+      _musicPlaying = true;
+      var btn = document.getElementById('musicBtn');
+      if (btn) { btn.textContent = '🔇 Mute'; btn.style.background = '#f9a8c9'; }
+    }).catch(function(){});
+  }
+  document.removeEventListener('click', _firstClick);
+});
+
 function startCountdown() {
   var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
   var targetDate = null, targetName = 'Marriage';
