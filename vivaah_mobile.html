@@ -1633,16 +1633,16 @@ function renderGuests() {
     var lbl = g.callStatus === 'confirmed' ? '\u2705' : g.callStatus === 'declined' ? '\u274c' : '\u23f3';
     var ph = (g.phone || '').replace(/\D/g, '');
     var waMsg = encodeURIComponent(g.waCustomMsg || generateInviteMsg(g));
-    return '<div class="row-item" style="flex-wrap:wrap;gap:6px;cursor:default;">' +
-      '<div style="flex:1;min-width:120px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
+    return '<div class="row-item" style="flex-wrap:wrap;gap:4px;cursor:default;padding:8px 10px;">' +
+      '<div style="flex:1;min-width:180px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
         '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + 'A' : '') + '</div>' +
       '</div>' +
-      '<div style="display:flex;gap:5px;align-items:center;flex-shrink:0;">' +
+      '<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;width:100%;justify-content:flex-start;margin-top:2px;">' +
         (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call">\ud83d\udcde</a>' : '') +
         (ph ? '<a href="https://wa.me/' + ph + '?text=' + waMsg + '" target="_blank" class="act-btn act-wa" onclick="markInvited(\'' + g.id + '\')">\ud83d\udcac</a>' : '') +
         (g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0 && ph ?
-          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2764\ufe0f':'\ud83d\udc8c STD') + '</a>' : '') +
+          '<a href="https://wa.me/' + ph + '?text=' + encodeURIComponent(generateStdMsg(g)) + '" target="_blank" onclick="markStdSent(\'' + g.id + '\')" class="act-btn" style="background:' + (g.stdSent?'#E8F5E9':'#FFF8E1') + ';font-size:11px;border-radius:8px;border:1px solid ' + (g.stdSent?'#2E7D32':'#D4A24C') + ';" title="Save the Date">' + (g.stdSent?'\u2764\ufe0f':'\ud83d\udc8c STD') + '</a>' : '<span></span>') +
         '<button class="act-btn act-tick" onclick="openConfirm(\'' + g.id + '\')">' + lbl + '</button>' +
       '</div>' +
     '</div>';
