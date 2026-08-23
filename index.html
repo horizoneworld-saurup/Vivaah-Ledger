@@ -3056,12 +3056,14 @@ function filterVendorsByCategory(cat) {
 function toggleSecBody(headerId, bodyId) {
   var hdr = document.getElementById(headerId);
   var body = document.getElementById(bodyId);
-  if (!hdr) { console.error('HEADER NOT FOUND: ' + headerId); return; }
-  if (!body) { console.error('BODY NOT FOUND: ' + bodyId); return; }
-  console.log('TOGGLE: ' + headerId + ' -> ' + bodyId + ' current:' + body.classList.contains('collapsed'));
+  if (!hdr || !body) return;
+  var isCollapsed = body.classList.contains('collapsed');
   body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
-  console.log('AFTER: collapsed=' + body.classList.contains('collapsed') + ' display=' + window.getComputedStyle(body).display);
+  // Scroll into view when opening
+  if (isCollapsed) {
+    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
+  }
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
