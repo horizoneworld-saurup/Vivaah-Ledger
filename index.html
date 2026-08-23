@@ -1423,6 +1423,27 @@
   </div>
 
     <!-- BUDGET vs ACTUAL CHART -->
+
+  <!-- BUDGET SECTION HEADER -->
+  <div class="sec-header sec-collapsed sec-budget" id="budgetSectionHeader" onclick="toggleSecBody('budgetSectionHeader','budgetSectionBody')">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">💰</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Budget & Payment Tracking</div>
+        <div class="sec-header-sub" style="color:#FFE8A0;">Track total spend, payments made and outstanding dues</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="budgetHeaderBadge">₹0 budget</span>
+          <span class="sec-badge" id="paidHeaderBadge">₹0 paid</span>
+          <span class="sec-badge" id="outstandingHeaderBadge">₹0 due</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('budget')">🖨️ Print</button>
+    </div>
+  </div>
+  <div class="sec-body collapsed" id="budgetSectionBody">
+
   <div class="budget-chart-wrap" id="budgetChartWrap" style="display:none;">
     <div class="budget-chart-title">📊 Budget vs Actual — By Category</div>
     <div class="budget-chart-legend">
@@ -1446,26 +1467,6 @@
       </div>
     </div>
   </div>
-
-  <!-- BUDGET SECTION HEADER -->
-  <div class="sec-header sec-collapsed sec-budget" id="budgetSectionHeader" onclick="toggleSecBody('budgetSectionHeader','budgetSectionBody')">
-    <div class="sec-header-left">
-      <div class="sec-header-icon">💰</div>
-      <div>
-        <div class="sec-header-title" style="color:#fff;">Budget & Payment Tracking</div>
-        <div class="sec-header-sub" style="color:#FFE8A0;">Track total spend, payments made and outstanding dues</div>
-        <div class="sec-header-badges">
-          <span class="sec-badge" id="budgetHeaderBadge">₹0 budget</span>
-          <span class="sec-badge" id="paidHeaderBadge">₹0 paid</span>
-          <span class="sec-badge" id="outstandingHeaderBadge">₹0 due</span>
-        </div>
-      </div>
-    </div>
-    <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('budget')">🖨️ Print</button>
-    </div>
-  </div>
-  <div class="sec-body collapsed" id="budgetSectionBody">
 
   <div class="dash">
     <div class="card budget">
