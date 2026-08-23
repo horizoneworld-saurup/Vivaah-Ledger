@@ -82,7 +82,7 @@
   .featured-extra-fields{
     border-left:3px solid var(--gold); padding-left:14px; margin:14px 0; display:flex; flex-direction:column; gap:14px;
   }
-  .topbar-actions{display:flex; gap:10px; flex-wrap:wrap;}
+  .topbar-actions{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
   .btn{
     display:inline-flex; align-items:center; gap:7px;
     font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
@@ -684,13 +684,15 @@
   .sec-header-sub{font-size:12px;margin-top:3px;opacity:0.85;}
   .sec-header-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
   .sec-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;}
-  .sec-header-actions{display:flex;gap:8px;align-items:center;}
+  .sec-header-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
   .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;transition:max-height 0.35s ease;}
   .sec-body.collapsed{display:none!important;}
   .sec-header{cursor:pointer;user-select:none;position:relative;}
-  .sec-header::after{content:'▼';position:absolute;right:14px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:11px;transition:transform 0.3s;}
+  /* Arrow — separate from print, added via padding on right */
+  .sec-header-actions{padding-right:42px;}
+  .sec-header::after{content:'▼';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;line-height:28px;text-align:center;transition:transform 0.3s;}
   .sec-header.sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
   .sec-filter-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ivory-deep);border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .sec-filter-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
@@ -1305,7 +1307,7 @@
       <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
       <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;">🔑 Owner Panel</button>
       <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
-      <button class="btn btn-ghost" id="btnSignOutRole">↩ Sign out</button>
+      <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:12px;">↩ Sign out</button>
     </div>
   </div>
 
@@ -1445,7 +1447,7 @@
   </div>
 
   <!-- BUDGET SECTION HEADER -->
-  <div class="sec-header sec-collapsed sec-budget" id="budgetSectionHeader">
+  <div class="sec-header sec-collapsed sec-budget" id="budgetSectionHeader" onclick="toggleSecBody('budgetSectionHeader','budgetSectionBody')">
     <div class="sec-header-left">
       <div class="sec-header-icon">💰</div>
       <div>
@@ -1459,7 +1461,7 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('budget')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('budget')">🖨️ Print</button>
     </div>
   </div>
   <div class="sec-body collapsed" id="budgetSectionBody">
@@ -1491,7 +1493,7 @@
   </div><!-- end budgetSectionBody -->
 
   <!-- EVENT TIMELINE SECTION HEADER -->
-  <div class="sec-header sec-timeline">
+  <div class="sec-header sec-collapsed sec-timeline" id="timelineSectionHeader" onclick="toggleSecBody('timelineSectionHeader','timelineSecBody')">
     <div class="sec-header-left">
       <div class="sec-header-icon">📅</div>
       <div>
@@ -1504,10 +1506,10 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('timeline')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('timeline')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body collapsed">
+  <div class="sec-body collapsed" id="timelineSecBody">
   <!-- EVENT TIMELINE -->
   <div class="event-timeline-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="event-timeline-head">
@@ -1520,7 +1522,7 @@
   </div><!-- end timeline sec-body -->
 
   <!-- REMINDERS SECTION HEADER -->
-  <div class="sec-header sec-reminder">
+  <div class="sec-header sec-collapsed sec-reminder" id="reminderSectionHeader" onclick="toggleSecBody('reminderSectionHeader','reminderSecBody')">
     <div class="sec-header-left">
       <div class="sec-header-icon">🔔</div>
       <div>
@@ -1534,10 +1536,10 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('reminders')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('reminders')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body collapsed" style="padding:16px;">
+  <div class="sec-body collapsed" id="reminderSecBody" style="padding:16px;">
 
   <div class="reminders-grid" id="remindersGrid">
     <div class="reminder-card" data-reminder="trial">
@@ -1587,7 +1589,7 @@
   </div><!-- end reminders sec-body -->
 
   <!-- NOTES SECTION HEADER -->
-  <div class="sec-header sec-notes">
+  <div class="sec-header sec-collapsed sec-notes" id="notesSectionHeader" onclick="toggleSecBody('notesSectionHeader','notesSecBody')">
     <div class="sec-header-left">
       <div class="sec-header-icon">📝</div>
       <div>
@@ -1599,11 +1601,11 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('notes')">🖨️ Print</button>
-      <button class="btn-print-sec" onclick="noteOpenModal()" style="background:rgba(255,255,255,0.25);">+ Add Note</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('notes')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();noteOpenModal()" style="background:rgba(255,255,255,0.25);">+ Add Note</button>
     </div>
   </div>
-  <div class="sec-body collapsed" style="padding:16px;overflow:visible;">
+  <div class="sec-body collapsed" id="notesSecBody" style="padding:16px;overflow:visible;">
 
   <!-- ═══════════════ NOTES SECTION ═══════════════ -->
   <div class="notes-section" style="box-shadow:none;border-radius:0;padding:0;margin:0;">
@@ -1651,7 +1653,7 @@
   </div><!-- end notes sec-body -->
 
   <!-- CATERING SECTION HEADER -->
-  <div class="sec-header sec-catering">
+  <div class="sec-header sec-collapsed sec-catering" id="cateringSectionHeader" onclick="toggleSecBody('cateringSectionHeader','cateringSecBody')">
     <div class="sec-header-left">
       <div class="sec-header-icon">🍽️</div>
       <div>
@@ -1663,10 +1665,10 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('catering')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('catering')">🖨️ Print</button>
     </div>
   </div>
-  <div class="sec-body collapsed">
+  <div class="sec-body collapsed" id="cateringSecBody">
 
   <div class="catering-card" style="box-shadow:none;border-radius:0;margin-bottom:0;">
     <div class="catering-head">
@@ -1710,7 +1712,7 @@
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
     <!-- Guest List Section Header -->
-    <div class="sec-header sec-collapsed sec-guest" style="margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-guest" onclick="toggleSecBody('guestSectionHeader','guestSecBody')" style="margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">👥</div>
         <div>
@@ -1727,10 +1729,10 @@
         </div>
       </div>
       <div class="sec-header-actions">
-        <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
-      </div>
+        <button class="btn-print-sec" onclick="event.stopPropagation();printSection('guests')">🖨️ Print</button>
     </div>
-  <div class="sec-body"><!-- guest open by default -->
+    </div>
+  <div class="sec-body" id="guestSecBody"><!-- guest open by default -->
 
     <!-- Guest backup bar -->
     <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
@@ -1791,7 +1793,7 @@
   </div><!-- end guest sec-body -->
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
-    <div class="sec-header sec-collapsed" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-collapsed" id="kankotriSectionHeader" onclick="toggleSecBody('kankotriSectionHeader','kankotriSecBody')" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">𖥸</div>
         <div>
@@ -1806,10 +1808,10 @@
         </div>
       </div>
       <div class="sec-header-actions">
-        <button class="btn-print-sec" onclick="printSection('kankotri')">🖨️ Print</button>
-      </div>
+        <button class="btn-print-sec" onclick="event.stopPropagation();printSection('kankotri')">🖨️ Print</button>
     </div>
-  <div class="sec-body collapsed">
+    </div>
+  <div class="sec-body collapsed" id="kankotriSecBody">
 
     <div class="kankotri-bar" style="border-radius:0;margin-bottom:0;border-top:1px solid rgba(255,255,255,0.1);">
       <div>
@@ -1970,7 +1972,7 @@
 
   </div><!-- end kankotri sec-body -->
   <!-- VENDOR SECTION HEADER -->
-  <div class="sec-header sec-collapsed sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
+  <div class="sec-header sec-collapsed sec-vendor" id="vendorSectionHeader" onclick="toggleSecBody('vendorSectionHeader','vendorSecBody')" style="margin-top:28px;">
     <div class="sec-header-left">
       <div class="sec-header-icon">🏪</div>
       <div>
@@ -1983,11 +1985,11 @@
       </div>
     </div>
     <div class="sec-header-actions">
-      <button class="btn-print-sec" onclick="printSection('vendor')">🖨️ Print</button>
-      <button class="btn-print-sec" onclick="document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();printSection('vendor')">🖨️ Print</button>
+      <button class="btn-print-sec" onclick="event.stopPropagation();document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
     </div>
   </div>
-  <div class="sec-body collapsed">
+  <div class="sec-body collapsed" id="vendorSecBody">
 
   <div class="toolbar" style="border-radius:0;">
     <h2>Vendor ledger</h2>
@@ -3048,17 +3050,14 @@ function filterVendorsByCategory(cat) {
 }
 
 // ── Collapsible Sections ─────────────────────────────────────────────────
-document.addEventListener('click', function(e) {
-  var hdr = e.target.closest('.sec-header');
-  if (!hdr) return;
-  if (e.target.closest('button') || e.target.closest('a') || e.target.closest('select') || e.target.closest('input')) return;
-  // Find next sec-body sibling
-  var el = hdr.nextElementSibling;
-  while (el && !el.classList.contains('sec-body')) { el = el.nextElementSibling; }
-  if (!el) return;
-  el.classList.toggle('collapsed');
+// Section toggle - uses data-target attribute on each header
+function toggleSecBody(headerId, bodyId) {
+  var hdr = document.getElementById(headerId);
+  var body = document.getElementById(bodyId);
+  if (!hdr || !body) return;
+  body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
-});
+}
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
 function renderBudgetChart() {
