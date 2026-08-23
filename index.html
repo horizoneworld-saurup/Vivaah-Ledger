@@ -1730,6 +1730,7 @@
         <button class="btn-print-sec" onclick="printSection('guests')">🖨️ Print</button>
       </div>
     </div>
+  <div class="sec-body"><!-- guest open by default -->
 
     <!-- Guest backup bar -->
     <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
@@ -1787,6 +1788,7 @@
     </div>
   </div>
 
+  </div><!-- end guest sec-body -->
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
     <div class="sec-header sec-collapsed" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
@@ -1807,6 +1809,7 @@
         <button class="btn-print-sec" onclick="printSection('kankotri')">🖨️ Print</button>
       </div>
     </div>
+  <div class="sec-body collapsed">
 
     <div class="kankotri-bar" style="border-radius:0;margin-bottom:0;border-top:1px solid rgba(255,255,255,0.1);">
       <div>
@@ -1965,6 +1968,7 @@
       <div id="invEmptyMsg" style="display:none;text-align:center;padding:28px;color:var(--ink-soft);font-size:13px;">No guests in main list yet — add guests first.</div>
     </div>
 
+  </div><!-- end kankotri sec-body -->
   <!-- VENDOR SECTION HEADER -->
   <div class="sec-header sec-collapsed sec-vendor" id="vendorSectionHeader" style="margin-top:28px;">
     <div class="sec-header-left">
@@ -1983,6 +1987,7 @@
       <button class="btn-print-sec" onclick="document.getElementById('btnAddVendor').click()" style="background:rgba(255,255,255,0.25);">+ Add Vendor</button>
     </div>
   </div>
+  <div class="sec-body collapsed">
 
   <div class="toolbar" style="border-radius:0;">
     <h2>Vendor ledger</h2>
@@ -2040,6 +2045,7 @@
 </div>
 
 <!-- Add/Edit Vendor Modal -->
+  </div><!-- end vendor sec-body -->
 <div class="modal-overlay" id="vendorModalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add vendor</h3>
@@ -7019,6 +7025,25 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </div>
 </div>
+
+  <!-- FOOTER -->
+  <footer id="pageFooter" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);padding:24px;text-align:center;margin-top:8px;">
+    <div style="display:inline-flex;align-items:center;gap:12px;background:rgba(212,164,76,0.15);border:1px solid rgba(212,164,76,0.3);border-radius:12px;padding:10px 20px;margin-bottom:12px;">
+      <div style="width:36px;height:36px;background:#D4A24C;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">💼</div>
+      <div style="text-align:left;">
+        <div style="color:#D4A24C;font-size:15px;font-weight:700;">RMS Fincore Solutions</div>
+        <div style="color:rgba(212,164,76,0.7);font-size:11px;">Ahmedabad, Gujarat</div>
+      </div>
+    </div>
+    <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-bottom:10px;">
+      Designed &amp; Developed with ❤️ for <span id="footerCoupleName" style="color:#D4A24C;font-weight:600;">your wedding</span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,0.7);">📧 rmsfincoresolutions@gmail.com</span>
+      <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,0.7);">📱 Contact us for your wedding tool</span>
+      <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,0.7);">🌸 Vivaah Ledger © 2026</span>
+    </div>
+  </footer>
 
 </body>
 </html>
