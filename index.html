@@ -701,7 +701,7 @@
   .sec-filter-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
   .sec-filter-select{border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:12px;background:#fff;color:var(--ink);}
   .sec-filter-count{font-size:11px;color:var(--ink-soft);}
-  .sec-body.collapsed{max-height:0!important;overflow:hidden;margin-bottom:4px;}top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:12px;transition:transform 0.3s;}
+  top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.6);font-size:12px;transition:transform 0.3s;}
   .sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
   .sec-collapse-icon{margin-left:auto;font-size:14px;transition:transform 0.3s;color:rgba(255,255,255,0.7);}
   .sec-collapsed .sec-collapse-icon{transform:rotate(-90deg);}
@@ -1714,7 +1714,7 @@
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
     <!-- Guest List Section Header -->
-    <div class="sec-header sec-guest" onclick="toggleSecBody('guestSectionHeader','guestSecBody')" style="margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-guest" id="guestSectionHeader" onclick="toggleSecBody('guestSectionHeader','guestSecBody')" style="margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">👥</div>
         <div>
@@ -1732,7 +1732,7 @@
       </div>
       <div class="sec-header-actions">
         <button class="btn-print-sec" onclick="event.stopPropagation();printSection('guests')">🖨️ Print</button>
-    </div>
+      </div>
     </div>
   <div class="sec-body" id="guestSecBody"><!-- guest open by default -->
 
@@ -3056,9 +3056,12 @@ function filterVendorsByCategory(cat) {
 function toggleSecBody(headerId, bodyId) {
   var hdr = document.getElementById(headerId);
   var body = document.getElementById(bodyId);
-  if (!hdr || !body) return;
+  if (!hdr) { console.error('HEADER NOT FOUND: ' + headerId); return; }
+  if (!body) { console.error('BODY NOT FOUND: ' + bodyId); return; }
+  console.log('TOGGLE: ' + headerId + ' -> ' + bodyId + ' current:' + body.classList.contains('collapsed'));
   body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
+  console.log('AFTER: collapsed=' + body.classList.contains('collapsed') + ' display=' + window.getComputedStyle(body).display);
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
