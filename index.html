@@ -687,7 +687,7 @@
   .sec-header-sub{font-size:12px;margin-top:3px;opacity:0.85;}
   .sec-header-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
   .sec-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(255,255,255,0.2);color:#fff;}
-  .sec-header-actions{display:flex;gap:8px;align-items:center;margin-left:auto;padding-right:40px;}
+  .sec-header-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
   .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
@@ -695,7 +695,7 @@
   
   /* Arrow — separate from print, added via padding on right */
   .sec-header-actions{padding-right:42px;}
-  .sec-header::after{content:'▼';position:absolute;right:12px;top:50%;transform:translateY(-50%) rotate(0deg);color:rgba(255,255,255,0.7);font-size:11px;font-weight:700;width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;border:1px solid rgba(255,255,255,0.25);line-height:28px;text-align:center;transition:transform 0.3s;}
+  .sec-header::after{content:'▼';position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.7);font-size:12px;font-weight:700;width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:50%;border:1px solid rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;line-height:28px;text-align:center;transition:transform 0.3s;}
   .sec-header.sec-collapsed::after{transform:translateY(-50%) rotate(-90deg);}
   .sec-filter-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--ivory-deep);border-bottom:1px solid var(--line);flex-wrap:wrap;}
   .sec-filter-label{font-size:12px;color:var(--ink-soft);font-weight:600;}
@@ -1713,8 +1713,6 @@
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
-  </div><!-- end catering sec-body -->
-
     <!-- Guest List Section Header -->
     <div class="sec-header sec-guest" id="guestSectionHeader" onclick="toggleSecBody('guestSectionHeader','guestSecBody')" style="margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
@@ -1893,6 +1891,7 @@
     <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
 
+  </div><!-- end catering sec-body -->
 
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
@@ -3055,17 +3054,7 @@ function filterVendorsByCategory(cat) {
 // ── Collapsible Sections ─────────────────────────────────────────────────
 // Section toggle - uses data-target attribute on each header
 function toggleSecBody(headerId, bodyId) {
-  var hdr = document.getElementById(headerId);
-  var body = document.getElementById(bodyId);
-  if (!hdr || !body) return;
-  var opening = body.classList.contains('collapsed');
-  body.classList.toggle('collapsed');
-  hdr.classList.toggle('sec-collapsed');
-  if (opening) {
-    try { render(); } catch(e) {}
-    try { renderBudgetChart(); } catch(e) {}
-    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
-  }
+  alert('CLICKED: ' + headerId);
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
