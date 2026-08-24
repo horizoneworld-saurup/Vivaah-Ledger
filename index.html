@@ -709,7 +709,7 @@
   /* Section header colors */
   /* ── Rangoli Countdown Timer ── */
   .countdown-hide{display:none!important;}
-  .rangoli-wrap{margin:0 0 20px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;}
+  .rangoli-wrap{margin:0 0 20px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;z-index:0;}
   .rangoli-wrap .card{border-radius:20px;padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;background:#fce4ec;border:2px solid #e8aac0;min-height:320px;}
   .rangoli-wrap .bg-svg{position:absolute;inset:0;width:100%;height:100%;}
   .rangoli-wrap .petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;}
@@ -1401,7 +1401,7 @@
         <rect x="18" y="18" width="624" height="304" rx="11" fill="none" stroke="#e8892a" stroke-width="1" stroke-opacity=".32" stroke-dasharray="3 6"/>
       </svg>
       <div id="rangoliPetals" style="position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;"></div>
-      <div class="inner">
+      <div class="inner" style="pointer-events:none;">
         <div class="top-icon">🌺 🕉️ 🌺</div>
         <div class="r-title">Until We Say "I Do"</div>
         <div class="r-sub" id="countdownEventName">Mangalsutra Moment</div>
@@ -3059,11 +3059,13 @@ function toggleSecBody(headerId, bodyId) {
   var hdr = document.getElementById(headerId);
   var body = document.getElementById(bodyId);
   if (!hdr || !body) return;
-  var isCollapsed = body.classList.contains('collapsed');
-  body.classList.toggle('collapsed');
-  hdr.classList.toggle('sec-collapsed');
-  if (isCollapsed) {
-    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    hdr.classList.remove('sec-collapsed');
+    hdr.scrollIntoView({behavior:'smooth', block:'start'});
+  } else {
+    body.classList.add('collapsed');
+    hdr.classList.add('sec-collapsed');
   }
 }
 
