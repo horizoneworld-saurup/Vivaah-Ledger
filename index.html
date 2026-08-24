@@ -1444,7 +1444,7 @@
   </div>
   <div class="sec-body collapsed" id="budgetSectionBody">
 
-  <div class="budget-chart-wrap" id="budgetChartWrap" style="display:none;">
+  <div class="budget-chart-wrap" id="budgetChartWrap">
     <div class="budget-chart-title">📊 Budget vs Actual — By Category</div>
     <div class="budget-chart-legend">
       <div class="legend-item"><div class="legend-dot" style="background:#D4A24C;"></div>Quoted</div>
@@ -3061,9 +3061,12 @@ function toggleSecBody(headerId, bodyId) {
   body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
   if (isCollapsed) {
+    // Refresh data when opening
+    try { render(); } catch(e) {}
+    try { renderBudgetChart(); } catch(e) {}
     setTimeout(function() {
       hdr.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 100);
+    }, 150);
   }
 }
 
