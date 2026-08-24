@@ -3059,19 +3059,11 @@ function toggleSecBody(headerId, bodyId) {
   var hdr = document.getElementById(headerId);
   var body = document.getElementById(bodyId);
   if (!hdr || !body) return;
-  var opening = body.classList.contains('collapsed');
+  var isCollapsed = body.classList.contains('collapsed');
   body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
-  if (opening) {
-    try { renderTable(); } catch(e) {}
-    try { renderBudgetChart(); } catch(e) {}
-    try { renderTimeline(); } catch(e) {}
-    try { renderGuests(); } catch(e) {}
-    try { renderReminders(); } catch(e) {}
-    try { renderNotes(); } catch(e) {}
-    try { renderCatering(); } catch(e) {}
-    try { renderInvTable(); } catch(e) {}
-    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+  if (isCollapsed) {
+    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
   }
 }
 
