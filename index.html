@@ -712,8 +712,8 @@
   .rangoli-wrap{margin:0 0 20px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;}
   .rangoli-wrap .card{border-radius:20px;padding:28px 20px 24px;text-align:center;position:relative;overflow:hidden;background:#fce4ec;border:2px solid #e8aac0;min-height:320px;}
   .rangoli-wrap .bg-svg{position:absolute;inset:0;width:100%;height:100%;}
-  .rangoli-wrap .petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;}
-  @keyframes rFall{0%{transform:translateY(-30px) rotate(0deg);opacity:0;}10%{opacity:.85;}90%{opacity:.65;}100%{transform:translateY(420px) rotate(360deg);opacity:0;}}
+  .rangoli-wrap .petal{position:absolute;animation:rFall linear infinite;opacity:0;pointer-events:none;z-index:2;filter:saturate(2) brightness(1.3);font-size:18px;}
+  @keyframes rFall{0%{transform:translateY(-30px) rotate(0deg);opacity:0;}10%{opacity:1;}50%{opacity:1;}90%{opacity:.9;}100%{transform:translateY(420px) rotate(360deg);opacity:0;}}
   .rangoli-wrap .inner{position:relative;z-index:5;}
   .rangoli-wrap .top-icon{font-size:24px;margin-bottom:8px;}
   .rangoli-wrap .r-title{font-family:'Playfair Display','Cormorant Garamond',serif;font-size:22px;font-weight:700;color:#4a0826;text-shadow:0 0 12px rgba(255,255,255,.9),0 0 20px rgba(255,255,255,.7);margin-bottom:3px;}
@@ -1719,7 +1719,7 @@
         <button class="btn-print-sec" onclick="event.stopPropagation();printSection('guests')">🖨️ Print</button>
       </div>
     </div>
-  <div class="sec-body" id="guestSecBody"><!-- guest open by default -->
+  <div class="sec-body collapsed" id="guestSecBody">
   <div class="guest-card">
     <div class="guest-head">
       <div>
@@ -7072,7 +7072,7 @@ function runGlobalSearch(q, gsInput, gsResults){
       </div>
     </div>
     <div style="color:rgba(255,255,255,0.55);font-size:12px;margin-bottom:10px;">
-      Designed &amp; Developed with ❤️ for <span id="footerCoupleName" style="color:#D4A24C;font-weight:600;">your wedding</span>
+      Designed &amp; Developed with ❤️ for <span id="footerCoupleName" style="color:#D4A24C;font-weight:600;">Mrishana &amp; Spandan</span>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
       <span style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:11px;color:rgba(255,255,255,0.7);">📧 rmsfincoresolutions@gmail.com</span>
