@@ -3058,9 +3058,11 @@ function toggleSecBody(headerId, bodyId) {
   var body = document.getElementById(bodyId);
   if (!hdr || !body) return;
   var isCollapsed = body.classList.contains('collapsed');
+  var beforeDisplay = window.getComputedStyle(body).display;
   body.classList.toggle('collapsed');
   hdr.classList.toggle('sec-collapsed');
-  // Scroll into view when opening
+  var afterDisplay = window.getComputedStyle(body).display;
+  console.log('BEFORE:'+beforeDisplay+' AFTER:'+afterDisplay+' wasCollapsed:'+isCollapsed);
   if (isCollapsed) {
     setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 50);
   }
