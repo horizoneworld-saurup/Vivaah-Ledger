@@ -1713,6 +1713,8 @@
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
+  </div><!-- end catering sec-body -->
+
     <!-- Guest List Section Header -->
     <div class="sec-header sec-guest" id="guestSectionHeader" onclick="toggleSecBody('guestSectionHeader','guestSecBody')" style="margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
@@ -1891,7 +1893,7 @@
     <div class="kankotri-filter-chips" id="kankotriFilterChips"></div>
     <div class="kankotri-summary-row" id="kankotriSummaryRow"></div>
 
-  </div><!-- end catering sec-body -->
+
 
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
@@ -3054,7 +3056,23 @@ function filterVendorsByCategory(cat) {
 // ── Collapsible Sections ─────────────────────────────────────────────────
 // Section toggle - uses data-target attribute on each header
 function toggleSecBody(headerId, bodyId) {
-  alert('CLICKED: ' + headerId);
+  var hdr = document.getElementById(headerId);
+  var body = document.getElementById(bodyId);
+  if (!hdr || !body) return;
+  var opening = body.classList.contains('collapsed');
+  body.classList.toggle('collapsed');
+  hdr.classList.toggle('sec-collapsed');
+  if (opening) {
+    try { renderTable(); } catch(e) {}
+    try { renderBudgetChart(); } catch(e) {}
+    try { renderTimeline(); } catch(e) {}
+    try { renderGuests(); } catch(e) {}
+    try { renderReminders(); } catch(e) {}
+    try { renderNotes(); } catch(e) {}
+    try { renderCatering(); } catch(e) {}
+    try { renderInvTable(); } catch(e) {}
+    setTimeout(function() { hdr.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+  }
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
