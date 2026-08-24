@@ -690,8 +690,8 @@
   .sec-header-actions{display:flex;gap:8px;align-items:center;margin-left:auto;}
   .btn-print-sec{padding:5px 12px;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;transition:background .15s;}
   .btn-print-sec:hover{background:rgba(255,255,255,0.3);}
-  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;max-height:9999px;transition:max-height 0.4s ease;}
-  .sec-body.collapsed{max-height:0!important;overflow:hidden;margin-bottom:4px;}
+  .sec-body{border-radius:0 0 12px 12px;background:#fff;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:24px;overflow:hidden;}
+  .sec-body.collapsed{display:none!important;}
   
   /* Arrow — separate from print, added via padding on right */
   .sec-header-actions{padding-right:42px;}
@@ -3054,20 +3054,7 @@ function filterVendorsByCategory(cat) {
 // ── Collapsible Sections ─────────────────────────────────────────────────
 // Section toggle - uses data-target attribute on each header
 function toggleSecBody(headerId, bodyId) {
-  var hdr = document.getElementById(headerId);
-  var body = document.getElementById(bodyId);
-  if (!hdr || !body) return;
-  var isCollapsed = body.classList.contains('collapsed');
-  body.classList.toggle('collapsed');
-  hdr.classList.toggle('sec-collapsed');
-  if (isCollapsed) {
-    // Refresh data when opening
-    try { render(); } catch(e) {}
-    try { renderBudgetChart(); } catch(e) {}
-    setTimeout(function() {
-      hdr.scrollIntoView({behavior:'smooth', block:'start'});
-    }, 150);
-  }
+  alert('CLICKED: ' + headerId);
 }
 
 // ── Budget vs Actual Chart ───────────────────────────────────────────────
