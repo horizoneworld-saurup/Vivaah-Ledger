@@ -4012,7 +4012,20 @@ async function egRequestAccess(){
       // Owner or already approved — go straight to PIN
       egCurrentEmail = email;
       localStorage.setItem('vivaah-approved-email', email);
-      showLockStep('pin');
+      // Check if new couple needs setup first
+      (async function() {
+        try {
+          var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(email));
+          var sd = await sr.json();
+          if (!sd.setupDone) {
+            // Show setup screen instead of PIN
+            document.getElementById('lockOverlay').classList.add('hidden');
+            document.getElementById('setupOverlay').classList.remove('hidden');
+            return;
+          }
+        } catch(e) {}
+        showLockStep('pin');
+      })();
     } else if(data.status === 'pending'){
       egCurrentEmail = email;
       document.getElementById('waitingEmailBadge').textContent = email;
@@ -4057,7 +4070,18 @@ async function egCheckStatus(){
       localStorage.setItem('vivaah-approved-email', egCurrentEmail);
       statusEl.textContent = '✅ Approved! Loading PIN screen…';
       statusEl.className = 'eg-status-msg success';
-      setTimeout(()=>{ showLockStep('pin'); }, 800);
+      setTimeout(async function() {
+        try {
+          var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(egCurrentEmail||email||''));
+          var sd = await sr.json();
+          if (!sd.setupDone) {
+            document.getElementById('lockOverlay').classList.add('hidden');
+            document.getElementById('setupOverlay').classList.remove('hidden');
+            return;
+          }
+        } catch(e) {}
+        showLockStep('pin');
+      }, 800);
     } else if(data.status === 'rejected'){
       egStopPolling();
       statusEl.textContent = '❌ Access was rejected by the owner.';
@@ -4117,6 +4141,16 @@ async function initAuth(){
       const data = await resp.json();
       if(data.status === 'approved'){
         egCurrentEmail = approvedEmail;
+        // Check setup before showing PIN
+        try {
+          var _sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(approvedEmail||''));
+          var _sd = await _sr.json();
+          if (!_sd.setupDone) {
+            document.getElementById('lockOverlay').classList.add('hidden');
+            document.getElementById('setupOverlay').classList.remove('hidden');
+            return;
+          }
+        } catch(e) {}
         showLockStep('pin');
         return;
       } else {
