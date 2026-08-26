@@ -4528,14 +4528,30 @@ async function findOrCreateSheet(){
 }
 
 async function onSignedIn(){
-  // Check setup for new couples and load branding
-  setTimeout(function() {
-    if (googleUserEmail) {
-      checkAndShowSetup(googleUserEmail);
-      loadCoupleBranding(googleUserEmail);
-    }
-  }, 1200);
   setSyncStatus('saving','Connecting…');
+  // For new couples: check setup BEFORE anything else
+  if (googleUserEmail && 
+      googleUserEmail !== 'horizoneworld@gmail.com' && 
+      googleUserEmail !== 'rmsfincoresolutions@gmail.com') {
+    try {
+      var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(googleUserEmail));
+      var sd = await sr.json();
+      if (!sd.setupDone) {
+        // Check if approved
+        var ar = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status?email=' + encodeURIComponent(googleUserEmail));
+        var ad = await ar.json();
+        if (ad.status === 'approved') {
+          // Hide lock screen, show setup screen
+          document.getElementById('lockOverlay').classList.add('hidden');
+          document.getElementById('setupOverlay').classList.remove('hidden');
+          return; // Don't proceed with normal flow
+        }
+      } else {
+        // Setup done - load their branding
+        loadCoupleBranding(googleUserEmail);
+      }
+    } catch(e) { console.log('Setup check:', e); }
+  }
   try{
     let cachedId = await storageGet('wedding-sheet-id');
     sheetId = cachedId || await findOrCreateSheet();
