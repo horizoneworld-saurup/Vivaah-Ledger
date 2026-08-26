@@ -2358,9 +2358,14 @@ function setRole(role){
   badge.className = 'role-badge role-' + role;
   const isOwner = role === 'owner';
   const isAdmin = role === 'admin' || isOwner;
+  // Owner Panel only visible to master owner emails
+  var isMasterOwner = isOwner && (
+    googleUserEmail === 'horizoneworld@gmail.com' || 
+    googleUserEmail === 'rmsfincoresolutions@gmail.com'
+  );
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
-  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
+  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isMasterOwner ? '' : 'none');
   applyRoleRestrictions();
 }
 
