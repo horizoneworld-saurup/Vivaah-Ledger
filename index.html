@@ -1050,6 +1050,39 @@
   .tier-select{padding:4px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;cursor:pointer;}
   .dispatch-sent{color:var(--sage);font-weight:700;font-size:12px;}
   .dispatch-pending{color:var(--rust);font-weight:700;font-size:12px;}
+
+  /* ══ SETUP SCREEN ══════════════════════════════════════════════════════ */
+  .setup-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1a0a2e 0%,#3E0F1C 40%,#1a0a2e 100%);}
+  .setup-overlay.hidden{display:none!important;}
+  .setup-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:36px 32px;max-width:500px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.1);position:relative;overflow:hidden;}
+  .setup-glow1{position:absolute;top:-80px;right:-80px;width:200px;height:200px;background:radial-gradient(circle,rgba(106,27,154,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
+  .setup-glow2{position:absolute;bottom:-60px;left:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(139,42,63,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
+  .setup-inner{position:relative;z-index:1;}
+  .setup-logo-box{width:64px;height:64px;margin:0 auto 12px;background:linear-gradient(135deg,#6A1B9A,#5C1A2B);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 24px rgba(106,27,154,0.4);border:1px solid rgba(212,164,76,0.3);}
+  .setup-h1{font-family:'Cormorant Garamond',serif;font-size:24px;color:#fff;font-weight:700;text-align:center;}
+  .setup-h2{font-size:12px;color:rgba(255,255,255,0.5);text-align:center;margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+  .setup-approved{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(46,125,50,0.15);border:1px solid rgba(76,175,80,0.4);border-radius:10px;padding:10px 16px;margin:20px 0;font-size:12px;color:#81C784;font-weight:600;}
+  .setup-lbl{font-size:10px;font-weight:600;color:rgba(212,164,76,0.8);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .setup-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
+  .setup-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .setup-f{margin-bottom:12px;}
+  .setup-f label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:6px;letter-spacing:0.5px;}
+  .setup-f input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 14px;font-size:13px;color:#fff;outline:none;}
+  .setup-f input:focus{border-color:rgba(212,164,76,0.6);background:rgba(255,255,255,0.09);}
+  .setup-f input::placeholder{color:rgba(255,255,255,0.25);}
+  .setup-pins{background:linear-gradient(135deg,rgba(106,27,154,0.15),rgba(92,26,43,0.15));border:1px solid rgba(106,27,154,0.3);border-radius:14px;padding:18px;margin-bottom:20px;}
+  .setup-pin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
+  .setup-pin-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;margin-bottom:6px;}
+  .spb-admin{background:rgba(212,164,76,0.2);color:#D4A24C;}
+  .spb-editor{background:rgba(106,27,154,0.3);color:#CE93D8;}
+  .spb-viewer{background:rgba(33,150,243,0.2);color:#90CAF9;}
+  .setup-pin-lbl{display:block;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
+  .setup-pin-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 8px;font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:6px;outline:none;}
+  .setup-pin-input:focus{border-color:rgba(212,164,76,0.5);}
+  .setup-pin-input::placeholder{font-size:14px;letter-spacing:2px;color:rgba(255,255,255,0.2);}
+  .setup-btn{width:100%;background:linear-gradient(135deg,#6A1B9A,#5C1A2B,#8B2A3F);color:#fff;border:1px solid rgba(212,164,76,0.2);border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(106,27,154,0.4);}
+  .setup-btn:hover{opacity:0.9;}
+  .setup-note{text-align:center;font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px;}
 </style>
 </head>
 <body>
@@ -2991,7 +3024,7 @@ document.addEventListener('click', function(e) {
 
 async function checkAndShowSetup(email) {
   if (!email) return;
-  // Skip for owner emails
+  // Skip for owner emails - they use existing flow
   if (email === 'horizoneworld@gmail.com' || email === 'rmsfincoresolutions@gmail.com') return;
   try {
     // Check if setup is done
@@ -3002,10 +3035,16 @@ async function checkAndShowSetup(email) {
       var r2 = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status?email=' + encodeURIComponent(email));
       var d2 = await r2.json();
       if (d2.status === 'approved') {
+        // Hide lock overlay, show setup screen
+        var lock = document.getElementById('lockOverlay');
+        if (lock) lock.classList.add('hidden');
         document.getElementById('setupOverlay').classList.remove('hidden');
+      } else {
+        // Not approved yet - show pending message on lock screen
+        showToast('Your access request is pending approval. Please wait.');
       }
     } else {
-      // Setup done - load their branding
+      // Setup done - load branding and proceed normally
       loadCoupleBranding(email);
     }
   } catch(e) { console.log('Setup check error:', e); }
@@ -7190,95 +7229,67 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </footer>
 
-  <!-- SETUP SCREEN -->
+
+  
+<!-- ══ SETUP SCREEN (new couples only) ══════════════════════════════ -->
   <div class="setup-overlay hidden" id="setupOverlay">
     <div class="setup-card">
-      <div class="setup-glow-1"></div>
-      <div class="setup-glow-2"></div>
-      <div style="text-align:center;margin-bottom:20px;position:relative;z-index:1;">
-        <div class="setup-logo-icon" style="margin:0 auto 12px;">🌸</div>
-        <div class="setup-title">Vivaah Ledger</div>
-        <div class="setup-sub">Your Wedding Management Tool</div>
-      </div>
-      <div class="setup-badge" style="position:relative;z-index:1;">✅ Access approved — complete setup to begin</div>
-      <div style="position:relative;z-index:1;">
-        <div class="setup-section-label">Wedding Details</div>
-        <div class="setup-field-row">
-          <div class="setup-field">
+      <div class="setup-glow1"></div>
+      <div class="setup-glow2"></div>
+      <div class="setup-inner">
+        <div style="text-align:center;margin-bottom:20px;">
+          <div class="setup-logo-box">🌸</div>
+          <div class="setup-h1">Vivaah Ledger</div>
+          <div class="setup-h2">Your Wedding Management Tool</div>
+        </div>
+        <div class="setup-approved">✅ Access approved — complete setup to begin</div>
+        <div class="setup-lbl">Wedding Details</div>
+        <div class="setup-row">
+          <div class="setup-f">
             <label>👰 BRIDE'S NAME</label>
             <input type="text" id="setupBrideName" placeholder="e.g. Priya">
           </div>
-          <div class="setup-field">
+          <div class="setup-f">
             <label>🤵 GROOM'S NAME</label>
             <input type="text" id="setupGroomName" placeholder="e.g. Rahul">
           </div>
         </div>
-        <div class="setup-field-row">
-          <div class="setup-field">
+        <div class="setup-row">
+          <div class="setup-f">
             <label>📅 WEDDING DATE</label>
             <input type="date" id="setupWeddingDate">
           </div>
-          <div class="setup-field">
+          <div class="setup-f">
             <label>🏛️ VENUE (OPTIONAL)</label>
             <input type="text" id="setupVenue" placeholder="e.g. Oreva Farm">
           </div>
         </div>
-        <div class="pin-wrap">
-          <div class="setup-section-label" style="margin-bottom:0;">Set Your Access PINs</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;margin-bottom:4px;">4-digit PINs — keep them safe. Only you know these.</div>
-          <div class="pin-grid">
-            <div class="pin-item">
-              <div class="pin-badge-admin">👑 ADMIN</div>
-              <label>Full access — only you</label>
-              <input class="pin-input" type="password" id="setupAdminPin" maxlength="4" placeholder="••••">
+        <div class="setup-pins">
+          <div class="setup-lbl" style="margin-bottom:0;">Create Your Access PINs</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;">4-digit PINs — keep safe. Only you know these.</div>
+          <div class="setup-pin-grid">
+            <div>
+              <div class="setup-pin-badge spb-admin">👑 ADMIN</div>
+              <span class="setup-pin-lbl">Full access — only you</span>
+              <input class="setup-pin-input" type="password" id="setupAdminPin" maxlength="4" placeholder="••••">
             </div>
-            <div class="pin-item">
-              <div class="pin-badge-editor">✏️ EDITOR</div>
-              <label>Family members</label>
-              <input class="pin-input" type="password" id="setupEditorPin" maxlength="4" placeholder="••••">
+            <div>
+              <div class="setup-pin-badge spb-editor">✏️ EDITOR</div>
+              <span class="setup-pin-lbl">Family members</span>
+              <input class="setup-pin-input" type="password" id="setupEditorPin" maxlength="4" placeholder="••••">
             </div>
-            <div class="pin-item">
-              <div class="pin-badge-viewer">👁️ VIEWER</div>
-              <label>Read only</label>
-              <input class="pin-input" type="password" id="setupViewerPin" maxlength="4" placeholder="••••">
+            <div>
+              <div class="setup-pin-badge spb-viewer">👁️ VIEWER</div>
+              <span class="setup-pin-lbl">Read only</span>
+              <input class="setup-pin-input" type="password" id="setupViewerPin" maxlength="4" placeholder="••••">
             </div>
           </div>
         </div>
-        <button class="btn-setup-start" id="btnCompleteSetup">🌸 Start My Vivaah Ledger</button>
-        <div class="setup-privacy">🔒 Your data is private and linked only to your Gmail</div>
+        <button class="setup-btn" id="btnCompleteSetup">🌸 Start My Vivaah Ledger</button>
+        <div class="setup-note">🔒 Your data is private and linked only to your Gmail</div>
       </div>
     </div>
   </div>
 
 </body>
-</html  /* ── Setup Screen ── */
-  .setup-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1a0a2e 0%,#3E0F1C 40%,#1a0a2e 100%);}
-  .setup-overlay.hidden{display:none!important;}
-  .setup-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:36px 32px;max-width:500px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.5);position:relative;overflow:hidden;}
-  .setup-glow-1{position:absolute;top:-80px;right:-80px;width:200px;height:200px;background:radial-gradient(circle,rgba(106,27,154,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
-  .setup-glow-2{position:absolute;bottom:-60px;left:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(139,42,63,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
-  .setup-logo-icon{width:64px;height:64px;margin:0 auto 12px;background:linear-gradient(135deg,#6A1B9A,#5C1A2B);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 24px rgba(106,27,154,0.4);border:1px solid rgba(212,164,76,0.3);}
-  .setup-title{font-family:'Cormorant Garamond',serif;font-size:24px;color:#fff;font-weight:700;text-align:center;}
-  .setup-sub{font-size:12px;color:rgba(255,255,255,0.5);text-align:center;margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
-  .setup-badge{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(46,125,50,0.15);border:1px solid rgba(76,175,80,0.4);border-radius:10px;padding:10px 16px;margin:20px 0;font-size:12px;color:#81C784;font-weight:600;}
-  .setup-section-label{font-size:10px;font-weight:600;color:rgba(212,164,76,0.8);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-  .setup-section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
-  .setup-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
-  .setup-field{margin-bottom:12px;}
-  .setup-field label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:6px;}
-  .setup-field input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 14px;font-size:13px;color:#fff;outline:none;}
-  .setup-field input:focus{border-color:rgba(212,164,76,0.6);}
-  .setup-field input::placeholder{color:rgba(255,255,255,0.25);}
-  .pin-wrap{background:linear-gradient(135deg,rgba(106,27,154,0.15),rgba(92,26,43,0.15));border:1px solid rgba(106,27,154,0.3);border-radius:14px;padding:18px;margin-bottom:20px;}
-  .pin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
-  .pin-badge-admin{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(212,164,76,0.2);color:#D4A24C;margin-bottom:6px;}
-  .pin-badge-editor{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(106,27,154,0.3);color:#CE93D8;margin-bottom:6px;}
-  .pin-badge-viewer{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(33,150,243,0.2);color:#90CAF9;margin-bottom:6px;}
-  .pin-item label{display:block;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
-  .pin-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 8px;font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:6px;outline:none;}
-  .pin-input:focus{border-color:rgba(212,164,76,0.5);}
-  .pin-input::placeholder{font-size:14px;letter-spacing:2px;color:rgba(255,255,255,0.2);}
-  .btn-setup-start{width:100%;background:linear-gradient(135deg,#6A1B9A,#5C1A2B,#8B2A3F);color:#fff;border:1px solid rgba(212,164,76,0.2);border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(106,27,154,0.4);}
-  .setup-privacy{text-align:center;font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px;}
-
-  >
+</html>
