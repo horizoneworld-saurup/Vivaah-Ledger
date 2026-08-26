@@ -3094,7 +3094,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var adminPin = document.getElementById('setupAdminPin').value.trim();
     var editorPin = document.getElementById('setupEditorPin').value.trim();
     var viewerPin = document.getElementById('setupViewerPin').value.trim();
-    var email = googleUserEmail || '';
+    var email = googleUserEmail || window.egCurrentEmail || egCurrentEmail || (document.getElementById('egEmail') ? document.getElementById('egEmail').value.trim() : '') || '';
+    console.log('Setup email:', email);
 
     if (!bride || !groom) { showToast('Please enter bride and groom names'); return; }
     if (!date) { showToast('Please enter wedding date'); return; }
