@@ -3099,7 +3099,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var adminPin = document.getElementById('setupAdminPin').value.trim();
     var editorPin = document.getElementById('setupEditorPin').value.trim();
     var viewerPin = document.getElementById('setupViewerPin').value.trim();
-    var email = googleUserEmail || window.egCurrentEmail || egCurrentEmail || (document.getElementById('egEmail') ? document.getElementById('egEmail').value.trim() : '') || '';
+    // Get email from all possible sources
+    var email = window.egCurrentEmail || egCurrentEmail || googleUserEmail || '';
     console.log('Setup email:', email);
 
     if (!bride || !groom) { showToast('Please enter bride and groom names'); return; }
@@ -3107,32 +3108,58 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!adminPin || adminPin.length !== 4) { showToast('Admin PIN must be 4 digits'); return; }
     if (!editorPin || editorPin.length !== 4) { showToast('Editor PIN must be 4 digits'); return; }
     if (!viewerPin || viewerPin.length !== 4) { showToast('Viewer PIN must be 4 digits'); return; }
+    if (!email) { showToast('Email not found. Please sign in again.'); return; }
 
     btn.textContent = 'Setting up...'; btn.disabled = true;
     try {
-      // Save branding
-      await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})});
-      // Save PINs
-      var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, adminPin, editorPin, viewerPin})});
+      // 1. Save branding
+      var br = await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})
+      });
+      var bd = await br.json();
+      if (!bd.success) throw new Error(bd.error || 'Branding save failed');
+
+      // 2. Save PINs
+      var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, adminPin, editorPin, viewerPin})
+      });
       var pd = await pr.json();
-      if (pd.success) {
-        document.getElementById('setupOverlay').classList.add('hidden');
-        loadCoupleBranding(email);
-        showToast('🎉 Welcome! Your Vivaah Ledger is ready.');
-      } else {
-        showToast('Setup failed: ' + (pd.error || 'Unknown error'));
-        btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
+      if (!pd.success) throw new Error(pd.error || 'PIN save failed');
+
+      // 3. Hide setup, apply branding
+      document.getElementById('setupOverlay').classList.add('hidden');
+      
+      // 4. Apply branding to page
+      var names = bride + ' & ' + groom;
+      var brandTitle = document.getElementById('brandTitle');
+      if (brandTitle) brandTitle.textContent = names + ' — Vivaah Ledger';
+      document.title = names + ' — Vivaah Ledger';
+      var cdNames = document.getElementById('countdownCoupleNames');
+      if (cdNames) cdNames.textContent = '🪔 ' + names + ' 🪔';
+      var footer = document.getElementById('footerCoupleName');
+      if (footer) footer.textContent = names;
+      
+      // 5. Add wedding date to timeline
+      if (date && typeof eventTimeline !== 'undefined') {
+        if (!eventTimeline['Marriage']) eventTimeline['Marriage'] = {};
+        eventTimeline['Marriage'].date = date;
+        eventTimeline['Marriage'].venue = venue || '';
+        try { await saveTimeline(); } catch(e) {}
+        startCountdown();
       }
+
+      // 6. Show lock screen for PIN entry
+      document.getElementById('lockOverlay').classList.remove('hidden');
+      showToast('🎉 Setup complete! Please enter your Admin PIN to continue.');
+
     } catch(e) {
       showToast('Error: ' + e.message);
       btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
     }
   });
-});
+
 
 // ── Collapsible Sections ────────────────────────────────────────────────
 (function() {
