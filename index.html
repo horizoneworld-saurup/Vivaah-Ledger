@@ -2987,6 +2987,108 @@ document.addEventListener('click', function(e) {
   if (btn && btn.dataset.sstar) setSubmitStar(Number(btn.dataset.sstar));
 });
 
+// ── Per-Couple Setup & Branding ──────────────────────────────────────────
+
+async function checkAndShowSetup(email) {
+  if (!email) return;
+  // Skip for owner emails
+  if (email === 'horizoneworld@gmail.com' || email === 'rmsfincoresolutions@gmail.com') return;
+  try {
+    // Check if setup is done
+    var r = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(email));
+    var d = await r.json();
+    if (!d.setupDone) {
+      // Check if approved
+      var r2 = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status?email=' + encodeURIComponent(email));
+      var d2 = await r2.json();
+      if (d2.status === 'approved') {
+        document.getElementById('setupOverlay').classList.remove('hidden');
+      }
+    } else {
+      // Setup done - load their branding
+      loadCoupleBranding(email);
+    }
+  } catch(e) { console.log('Setup check error:', e); }
+}
+
+async function loadCoupleBranding(email) {
+  if (!email) return;
+  if (email === 'horizoneworld@gmail.com' || email === 'rmsfincoresolutions@gmail.com') return;
+  try {
+    var r = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-branding?email=' + encodeURIComponent(email));
+    var d = await r.json();
+    if (d.found) {
+      // Update branding
+      var bride = d.brideName || '';
+      var groom = d.groomName || '';
+      if (bride || groom) {
+        var names = bride + (bride && groom ? ' & ' : '') + groom;
+        // Update logo
+        var brandTitle = document.getElementById('brandTitle');
+        if (brandTitle) brandTitle.textContent = names + ' — Vivaah Ledger';
+        // Update countdown names
+        var cdNames = document.getElementById('countdownCoupleNames');
+        if (cdNames) cdNames.textContent = '🪔 ' + names + ' 🪔';
+        // Update footer
+        var footer = document.getElementById('footerCoupleName');
+        if (footer) footer.textContent = names;
+        // Update countdown date
+        if (d.weddingDate) {
+          var dt = new Date(d.weddingDate);
+          var cdDate = document.getElementById('countdownDateTxt');
+          if (cdDate) cdDate.textContent = dt.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) + ' · Shubh Vivah';
+        }
+        document.title = names + ' — Vivaah Ledger';
+      }
+    }
+  } catch(e) { console.log('Branding load error:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('btnCompleteSetup');
+  if (!btn) return;
+  btn.addEventListener('click', async function() {
+    var bride = document.getElementById('setupBrideName').value.trim();
+    var groom = document.getElementById('setupGroomName').value.trim();
+    var date = document.getElementById('setupWeddingDate').value;
+    var venue = document.getElementById('setupVenue').value.trim();
+    var adminPin = document.getElementById('setupAdminPin').value.trim();
+    var editorPin = document.getElementById('setupEditorPin').value.trim();
+    var viewerPin = document.getElementById('setupViewerPin').value.trim();
+    var email = googleUserEmail || '';
+
+    if (!bride || !groom) { showToast('Please enter bride and groom names'); return; }
+    if (!date) { showToast('Please enter wedding date'); return; }
+    if (!adminPin || adminPin.length !== 4) { showToast('Admin PIN must be 4 digits'); return; }
+    if (!editorPin || editorPin.length !== 4) { showToast('Editor PIN must be 4 digits'); return; }
+    if (!viewerPin || viewerPin.length !== 4) { showToast('Viewer PIN must be 4 digits'); return; }
+
+    btn.textContent = 'Setting up...'; btn.disabled = true;
+    try {
+      // Save branding
+      await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})});
+      // Save PINs
+      var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, adminPin, editorPin, viewerPin})});
+      var pd = await pr.json();
+      if (pd.success) {
+        document.getElementById('setupOverlay').classList.add('hidden');
+        loadCoupleBranding(email);
+        showToast('🎉 Welcome! Your Vivaah Ledger is ready.');
+      } else {
+        showToast('Setup failed: ' + (pd.error || 'Unknown error'));
+        btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
+      }
+    } catch(e) {
+      showToast('Error: ' + e.message);
+      btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
+    }
+  });
+});
+
 // ── Collapsible Sections ────────────────────────────────────────────────
 (function() {
   document.addEventListener('click', function(e) {
@@ -4387,6 +4489,13 @@ async function findOrCreateSheet(){
 }
 
 async function onSignedIn(){
+  // Check setup for new couples and load branding
+  setTimeout(function() {
+    if (googleUserEmail) {
+      checkAndShowSetup(googleUserEmail);
+      loadCoupleBranding(googleUserEmail);
+    }
+  }, 1200);
   setSyncStatus('saving','Connecting…');
   try{
     let cachedId = await storageGet('wedding-sheet-id');
@@ -7081,5 +7190,95 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </footer>
 
+  <!-- SETUP SCREEN -->
+  <div class="setup-overlay hidden" id="setupOverlay">
+    <div class="setup-card">
+      <div class="setup-glow-1"></div>
+      <div class="setup-glow-2"></div>
+      <div style="text-align:center;margin-bottom:20px;position:relative;z-index:1;">
+        <div class="setup-logo-icon" style="margin:0 auto 12px;">🌸</div>
+        <div class="setup-title">Vivaah Ledger</div>
+        <div class="setup-sub">Your Wedding Management Tool</div>
+      </div>
+      <div class="setup-badge" style="position:relative;z-index:1;">✅ Access approved — complete setup to begin</div>
+      <div style="position:relative;z-index:1;">
+        <div class="setup-section-label">Wedding Details</div>
+        <div class="setup-field-row">
+          <div class="setup-field">
+            <label>👰 BRIDE'S NAME</label>
+            <input type="text" id="setupBrideName" placeholder="e.g. Priya">
+          </div>
+          <div class="setup-field">
+            <label>🤵 GROOM'S NAME</label>
+            <input type="text" id="setupGroomName" placeholder="e.g. Rahul">
+          </div>
+        </div>
+        <div class="setup-field-row">
+          <div class="setup-field">
+            <label>📅 WEDDING DATE</label>
+            <input type="date" id="setupWeddingDate">
+          </div>
+          <div class="setup-field">
+            <label>🏛️ VENUE (OPTIONAL)</label>
+            <input type="text" id="setupVenue" placeholder="e.g. Oreva Farm">
+          </div>
+        </div>
+        <div class="pin-wrap">
+          <div class="setup-section-label" style="margin-bottom:0;">Set Your Access PINs</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:6px;margin-bottom:4px;">4-digit PINs — keep them safe. Only you know these.</div>
+          <div class="pin-grid">
+            <div class="pin-item">
+              <div class="pin-badge-admin">👑 ADMIN</div>
+              <label>Full access — only you</label>
+              <input class="pin-input" type="password" id="setupAdminPin" maxlength="4" placeholder="••••">
+            </div>
+            <div class="pin-item">
+              <div class="pin-badge-editor">✏️ EDITOR</div>
+              <label>Family members</label>
+              <input class="pin-input" type="password" id="setupEditorPin" maxlength="4" placeholder="••••">
+            </div>
+            <div class="pin-item">
+              <div class="pin-badge-viewer">👁️ VIEWER</div>
+              <label>Read only</label>
+              <input class="pin-input" type="password" id="setupViewerPin" maxlength="4" placeholder="••••">
+            </div>
+          </div>
+        </div>
+        <button class="btn-setup-start" id="btnCompleteSetup">🌸 Start My Vivaah Ledger</button>
+        <div class="setup-privacy">🔒 Your data is private and linked only to your Gmail</div>
+      </div>
+    </div>
+  </div>
+
 </body>
-</html>
+</html  /* ── Setup Screen ── */
+  .setup-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#1a0a2e 0%,#3E0F1C 40%,#1a0a2e 100%);}
+  .setup-overlay.hidden{display:none!important;}
+  .setup-card{background:rgba(255,255,255,0.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:36px 32px;max-width:500px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,0.5);position:relative;overflow:hidden;}
+  .setup-glow-1{position:absolute;top:-80px;right:-80px;width:200px;height:200px;background:radial-gradient(circle,rgba(106,27,154,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
+  .setup-glow-2{position:absolute;bottom:-60px;left:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(139,42,63,0.3),transparent 70%);border-radius:50%;pointer-events:none;}
+  .setup-logo-icon{width:64px;height:64px;margin:0 auto 12px;background:linear-gradient(135deg,#6A1B9A,#5C1A2B);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 8px 24px rgba(106,27,154,0.4);border:1px solid rgba(212,164,76,0.3);}
+  .setup-title{font-family:'Cormorant Garamond',serif;font-size:24px;color:#fff;font-weight:700;text-align:center;}
+  .setup-sub{font-size:12px;color:rgba(255,255,255,0.5);text-align:center;margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+  .setup-badge{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(46,125,50,0.15);border:1px solid rgba(76,175,80,0.4);border-radius:10px;padding:10px 16px;margin:20px 0;font-size:12px;color:#81C784;font-weight:600;}
+  .setup-section-label{font-size:10px;font-weight:600;color:rgba(212,164,76,0.8);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .setup-section-label::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.1);}
+  .setup-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .setup-field{margin-bottom:12px;}
+  .setup-field label{display:block;font-size:11px;font-weight:600;color:rgba(255,255,255,0.6);margin-bottom:6px;}
+  .setup-field input{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 14px;font-size:13px;color:#fff;outline:none;}
+  .setup-field input:focus{border-color:rgba(212,164,76,0.6);}
+  .setup-field input::placeholder{color:rgba(255,255,255,0.25);}
+  .pin-wrap{background:linear-gradient(135deg,rgba(106,27,154,0.15),rgba(92,26,43,0.15));border:1px solid rgba(106,27,154,0.3);border-radius:14px;padding:18px;margin-bottom:20px;}
+  .pin-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px;}
+  .pin-badge-admin{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(212,164,76,0.2);color:#D4A24C;margin-bottom:6px;}
+  .pin-badge-editor{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(106,27,154,0.3);color:#CE93D8;margin-bottom:6px;}
+  .pin-badge-viewer{display:inline-block;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(33,150,243,0.2);color:#90CAF9;margin-bottom:6px;}
+  .pin-item label{display:block;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
+  .pin-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 8px;font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:6px;outline:none;}
+  .pin-input:focus{border-color:rgba(212,164,76,0.5);}
+  .pin-input::placeholder{font-size:14px;letter-spacing:2px;color:rgba(255,255,255,0.2);}
+  .btn-setup-start{width:100%;background:linear-gradient(135deg,#6A1B9A,#5C1A2B,#8B2A3F);color:#fff;border:1px solid rgba(212,164,76,0.2);border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(106,27,154,0.4);}
+  .setup-privacy{text-align:center;font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px;}
+
+  >
