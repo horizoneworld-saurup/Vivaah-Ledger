@@ -2490,7 +2490,7 @@ async function amCheckEmail() {
   resultEl.style.display = 'none';
 
   try {
-    const resp = await fetch('/api/check-status', {
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -4001,7 +4001,7 @@ async function egRequestAccess(){
   statusEl.textContent = '';
 
   try{
-    const resp = await fetch('/api/request-access', {
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/request-access', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email})
@@ -4044,7 +4044,7 @@ function egStopPolling(){
 async function egCheckStatus(){
   if(!egCurrentEmail) return;
   try{
-    const resp = await fetch('/api/check-status', {
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email: egCurrentEmail})
@@ -4109,7 +4109,7 @@ async function initAuth(){
   if(approvedEmail){
     // Verify still approved with worker
     try{
-      const resp = await fetch('/api/check-status', {
+      const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({email: approvedEmail})
