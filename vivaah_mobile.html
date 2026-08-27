@@ -133,6 +133,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
 
 /* ── SEARCH ── */
 .srch{padding:8px 10px 4px;}
+.evt-chip{padding:4px 10px;border-radius:20px;font-size:11px;white-space:nowrap;cursor:pointer;border:1px solid #c4a882;background:#fff;color:#5C1A2B;flex-shrink:0;}
+.evt-chip.active{background:#5C1A2B;color:#fff;border-color:#5C1A2B;}
+.evt-sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.evt-sum-card{background:#fff;border:1px solid #e8d5b0;border-radius:8px;padding:6px 8px;text-align:center;cursor:pointer;}
+.evt-sum-card:active{background:#5C1A2B;}
+.evt-sum-name{font-size:9px;color:#666;}
+.evt-sum-count{font-size:16px;font-weight:700;color:#5C1A2B;}
+.evt-sum-sub{font-size:9px;color:#999;}
 .srch input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;font-size:13px;outline:none;background:#fff;color:var(--ink);}
 .srch input:focus{border-color:var(--maroon);}
 
@@ -538,6 +546,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       <button id="copyNumsBtn" onclick="copyMarriageNumbers()" style="margin-top:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.5);color:var(--gold);padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">📋 Copy All Marriage Guest Numbers</button>
     </div>
     <div class="srch"><input id="guestSearch" placeholder="Search family name or phone…" oninput="renderGuests()"></div>
+    <!-- Event Summary Cards -->
+    <div id="eventSummaryCards" style="padding:10px 14px;background:#fff8e1;border-bottom:1px solid #e8d5b0;"></div>
+    <!-- Event Filter Chips -->
+    <div style="display:flex;gap:6px;padding:8px 14px;overflow-x:auto;background:#faf0e6;border-bottom:1px solid #e8d5b0;" id="eventFilterChips">
+      <div class="evt-chip active" onclick="filterGuestsByEvent(null)" data-event="">All</div>
+    </div>
     <div class="acc-wrap" id="guestList"></div>
   </div>
 
@@ -580,6 +594,26 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--ivory);min-height:
       <div class="sec-head-title">📝 Notes & References</div>
       <div class="sec-head-sub">Linked to vendors or guests — synced to Google Sheets</div>
       <div class="sec-badges" id="notesBadges"></div>
+    </div>
+    <!-- Quick Add Note -->
+    <div style="padding:12px 14px;background:#f5f5f5;border-bottom:1px solid #e0e0e0;">
+      <div style="font-size:12px;font-weight:700;color:#2E7D32;margin-bottom:8px;">✏️ Add Quick Note</div>
+      <textarea id="quickNoteText" rows="3" placeholder="Type your note here…" style="width:100%;border:1.5px solid #c8e6c9;border-radius:8px;padding:8px 10px;font-size:12px;resize:none;font-family:inherit;outline:none;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <select id="quickNoteTag" style="flex:1;border:1px solid #e0e0e0;border-radius:6px;padding:6px;font-size:11px;">
+          <option value="">🏷️ Tag (optional)</option>
+          <option value="Marriage">💍 Marriage</option>
+          <option value="Mehendi">🌿 Mehendi</option>
+          <option value="Catering">🍽️ Catering</option>
+          <option value="Photography">📸 Photography</option>
+          <option value="Clothes">👗 Clothes</option>
+          <option value="Venue">🏛️ Venue</option>
+          <option value="Urgent">⚡ Urgent</option>
+          <option value="Ganesh">🪔 Ganesh</option>
+          <option value="Sangeet">🎶 Sangeet</option>
+        </select>
+        <button onclick="saveQuickNote()" style="background:#2E7D32;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;">💾 Save</button>
+      </div>
     </div>
     <div class="acc-wrap" id="notesList"></div>
     <a href="https://vivaah-ledger.pages.dev" target="_blank" class="open-full">Add Notes in Full Tool →</a>
@@ -712,6 +746,7 @@ var currentVendorId = null;
 
 var vendors = [];
 var guests = [];
+var activeEventFilter = null; // null = All
 var reminders = { trial: [], clothes: [], guest: [] };
 var notes = [];
 var eventTimeline = {};
@@ -1576,7 +1611,8 @@ async function markStdSent(guestId) {
   var g = guests.find(function(x){return x.id===guestId;});
   if (!g) return;
   g.stdSent = true;
-  await saveGuests(); updateDash(); renderGuests();
+  await saveGuests(); updateDash(); buildEventSummary();
+  renderGuests();
 }
 
 async function markInvited(guestId) {
@@ -1668,11 +1704,79 @@ function renderVendors() {
 // ═══════════════════════════════════════
 // RENDER GUESTS
 // ═══════════════════════════════════════
+function buildEventSummary() {
+  var EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var LABELS = {'Kankotri':'📮 Kankotri','Ganesh-Grahshanti-Mosalu':'🪔 Ganesh','Mehendi':'🌿 Mehendi','Sangeet':'🎶 Sangeet','Haldi':'💛 Haldi','Marriage':'💍 Marriage','Reception':'🎊 Reception'};
+  // Build summary cards
+  var cardsEl = document.getElementById('eventSummaryCards');
+  if (!cardsEl) return;
+  var html = '<div style="font-size:11px;font-weight:700;color:#856404;margin-bottom:6px;">📊 Guests per Event</div><div class="evt-sum-grid">';
+  EVENTS.forEach(function(ev) {
+    var count = guests.filter(function(g) {
+      var e = g.events && g.events[ev];
+      return e && (Number(e.adults||0)+Number(e.kids||0)) > 0;
+    }).length;
+    html += '<div class="evt-sum-card" onclick="filterGuestsByEvent(\'' + ev + '\')">' +
+      '<div class="evt-sum-name">' + (LABELS[ev]||ev) + '</div>' +
+      '<div class="evt-sum-count">' + count + '</div>' +
+      '<div class="evt-sum-sub">families</div></div>';
+  });
+  html += '</div>';
+  cardsEl.innerHTML = html;
+  // Build filter chips
+  var chipsEl = document.getElementById('eventFilterChips');
+  if (!chipsEl) return;
+  var chipsHtml = '<div class="evt-chip ' + (!activeEventFilter?'active':'') + '" onclick="filterGuestsByEvent(null)">All ' + guests.length + '</div>';
+  EVENTS.forEach(function(ev) {
+    var count = guests.filter(function(g) {
+      var e = g.events && g.events[ev];
+      return e && (Number(e.adults||0)+Number(e.kids||0)) > 0;
+    }).length;
+    chipsHtml += '<div class="evt-chip ' + (activeEventFilter===ev?'active':'') + '" onclick="filterGuestsByEvent(\'' + ev + '\')">' + (LABELS[ev]||ev) + ' ' + count + '</div>';
+  });
+  chipsEl.innerHTML = chipsHtml;
+}
+
+function filterGuestsByEvent(ev) {
+  activeEventFilter = ev;
+  buildEventSummary();
+  renderGuests();
+}
+
+async function saveQuickNote() {
+  var text = (document.getElementById('quickNoteText').value || '').trim();
+  var tag = document.getElementById('quickNoteTag').value;
+  if (!text) { showToast('Please enter a note'); return; }
+  var note = {
+    id: Date.now().toString(),
+    text: text,
+    tag: tag,
+    createdAt: new Date().toISOString(),
+    vendor: tag || '',
+    guest: ''
+  };
+  notes.unshift(note);
+  document.getElementById('quickNoteText').value = '';
+  document.getElementById('quickNoteTag').value = '';
+  renderNotes();
+  showToast('✅ Note saved!');
+  try { await saveNotes(); } catch(e) { console.log('Note sync error:', e); }
+}
+
 function renderGuests() {
   var q = (document.getElementById('guestSearch').value || '').toLowerCase();
-  var filtered = q ? guests.filter(function(g) {
-    return (g.name || '').toLowerCase().includes(q) || (g.phone || '').includes(q);
-  }) : guests;
+  var filtered = guests;
+  if (activeEventFilter) {
+    filtered = filtered.filter(function(g) {
+      var e = g.events && g.events[activeEventFilter];
+      return e && (Number(e.adults||0)+Number(e.kids||0)) > 0;
+    });
+  }
+  if (q) {
+    filtered = filtered.filter(function(g) {
+      return (g.name||'').toLowerCase().includes(q) || (g.phone||'').includes(q);
+    });
+  }
   var conf = guests.filter(function(g) { return g.callStatus === 'confirmed'; }).length;
   var invCnt = guests.filter(function(g){return g.invitationSent;}).length;
   var stdCnt = guests.filter(function(g){return g.stdSent;}).length;
@@ -1692,6 +1796,14 @@ function renderGuests() {
       '<div style="flex:1;min-width:180px;" onclick="openGuestDetail(\'' + g.id + '\')">' +
         '<div class="row-name">' + esc(g.name || '\u2014') + '</div>' +
         '<div class="row-sub">' + (g.phone || '') + (g.confirmedAdults ? ' \u00b7 ' + g.confirmedAdults + 'A' : '') + '</div>' +
+        '<div style="font-size:10px;color:#5C1A2B;margin-top:2px;">' + (function() {
+          var evLabels = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
+          var evs = Object.keys(evLabels).filter(function(ev) {
+            var e = g.events && g.events[ev];
+            return e && (Number(e.adults||0)+Number(e.kids||0)) > 0;
+          }).map(function(ev){ return evLabels[ev]; });
+          return evs.length ? evs.join(' ') : '';
+        })() + '</div>' +
       '</div>' +
       '<div style="display:flex;gap:6px;align-items:stretch;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">' +
         (ph ? '<a href="tel:+' + ph + '" class="act-btn act-call" style="flex:1;text-align:center;">\ud83d\udcde</a>' : '') +
