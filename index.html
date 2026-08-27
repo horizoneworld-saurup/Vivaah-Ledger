@@ -2358,14 +2358,9 @@ function setRole(role){
   badge.className = 'role-badge role-' + role;
   const isOwner = role === 'owner';
   const isAdmin = role === 'admin' || isOwner;
-  // Owner Panel only visible to master owner emails
-  var isMasterOwner = isOwner && (
-    googleUserEmail === 'horizoneworld@gmail.com' || 
-    googleUserEmail === 'rmsfincoresolutions@gmail.com'
-  );
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
-  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isMasterOwner ? '' : 'none');
+  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
   applyRoleRestrictions();
 }
 
@@ -3099,61 +3094,33 @@ document.addEventListener('DOMContentLoaded', function() {
     var adminPin = document.getElementById('setupAdminPin').value.trim();
     var editorPin = document.getElementById('setupEditorPin').value.trim();
     var viewerPin = document.getElementById('setupViewerPin').value.trim();
-    // Get email from all possible sources
-    var email = window.egCurrentEmail || egCurrentEmail || googleUserEmail || '';
-    console.log('Setup email:', email);
+    var email = googleUserEmail || '';
 
     if (!bride || !groom) { showToast('Please enter bride and groom names'); return; }
     if (!date) { showToast('Please enter wedding date'); return; }
     if (!adminPin || adminPin.length !== 4) { showToast('Admin PIN must be 4 digits'); return; }
     if (!editorPin || editorPin.length !== 4) { showToast('Editor PIN must be 4 digits'); return; }
     if (!viewerPin || viewerPin.length !== 4) { showToast('Viewer PIN must be 4 digits'); return; }
-    if (!email) { showToast('Email not found. Please sign in again.'); return; }
 
     btn.textContent = 'Setting up...'; btn.disabled = true;
     try {
-      // 1. Save branding
-      var br = await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})
-      });
-      var bd = await br.json();
-      if (!bd.success) throw new Error(bd.error || 'Branding save failed');
-
-      // 2. Save PINs
-      var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, adminPin, editorPin, viewerPin})
-      });
+      // Save branding
+      await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})});
+      // Save PINs
+      var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email, adminPin, editorPin, viewerPin})});
       var pd = await pr.json();
-      if (!pd.success) throw new Error(pd.error || 'PIN save failed');
-
-      // 3. Hide setup, apply branding
-      document.getElementById('setupOverlay').classList.add('hidden');
-      
-      // 4. Apply branding to page
-      var names = bride + ' & ' + groom;
-      var brandTitle = document.getElementById('brandTitle');
-      if (brandTitle) brandTitle.textContent = names + ' — Vivaah Ledger';
-      document.title = names + ' — Vivaah Ledger';
-      var cdNames = document.getElementById('countdownCoupleNames');
-      if (cdNames) cdNames.textContent = '🪔 ' + names + ' 🪔';
-      var footer = document.getElementById('footerCoupleName');
-      if (footer) footer.textContent = names;
-      
-      // 5. Add wedding date to timeline
-      if (date && typeof eventTimeline !== 'undefined') {
-        if (!eventTimeline['Marriage']) eventTimeline['Marriage'] = {};
-        eventTimeline['Marriage'].date = date;
-        eventTimeline['Marriage'].venue = venue || '';
-        try { await saveTimeline(); } catch(e) {}
-        startCountdown();
+      if (pd.success) {
+        document.getElementById('setupOverlay').classList.add('hidden');
+        loadCoupleBranding(email);
+        showToast('🎉 Welcome! Your Vivaah Ledger is ready.');
+      } else {
+        showToast('Setup failed: ' + (pd.error || 'Unknown error'));
+        btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
       }
-
-      // 6. Show lock screen for PIN entry
-      document.getElementById('lockOverlay').classList.remove('hidden');
-      showToast('🎉 Setup complete! Please enter your Admin PIN to continue.');
-
     } catch(e) {
       showToast('Error: ' + e.message);
       btn.textContent = '🌸 Start My Vivaah Ledger'; btn.disabled = false;
@@ -4045,20 +4012,7 @@ async function egRequestAccess(){
       // Owner or already approved — go straight to PIN
       egCurrentEmail = email;
       localStorage.setItem('vivaah-approved-email', email);
-      // Check if new couple needs setup first
-      (async function() {
-        try {
-          var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(email));
-          var sd = await sr.json();
-          if (!sd.setupDone) {
-            // Show setup screen instead of PIN
-            document.getElementById('lockOverlay').classList.add('hidden');
-            document.getElementById('setupOverlay').classList.remove('hidden');
-            return;
-          }
-        } catch(e) {}
-        showLockStep('pin');
-      })();
+      showLockStep('pin');
     } else if(data.status === 'pending'){
       egCurrentEmail = email;
       document.getElementById('waitingEmailBadge').textContent = email;
@@ -4103,18 +4057,7 @@ async function egCheckStatus(){
       localStorage.setItem('vivaah-approved-email', egCurrentEmail);
       statusEl.textContent = '✅ Approved! Loading PIN screen…';
       statusEl.className = 'eg-status-msg success';
-      setTimeout(async function() {
-        try {
-          var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(egCurrentEmail||email||''));
-          var sd = await sr.json();
-          if (!sd.setupDone) {
-            document.getElementById('lockOverlay').classList.add('hidden');
-            document.getElementById('setupOverlay').classList.remove('hidden');
-            return;
-          }
-        } catch(e) {}
-        showLockStep('pin');
-      }, 800);
+      setTimeout(()=>{ showLockStep('pin'); }, 800);
     } else if(data.status === 'rejected'){
       egStopPolling();
       statusEl.textContent = '❌ Access was rejected by the owner.';
@@ -4174,16 +4117,6 @@ async function initAuth(){
       const data = await resp.json();
       if(data.status === 'approved'){
         egCurrentEmail = approvedEmail;
-        // Check setup before showing PIN
-        try {
-          var _sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(approvedEmail||''));
-          var _sd = await _sr.json();
-          if (!_sd.setupDone) {
-            document.getElementById('lockOverlay').classList.add('hidden');
-            document.getElementById('setupOverlay').classList.remove('hidden');
-            return;
-          }
-        } catch(e) {}
         showLockStep('pin');
         return;
       } else {
@@ -4595,30 +4528,14 @@ async function findOrCreateSheet(){
 }
 
 async function onSignedIn(){
+  // Check setup for new couples and load branding
+  setTimeout(function() {
+    if (googleUserEmail) {
+      checkAndShowSetup(googleUserEmail);
+      loadCoupleBranding(googleUserEmail);
+    }
+  }, 1200);
   setSyncStatus('saving','Connecting…');
-  // For new couples: check setup BEFORE anything else
-  if (googleUserEmail && 
-      googleUserEmail !== 'horizoneworld@gmail.com' && 
-      googleUserEmail !== 'rmsfincoresolutions@gmail.com') {
-    try {
-      var sr = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(googleUserEmail));
-      var sd = await sr.json();
-      if (!sd.setupDone) {
-        // Check if approved
-        var ar = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status?email=' + encodeURIComponent(googleUserEmail));
-        var ad = await ar.json();
-        if (ad.status === 'approved') {
-          // Hide lock screen, show setup screen
-          document.getElementById('lockOverlay').classList.add('hidden');
-          document.getElementById('setupOverlay').classList.remove('hidden');
-          return; // Don't proceed with normal flow
-        }
-      } else {
-        // Setup done - load their branding
-        loadCoupleBranding(googleUserEmail);
-      }
-    } catch(e) { console.log('Setup check:', e); }
-  }
   try{
     let cachedId = await storageGet('wedding-sheet-id');
     sheetId = cachedId || await findOrCreateSheet();
@@ -7215,6 +7132,7 @@ function runGlobalSearch(q, gsInput, gsResults){
   }
   gsResults.innerHTML=html; gsResults.style.display='block';
 }
+</script>
 <!-- ── WhatsApp Message Editor Modal ── -->
 <!-- SUBMIT TO VIVAAH DIRECTORY POPUP -->
 <div class="submit-review-overlay" id="submitReviewOverlay" style="display:none;">
