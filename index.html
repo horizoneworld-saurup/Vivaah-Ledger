@@ -2522,7 +2522,7 @@ async function amLoadApprovedList() {
   const listEl = document.getElementById('amApprovedList');
   listEl.innerHTML = '<span style="color:var(--ink-soft);">Loading…</span>';
   try {
-    const resp = await fetch('/api/list-approved', { method: 'GET' });
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/list-approved', { method: 'GET' });
     const data = await resp.json();
     if (!data.users || data.users.length === 0) {
       listEl.innerHTML = '<span style="color:var(--ink-soft);">No approved users found.</span>';
@@ -2563,7 +2563,7 @@ async function amExtendEmail() {
   extendBtn.textContent = 'Extending…';
 
   try {
-    const resp = await fetch('/api/approve', {
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com', months }),
@@ -2597,7 +2597,7 @@ async function amRevokeEmail() {
   statusMsg.textContent = '';
 
   try {
-    const resp = await fetch('/api/revoke', {
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/revoke', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, ownerEmail: 'horizoneworld@gmail.com' }),
@@ -3094,7 +3094,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var adminPin = document.getElementById('setupAdminPin').value.trim();
     var editorPin = document.getElementById('setupEditorPin').value.trim();
     var viewerPin = document.getElementById('setupViewerPin').value.trim();
-    var email = googleUserEmail || '';
+    var email = googleUserEmail || window.egCurrentEmail || egCurrentEmail || '';
+    console.log('Setup email:', email);
 
     if (!bride || !groom) { showToast('Please enter bride and groom names'); return; }
     if (!date) { showToast('Please enter wedding date'); return; }
@@ -4330,7 +4331,7 @@ async function saveReminders(){
   // Sync reminders to Cloudflare KV so cron job can send alerts
   if(googleUserEmail){
     try{
-      await fetch('/api/save-reminders', {
+      await fetch('https://vivaah-auth.rms-d21.workers.dev/save-reminders', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ email: googleUserEmail, reminders })
