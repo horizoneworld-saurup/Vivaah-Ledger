@@ -3057,21 +3057,16 @@ async function loadCoupleBranding(email) {
     var r = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-branding?email=' + encodeURIComponent(email));
     var d = await r.json();
     if (d.found) {
-      // Update branding
       var bride = d.brideName || '';
       var groom = d.groomName || '';
       if (bride || groom) {
         var names = bride + (bride && groom ? ' & ' : '') + groom;
-        // Update logo
         var brandTitle = document.getElementById('brandTitle');
         if (brandTitle) brandTitle.textContent = names + ' — Vivaah Ledger';
-        // Update countdown names
         var cdNames = document.getElementById('countdownCoupleNames');
         if (cdNames) cdNames.textContent = '🪔 ' + names + ' 🪔';
-        // Update footer
         var footer = document.getElementById('footerCoupleName');
         if (footer) footer.textContent = names;
-        // Update countdown date
         if (d.weddingDate) {
           var dt = new Date(d.weddingDate);
           var cdDate = document.getElementById('countdownDateTxt');
@@ -3079,8 +3074,38 @@ async function loadCoupleBranding(email) {
         }
         document.title = names + ' — Vivaah Ledger';
       }
+      // Apply music
+      if (d.musicUrl) {
+        var audio = document.getElementById('bgMusic');
+        if (audio && audio.src !== d.musicUrl) {
+          audio.src = d.musicUrl;
+          audio.load();
+        }
+      }
+      // Apply rangoli style
+      if (d.rangoli && d.rangoli !== 'mandala') {
+        applyRangoliStyle(d.rangoli);
+      }
     }
   } catch(e) { console.log('Branding load error:', e); }
+}
+
+function applyRangoliStyle(style) {
+  var wrap = document.getElementById('countdownWrap');
+  if (!wrap) return;
+  // Remove existing style classes
+  wrap.classList.remove('rangoli-diya','rangoli-floral','rangoli-lotus','rangoli-mandala');
+  wrap.classList.add('rangoli-' + style);
+  // Update background colors per style
+  var colors = {
+    diya: {bg1:'#1a0a00', bg2:'#3d1f00', accent:'#FF8C00'},
+    floral: {bg1:'#1a0020', bg2:'#3d0050', accent:'#E91E63'},
+    lotus: {bg1:'#001a10', bg2:'#003320', accent:'#4CAF50'},
+    mandala: {bg1:'#0a0020', bg2:'#1a0a2e', accent:'#D4A24C'}
+  };
+  var c = colors[style] || colors.mandala;
+  var inner = wrap.querySelector('.inner');
+  if (inner) inner.style.background = 'linear-gradient(135deg,' + c.bg1 + ',' + c.bg2 + ')';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3106,9 +3131,18 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.textContent = 'Setting up...'; btn.disabled = true;
     try {
       // Save branding
+      // Convert Google Drive link to direct URL
+      var musicUrl = (document.getElementById('setupMusicUrl')||{}).value || '';
+      musicUrl = musicUrl.trim();
+      var musicDirect = '';
+      if (musicUrl) {
+        var driveId = musicUrl.match(/[/=]([a-zA-Z0-9_-]{25,})/);
+        musicDirect = driveId ? 'https://drive.google.com/uc?export=download&id=' + driveId[1] : musicUrl;
+      }
+      var rangoli = (document.getElementById('setupRangoli')||{value:'mandala'}).value || 'mandala';
       await fetch('https://vivaah-auth.rms-d21.workers.dev/save-branding', {method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue})});
+        body: JSON.stringify({email, brideName:bride, groomName:groom, weddingDate:date, venue, musicUrl:musicDirect, rangoli:rangoli})});
       // Save PINs
       var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -7317,6 +7351,39 @@ function runGlobalSearch(q, gsInput, gsResults){
             <label>🏛️ VENUE (OPTIONAL)</label>
             <input type="text" id="setupVenue" placeholder="e.g. Oreva Farm">
           </div>
+        </div>
+        <!-- Music Link -->
+        <div class="setup-f" style="margin-bottom:16px;">
+          <label>🎵 WEDDING SONG (OPTIONAL)</label>
+          <input type="text" id="setupMusicUrl" placeholder="Paste Google Drive shareable link…" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:11px 14px;font-size:12px;color:#fff;outline:none;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;">Upload MP3 to Google Drive → Share → Anyone with link → Copy link</div>
+        </div>
+        <!-- Rangoli Picker -->
+        <div class="setup-f" style="margin-bottom:16px;">
+          <label>🎨 CHOOSE YOUR RANGOLI STYLE</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;" id="rangoli-picker">
+            <div class="rangoli-opt selected" data-val="mandala" onclick="selectRangoli(this)" style="border:2px solid #D4A24C;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:rgba(212,164,76,0.1);">
+              <div style="font-size:28px;">🌸</div>
+              <div style="font-size:11px;color:#D4A24C;font-weight:600;margin-top:4px;">Mandala</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Classic</div>
+            </div>
+            <div class="rangoli-opt" data-val="diya" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
+              <div style="font-size:28px;">🪔</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Diya</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Traditional</div>
+            </div>
+            <div class="rangoli-opt" data-val="floral" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
+              <div style="font-size:28px;">🌺</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Floral</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Elegant</div>
+            </div>
+            <div class="rangoli-opt" data-val="lotus" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
+              <div style="font-size:28px;">🪷</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Lotus</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Sacred</div>
+            </div>
+          </div>
+          <input type="hidden" id="setupRangoli" value="mandala">
         </div>
         <div class="setup-pins">
           <div class="setup-lbl" style="margin-bottom:0;">Create Your Access PINs</div>
