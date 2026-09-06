@@ -957,8 +957,8 @@
   .gx-field label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);font-weight:700;margin-bottom:4px;}
   .gx-field input,.gx-field select{width:100%;padding:6px 8px;border-radius:7px;border:1px solid var(--line);font-size:12px;font-family:'Inter';box-sizing:border-box;}
   .gx-field-full{grid-column:1/-1;}
-  .gx-check{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;}
-  .gx-check input{accent-color:var(--maroon);cursor:pointer;}
+  .gx-check{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer;line-height:1.4;}
+  .gx-check input{accent-color:var(--maroon);cursor:pointer;width:16px;height:16px;flex-shrink:0;margin:0;vertical-align:middle;}
 
   /* --- Enhanced reminders (vendor + person) --- */
   .reminder-add-extended{display:flex;flex-direction:column;gap:6px;margin-top:auto;}
@@ -2360,7 +2360,13 @@ function setRole(role){
   const isAdmin = role === 'admin' || isOwner;
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
-  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isOwner ? '' : 'none');
+  // Owner Panel only for master owner emails
+  var isMasterOwner = isOwner && (
+    googleUserEmail === 'horizoneworld@gmail.com' ||
+    googleUserEmail === 'rmsfincoresolutions@gmail.com' ||
+    googleUserEmail === 'saurabh@horizoneworld.com'
+  );
+  document.querySelectorAll('.owner-only').forEach(el=>el.style.display = isMasterOwner ? '' : 'none');
   applyRoleRestrictions();
 }
 
@@ -2522,7 +2528,8 @@ async function amLoadApprovedList() {
   const listEl = document.getElementById('amApprovedList');
   listEl.innerHTML = '<span style="color:var(--ink-soft);">Loading…</span>';
   try {
-    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/list-approved', { method: 'GET' });
+    var _ownerParam = encodeURIComponent(googleUserEmail || 'horizoneworld@gmail.com');
+    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/list-approved?owner=' + _ownerParam, { method: 'GET' });
     const data = await resp.json();
     if (!data.users || data.users.length === 0) {
       listEl.innerHTML = '<span style="color:var(--ink-soft);">No approved users found.</span>';
@@ -3249,6 +3256,16 @@ function toggleSecBody(headerId, bodyId) {
     body.classList.remove('collapsed');
     hdr.classList.remove('sec-collapsed');
     hdr.scrollIntoView({behavior:'smooth', block:'start'});
+    // Trigger right render per section
+    try {
+      if (bodyId === 'kankotriSecBody') { renderInvTable(); renderKankotriCardPreviews(); }
+      else if (bodyId === 'guestSecBody') { renderGuests(); buildEventSummary(); }
+      else if (bodyId === 'vendorSecBody') { renderTable(); }
+      else if (bodyId === 'budgetSectionBody') { renderBudgetChart(); }
+      else if (bodyId === 'timelineSecBody') { renderTimeline ? renderTimeline() : null; }
+      else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
+      else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
+    } catch(e) {}
   } else {
     body.classList.add('collapsed');
     hdr.classList.add('sec-collapsed');
