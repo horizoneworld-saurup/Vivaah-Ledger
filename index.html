@@ -5589,10 +5589,10 @@ function renderGuests(){
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
   document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
   document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
-  // Show Tier and Dispatch columns only when Kankotri tab is active
+  // Tier and Dispatch columns permanently hidden in guest list (managed via Kankotri section instead)
   const isKankotri = activeEventFilter === 'Kankotri';
-  document.getElementById('thTier').style.display = isKankotri ? '' : 'none';
-  document.getElementById('thDispatch').style.display = isKankotri ? '' : 'none';
+  document.getElementById('thTier').style.display = 'none';
+  document.getElementById('thDispatch').style.display = 'none';
   // Hide Ladies column when Kankotri filter active (not needed for kankotri)
   var thL = document.getElementById('thLadies');
   if (thL) thL.style.display = isKankotri ? 'none' : '';
@@ -5717,21 +5717,7 @@ function renderGuests(){
         <td class="num">${rawCounts.adults}</td>
         <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
         <td class="num">${secondColValue}</td>
-        ${activeEventFilter==='Kankotri' ? `
-        <td>
-          <select class="tier-select" data-tier-guest="${g.id}">
-            <option value="">— Tier —</option>
-            <option value="vip" ${g.kankotriTier==='vip'?'selected':''}>👑 VIP Premium</option>
-            <option value="premium" ${g.kankotriTier==='premium'?'selected':''}>⭐ Premium</option>
-            <option value="normal" ${g.kankotriTier==='normal'?'selected':''}>🎟 Normal</option>
-          </select>
-        </td>
-        <td>
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;">
-            <input type="checkbox" ${g.kankotriSent?'checked':''} data-dispatch-guest="${g.id}">
-            <span class="${g.kankotriSent?'dispatch-sent':'dispatch-pending'}">${g.kankotriSent?'✓ Sent':'⏳ Pending'}</span>
-          </label>
-        </td>` : ''}
+        
         <td>
           <div class="guest-action-btns">
             ${g.phone ? `
@@ -7196,31 +7182,36 @@ document.getElementById('btnKankotriExport').onclick=()=>{
   showToast(`Exported ${kankotriGuests.length} Kankotri guests`);
 };
 document.getElementById('btnPrintKankotri').onclick=()=>{
-  const kankotriGuests=guests.filter(g=>{const c=guestEventCounts(g,'Kankotri');return c.adults>0||c.writer>0;});
-  const t=eventTimeline['Kankotri']||{};
   const printArea=document.createElement('div');
   printArea.id='kankotriPrintArea';
-  // Build tier-based print with function counts
+
+  // Events to show in print columns
   const EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
   const EV_SHORT = {'Kankotri':'Kankotri','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehendi','Sangeet':'Sangeet','Marriage':'Marriage','Reception':'Reception'};
   const TIERS = [
-    {key:'vip', label:'👑 VIP Premium', color:'#5C1A2B'},
-    {key:'premium', label:'⭐ Premium', color:'#856404'},
-    {key:'normal', label:'✏️ Normal (WhatsApp only)', color:'#555'}
+    {key:'vip',     label:'👑 VIP Premium',           color:'#5C1A2B'},
+    {key:'premium', label:'⭐ Premium',                color:'#856404'},
+    {key:'normal',  label:'✏️ Normal (WhatsApp only)', color:'#555'}
   ];
+
+  // Format event count for a guest — Kankotri shows adults+writerW, others show adults+kids
   function kankEvCount(g, ev) {
     var e = g.events && g.events[ev];
     if (!e) return '';
     var a = Number(e.adults||0), w = Number(e.writer||0), k = Number(e.kids||0);
     if (ev === 'Kankotri') return (a > 0 || w > 0) ? (a + (w > 0 ? '+' + w + 'W' : '')) : '—';
     var total = a + k;
-    return total > 0 ? total : '—';
+    return total > 0 ? String(total) : '—';
   }
+
+  // Build rows for one tier — uses invTier (Kankotri section assignment)
   function tierRows(tierKey) {
     var list = guests.filter(function(g){ return g.invTier === tierKey; });
     if (list.length === 0) return '<tr><td colspan="10" style="padding:8px;color:#888;font-style:italic;">No families in this tier</td></tr>';
     var rows = list.map(function(g, i) {
-      var cells = EVENTS.map(function(ev){ return '<td style="padding:5px 6px;text-align:center;font-size:11px;">' + kankEvCount(g, ev) + '</td>'; }).join('');
+      var cells = EVENTS.map(function(ev){
+        return '<td style="padding:5px 6px;text-align:center;font-size:11px;">' + kankEvCount(g, ev) + '</td>';
+      }).join('');
       return '<tr style="background:' + (i%2?'#F3EBDB':'#fff') + ';">' +
         '<td style="padding:5px 6px;font-size:11px;">' + escapeHtml(g.name) + '</td>' +
         '<td style="padding:5px 6px;font-size:11px;">' + escapeHtml(g.phone||'—') + '</td>' +
@@ -7229,33 +7220,56 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
         '<td style="padding:5px 6px;text-align:center;font-size:11px;font-weight:700;">' + (g.invCards||0) + '</td>' +
         '</tr>';
     });
+    // Totals row
     var totals = EVENTS.map(function(ev){
       var t = list.reduce(function(s,g){ var e=g.events&&g.events[ev]; return s+(e?Number(e.adults||0)+Number(e.kids||0):0); }, 0);
-      return '<td style="padding:6px;text-align:center;font-weight:700;">' + (t||'—') + '</td>';
+      return '<td style="padding:6px;text-align:center;font-weight:700;">' + (t > 0 ? t : '—') + '</td>';
     });
     var totalCards = list.reduce(function(s,g){ return s+(Number(g.invCards)||0); }, 0);
     rows.push('<tr style="background:#e8d5b0;font-weight:700;"><td colspan="3" style="padding:6px 8px;">Total (' + list.length + ' families)</td>' + totals.join('') + '<td style="padding:6px;text-align:center;">' + totalCards + '</td></tr>');
     return rows.join('');
   }
-  var thStyle = 'padding:6px 6px;text-align:left;font-size:11px;';
-  var thCStyle = 'padding:6px 6px;text-align:center;font-size:11px;';
+
+  // Table header
+  var thS = 'padding:6px;text-align:left;font-size:11px;';
+  var thC = 'padding:6px;text-align:center;font-size:11px;';
   var tableHdr = '<thead><tr style="background:#3E0F1C;color:#FBF6EE;">' +
-    '<th style="' + thStyle + '">Family / Guest Name</th>' +
-    '<th style="' + thStyle + '">Phone</th>' +
-    '<th style="' + thStyle + '">Side</th>' +
-    EVENTS.map(function(ev){ return '<th style="' + thCStyle + '">' + EV_SHORT[ev] + '</th>'; }).join('') +
-    '<th style="' + thCStyle + '">Cards</th>' +
+    '<th style="' + thS + '">Family / Guest Name</th>' +
+    '<th style="' + thS + '">Phone</th>' +
+    '<th style="' + thS + '">Side</th>' +
+    EVENTS.map(function(ev){ return '<th style="' + thC + '">' + EV_SHORT[ev] + '</th>'; }).join('') +
+    '<th style="' + thC + '">Cards</th>' +
     '</tr></thead>';
+
+  // One section per tier — this is all that prints (no summary pages before it)
+  var vipCount     = guests.filter(function(g){return g.invTier==='vip';}).length;
+  var premCount    = guests.filter(function(g){return g.invTier==='premium';}).length;
+  var normalCount  = guests.filter(function(g){return g.invTier==='normal';}).length;
+  var totalCards   = guests.filter(function(g){return g.invTier==='vip'||g.invTier==='premium';}).reduce(function(s,g){return s+(Number(g.invCards)||0);},0);
+
   var sections = TIERS.map(function(tier){
-    return '<div style="margin-bottom:24px;page-break-inside:avoid;">' +
-      '<h3 style="color:' + tier.color + ';margin:0 0 6px;font-size:14px;">' + tier.label + ' — ' +
-        guests.filter(function(g){ return g.invTier===tier.key; }).length + ' families</h3>' +
+    return '<div style="margin-bottom:28px;page-break-inside:avoid;">' +
+      '<h3 style="color:' + tier.color + ';margin:0 0 8px;font-size:14px;border-bottom:2px solid ' + tier.color + ';padding-bottom:4px;">' +
+        tier.label + ' — ' + guests.filter(function(g){return g.invTier===tier.key;}).length + ' families' +
+      '</h3>' +
       '<table style="width:100%;border-collapse:collapse;">' + tableHdr + '<tbody>' + tierRows(tier.key) + '</tbody></table>' +
       '</div>';
-  }).join('<hr style="border:none;border-top:1px solid #D4A24C;margin:16px 0;">');
-  printArea.innerHTML = '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 4px;">𖥸 Kankotri — Invitation Card Management</h2>' +
-    '<p style="font-size:11px;color:#6b5d52;margin:0 0 12px;">Generated ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) + ' · VIP: ' + guests.filter(function(g){return g.invTier==='vip';}).length + ' · Premium: ' + guests.filter(function(g){return g.invTier==='premium';}).length + ' · Normal: ' + guests.filter(function(g){return g.invTier==='normal';}).length + ' · Total Cards: ' + guests.filter(function(g){return g.invTier==='vip'||g.invTier==='premium';}).reduce(function(s,g){return s+(Number(g.invCards)||0);},0) + '</p>' +
-    sections;
+  }).join('<div style="height:16px;border-top:1px dashed #D4A24C;margin:16px 0;"></div>');
+
+  // Print output — starts directly with tier tables, no summary pages
+  printArea.innerHTML =
+    '<div style="font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;">' +
+    '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 4px;font-size:18px;">𖥸 Kankotri — Invitation Card Management</h2>' +
+    '<p style="font-size:11px;color:#6b5d52;margin:0 0 16px;">' +
+      'Generated ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) +
+      ' &nbsp;·&nbsp; 👑 VIP: ' + vipCount +
+      ' &nbsp;·&nbsp; ⭐ Premium: ' + premCount +
+      ' &nbsp;·&nbsp; ✏️ Normal: ' + normalCount +
+      ' &nbsp;·&nbsp; Total Cards: ' + totalCards +
+    '</p>' +
+    sections +
+    '</div>';
+
   document.body.appendChild(printArea);
   window.print();
   printArea.remove();
