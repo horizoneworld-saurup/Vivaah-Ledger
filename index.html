@@ -1345,7 +1345,7 @@
     </div>
   </div>
 
-  <div class="sync-banner" id="syncBanner">
+  <div class="sync-banner" id="syncBanner" style="cursor:pointer;" onclick="document.getElementById('btnGoogleSignIn').click()">
     <span id="syncBannerText">⟲ Sign in with Google to save your ledger online — it'll then load automatically on every device, no exporting or uploading needed.</span>
     <span class="sync-meta-group">
       <span class="sync-meta" id="syncMeta"></span>
@@ -1937,6 +1937,7 @@
         <div>💾 <strong>Auto-backup:</strong> <span id="lastBackupTime">Not backed up yet</span> — download a backup anytime to protect your data</div>
         <div style="display:flex;gap:8px;">
           <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
+          <button class="btn btn-ghost" onclick="restoreAutoBackup()" style="font-size:12px;">🔄 Restore Auto-Backup</button>
           <button class="btn-backup" style="background:var(--sage);" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
           <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreFromBackup(this.files[0]).then(()=>this.value='')">
         </div>
@@ -2332,6 +2333,12 @@ async function tryUnlock(){
       document.getElementById('lockOverlay').classList.add('hidden');
       // Always load data + render — ensures ticker and all sections appear immediately
       await loadData();
+      // Remind to connect Google for cross-device sync
+      setTimeout(function() {
+        if (!googleAccessToken) {
+          showToast('💡 Sign in with Google to sync data across all devices');
+        }
+      }, 2000);
     } else { lockError('Wrong owner PIN'); }
     return;
   }
@@ -3687,7 +3694,7 @@ function updateSectionBadges() {
   if(document.getElementById('guestHeaderPending')) document.getElementById('guestHeaderPending').textContent = (guests?guests.filter(g=>g.callStatus!=='confirmed').length:0) + ' pending';
   const premCount = guests ? guests.filter(g=>g.invTier==='premium').length : 0;
   const normCount = guests ? guests.filter(g=>g.invTier==='normal').length : 0;
-  const totalCards = guests ? guests.reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
+  const totalCards = guests ? guests.filter(g=>g.invTier==='vip'||g.invTier==='premium').reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
   if (document.getElementById('kankotriHeaderVip')) document.getElementById('kankotriHeaderVip').textContent = vipCount;
   if (document.getElementById('kankotriHeaderPremium')) document.getElementById('kankotriHeaderPremium').textContent = premCount;
   if (document.getElementById('kankotriHeaderNormal')) document.getElementById('kankotriHeaderNormal').textContent = normCount;
@@ -3738,6 +3745,44 @@ function updateSectionBadges() {
    AUTO-BACKUP SYSTEM
    ================================================================ */
 let lastBackupAt = null;
+
+function autoSaveLocalBackup() {
+  try {
+    var backup = {
+      version: '1.0',
+      backedUpAt: new Date().toISOString(),
+      guests: guests,
+      vendors: vendors,
+      reminders: reminders,
+      notes: notes,
+      eventTimeline: eventTimeline,
+      branding: branding,
+      kankotriCards: kankotriCards,
+    };
+    localStorage.setItem('vivaah-auto-backup', JSON.stringify(backup));
+    localStorage.setItem('vivaah-auto-backup-time', new Date().toISOString());
+  } catch(e) { console.log('Auto backup error:', e); }
+}
+
+function restoreAutoBackup() {
+  var raw = localStorage.getItem('vivaah-auto-backup');
+  if (!raw) { showToast('No auto-backup found'); return; }
+  try {
+    var backup = JSON.parse(raw);
+    var time = localStorage.getItem('vivaah-auto-backup-time');
+    if (!confirm('Restore auto-backup from ' + (time ? new Date(time).toLocaleString() : 'unknown time') + '?')) return;
+    if (backup.guests) { guests = backup.guests; }
+    if (backup.vendors) { vendors = backup.vendors; }
+    if (backup.kankotriCards) { kankotriCards = backup.kankotriCards; }
+    if (backup.eventTimeline) { eventTimeline = backup.eventTimeline; }
+    render();
+    renderInvTable();
+    showToast('✅ Auto-backup restored!');
+  } catch(e) { showToast('Restore failed: ' + e.message); }
+}
+
+// Auto-backup every 3 minutes
+setInterval(function() { if (guests.length > 0) autoSaveLocalBackup(); }, 3 * 60 * 1000);
 
 function downloadBackup() {
   const backup = {
@@ -4395,6 +4440,8 @@ async function saveGuests(){
   await storageSet('wedding-guests', JSON.stringify(guests));
   queueCloudSave();
   setTimeout(updateSectionBadges, 200);
+  // Auto-save backup to localStorage on every guest change
+  autoSaveLocalBackup();
 }
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
@@ -6883,7 +6930,7 @@ function renderInvTable(){
   const normC    = allG.filter(g=>g.invTier==='normal').length;
   const unassC   = allG.filter(g=>!g.invTier).length;
   const sentC    = allG.filter(g=>g.invSent).length;
-  const totalCards = allG.reduce((s,g)=>s+(Number(g.invCards)||0),0);
+  const totalCards = allG.filter(g=>g.invTier==='vip'||g.invTier==='premium').reduce((s,g)=>s+(Number(g.invCards)||0),0);
 
   summaryBar.innerHTML = `
     <span>👑 VIP: <b>${vipC}</b></span>
