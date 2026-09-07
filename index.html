@@ -1846,7 +1846,7 @@
         </div>
       </div>
       <div class="sec-header-actions">
-        <button class="btn-print-sec" onclick="event.stopPropagation();printSection('kankotri')">🖨️ Print</button>
+        
     </div>
     </div>
   <div class="sec-body collapsed" id="kankotriSecBody">
@@ -7188,15 +7188,62 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   const t=eventTimeline['Kankotri']||{};
   const printArea=document.createElement('div');
   printArea.id='kankotriPrintArea';
-  printArea.innerHTML=`
-    <h2 style="color:#3E0F1C;font-family:'Cormorant Garamond',serif;margin:0 0 4px;">𖥸 Kankotri Guest List</h2>
-    ${t.date?`<div style="font-size:12px;color:#6b5d52;">${new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${t.startTime?' · '+t.startTime:''}${t.venue?' · '+t.venue:''}</div>`:''}
-    <p style="font-size:12px;color:#6b5d52;">Generated ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}</p>
-    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:8px;">
-      <thead><tr style="background:#3E0F1C;color:#FBF6EE;"><th style="padding:6px 8px;text-align:left;">Family</th><th style="padding:6px 8px;text-align:left;">Phone</th><th style="padding:6px 8px;text-align:left;">Side</th><th style="padding:6px 8px;text-align:right;">Adults</th><th style="padding:6px 8px;text-align:right;">Writer</th></tr></thead>
-      <tbody>${kankotriGuests.map((g,i)=>{const c=guestEventCounts(g,'Kankotri');return`<tr style="background:${i%2?'#F3EBDB':'#fff'};"><td style="padding:5px 8px;">${escapeHtml(g.name)}</td><td style="padding:5px 8px;">${escapeHtml(g.phone||'—')}</td><td style="padding:5px 8px;">${escapeHtml(g.side||'—')}</td><td style="padding:5px 8px;text-align:right;">${c.adults}</td><td style="padding:5px 8px;text-align:right;">${c.writer}</td></tr>`;}).join('')}</tbody>
-      <tfoot><tr style="background:#F3EBDB;font-weight:700;"><td colspan="3" style="padding:6px 8px;">Total</td><td style="padding:6px 8px;text-align:right;">${kankotriGuests.reduce((s,g)=>s+guestEventCounts(g,'Kankotri').adults,0)}</td><td style="padding:6px 8px;text-align:right;">${kankotriGuests.reduce((s,g)=>s+guestEventCounts(g,'Kankotri').writer,0)}</td></tr></tfoot>
-    </table>`;
+  // Build tier-based print with function counts
+  const EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+  const EV_SHORT = {'Kankotri':'Kankotri','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehendi','Sangeet':'Sangeet','Marriage':'Marriage','Reception':'Reception'};
+  const TIERS = [
+    {key:'vip', label:'👑 VIP Premium', color:'#5C1A2B'},
+    {key:'premium', label:'⭐ Premium', color:'#856404'},
+    {key:'normal', label:'✏️ Normal (WhatsApp only)', color:'#555'}
+  ];
+  function kankEvCount(g, ev) {
+    var e = g.events && g.events[ev];
+    if (!e) return '';
+    var a = Number(e.adults||0), w = Number(e.writer||0), k = Number(e.kids||0);
+    if (ev === 'Kankotri') return (a > 0 || w > 0) ? (a + (w > 0 ? '+' + w + 'W' : '')) : '—';
+    var total = a + k;
+    return total > 0 ? total : '—';
+  }
+  function tierRows(tierKey) {
+    var list = guests.filter(function(g){ return g.invTier === tierKey; });
+    if (list.length === 0) return '<tr><td colspan="10" style="padding:8px;color:#888;font-style:italic;">No families in this tier</td></tr>';
+    var rows = list.map(function(g, i) {
+      var cells = EVENTS.map(function(ev){ return '<td style="padding:5px 6px;text-align:center;font-size:11px;">' + kankEvCount(g, ev) + '</td>'; }).join('');
+      return '<tr style="background:' + (i%2?'#F3EBDB':'#fff') + ';">' +
+        '<td style="padding:5px 6px;font-size:11px;">' + escapeHtml(g.name) + '</td>' +
+        '<td style="padding:5px 6px;font-size:11px;">' + escapeHtml(g.phone||'—') + '</td>' +
+        '<td style="padding:5px 6px;font-size:11px;">' + escapeHtml(g.side||'—') + '</td>' +
+        cells +
+        '<td style="padding:5px 6px;text-align:center;font-size:11px;font-weight:700;">' + (g.invCards||0) + '</td>' +
+        '</tr>';
+    });
+    var totals = EVENTS.map(function(ev){
+      var t = list.reduce(function(s,g){ var e=g.events&&g.events[ev]; return s+(e?Number(e.adults||0)+Number(e.kids||0):0); }, 0);
+      return '<td style="padding:6px;text-align:center;font-weight:700;">' + (t||'—') + '</td>';
+    });
+    var totalCards = list.reduce(function(s,g){ return s+(Number(g.invCards)||0); }, 0);
+    rows.push('<tr style="background:#e8d5b0;font-weight:700;"><td colspan="3" style="padding:6px 8px;">Total (' + list.length + ' families)</td>' + totals.join('') + '<td style="padding:6px;text-align:center;">' + totalCards + '</td></tr>');
+    return rows.join('');
+  }
+  var thStyle = 'padding:6px 6px;text-align:left;font-size:11px;';
+  var thCStyle = 'padding:6px 6px;text-align:center;font-size:11px;';
+  var tableHdr = '<thead><tr style="background:#3E0F1C;color:#FBF6EE;">' +
+    '<th style="' + thStyle + '">Family / Guest Name</th>' +
+    '<th style="' + thStyle + '">Phone</th>' +
+    '<th style="' + thStyle + '">Side</th>' +
+    EVENTS.map(function(ev){ return '<th style="' + thCStyle + '">' + EV_SHORT[ev] + '</th>'; }).join('') +
+    '<th style="' + thCStyle + '">Cards</th>' +
+    '</tr></thead>';
+  var sections = TIERS.map(function(tier){
+    return '<div style="margin-bottom:24px;page-break-inside:avoid;">' +
+      '<h3 style="color:' + tier.color + ';margin:0 0 6px;font-size:14px;">' + tier.label + ' — ' +
+        guests.filter(function(g){ return g.invTier===tier.key; }).length + ' families</h3>' +
+      '<table style="width:100%;border-collapse:collapse;">' + tableHdr + '<tbody>' + tierRows(tier.key) + '</tbody></table>' +
+      '</div>';
+  }).join('<hr style="border:none;border-top:1px solid #D4A24C;margin:16px 0;">');
+  printArea.innerHTML = '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 4px;">𖥸 Kankotri — Invitation Card Management</h2>' +
+    '<p style="font-size:11px;color:#6b5d52;margin:0 0 12px;">Generated ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) + ' · VIP: ' + guests.filter(function(g){return g.invTier==='vip';}).length + ' · Premium: ' + guests.filter(function(g){return g.invTier==='premium';}).length + ' · Normal: ' + guests.filter(function(g){return g.invTier==='normal';}).length + ' · Total Cards: ' + guests.filter(function(g){return g.invTier==='vip'||g.invTier==='premium';}).reduce(function(s,g){return s+(Number(g.invCards)||0);},0) + '</p>' +
+    sections;
   document.body.appendChild(printArea);
   window.print();
   printArea.remove();
