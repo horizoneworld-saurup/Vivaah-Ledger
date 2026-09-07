@@ -5580,10 +5580,13 @@ function renderGuests(){
   document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
   document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
   document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
+  // Hide Ladies column when Kankotri filter active (not needed for kankotri)
+  var thL = document.getElementById('thLadies');
+  if (thL) thL.style.display = isKankotri ? 'none' : '';
   // Show Tier and Dispatch columns only when Kankotri tab is active
   const isKankotri = activeEventFilter === 'Kankotri';
-  document.getElementById('thTier').style.display = isKankotri ? '' : 'none';
-  document.getElementById('thDispatch').style.display = isKankotri ? '' : 'none';
+  document.getElementById('thTier').style.display = 'none';
+  document.getElementById('thDispatch').style.display = 'none';
   // Kankotri summary when Kankotri is active
   const kankotriSummaryRow = document.getElementById('kankotriSummaryRow');
   if(isKankotri && kankotriSummaryRow){
