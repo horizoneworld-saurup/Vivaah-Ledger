@@ -2329,8 +2329,10 @@ async function tryUnlock(){
     if(ok){
       setRole('owner');
       const remember = document.getElementById('lockRemember').checked;
-      if(remember) localStorage.setItem('vivaah-role','owner');
+      const _oemail = egCurrentEmail || localStorage.getItem('vivaah-approved-email') || '';
+      if(remember){ localStorage.setItem('vivaah-role','owner'); localStorage.setItem('vivaah-remembered-email', _oemail); }
       sessionStorage.setItem('vivaah-role','owner');
+      sessionStorage.setItem('vivaah-session-email', _oemail);
       document.getElementById('lockOverlay').classList.add('hidden');
       // Always load data + render — ensures ticker and all sections appear immediately
       await loadData();
@@ -2347,8 +2349,10 @@ async function tryUnlock(){
   if(ok){
     setRole(lockSelectedRole);
     const remember = document.getElementById('lockRemember').checked;
-    if(remember) localStorage.setItem('vivaah-role', lockSelectedRole);
+    const _remail = egCurrentEmail || localStorage.getItem('vivaah-approved-email') || '';
+    if(remember){ localStorage.setItem('vivaah-role', lockSelectedRole); localStorage.setItem('vivaah-remembered-email', _remail); }
     sessionStorage.setItem('vivaah-role', lockSelectedRole);
+    sessionStorage.setItem('vivaah-session-email', _remail);
     document.getElementById('lockOverlay').classList.add('hidden');
     // Always load data + render — ensures ticker and all sections appear immediately
     await loadData();
@@ -2423,7 +2427,9 @@ document.getElementById('btnSignOutRole').onclick = ()=>{
   currentRole = null;
   localStorage.removeItem('vivaah-role');
   localStorage.removeItem('vivaah-approved-email');
+  localStorage.removeItem('vivaah-remembered-email');
   sessionStorage.removeItem('vivaah-role');
+  sessionStorage.removeItem('vivaah-session-email');
   egCurrentEmail = '';
   egStopPolling();
   lockPinEntry = '';
@@ -4373,21 +4379,35 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
+  // IMPORTANT: session/role restore only valid if the saved email matches
+  // this prevents new customers from inheriting owner's saved login
+  const savedEmail = localStorage.getItem('vivaah-approved-email') || '';
   const sessionRole = sessionStorage.getItem('vivaah-role');
-  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole)){
+  const sessionEmail = sessionStorage.getItem('vivaah-session-email') || '';
+
+  // Session restore: only if email matches current session email
+  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && sessionEmail && sessionEmail === savedEmail){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
+
+  // LocalStorage restore: only valid for remembered logins on this device/email
   const rememberedRole = localStorage.getItem('vivaah-role');
-  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole)){
+  const rememberedEmail = localStorage.getItem('vivaah-remembered-email') || '';
+  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole) && rememberedEmail && rememberedEmail === savedEmail){
     setRole(rememberedRole);
     sessionStorage.setItem('vivaah-role', rememberedRole);
+    sessionStorage.setItem('vivaah-session-email', rememberedEmail);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
+
+  // Clear any stale role data from a different user
+  sessionStorage.removeItem('vivaah-role');
+  sessionStorage.removeItem('vivaah-session-email');
 
   // Check if device has a pre-approved email (30-day approval)
   const approvedEmail = localStorage.getItem('vivaah-approved-email');
