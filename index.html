@@ -3089,38 +3089,158 @@ async function loadCoupleBranding(email) {
         }
         document.title = names + ' — Vivaah Ledger';
       }
-      // Apply music
+      // Fix: apply couple music using correct element id weddingMusic
       if (d.musicUrl) {
-        var audio = document.getElementById('bgMusic');
-        if (audio && audio.src !== d.musicUrl) {
-          audio.src = d.musicUrl;
+        var audio = document.getElementById('weddingMusic');
+        if (audio) {
+          audio.innerHTML = '<source src="' + d.musicUrl + '" type="audio/mpeg">';
           audio.load();
+          window._coupleMusic = d.musicUrl;
         }
       }
-      // Apply rangoli style
-      if (d.rangoli && d.rangoli !== 'mandala') {
+      // Apply rangoli style (apply for all styles — mandala stays as-is, others swap SVG)
+      if (d.rangoli) {
         applyRangoliStyle(d.rangoli);
       }
     }
   } catch(e) { console.log('Branding load error:', e); }
 }
 
+/* ── Per-couple rangoli SVG backgrounds ────────────────────── */
+function getRangoliSVG(style) {
+  if (style === 'diya') {
+    return '<svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">' +
+      '<rect width="660" height="340" fill="#1a0800"/>' +
+      '<g transform="translate(330,170)">' +
+        '<circle r="130" fill="none" stroke="#FF8C00" stroke-width="0.8" opacity="0.3"/>' +
+        '<circle r="90" fill="none" stroke="#FFA500" stroke-width="0.8" opacity="0.3"/>' +
+        '<circle r="50" fill="none" stroke="#FF8C00" stroke-width="0.8" opacity="0.3"/>' +
+        // Central diya
+        '<ellipse rx="26" ry="11" cy="22" fill="#8B4513" opacity="0.95"/>' +
+        '<ellipse rx="20" ry="8" cy="17" fill="#CD853F" opacity="0.95"/>' +
+        '<ellipse rx="13" ry="4" cy="16" fill="#DAA520" opacity="0.8"/>' +
+        '<path d="M0,8 C-6,-4 -4,-18 0,-26 C4,-18 6,-4 0,8Z" fill="#FF8C00" opacity="0.95"/>' +
+        '<path d="M0,5 C-3,-3 -1,-13 0,-18 C1,-13 3,-3 0,5Z" fill="#FFD700" opacity="0.9"/>' +
+        '<circle cy="-22" r="3" fill="#fff" opacity="0.8"/>' +
+        // 8 surrounding diyas
+        '<g transform="rotate(0) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(45) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(90) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(135) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(180) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(225) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(270) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        '<g transform="rotate(315) translate(0,-72)"><ellipse rx="9" ry="4" cy="4" fill="#CD853F" opacity="0.85"/><path d="M0,-2 C-2,-6 0,-11 0,-14 C2,-8 2,-5 0,-2Z" fill="#FF8C00" opacity="0.9"/><circle cy="-15" r="1.5" fill="#FFD700" opacity="0.8"/></g>' +
+        // Dot rings
+        '<g fill="#FF8C00" opacity="0.55"><circle cx="110" cy="0" r="3"/><circle cx="78" cy="78" r="3"/><circle cx="0" cy="110" r="3"/><circle cx="-78" cy="78" r="3"/><circle cx="-110" cy="0" r="3"/><circle cx="-78" cy="-78" r="3"/><circle cx="0" cy="-110" r="3"/><circle cx="78" cy="-78" r="3"/></g>' +
+      '</g>' +
+      // Corner diyas
+      '<g transform="translate(55,55)" opacity="0.7"><ellipse rx="12" ry="5" cy="5" fill="#CD853F"/><path d="M0,-3 C-3,-8 0,-15 0,-18 C3,-12 3,-7 0,-3Z" fill="#FF8C00"/></g>' +
+      '<g transform="translate(605,55)" opacity="0.7"><ellipse rx="12" ry="5" cy="5" fill="#CD853F"/><path d="M0,-3 C-3,-8 0,-15 0,-18 C3,-12 3,-7 0,-3Z" fill="#FF8C00"/></g>' +
+      '<g transform="translate(55,285)" opacity="0.7"><ellipse rx="12" ry="5" cy="5" fill="#CD853F"/><path d="M0,-3 C-3,-8 0,-15 0,-18 C3,-12 3,-7 0,-3Z" fill="#FF8C00"/></g>' +
+      '<g transform="translate(605,285)" opacity="0.7"><ellipse rx="12" ry="5" cy="5" fill="#CD853F"/><path d="M0,-3 C-3,-8 0,-15 0,-18 C3,-12 3,-7 0,-3Z" fill="#FF8C00"/></g>' +
+      '<rect x="10" y="10" width="640" height="320" rx="14" fill="none" stroke="#FF8C00" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="7 4"/>' +
+    '</svg>';
+  }
+  if (style === 'floral') {
+    return '<svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">' +
+      '<rect width="660" height="340" fill="#1a0028"/>' +
+      '<g transform="translate(330,170)">' +
+        '<circle r="8" fill="#E91E63" opacity="0.9"/>' +
+        // Inner 5 petals
+        '<g fill="#E91E63" opacity="0.8"><ellipse rx="12" ry="28" transform="rotate(0) translate(0,-24)"/><ellipse rx="12" ry="28" transform="rotate(72) translate(0,-24)"/><ellipse rx="12" ry="28" transform="rotate(144) translate(0,-24)"/><ellipse rx="12" ry="28" transform="rotate(216) translate(0,-24)"/><ellipse rx="12" ry="28" transform="rotate(288) translate(0,-24)"/></g>' +
+        // Middle 5 petals offset
+        '<g fill="#FF69B4" opacity="0.65"><ellipse rx="9" ry="20" transform="rotate(36) translate(0,-40)"/><ellipse rx="9" ry="20" transform="rotate(108) translate(0,-40)"/><ellipse rx="9" ry="20" transform="rotate(180) translate(0,-40)"/><ellipse rx="9" ry="20" transform="rotate(252) translate(0,-40)"/><ellipse rx="9" ry="20" transform="rotate(324) translate(0,-40)"/></g>' +
+        // Outer 6 petals
+        '<g fill="#9C27B0" opacity="0.5"><ellipse rx="7" ry="16" transform="rotate(0) translate(0,-56)"/><ellipse rx="7" ry="16" transform="rotate(60) translate(0,-56)"/><ellipse rx="7" ry="16" transform="rotate(120) translate(0,-56)"/><ellipse rx="7" ry="16" transform="rotate(180) translate(0,-56)"/><ellipse rx="7" ry="16" transform="rotate(240) translate(0,-56)"/><ellipse rx="7" ry="16" transform="rotate(300) translate(0,-56)"/></g>' +
+        // Leaf accents
+        '<g fill="#4CAF50" opacity="0.5"><ellipse rx="5" ry="12" transform="rotate(18) translate(0,-68)"/><ellipse rx="5" ry="12" transform="rotate(90) translate(0,-68)"/><ellipse rx="5" ry="12" transform="rotate(162) translate(0,-68)"/><ellipse rx="5" ry="12" transform="rotate(234) translate(0,-68)"/><ellipse rx="5" ry="12" transform="rotate(306) translate(0,-68)"/></g>' +
+        '<circle r="5" fill="#FFD700" opacity="0.95"/>' +
+        // Circles
+        '<circle r="80" fill="none" stroke="#E91E63" stroke-width="0.8" opacity="0.3"/>' +
+        '<circle r="110" fill="none" stroke="#9C27B0" stroke-width="0.8" opacity="0.25"/>' +
+        // Dot ring
+        '<g fill="#E91E63" opacity="0.5"><circle cx="110" cy="0" r="3"/><circle cx="55" cy="95" r="3"/><circle cx="-55" cy="95" r="3"/><circle cx="-110" cy="0" r="3"/><circle cx="-55" cy="-95" r="3"/><circle cx="55" cy="-95" r="3"/></g>' +
+      '</g>' +
+      // Corner flowers
+      '<g transform="translate(55,55)" opacity="0.65"><circle r="5" fill="#E91E63"/><g fill="#E91E63" opacity="0.8"><ellipse rx="5" ry="12" transform="rotate(0) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(72) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(144) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(216) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(288) translate(0,-10)"/></g></g>' +
+      '<g transform="translate(605,55)" opacity="0.65"><circle r="5" fill="#9C27B0"/><g fill="#9C27B0" opacity="0.8"><ellipse rx="5" ry="12" transform="rotate(0) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(72) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(144) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(216) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(288) translate(0,-10)"/></g></g>' +
+      '<g transform="translate(55,285)" opacity="0.65"><circle r="5" fill="#FF69B4"/><g fill="#FF69B4" opacity="0.8"><ellipse rx="5" ry="12" transform="rotate(0) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(72) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(144) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(216) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(288) translate(0,-10)"/></g></g>' +
+      '<g transform="translate(605,285)" opacity="0.65"><circle r="5" fill="#E91E63"/><g fill="#E91E63" opacity="0.8"><ellipse rx="5" ry="12" transform="rotate(0) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(72) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(144) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(216) translate(0,-10)"/><ellipse rx="5" ry="12" transform="rotate(288) translate(0,-10)"/></g></g>' +
+      '<rect x="10" y="10" width="640" height="320" rx="14" fill="none" stroke="#E91E63" stroke-width="1.5" stroke-opacity="0.35" stroke-dasharray="7 4"/>' +
+    '</svg>';
+  }
+  if (style === 'geometric') {
+    return '<svg viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;">' +
+      '<rect width="660" height="340" fill="#001525"/>' +
+      '<g transform="translate(330,170)">' +
+        // Star of David / geometric rings
+        '<polygon points="0,-110 95,55 -95,55" fill="none" stroke="#00BCD4" stroke-width="1.2" opacity="0.45"/>' +
+        '<polygon points="0,110 -95,-55 95,-55" fill="none" stroke="#00BCD4" stroke-width="1.2" opacity="0.45"/>' +
+        '<rect x="-75" y="-75" width="150" height="150" fill="none" stroke="#7C4DFF" stroke-width="1" opacity="0.4" transform="rotate(15)"/>' +
+        '<rect x="-55" y="-55" width="110" height="110" fill="none" stroke="#00BCD4" stroke-width="1" opacity="0.35" transform="rotate(30)"/>' +
+        '<polygon points="0,-80 69,40 -69,40" fill="none" stroke="#7C4DFF" stroke-width="1" opacity="0.5"/>' +
+        '<polygon points="0,80 -69,-40 69,-40" fill="none" stroke="#7C4DFF" stroke-width="1" opacity="0.5"/>' +
+        // Inner diamond
+        '<rect x="-30" y="-30" width="60" height="60" fill="#00BCD4" opacity="0.18" transform="rotate(45)"/>' +
+        '<rect x="-18" y="-18" width="36" height="36" fill="#7C4DFF" opacity="0.3" transform="rotate(45)"/>' +
+        '<rect x="-8" y="-8" width="16" height="16" fill="#00BCD4" opacity="0.6" transform="rotate(45)"/>' +
+        '<circle r="4" fill="#00BCD4" opacity="0.95"/>' +
+        // Rings
+        '<circle r="90" fill="none" stroke="#00BCD4" stroke-width="0.8" opacity="0.3"/>' +
+        '<circle r="115" fill="none" stroke="#7C4DFF" stroke-width="0.8" opacity="0.25"/>' +
+        // Cardinal dots
+        '<g fill="#00BCD4" opacity="0.65"><circle cx="115" cy="0" r="4"/><circle cx="0" cy="115" r="4"/><circle cx="-115" cy="0" r="4"/><circle cx="0" cy="-115" r="4"/></g>' +
+        '<g fill="#7C4DFF" opacity="0.6"><circle cx="81" cy="81" r="3"/><circle cx="-81" cy="81" r="3"/><circle cx="-81" cy="-81" r="3"/><circle cx="81" cy="-81" r="3"/></g>' +
+      '</g>' +
+      // Corner geometric accents
+      '<g transform="translate(55,55)" opacity="0.6"><rect x="-18" y="-18" width="36" height="36" fill="none" stroke="#00BCD4" stroke-width="1" transform="rotate(45)"/><rect x="-10" y="-10" width="20" height="20" fill="#00BCD4" opacity="0.25" transform="rotate(45)"/><circle r="3" fill="#00BCD4"/></g>' +
+      '<g transform="translate(605,55)" opacity="0.6"><rect x="-18" y="-18" width="36" height="36" fill="none" stroke="#7C4DFF" stroke-width="1" transform="rotate(45)"/><rect x="-10" y="-10" width="20" height="20" fill="#7C4DFF" opacity="0.25" transform="rotate(45)"/><circle r="3" fill="#7C4DFF"/></g>' +
+      '<g transform="translate(55,285)" opacity="0.6"><rect x="-18" y="-18" width="36" height="36" fill="none" stroke="#7C4DFF" stroke-width="1" transform="rotate(45)"/><rect x="-10" y="-10" width="20" height="20" fill="#7C4DFF" opacity="0.25" transform="rotate(45)"/><circle r="3" fill="#7C4DFF"/></g>' +
+      '<g transform="translate(605,285)" opacity="0.6"><rect x="-18" y="-18" width="36" height="36" fill="none" stroke="#00BCD4" stroke-width="1" transform="rotate(45)"/><rect x="-10" y="-10" width="20" height="20" fill="#00BCD4" opacity="0.25" transform="rotate(45)"/><circle r="3" fill="#00BCD4"/></g>' +
+      '<rect x="10" y="10" width="640" height="320" rx="14" fill="none" stroke="#00BCD4" stroke-width="1.5" stroke-opacity="0.3" stroke-dasharray="7 4"/>' +
+    '</svg>';
+  }
+  // mandala = default, return empty (keeps original hardcoded SVG)
+  return null;
+}
+
 function applyRangoliStyle(style) {
   var wrap = document.getElementById('countdownWrap');
   if (!wrap) return;
-  // Remove existing style classes
-  wrap.classList.remove('rangoli-diya','rangoli-floral','rangoli-lotus','rangoli-mandala');
-  wrap.classList.add('rangoli-' + style);
-  // Update background colors per style
-  var colors = {
-    diya: {bg1:'#1a0a00', bg2:'#3d1f00', accent:'#FF8C00'},
-    floral: {bg1:'#1a0020', bg2:'#3d0050', accent:'#E91E63'},
-    lotus: {bg1:'#001a10', bg2:'#003320', accent:'#4CAF50'},
-    mandala: {bg1:'#0a0020', bg2:'#1a0a2e', accent:'#D4A24C'}
-  };
-  var c = colors[style] || colors.mandala;
-  var inner = wrap.querySelector('.inner');
-  if (inner) inner.style.background = 'linear-gradient(135deg,' + c.bg1 + ',' + c.bg2 + ')';
+  // Swap SVG background for non-mandala styles
+  var svgStr = getRangoliSVG(style);
+  if (svgStr) {
+    var card = wrap.querySelector('.card');
+    if (card) {
+      // Remove existing bg-svg
+      var existing = card.querySelector('.bg-svg');
+      if (existing) existing.remove();
+      // Insert new style SVG
+      var tmp = document.createElement('div');
+      tmp.innerHTML = svgStr;
+      var newSvg = tmp.firstChild;
+      newSvg.className = 'bg-svg';
+      card.insertBefore(newSvg, card.firstChild);
+      // Update card background to match style
+      var cardBg = {diya:'#1a0800', floral:'#1a0028', geometric:'#001525', mandala:'#fce4ec'};
+      card.style.background = cardBg[style] || '#fce4ec';
+      card.style.borderColor = {diya:'#FF8C00', floral:'#E91E63', geometric:'#00BCD4', mandala:'#e8aac0'}[style] || '#e8aac0';
+    }
+  }
+  // Update falling petals to match style
+  initRangoliPetals(style);
+}
+
+// Rangoli picker selection handler
+function selectRangoli(el) {
+  document.querySelectorAll('.rangoli-opt').forEach(function(opt) {
+    opt.style.border = '2px solid rgba(255,255,255,0.15)';
+    opt.style.background = 'transparent';
+  });
+  el.style.border = '2px solid #D4A24C';
+  el.style.background = 'rgba(212,164,76,0.1)';
+  document.getElementById('setupRangoli').value = el.dataset.val;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -3381,10 +3501,20 @@ document.addEventListener('click', function _firstClick() {
   document.removeEventListener('click', _firstClick);
 });
 
-function initRangoliPetals() {
+function initRangoliPetals(style) {
   var wrap = document.getElementById('rangoliPetals');
-  if (!wrap || wrap.children.length > 0) return;
-  var emojis = ['🌸','🌺','🌹','🌼','🪷'];
+  if (!wrap) return;
+  // Clear existing petals when style changes
+  if (style) wrap.innerHTML = '';
+  if (wrap.children.length > 0) return;
+  // Per-style petal emojis
+  var petalSets = {
+    mandala:  ['🌸','🌺','🌹','🌼','🪷'],
+    diya:     ['🪔','✨','🌟','💫','🕯️'],
+    floral:   ['🌸','🌺','🌷','🌻','🌼'],
+    geometric:['✨','💫','⭐','🌟','💎']
+  };
+  var emojis = petalSets[style] || petalSets.mandala;
   for (var i = 0; i < 24; i++) {
     var p = document.createElement('div');
     p.className = 'petal';
@@ -4107,8 +4237,26 @@ async function egRequestAccess(){
   btn.textContent = 'Sending…';
   statusEl.textContent = '';
 
+  // Retry up to 3 times with 1.5s delay between attempts
+  async function fetchWithRetry(url, options, retries=3){
+    for(let i=0; i<retries; i++){
+      try{
+        const r = await fetch(url, options);
+        return r;
+      } catch(e){
+        if(i < retries-1){
+          statusEl.textContent = 'Retrying… (' + (i+2) + '/' + retries + ')';
+          statusEl.className = 'eg-status-msg';
+          await new Promise(res=>setTimeout(res, 1500));
+        } else {
+          throw e;
+        }
+      }
+    }
+  }
+
   try{
-    const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/request-access', {
+    const resp = await fetchWithRetry('https://vivaah-auth.rms-d21.workers.dev/request-access', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({email})
@@ -4146,7 +4294,7 @@ async function egRequestAccess(){
     }
   } catch(e){
     console.error('Request access error:', e);
-    statusEl.textContent = 'Network error: ' + (e.message || 'Could not reach server. Try refreshing the page.');
+    statusEl.innerHTML = '⚠ Could not connect. Check your internet and <a href="" style="color:var(--maroon);font-weight:600;" onclick="egRequestAccess();return false;">try again</a>.';
     statusEl.className = 'eg-status-msg error';
   } finally {
     btn.disabled = false;
@@ -7511,26 +7659,75 @@ function runGlobalSearch(q, gsInput, gsResults){
         <div class="setup-f" style="margin-bottom:16px;">
           <label>🎨 CHOOSE YOUR RANGOLI STYLE</label>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;" id="rangoli-picker">
-            <div class="rangoli-opt selected" data-val="mandala" onclick="selectRangoli(this)" style="border:2px solid #D4A24C;border-radius:10px;padding:10px;text-align:center;cursor:pointer;background:rgba(212,164,76,0.1);">
-              <div style="font-size:28px;">🌸</div>
-              <div style="font-size:11px;color:#D4A24C;font-weight:600;margin-top:4px;">Mandala</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Classic</div>
+
+            <!-- Mandala -->
+            <div class="rangoli-opt selected" data-val="mandala" onclick="selectRangoli(this)" style="border:2px solid #D4A24C;border-radius:10px;padding:8px;text-align:center;cursor:pointer;background:rgba(212,164,76,0.1);">
+              <svg viewBox="0 0 80 80" width="60" height="60" style="margin:0 auto;display:block;">
+                <circle cx="40" cy="40" r="38" fill="#fce4ec"/>
+                <g transform="translate(40,40)" fill="#f48fb1" opacity="0.8">
+                  <ellipse rx="5" ry="14" transform="rotate(0) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(45) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(90) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(135) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(180) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(225) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(270) translate(0,-18)"/><ellipse rx="5" ry="14" transform="rotate(315) translate(0,-18)"/>
+                </g>
+                <g transform="translate(40,40)" fill="#e8892a" opacity="0.65">
+                  <ellipse rx="4" ry="10" transform="rotate(22.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(67.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(112.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(157.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(202.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(247.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(292.5) translate(0,-10)"/><ellipse rx="4" ry="10" transform="rotate(337.5) translate(0,-10)"/>
+                </g>
+                <circle cx="40" cy="40" r="4" fill="#c06a1a" opacity="0.8"/>
+              </svg>
+              <div style="font-size:11px;color:#D4A24C;font-weight:600;margin-top:4px;">🌸 Mandala</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);">Classic · Default</div>
             </div>
-            <div class="rangoli-opt" data-val="diya" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
-              <div style="font-size:28px;">🪔</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Diya</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Traditional</div>
+
+            <!-- Diya -->
+            <div class="rangoli-opt" data-val="diya" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;">
+              <svg viewBox="0 0 80 80" width="60" height="60" style="margin:0 auto;display:block;">
+                <circle cx="40" cy="40" r="38" fill="#1a0800"/>
+                <g transform="translate(40,44)">
+                  <ellipse rx="16" ry="7" cy="2" fill="#CD853F"/>
+                  <ellipse rx="12" ry="5" cy="-1" fill="#DAA520"/>
+                  <path d="M0,-4 C-4,-10 -2,-20 0,-24 C2,-20 4,-10 0,-4Z" fill="#FF8C00"/>
+                  <path d="M0,-5 C-2,-10 0,-17 0,-20 C2,-15 2,-10 0,-5Z" fill="#FFD700"/>
+                  <circle cy="-22" r="2" fill="#fff" opacity="0.8"/>
+                </g>
+                <g transform="translate(40,40)" fill="#FF8C00" opacity="0.7">
+                  <circle cx="32" cy="0" r="2"/><circle cx="23" cy="23" r="2"/><circle cx="0" cy="32" r="2"/><circle cx="-23" cy="23" r="2"/><circle cx="-32" cy="0" r="2"/><circle cx="-23" cy="-23" r="2"/><circle cx="0" cy="-32" r="2"/><circle cx="23" cy="-23" r="2"/>
+                </g>
+              </svg>
+              <div style="font-size:11px;color:#FF8C00;font-weight:600;margin-top:4px;">🪔 Diya</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);">Traditional lamps</div>
             </div>
-            <div class="rangoli-opt" data-val="floral" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
-              <div style="font-size:28px;">🌺</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Floral</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Elegant</div>
+
+            <!-- Floral -->
+            <div class="rangoli-opt" data-val="floral" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;">
+              <svg viewBox="0 0 80 80" width="60" height="60" style="margin:0 auto;display:block;">
+                <circle cx="40" cy="40" r="38" fill="#1a0028"/>
+                <g transform="translate(40,40)">
+                  <g fill="#E91E63" opacity="0.85"><ellipse rx="7" ry="17" transform="rotate(0) translate(0,-14)"/><ellipse rx="7" ry="17" transform="rotate(72) translate(0,-14)"/><ellipse rx="7" ry="17" transform="rotate(144) translate(0,-14)"/><ellipse rx="7" ry="17" transform="rotate(216) translate(0,-14)"/><ellipse rx="7" ry="17" transform="rotate(288) translate(0,-14)"/></g>
+                  <g fill="#FF69B4" opacity="0.6"><ellipse rx="5" ry="12" transform="rotate(36) translate(0,-25)"/><ellipse rx="5" ry="12" transform="rotate(108) translate(0,-25)"/><ellipse rx="5" ry="12" transform="rotate(180) translate(0,-25)"/><ellipse rx="5" ry="12" transform="rotate(252) translate(0,-25)"/><ellipse rx="5" ry="12" transform="rotate(324) translate(0,-25)"/></g>
+                  <g fill="#4CAF50" opacity="0.5"><ellipse rx="3" ry="8" transform="rotate(18) translate(0,-32)"/><ellipse rx="3" ry="8" transform="rotate(90) translate(0,-32)"/><ellipse rx="3" ry="8" transform="rotate(162) translate(0,-32)"/><ellipse rx="3" ry="8" transform="rotate(234) translate(0,-32)"/><ellipse rx="3" ry="8" transform="rotate(306) translate(0,-32)"/></g>
+                  <circle r="4" fill="#FFD700" opacity="0.9"/>
+                </g>
+              </svg>
+              <div style="font-size:11px;color:#E91E63;font-weight:600;margin-top:4px;">🌺 Floral</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);">Rose &amp; lotus</div>
             </div>
-            <div class="rangoli-opt" data-val="lotus" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px;text-align:center;cursor:pointer;">
-              <div style="font-size:28px;">🪷</div>
-              <div style="font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-top:4px;">Lotus</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.4);">Sacred</div>
+
+            <!-- Geometric -->
+            <div class="rangoli-opt" data-val="geometric" onclick="selectRangoli(this)" style="border:2px solid rgba(255,255,255,0.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;">
+              <svg viewBox="0 0 80 80" width="60" height="60" style="margin:0 auto;display:block;">
+                <circle cx="40" cy="40" r="38" fill="#001525"/>
+                <g transform="translate(40,40)">
+                  <polygon points="0,-32 28,16 -28,16" fill="none" stroke="#00BCD4" stroke-width="1" opacity="0.6"/>
+                  <polygon points="0,32 -28,-16 28,-16" fill="none" stroke="#00BCD4" stroke-width="1" opacity="0.6"/>
+                  <rect x="-22" y="-22" width="44" height="44" fill="none" stroke="#7C4DFF" stroke-width="1" opacity="0.5" transform="rotate(15)"/>
+                  <rect x="-14" y="-14" width="28" height="28" fill="none" stroke="#00BCD4" stroke-width="0.8" opacity="0.4" transform="rotate(30)"/>
+                  <rect x="-8" y="-8" width="16" height="16" fill="#00BCD4" opacity="0.3" transform="rotate(45)"/>
+                  <circle r="3" fill="#00BCD4" opacity="0.9"/>
+                  <g fill="#00BCD4" opacity="0.6"><circle cx="33" cy="0" r="2"/><circle cx="0" cy="33" r="2"/><circle cx="-33" cy="0" r="2"/><circle cx="0" cy="-33" r="2"/></g>
+                </g>
+              </svg>
+              <div style="font-size:11px;color:#00BCD4;font-weight:600;margin-top:4px;">💫 Geometric</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.4);">Star &amp; crystal</div>
             </div>
+
           </div>
           <input type="hidden" id="setupRangoli" value="mandala">
         </div>
