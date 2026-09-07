@@ -486,14 +486,15 @@
   table.guest-table{width:100%; border-collapse:collapse; font-size:12.5px;}
   table.guest-table th{
     text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);
-    font-weight:700; padding:9px 10px; border-bottom:2px solid var(--line); white-space:nowrap;
+    font-weight:700; padding:9px 8px; border-bottom:2px solid var(--line); white-space:normal;
+    line-height:1.3; vertical-align:bottom;
   }
-  table.guest-table th.num, table.guest-table td.num{text-align:right;}
-  table.guest-table td{padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  table.guest-table th.num, table.guest-table td.num{text-align:right; padding:8px 6px;}
+  table.guest-table td{padding:8px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
   table.guest-table tr.guest-row{cursor:pointer; transition:background .12s;}
   table.guest-table tr.guest-row:hover{background:#FCF8EF;}
-  table.guest-table td.gname{font-weight:600; white-space:normal; min-width:140px;}
-  table.guest-table td.invited-to{white-space:normal; font-size:11.5px; color:var(--ink-soft); max-width:220px;}
+  table.guest-table td.gname{font-weight:600; white-space:normal; min-width:120px; max-width:160px;}
+  table.guest-table td.invited-to{white-space:normal; font-size:11px; color:var(--ink-soft); max-width:160px; line-height:1.4;}
   .guest-chev{display:inline-block; transition:transform .2s ease; color:var(--ink-soft);}
   .guest-chev.open{transform:rotate(90deg);}
   tr.guest-detail-row{display:none;}
@@ -1799,17 +1800,17 @@
       <table class="guest-table" id="guestTable">
         <thead>
           <tr>
-            <th style="width:24px;"></th>
+            <th style="width:18px;padding:9px 4px;"></th>
             <th>Family / Guest name</th>
             <th>Phone</th>
             <th>Side</th>
-            <th>Invited to</th>
-            <th class="num" id="thAdults">Adults</th>
-            <th class="num" id="thLadies">Ladies</th>
-            <th class="num" id="thKids">Kids</th>
+            <th style="min-width:120px;">Invited to</th>
+            <th class="num" id="thAdults" style="min-width:48px;">Adults</th>
+            <th class="num" id="thLadies" style="min-width:48px;">Ladies</th>
+            <th class="num" id="thKids" style="min-width:48px;">Kids</th>
             <th id="thTier" style="display:none;">Kankotri Tier</th>
             <th id="thDispatch" style="display:none;">Dispatch</th>
-            <th style="width:36px;"></th>
+            <th style="width:90px;"></th>
           </tr>
         </thead>
         <tbody id="guestTableBody"></tbody>
@@ -5586,9 +5587,15 @@ function renderGuests(){
     ` : '';
   } else if(accomEl){ accomEl.innerHTML=''; }
 
-  document.getElementById('thAdults').textContent = activeEventFilter ? `Adults (${activeEventFilter})` : 'Adults (max)';
-  document.getElementById('thKids').textContent = isWriterFilterActive ? `Writer (${activeEventFilter})` : (activeEventFilter ? `Kids (${activeEventFilter})` : 'Kids (max)');
-  document.getElementById('thLadies').textContent = activeEventFilter ? `Ladies (${activeEventFilter})` : 'Ladies (max)';
+  // Short event name for column headers - keeps header compact
+  const EVENT_SHORT = {
+    'Kankotri':'Kankotri','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehendi',
+    'Sangeet':'Sangeet','Haldi':'Haldi','Marriage':'Marriage','Reception':'Reception'
+  };
+  const shortFilter = EVENT_SHORT[activeEventFilter] || activeEventFilter;
+  document.getElementById('thAdults').innerHTML = activeEventFilter ? `Adults<br><span style="font-size:9px;opacity:0.7;text-transform:none;letter-spacing:0;">${shortFilter}</span>` : 'Adults<br><span style="font-size:9px;opacity:0.6;font-weight:400;">(max)</span>';
+  document.getElementById('thKids').innerHTML = isWriterFilterActive ? `Writer<br><span style="font-size:9px;opacity:0.7;text-transform:none;letter-spacing:0;">${shortFilter}</span>` : (activeEventFilter ? `Kids<br><span style="font-size:9px;opacity:0.7;text-transform:none;letter-spacing:0;">${shortFilter}</span>` : 'Kids<br><span style="font-size:9px;opacity:0.6;font-weight:400;">(max)</span>');
+  document.getElementById('thLadies').innerHTML = activeEventFilter ? `Ladies<br><span style="font-size:9px;opacity:0.7;text-transform:none;letter-spacing:0;">${shortFilter}</span>` : 'Ladies<br><span style="font-size:9px;opacity:0.6;font-weight:400;">(max)</span>';
   // Tier and Dispatch columns permanently hidden in guest list (managed via Kankotri section instead)
   const isKankotri = activeEventFilter === 'Kankotri';
   document.getElementById('thTier').style.display = 'none';
@@ -5713,7 +5720,12 @@ function renderGuests(){
             <option value="Both" ${g.side==='Both'?'selected':''}>Both</option>
           </select>
         </td>
-        <td class="invited-to">${invited.length ? escapeHtml(invited.join(', ')) : '<span style="color:var(--ink-soft);">Not yet set</span>'}</td>
+        <td class="invited-to">${(function(){
+          if(!invited.length) return '<span style="color:var(--ink-soft);font-size:11px;">Not set</span>';
+          const EV_SHORT2 = {'Kankotri':'Kank','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'};
+          const EV_COLOR = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti-Mosalu':'#856404','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#E65100','Marriage':'#880E4F','Reception':'#4A148C'};
+          return invited.map(ev=>`<span style="display:inline-block;margin:1px 2px 1px 0;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:600;background:${EV_COLOR[ev]||'#555'}18;color:${EV_COLOR[ev]||'#555'};border:1px solid ${EV_COLOR[ev]||'#555'}40;">${EV_SHORT2[ev]||ev}</span>`).join('');
+        })()}</td>
         <td class="num">${rawCounts.adults}</td>
         <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
         <td class="num">${secondColValue}</td>
