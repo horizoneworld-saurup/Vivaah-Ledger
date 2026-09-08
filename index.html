@@ -7461,11 +7461,31 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
     sections +
     '</div>';
 
-  document.body.appendChild(printArea);
-  document.body.classList.add('kankotri-printing');
-  window.print();
-  document.body.classList.remove('kankotri-printing');
-  printArea.remove();
+  // Open a clean new window with ONLY the print content - no blank page possible
+  var printWin = window.open('', '_blank', 'width=900,height=700');
+  printWin.document.write(
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>Kankotri — Vivaah Ledger</title>' +
+    '<style>' +
+      'body{margin:10px;padding:0;font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;}' +
+      'table{width:100%;border-collapse:collapse;margin-bottom:4px;}' +
+      'th{background:#3E0F1C;color:#FBF6EE;padding:6px 8px;font-size:11px;text-align:left;}' +
+      'th.c{text-align:center;}' +
+      'td{padding:5px 8px;font-size:11px;border-bottom:1px solid #E3D7C2;}' +
+      'td.c{text-align:center;}' +
+      'tr:nth-child(even){background:#F3EBDB;}' +
+      'tr.total-row{background:#e8d5b0;font-weight:700;}' +
+      'h2{color:#3E0F1C;font-family:serif;margin:0 0 4px;font-size:18px;}' +
+      'h3{margin:16px 0 6px;font-size:14px;padding-bottom:4px;}' +
+      'p.meta{font-size:11px;color:#6b5d52;margin:0 0 14px;}' +
+      'hr{border:none;border-top:1px dashed #D4A24C;margin:14px 0;}' +
+      '@media print{@page{margin:12mm;} body{margin:0;}}' +
+    '</style></head><body>' +
+    printArea.innerHTML +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+    '</body></html>'
+  );
+  printWin.document.close();
 };
 
 /* ---------------- Init ---------------- */
