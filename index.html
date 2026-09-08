@@ -555,6 +555,13 @@
     .print-header{display:block !important; margin-bottom:18px;}
     .print-header h1{font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--maroon-dark); margin:0;}
     .print-header .meta{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+    /* When kankotri print area is present — hide everything else, show only the print area */
+    body.kankotri-printing > *:not(#kankotriPrintArea) { display:none !important; }
+    body.kankotri-printing #kankotriPrintArea { display:block !important; }
+    #kankotriPrintArea { font-family: Arial, sans-serif; }
+    #kankotriPrintArea table { width:100%; border-collapse:collapse; page-break-inside:auto; }
+    #kankotriPrintArea tr { page-break-inside:avoid; }
+    #kankotriPrintArea h3 { page-break-after:avoid; }
   }
   .print-header{display:none;}  /* ---------- Role badge ---------- */
   .role-badge{
@@ -5895,7 +5902,7 @@ function renderGuests(){
           return invited.map(ev=>`<span style="display:inline-block;margin:1px 2px 1px 0;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:600;background:${EV_COLOR[ev]||'#555'}18;color:${EV_COLOR[ev]||'#555'};border:1px solid ${EV_COLOR[ev]||'#555'}40;">${EV_SHORT2[ev]||ev}</span>`).join('');
         })()}</td>
         <td class="num">${rawCounts.adults}</td>
-        <td class="num">${showLadiesCol ? rawCounts.ladies : '—'}</td>
+        <td class="num" ${!showLadiesCol ? 'style="display:none;"' : ''}>${showLadiesCol ? rawCounts.ladies : ''}</td>
         <td class="num">${secondColValue}</td>
         
         <td>
@@ -7451,7 +7458,9 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
     '</div>';
 
   document.body.appendChild(printArea);
+  document.body.classList.add('kankotri-printing');
   window.print();
+  document.body.classList.remove('kankotri-printing');
   printArea.remove();
 };
 
