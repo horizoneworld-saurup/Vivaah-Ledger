@@ -1873,6 +1873,7 @@
         <button class="btn-ivory" id="btnKankotriTemplate">⬇ Template</button>
         <button class="btn-ivory" id="btnKankotriExport">⬇ Export</button>
         <button class="btn-ivory" id="btnPrintKankotri">🖺 Print</button>
+        <button class="btn-ivory" id="btnEnvelopeStuffing" style="background:#5C1A2B;color:#FBF6EE;border-color:#5C1A2B;">📋 Envelope Stuffing</button>
       </div>
     </div>
 
@@ -7482,6 +7483,153 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       '@media print{@page{margin:12mm;} body{margin:0;}}' +
     '</style></head><body>' +
     printArea.innerHTML +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+    '</body></html>'
+  );
+  printWin.document.close();
+};
+
+/* ---------------- Envelope Stuffing Print ---------------- */
+document.getElementById('btnEnvelopeStuffing').onclick = function() {
+  var FUNS = ['Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+  var FUN_SHORT = {
+    'Ganesh-Grahshanti-Mosalu':'Ganesh',
+    'Mehendi':'Mehendi',
+    'Sangeet':'Sangeet',
+    'Marriage':'Marriage',
+    'Reception':'Reception'
+  };
+  var FUN_COLOR = {
+    'Ganesh-Grahshanti-Mosalu': {bg:'#85640418', color:'#856404', border:'#85640440'},
+    'Mehendi':                   {bg:'#2E7D3218', color:'#2E7D32', border:'#2E7D3240'},
+    'Sangeet':                   {bg:'#1A3A8A18', color:'#1A3A8A', border:'#1A3A8A40'},
+    'Marriage':                  {bg:'#880E4F18', color:'#880E4F', border:'#880E4F40'},
+    'Reception':                 {bg:'#4A148C18', color:'#4A148C', border:'#4A148C40'}
+  };
+
+  function guestHasFunction(g, fn) {
+    var e = g.events && g.events[fn];
+    if (!e) return false;
+    return (Number(e.adults||0) + Number(e.kids||0) + Number(e.ladies||0)) > 0;
+  }
+
+  function chip(fn) {
+    var c = FUN_COLOR[fn];
+    return '<span style="display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin:1px;background:'+c.bg+';color:'+c.color+';border:0.5px solid '+c.border+';">'+FUN_SHORT[fn]+'</span>';
+  }
+
+  function tickCell(has, fn) {
+    if (has) return '<td style="text-align:center;padding:5px 4px;">'+chip(fn)+'</td>';
+    return '<td style="text-align:center;padding:5px 4px;color:#ccc;font-size:12px;">—</td>';
+  }
+
+  // Totals per function
+  function fnTotals(list) {
+    return FUNS.map(function(fn) {
+      return list.filter(function(g){ return guestHasFunction(g, fn); }).length;
+    });
+  }
+
+  var thStyle = 'padding:6px 8px;font-size:11px;font-weight:700;text-align:center;background:#F3EBDB;color:#5C1A2B;border-bottom:2px solid #D4A24C;white-space:nowrap;';
+  var thNameStyle = 'padding:6px 8px;font-size:11px;font-weight:700;text-align:left;background:#F3EBDB;color:#5C1A2B;border-bottom:2px solid #D4A24C;';
+
+  function buildGridTable(list, tierColor) {
+    if (!list.length) return '<p style="color:#888;font-size:12px;padding:8px;">No families in this tier.</p>';
+    var totals = fnTotals(list);
+    var rows = list.map(function(g, i) {
+      var cells = FUNS.map(function(fn){ return tickCell(guestHasFunction(g, fn), fn); }).join('');
+      return '<tr style="background:'+(i%2?'#F3EBDB':'#fff')+';">' +
+        '<td style="padding:5px 8px;font-size:11px;color:#aaa;">'+(i+1)+'</td>' +
+        '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:#2A1F1A;">' + escapeHtml(g.name) + '</td>' +
+        cells +
+        '</tr>';
+    }).join('');
+    var totalCells = totals.map(function(t, i) {
+      var c = FUN_COLOR[FUNS[i]];
+      return '<td style="text-align:center;padding:6px 4px;font-size:12px;font-weight:700;color:'+c.color+';">'+t+'</td>';
+    }).join('');
+    var totalRow = '<tr style="background:#e8d5b0;">' +
+      '<td style="padding:6px 8px;font-size:11px;color:#6b5d52;" colspan="2">Total inserts needed</td>' +
+      totalCells + '</tr>';
+    var funHeaders = FUNS.map(function(fn){ return '<th style="'+thStyle+'">'+FUN_SHORT[fn]+'</th>'; }).join('');
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;">' +
+      '<thead><tr>' +
+        '<th style="'+thNameStyle+';width:24px;">#</th>' +
+        '<th style="'+thNameStyle+'">Family / Guest Name</th>' +
+        funHeaders +
+      '</tr></thead>' +
+      '<tbody>' + rows + totalRow + '</tbody>' +
+    '</table>';
+  }
+
+  function buildNormalTable(list) {
+    if (!list.length) return '<p style="color:#888;font-size:12px;padding:8px;">No Normal families.</p>';
+    var rows = list.map(function(g, i) {
+      var fns = FUNS.filter(function(fn){ return guestHasFunction(g, fn); });
+      var chips = fns.length ? fns.map(chip).join(' ') : '<span style="color:#aaa;font-size:11px;font-style:italic;">Not confirmed</span>';
+      return '<tr style="background:'+(i%2?'#F3EBDB':'#fff')+';">' +
+        '<td style="padding:5px 8px;font-size:11px;color:#aaa;">'+(i+1)+'</td>' +
+        '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:#2A1F1A;">' + escapeHtml(g.name) + '</td>' +
+        '<td style="padding:5px 8px;font-size:11px;color:#6b5d52;">' + escapeHtml(g.phone||'—') + '</td>' +
+        '<td style="padding:5px 8px;">' + chips + '</td>' +
+        '</tr>';
+    }).join('');
+    return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;">' +
+      '<thead><tr>' +
+        '<th style="'+thNameStyle+';width:24px;">#</th>' +
+        '<th style="'+thNameStyle+'">Family / Guest Name</th>' +
+        '<th style="'+thNameStyle+'">Phone</th>' +
+        '<th style="'+thNameStyle+'">Functions Invited To</th>' +
+      '</tr></thead>' +
+      '<tbody>' + rows + '</tbody>' +
+    '</table>';
+  }
+
+  var vipList     = guests.filter(function(g){ return g.invTier === 'vip'; });
+  var premiumList = guests.filter(function(g){ return g.invTier === 'premium'; });
+  var normalList  = guests.filter(function(g){ return g.invTier === 'normal' || (!g.invTier && g.name); });
+
+  var sectionStyle = 'margin-bottom:24px;';
+  var secHdrStyle  = 'font-family:serif;font-size:16px;font-weight:700;color:#3E0F1C;margin:0 0 8px;padding-bottom:6px;border-bottom:2px solid #D4A24C;';
+
+  var html =
+    '<div style="font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;padding:0;">' +
+      '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 3px;font-size:20px;">Kankotri — Envelope Stuffing Guide</h2>' +
+      '<p style="font-size:11px;color:#6b5d52;margin:0 0 18px;">' +
+        'Generated ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) +
+        ' &nbsp;·&nbsp; VIP: ' + vipList.length +
+        ' &nbsp;·&nbsp; Premium: ' + premiumList.length +
+        ' &nbsp;·&nbsp; Normal (WhatsApp): ' + normalList.length +
+      '</p>' +
+
+      '<div style="'+sectionStyle+'">' +
+        '<h3 style="'+secHdrStyle+'">👑 VIP Premium — ' + vipList.length + ' families</h3>' +
+        buildGridTable(vipList) +
+      '</div>' +
+
+      '<div style="'+sectionStyle+'">' +
+        '<h3 style="'+secHdrStyle+'">⭐ Premium — ' + premiumList.length + ' families</h3>' +
+        buildGridTable(premiumList) +
+      '</div>' +
+
+      '<div style="'+sectionStyle+'">' +
+        '<h3 style="'+secHdrStyle+'">✏️ Normal — WhatsApp reference · ' + normalList.length + ' families</h3>' +
+        buildNormalTable(normalList) +
+      '</div>' +
+    '</div>';
+
+  var printWin = window.open('', '_blank', 'width=960,height=800');
+  printWin.document.write(
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>Envelope Stuffing — Vivaah Ledger</title>' +
+    '<style>' +
+      'body{margin:12px;padding:0;font-family:Arial,sans-serif;background:#fff;}' +
+      '@media print{@page{margin:10mm;size:A4 landscape;} body{margin:0;}}' +
+      'table{page-break-inside:auto;}' +
+      'tr{page-break-inside:avoid;}' +
+      'h3{page-break-after:avoid;}' +
+    '</style></head><body>' +
+    html +
     '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
     '</body></html>'
   );
