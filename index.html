@@ -7342,46 +7342,103 @@ document.getElementById('printOptGuests').onclick=()=>printSection('guests');
 document.getElementById('printOptTimeline').onclick=()=>printSection('timeline');
 document.getElementById('printOptFunctionWise').onclick=()=>{
   document.getElementById('printPanelOverlay').classList.remove('show');
-  document.getElementById('printDate').textContent='Generated '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  document.body.dataset.printMode='functionwise';
-  // Build a printable section for each event
-  const printArea=document.createElement('div');
-  printArea.id='functionWisePrintArea';
-  printArea.style.cssText='display:none;';
-  printArea.innerHTML=WEDDING_EVENTS.map(ev=>{
-    const evGuests=guests.filter(g=>{const c=guestEventCounts(g,ev);return WRITER_TRACKED_EVENTS.includes(ev)?(c.adults>0||c.writer>0):(c.adults>0||c.kids>0);});
+  var dateStr = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  var sectionsHTML = WEDDING_EVENTS.map(function(ev){
+    var evGuests = guests.filter(function(g){
+      var c = guestEventCounts(g,ev);
+      return WRITER_TRACKED_EVENTS.includes(ev) ? (c.adults>0||c.writer>0) : (c.adults>0||c.kids>0);
+    });
     if(evGuests.length===0) return '';
-    const t=eventTimeline[ev]||{};
-    const isWriter=WRITER_TRACKED_EVENTS.includes(ev);
-    const isLadies=LADIES_TRACKED_EVENTS.includes(ev);
-    return `<div style="page-break-before:auto;margin-bottom:30px;">
-      <h2 style="color:#3E0F1C;font-family:'Cormorant Garamond',serif;margin:0 0 4px;">${escapeHtml(ev)}</h2>
-      ${t.date?`<div style="font-size:12px;color:#6b5d52;">${new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}${t.startTime?' · '+t.startTime:''}${t.venue?' · '+t.venue:''}</div>`:''}
-      <table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px;">
-        <thead><tr style="background:#3E0F1C;color:#FBF6EE;">
-          <th style="padding:6px 8px;text-align:left;">Family</th><th style="padding:6px 8px;text-align:left;">Phone</th><th style="padding:6px 8px;text-align:left;">Side</th>
-          <th style="padding:6px 8px;text-align:right;">Adults</th>${isLadies?'<th style="padding:6px 8px;text-align:right;">Ladies</th>':''}
-          <th style="padding:6px 8px;text-align:right;">${isWriter?'Writer':'Kids'}</th>
-        </tr></thead>
-        <tbody>${evGuests.map((g,i)=>{const c=guestEventCounts(g,ev);return `<tr style="background:${i%2?'#F3EBDB':'#fff'};">
-          <td style="padding:5px 8px;">${escapeHtml(g.name)}</td><td style="padding:5px 8px;">${escapeHtml(g.phone||'—')}</td><td style="padding:5px 8px;">${escapeHtml(g.side||'—')}</td>
-          <td style="padding:5px 8px;text-align:right;">${c.adults}</td>${isLadies?`<td style="padding:5px 8px;text-align:right;">${c.ladies}</td>`:''}
-          <td style="padding:5px 8px;text-align:right;">${isWriter?c.writer:c.kids}</td>
-        </tr>`;}).join('')}</tbody>
-        <tfoot><tr style="background:#F3EBDB;font-weight:700;">
-          <td colspan="3" style="padding:6px 8px;">Total</td>
-          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).adults,0)}</td>
-          ${isLadies?`<td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+guestEventCounts(g,ev).ladies,0)}</td>`:''}
-          <td style="padding:6px 8px;text-align:right;">${evGuests.reduce((s,g)=>s+(isWriter?guestEventCounts(g,ev).writer:guestEventCounts(g,ev).kids),0)}</td>
-        </tfoot>
-      </table>
-    </div>`;
-  }).filter(Boolean).join('<hr style="border:none;border-top:2px solid #D4A24C;margin:20px 0;">');
-  document.body.appendChild(printArea);
-  printArea.style.display='block';
-  window.print();
-  printArea.remove();
-  delete document.body.dataset.printMode;
+    var t = eventTimeline[ev]||{};
+    var isWriter = WRITER_TRACKED_EVENTS.includes(ev);
+    var isLadies = LADIES_TRACKED_EVENTS.includes(ev);
+    var EV_COLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti-Mosalu':'#856404','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
+    var EV_LIGHT  = {'Kankotri':'#FBF6EE','Ganesh-Grahshanti-Mosalu':'#FFF8E1','Mehendi':'#F0F8EB','Sangeet':'#EEF2FF','Haldi':'#FFF3E0','Marriage':'#FCE4EC','Reception':'#F3E5F5'};
+    var col = EV_COLORS[ev]||'#3E0F1C';
+    var light = EV_LIGHT[ev]||'#FBF6EE';
+    var dateInfo = t.date ? new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(t.startTime?' · '+t.startTime:'')+(t.venue?' · '+t.venue:'') : '';
+    var rows = evGuests.map(function(g,i){
+      var c = guestEventCounts(g,ev);
+      return '<tr style="background:'+(i%2?light:'#fff')+';">' +
+        '<td style="padding:5px 8px;font-size:12px;">'+escapeHtml(g.name)+'</td>' +
+        '<td style="padding:5px 8px;font-size:12px;">'+escapeHtml(g.phone||'—')+'</td>' +
+        '<td style="padding:5px 8px;font-size:12px;">'+escapeHtml(g.side||'—')+'</td>' +
+        '<td style="padding:5px 8px;text-align:right;font-size:12px;">'+c.adults+'</td>' +
+        (isLadies?'<td style="padding:5px 8px;text-align:right;font-size:12px;">'+c.ladies+'</td>':'') +
+        '<td style="padding:5px 8px;text-align:right;font-size:12px;">'+(isWriter?c.writer:c.kids)+'</td>' +
+        '</tr>';
+    }).join('');
+    var totAdults = evGuests.reduce(function(s,g){return s+guestEventCounts(g,ev).adults;},0);
+    var totLadies = evGuests.reduce(function(s,g){return s+guestEventCounts(g,ev).ladies;},0);
+    var totKW = evGuests.reduce(function(s,g){var c=guestEventCounts(g,ev);return s+(isWriter?c.writer:c.kids);},0);
+    return '<div style="margin-bottom:28px;">' +
+      '<div style="background:'+col+';color:#fff;padding:14px 18px;border-radius:8px 8px 0 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
+        '<div style="font-size:18px;font-family:Georgia,serif;font-weight:700;">'+escapeHtml(ev)+'</div>' +
+        (dateInfo?'<div style="font-size:11px;opacity:0.8;margin-top:3px;">'+dateInfo+'</div>':'') +
+        '<div style="font-size:11px;opacity:0.7;margin-top:2px;">'+evGuests.length+' families attending</div>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+        '<thead><tr style="background:'+col+'22;">' +
+          '<th style="padding:7px 8px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">Family</th>' +
+          '<th style="padding:7px 8px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">Phone</th>' +
+          '<th style="padding:7px 8px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">Side</th>' +
+          '<th style="padding:7px 8px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">Adults</th>' +
+          (isLadies?'<th style="padding:7px 8px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">Ladies</th>':'') +
+          '<th style="padding:7px 8px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;color:'+col+';">'+(isWriter?'Writer':'Kids')+'</th>' +
+        '</tr></thead>' +
+        '<tbody>'+rows+'</tbody>' +
+        '<tfoot><tr style="background:'+col+'22;font-weight:700;">' +
+          '<td colspan="3" style="padding:7px 8px;font-size:12px;color:'+col+';">Total ('+evGuests.length+' families)</td>' +
+          '<td style="padding:7px 8px;text-align:right;color:'+col+';">'+totAdults+'</td>' +
+          (isLadies?'<td style="padding:7px 8px;text-align:right;color:'+col+';">'+totLadies+'</td>':'') +
+          '<td style="padding:7px 8px;text-align:right;color:'+col+';">'+totKW+'</td>' +
+        '</tr></tfoot>' +
+      '</table>' +
+    '</div>';
+  }).filter(Boolean).join('<div style="height:1px;background:#D4A24C;margin:16px 0;"></div>');
+
+  var bodyHTML =
+    '<div style="font-family:Arial,sans-serif;color:#2A1F1A;">' +
+    '<div style="background:linear-gradient(135deg,#5C1A2B,#8A2A3F);color:#fff;padding:20px 24px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
+      '<div style="font-size:24px;font-family:Georgia,serif;font-weight:700;">Function-wise Guest Lists</div>' +
+      '<div style="font-size:11px;opacity:0.75;margin-top:4px;">Mrishana &amp; Spandan &nbsp;·&nbsp; Vivaah Ledger &nbsp;·&nbsp; '+dateStr+'</div>' +
+    '</div>' +
+    '<div style="padding:20px 24px;">'+sectionsHTML+'</div>' +
+    '</div>';
+
+  // Overlay print
+  var _fwStyle = document.getElementById('vivaahPrintStyle');
+  if (_fwStyle) _fwStyle.remove();
+  var _st = document.createElement('style');
+  _st.id = 'vivaahPrintStyle';
+  _st.textContent =
+    '#vivaahPrintOverlay{position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;padding:0;}' +
+    '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
+    '@media print{' +
+      '#vivaahPrintClose{display:none!important;}' +
+      'body.vl-printing .topbar,body.vl-printing .sync-banner,body.vl-printing .global-search-wrap,' +
+      'body.vl-printing #countdownWrap,body.vl-printing .ledger,body.vl-printing .footnote,' +
+      'body.vl-printing .ticker-wrap,body.vl-printing .sponsored-wrap,body.vl-printing #printPanelOverlay{display:none!important;}' +
+      'body.vl-printing #vivaahPrintOverlay{display:block!important;position:static!important;overflow:visible!important;}' +
+      '-webkit-print-color-adjust:exact;print-color-adjust:exact;' +
+    '}';
+  document.head.appendChild(_st);
+  var _fwOld = document.getElementById('vivaahPrintOverlay');
+  if (_fwOld) _fwOld.remove();
+  var _fwOv = document.createElement('div');
+  _fwOv.id = 'vivaahPrintOverlay';
+  _fwOv.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();">✕</button>' + bodyHTML;
+  document.body.appendChild(_fwOv);
+  setTimeout(function(){
+    document.body.classList.add('vl-printing');
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var o=document.getElementById('vivaahPrintOverlay');
+      var s=document.getElementById('vivaahPrintStyle');
+      if(o)o.remove(); if(s)s.remove();
+    },1000);
+  },300);
 };
 
 /* ================================================================
