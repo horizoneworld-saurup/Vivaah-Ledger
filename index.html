@@ -4622,13 +4622,21 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
-  // IMPORTANT: session/role restore only valid if the saved email matches
-  // this prevents new customers from inheriting owner's saved login
+  // Owner emails always bypass session check — go straight to PIN
+  const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
   const savedEmail = localStorage.getItem('vivaah-approved-email') || '';
   const sessionRole = sessionStorage.getItem('vivaah-role');
   const sessionEmail = sessionStorage.getItem('vivaah-session-email') || '';
 
-  // Session restore: only if email matches current session email
+  // Owner session restore — no email match needed
+  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && OWNER_EMAILS.includes(sessionEmail)){
+    setRole(sessionRole);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    await loadData();
+    return;
+  }
+
+  // Regular session restore — email must match
   if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && sessionEmail && sessionEmail === savedEmail){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
@@ -4636,9 +4644,19 @@ async function initAuth(){
     return;
   }
 
-  // LocalStorage restore: only valid for remembered logins on this device/email
+  // LocalStorage restore for owners — no email match needed
   const rememberedRole = localStorage.getItem('vivaah-role');
   const rememberedEmail = localStorage.getItem('vivaah-remembered-email') || '';
+  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole) && OWNER_EMAILS.includes(rememberedEmail)){
+    setRole(rememberedRole);
+    sessionStorage.setItem('vivaah-role', rememberedRole);
+    sessionStorage.setItem('vivaah-session-email', rememberedEmail);
+    document.getElementById('lockOverlay').classList.add('hidden');
+    await loadData();
+    return;
+  }
+
+  // LocalStorage restore for regular users — email must match
   if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole) && rememberedEmail && rememberedEmail === savedEmail){
     setRole(rememberedRole);
     sessionStorage.setItem('vivaah-role', rememberedRole);
