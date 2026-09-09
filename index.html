@@ -4001,7 +4001,7 @@ function printSection(section) {
   if (oldOv) oldOv.remove();
   var overlay = document.createElement('div');
   overlay.id = 'vivaahPrintOverlay';
-  overlay.innerHTML = '<button id="vivaahPrintClose" onclick="document.getElementById('vivaahPrintOverlay').remove();document.getElementById('vivaahPrintStyle').remove();" title="Close">✕</button>' + html;
+  overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
   document.body.appendChild(overlay);
 
   // Short delay then print
@@ -4486,6 +4486,18 @@ async function egRequestAccess(){
   btn.textContent = 'Sending…';
   statusEl.textContent = '';
 
+  // Owner emails — skip worker call entirely, go straight to PIN
+  const _OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
+  if (_OWNER_EMAILS.includes(email)) {
+    egCurrentEmail = email;
+    localStorage.setItem('vivaah-approved-email', email);
+    localStorage.setItem('vivaah-remembered-email', email);
+    btn.disabled = false;
+    btn.textContent = 'Request Access →';
+    showLockStep('pin');
+    return;
+  }
+
   // Retry up to 3 times with 1.5s delay between attempts
   async function fetchWithRetry(url, options, retries=3){
     for(let i=0; i<retries; i++){
@@ -4624,9 +4636,24 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 async function initAuth(){
   // Owner emails always bypass session check — go straight to PIN
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
+
+  // If remembered email is an owner email, ensure approved-email matches so session restores
+  const rememberedEmailCheck = localStorage.getItem('vivaah-remembered-email') || '';
+  if (OWNER_EMAILS.includes(rememberedEmailCheck)) {
+    localStorage.setItem('vivaah-approved-email', rememberedEmailCheck);
+  }
+
   const savedEmail = localStorage.getItem('vivaah-approved-email') || '';
   const sessionRole = sessionStorage.getItem('vivaah-role');
   const sessionEmail = sessionStorage.getItem('vivaah-session-email') || '';
+
+  // If no session but owner email saved, go straight to email gate pre-filled
+  if (!sessionRole && OWNER_EMAILS.includes(savedEmail)) {
+    // Show PIN directly — owners always pre-approved
+    egCurrentEmail = savedEmail;
+    showLockStep('pin');
+    return;
+  }
 
   // Owner session restore — no email match needed
   if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && OWNER_EMAILS.includes(sessionEmail)){
@@ -7733,7 +7760,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   if (_povOld) _povOld.remove();
   var _pov = document.createElement('div');
   _pov.id = 'vivaahPrintOverlay';
-  _pov.innerHTML = '<button id="vivaahPrintClose" onclick="document.getElementById(\'vivaahPrintOverlay\').remove();document.getElementById(\'vivaahPrintStyle\').remove();">✕</button>' +
+  _pov.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();">✕</button>' +
     '<div style="font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;padding:0;">' +
     '<div style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);color:#fff;padding:20px 28px 16px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
       '<div style="font-size:28px;">𖥸</div>' +
@@ -7901,7 +7928,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   if (_povOld2) _povOld2.remove();
   var _pov2 = document.createElement('div');
   _pov2.id = 'vivaahPrintOverlay';
-  _pov2.innerHTML = '<button id="vivaahPrintClose" onclick="document.getElementById(\'vivaahPrintOverlay\').remove();document.getElementById(\'vivaahPrintStyle\').remove();">✕</button>' + html;
+  _pov2.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();">✕</button>' + html;
   document.body.appendChild(_pov2);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
