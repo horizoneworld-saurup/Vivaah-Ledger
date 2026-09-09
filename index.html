@@ -3570,8 +3570,20 @@ function startCountdown() {
   }
   var wrap = document.getElementById('countdownWrap');
   if (!wrap) return;
-  if (!targetDate) { wrap.classList.add('countdown-hide'); return; }
+  if (!targetDate) {
+    // Still show rangoli — just hide the countdown numbers
+    wrap.classList.remove('countdown-hide');
+    var unitsEl = document.getElementById('countdownUnits');
+    var doneEl = document.getElementById('countdownDone');
+    if (unitsEl) unitsEl.style.visibility = 'hidden';
+    var evNameEl = document.getElementById('countdownEventName');
+    if (evNameEl) evNameEl.textContent = 'Our Wedding';
+    initRangoliPetals();
+    return;
+  }
   wrap.classList.remove('countdown-hide');
+  var unitsEl2 = document.getElementById('countdownUnits');
+  if (unitsEl2) unitsEl2.style.visibility = 'visible';
   document.getElementById('countdownEventName').textContent = targetName;
   if (_countdownInterval) clearInterval(_countdownInterval);
   function tick() {
@@ -5166,6 +5178,7 @@ async function onSignedIn(){
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
       guests = cloudData.guests||guests;
       window._cloudGuestCount = guests.length; // used by queueCloudSave safety guard
+      window._cloudVendorCount = vendors.length; // vendor wipe guard
       reminders = cloudData.reminders||reminders;
       notes = cloudData.notes||notes;
       // Restore PIN hashes so PIN works on mobile after Google sign-in
@@ -5194,7 +5207,13 @@ async function onSignedIn(){
       }
       applyBranding();
     } else {
-      await pushToSheet();
+      // Only push to sheet if we actually have local data to push
+      // Never overwrite cloud with empty data on a fresh load
+      if (vendors.length > 0 || guests.length > 0 || Object.keys(eventTimeline).length > 0) {
+        await pushToSheet();
+      } else {
+        console.warn('onSignedIn: cloud returned no data and local is empty — skipping push to protect sheet');
+      }
     }
     setSyncStatus('ok','Synced just now');
     render();
@@ -5302,10 +5321,13 @@ async function pushToSheet(){
 
 function queueCloudSave(){
   if(!googleAccessToken || !sheetId) return;
-  // Safety guard: never push empty guests if cloud previously had data
-  // This prevents a fresh page load from wiping cloud data before sync completes
+  // Safety guard: never push empty data if cloud previously had data
   if(guests.length === 0 && window._cloudGuestCount > 0){
     console.warn('queueCloudSave: blocked — local guests empty but cloud had', window._cloudGuestCount);
+    return;
+  }
+  if(vendors.length === 0 && window._cloudVendorCount > 0){
+    console.warn('queueCloudSave: blocked — local vendors empty but cloud had', window._cloudVendorCount);
     return;
   }
   setSyncStatus('saving', 'Saving…');
