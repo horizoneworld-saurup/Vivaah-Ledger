@@ -82,6 +82,13 @@
   .featured-extra-fields{
     border-left:3px solid var(--gold); padding-left:14px; margin:14px 0; display:flex; flex-direction:column; gap:14px;
   }
+  /* ── Utility bar ── */
+  .utility-group{display:flex;align-items:center;gap:3px;background:rgba(92,26,43,0.06);border:1px solid rgba(92,26,43,0.15);border-radius:8px;padding:3px;}
+  .btn-utility{font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;background:transparent;color:var(--maroon);cursor:pointer;white-space:nowrap;transition:background .15s;}
+  .btn-utility:hover{background:rgba(92,26,43,0.1);}
+  .utility-divider{width:1px;height:20px;background:rgba(92,26,43,0.2);margin:0 2px;}
+  .backup-status{font-size:10px;color:var(--ink-soft);white-space:nowrap;padding:0 4px;}
+
   .topbar-actions{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
   .btn{
     display:inline-flex; align-items:center; gap:7px;
@@ -1350,13 +1357,23 @@
     <div class="topbar-actions">
       <span class="role-badge" id="roleBadge"></span>
       <input type="file" id="fileInput" accept=".xlsx,.xls">
+      <input type="file" id="importGuestsInput" accept=".xlsx,.xls" style="display:none;">
       <button class="btn btn-ghost" id="btnGoogleSignIn">⛁ Sign in with Google</button>
-      <button class="btn btn-ghost" id="btnUpload">⭱ Upload Excel</button>
-      <button class="btn btn-ghost" id="btnTemplate">⬇ Sample template</button>
-      <button class="btn btn-ghost" id="btnPrint">🖺 Print / PDF</button>
-      <button class="btn btn-ghost" id="btnExport">⬇ Export report</button>
+
+      <!-- Utility group -->
+      <div class="utility-group">
+        <button class="btn btn-utility" id="btnBackupTop" title="Download full backup — guests, vendors, timeline, notes, kankotri, all data">💾 Backup</button>
+        <button class="btn btn-utility" id="btnRestoreTop" title="Restore from downloaded JSON backup file">⭱ Restore</button>
+        <button class="btn btn-utility" id="btnAutoRestoreTop" title="Restore from last auto-saved backup (this device only)" onclick="restoreAutoBackup()">🔄 Auto-Restore</button>
+        <div class="utility-divider"></div>
+        <button class="btn btn-utility" id="btnTemplate" title="Download guest Excel template">⬇ Template</button>
+        <button class="btn btn-utility" id="btnImportGuests" title="Import guests from Excel">⬆ Import</button>
+        <button class="btn btn-utility" id="btnExport" title="Export guest list as Excel">⬇ Export</button>
+      </div>
+
+      <!-- Action group -->
       <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
-      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;">🔑 Owner Panel</button>
+      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;">🔑 Owner</button>
       <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
       <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:12px;">↩ Sign out</button>
     </div>
@@ -1789,14 +1806,7 @@
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
 
-    <!-- Guest backup bar -->
-    <div class="backup-bar" style="border-radius:0;border-left:none;border-right:none;border-top:none;">
-      <div>💾 <strong>Guest Data Backup:</strong> <span id="guestBackupTime">Not backed up yet</span></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
-        <button class="btn-backup" style="background:#1A5C1A;" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
-      </div>
-    </div>
+
 
     <div class="sec-filter-bar">
       <span class="sec-filter-label">Show guests for:</span>
@@ -1950,16 +1960,8 @@
     <!-- ── Invitation Distribution Table ── -->
     <div style="margin-top:18px;">
 
-      <!-- Auto-backup bar -->
-      <div class="backup-bar">
-        <div>💾 <strong>Auto-backup:</strong> <span id="lastBackupTime">Not backed up yet</span> — download a backup anytime to protect your data</div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn-backup" onclick="downloadBackup()">⬇ Download Backup</button>
-          <button class="btn btn-ghost" onclick="restoreAutoBackup()" style="font-size:12px;">🔄 Restore Auto-Backup</button>
-          <button class="btn-backup" style="background:var(--sage);" onclick="document.getElementById('restoreFileInput').click()">⭱ Restore Backup</button>
-          <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreFromBackup(this.files[0]).then(()=>this.value='')">
-        </div>
-      </div>
+      <!-- restoreFileInput kept for restore functionality -->
+      <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="restoreFromBackup(this.files[0]).then(()=>this.value='')">
 
       <!-- Bulk tier assignment bar -->
       <div class="bulk-tier-bar" id="bulkTierBar" style="display:none;">
@@ -4203,6 +4205,9 @@ function downloadBackup() {
     var el = document.getElementById(id);
     if (el) el.textContent = 'Last downloaded at ' + timeStr;
   });
+  // Update topbar backup button to show last backup time
+  var btnBk = document.getElementById('btnBackupTop');
+  if (btnBk) btnBk.title = 'Last backup: ' + timeStr;
   // Persist so it survives page refresh
   localStorage.setItem('vivaah-last-manual-backup', lastBackupAt.toISOString());
   showToast('✅ Backup downloaded — keep this file safe!');
@@ -6580,6 +6585,50 @@ document.getElementById('btnPrint').onclick = ()=>{
 /* ---------------- Excel Upload ---------------- */
 document.getElementById('btnUpload').onclick = ()=>document.getElementById('fileInput').click();
 
+// ── Utility bar button handlers ──
+document.getElementById('btnBackupTop').onclick = function() {
+  downloadBackup();
+};
+
+document.getElementById('btnRestoreTop').onclick = function() {
+  document.getElementById('restoreFileInput').click();
+};
+
+document.getElementById('btnImportGuests').onclick = function() {
+  document.getElementById('importGuestsInput').click();
+};
+
+// Import guests from Excel via new input
+document.getElementById('importGuestsInput').onchange = function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  // Trigger same handler as the guest upload button
+  var guestFileInput = document.getElementById('guestFileInput');
+  if (guestFileInput) {
+    // Copy file to guest file input and trigger
+    var dt = new DataTransfer();
+    dt.items.add(file);
+    guestFileInput.files = dt.files;
+    guestFileInput.dispatchEvent(new Event('change'));
+  } else {
+    // Fallback — use the main file input if guest specific one not found
+    var mainInput = document.getElementById('fileInput');
+    var dt2 = new DataTransfer();
+    dt2.items.add(file);
+    mainInput.files = dt2.files;
+    mainInput.dispatchEvent(new Event('change'));
+  }
+  this.value = '';
+};
+
+// btnTemplate in topbar → guest template download
+document.getElementById('btnTemplate').onclick = function() {
+  document.getElementById('btnGuestTemplate').click();
+};
+
+// btnExport in topbar → guest list export
+// (keeps existing vendor export as printOptVendors, this one exports guests)
+
 document.getElementById('fileInput').addEventListener('change', (e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -6764,7 +6813,9 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
 });
 
 /* ---------------- Sample Template Download ---------------- */
-document.getElementById('btnTemplate').onclick = ()=>{
+// Vendor template now accessible via Print panel
+// Guest template is primary in topbar
+function downloadVendorTemplate(){
   const wb = XLSX.utils.book_new();
   const vendorSheet = XLSX.utils.json_to_sheet([
     {VendorName:'Royal Banquet Hall', Category:'Venue', QuotedAmount:450000, Paid:150000, ContactPerson:'Mr. Sharma', Phone:'9876543210', Notes:'Advance paid, balance due 1 week before'},
