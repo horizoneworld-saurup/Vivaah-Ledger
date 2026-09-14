@@ -1362,6 +1362,7 @@
       <span class="role-badge" id="roleBadge"></span>
       <input type="file" id="fileInput" accept=".xlsx,.xls">
       <input type="file" id="importGuestsInput" accept=".xlsx,.xls" style="display:none;">
+      <button style="display:none;" id="btnPrint"></button>
       <button class="btn btn-ghost" id="btnGoogleSignIn">⛁ Sign in with Google</button>
 
       <!-- Utility group -->
@@ -4661,105 +4662,70 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
-  // Owner emails always bypass session check — go straight to PIN
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
+  const VALID_ROLES = ['owner','admin','editor','viewer'];
 
-  // If remembered email is an owner email, ensure approved-email matches so session restores
-  const rememberedEmailCheck = localStorage.getItem('vivaah-remembered-email') || '';
-  if (OWNER_EMAILS.includes(rememberedEmailCheck)) {
-    localStorage.setItem('vivaah-approved-email', rememberedEmailCheck);
-  }
-
-  const savedEmail = localStorage.getItem('vivaah-approved-email') || '';
+  // Step 1: Check session storage first (fastest — same tab/session)
   const sessionRole = sessionStorage.getItem('vivaah-role');
   const sessionEmail = sessionStorage.getItem('vivaah-session-email') || '';
-
-  // If no session but owner email saved, go straight to email gate pre-filled
-  if (!sessionRole && OWNER_EMAILS.includes(savedEmail)) {
-    // Show PIN directly — owners always pre-approved
-    egCurrentEmail = savedEmail;
-    showLockStep('pin');
-    return;
-  }
-
-  // Owner session restore — no email match needed
-  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && OWNER_EMAILS.includes(sessionEmail)){
+  if(sessionRole && VALID_ROLES.includes(sessionRole)){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
 
-  // Regular session restore — email must match
-  if(sessionRole && ['owner','admin','editor','viewer'].includes(sessionRole) && sessionEmail && sessionEmail === savedEmail){
-    setRole(sessionRole);
-    document.getElementById('lockOverlay').classList.add('hidden');
-    await loadData();
-    return;
-  }
-
-  // LocalStorage restore for owners — no email match needed
+  // Step 2: Check localStorage remembered login
   const rememberedRole = localStorage.getItem('vivaah-role');
   const rememberedEmail = localStorage.getItem('vivaah-remembered-email') || '';
-  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole) && OWNER_EMAILS.includes(rememberedEmail)){
-    setRole(rememberedRole);
-    sessionStorage.setItem('vivaah-role', rememberedRole);
-    sessionStorage.setItem('vivaah-session-email', rememberedEmail);
-    document.getElementById('lockOverlay').classList.add('hidden');
-    await loadData();
-    return;
+  if(rememberedRole && VALID_ROLES.includes(rememberedRole) && rememberedEmail){
+    // Owner emails always valid — regular users must match approved email
+    var savedEmail = localStorage.getItem('vivaah-approved-email') || '';
+    if(OWNER_EMAILS.includes(rememberedEmail) || rememberedEmail === savedEmail){
+      setRole(rememberedRole);
+      sessionStorage.setItem('vivaah-role', rememberedRole);
+      sessionStorage.setItem('vivaah-session-email', rememberedEmail);
+      egCurrentEmail = rememberedEmail;
+      document.getElementById('lockOverlay').classList.add('hidden');
+      await loadData();
+      return;
+    }
   }
 
-  // LocalStorage restore for regular users — email must match
-  if(rememberedRole && ['owner','admin','editor','viewer'].includes(rememberedRole) && rememberedEmail && rememberedEmail === savedEmail){
-    setRole(rememberedRole);
-    sessionStorage.setItem('vivaah-role', rememberedRole);
-    sessionStorage.setItem('vivaah-session-email', rememberedEmail);
-    document.getElementById('lockOverlay').classList.add('hidden');
-    await loadData();
-    return;
+  // Step 3: Check if approved email on device — go to PIN not email gate
+  var approvedEmail = localStorage.getItem('vivaah-approved-email') || '';
+  if(approvedEmail){
+    egCurrentEmail = approvedEmail;
+    // Owner emails — skip worker check, go straight to PIN
+    if(OWNER_EMAILS.includes(approvedEmail)){
+      showLockStep('pin');
+      return;
+    }
+    // Regular users — verify still approved with worker then show PIN
+    try{
+      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({email: approvedEmail})
+      });
+      var data = await resp.json();
+      if(data.status === 'approved'){
+        showLockStep('pin');
+        return;
+      }
+    }catch(e){
+      // Network error — still show PIN (offline tolerance)
+      showLockStep('pin');
+      return;
+    }
+    // No longer approved — clear and show email gate
+    localStorage.removeItem('vivaah-approved-email');
   }
 
-  // Clear any stale role data from a different user
+  // Step 4: Nothing saved — show email gate
   sessionStorage.removeItem('vivaah-role');
   sessionStorage.removeItem('vivaah-session-email');
 
-  // Check if device has a pre-approved email (30-day approval)
-  const approvedEmail = localStorage.getItem('vivaah-approved-email');
-  if(approvedEmail){
-    // Verify still approved with worker
-    try{
-      const resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-status', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email: approvedEmail})
-      });
-      const data = await resp.json();
-      if(data.status === 'approved'){
-        egCurrentEmail = approvedEmail;
-        // Check setup before showing PIN
-        if (approvedEmail === 'horizoneworld@gmail.com' || approvedEmail === 'rmsfincoresolutions@gmail.com' || approvedEmail === 'saurabh@horizoneworld.com') {
-          showLockStep('pin');
-        } else {
-          try {
-            var _r3 = await fetch('https://vivaah-auth.rms-d21.workers.dev/check-setup?email=' + encodeURIComponent(approvedEmail));
-            var _d3 = await _r3.json();
-            if (!_d3.setupDone) {
-              document.getElementById('lockOverlay').classList.add('hidden');
-              document.getElementById('setupOverlay').classList.remove('hidden');
-              return;
-            }
-          } catch(e) {}
-          showLockStep('pin');
-        }
-        return;
-      } else {
-        localStorage.removeItem('vivaah-approved-email');
-      }
-    } catch(e){ /* network error — fall through to email gate */ }
-  }
-
-  // Load notes
+    // Load notes
   await loadNotes(); renderNotes();
   // Check reminders once per day
   checkReminders();
@@ -4783,6 +4749,7 @@ const WRITER_TRACKED_EVENTS = ['Kankotri']; // calligrapher count instead of kid
 let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
+const REMINDER_KEYS = ['trial','clothes','guest'];
 let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per tier
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
@@ -5109,17 +5076,19 @@ function expandGuests(compressed){
 
 document.getElementById('btnGoogleSignIn').onclick = ()=>{
   if(!googleTokenClient){
-    // Google script not ready yet - wait up to 5 seconds and retry
-    showToast('Loading Google sign-in…');
+    // Google script not ready yet - wait up to 15 seconds and retry
+    showToast('Connecting to Google…');
     var _gsiWait = 0;
     var _gsiTimer = setInterval(function(){
       _gsiWait += 500;
       if(googleTokenClient){
         clearInterval(_gsiTimer);
         googleTokenClient.requestAccessToken({prompt:''});
-      } else if(_gsiWait >= 5000){
+      } else if(_gsiWait >= 15000){
         clearInterval(_gsiTimer);
-        showToast('Google sign-in unavailable — check your internet connection and refresh');
+        // Don't block — just show the banner message, user can click again
+        setSyncStatus(null,'');
+        document.getElementById('syncBanner') && (document.getElementById('syncBannerText').textContent = '⟲ Click here to sign in with Google — if it fails, refresh the page and try again');
       }
     }, 500);
     return;
@@ -7332,7 +7301,6 @@ document.getElementById('guestTableBody').addEventListener('change',e=>{
 /* ================================================================
    REMINDER ITEMS — vendor + person display
    ================================================================ */
-const REMINDER_KEYS=['trial','clothes','guest'];
 function capitalize(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 function formatShortDate(d){const dt=new Date(d);return isNaN(dt)?'':dt.toLocaleDateString('en-IN',{day:'numeric',month:'short'});}
 
