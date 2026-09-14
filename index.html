@@ -84,12 +84,16 @@
   }
   /* ── Utility bar ── */
   .utility-group{display:flex;align-items:center;gap:3px;background:rgba(92,26,43,0.06);border:1px solid rgba(92,26,43,0.15);border-radius:8px;padding:3px;}
-  .btn-utility{font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:6px;border:none;background:transparent;color:var(--maroon);cursor:pointer;white-space:nowrap;transition:background .15s;}
+  .btn-utility{font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;border:none;background:transparent;color:var(--maroon);cursor:pointer;white-space:nowrap;transition:background .15s;}
   .btn-utility:hover{background:rgba(92,26,43,0.1);}
   .utility-divider{width:1px;height:20px;background:rgba(92,26,43,0.2);margin:0 2px;}
   .backup-status{font-size:10px;color:var(--ink-soft);white-space:nowrap;padding:0 4px;}
 
-  .topbar-actions{display:flex; gap:6px; flex-wrap:wrap; align-items:center;}
+  .topbar-actions{display:flex; gap:4px; flex-wrap:nowrap; align-items:center; overflow-x:auto;}
+  .topbar-actions .btn{font-size:11.5px; padding:5px 10px; white-space:nowrap;}
+  .topbar-actions .btn-primary{font-size:12px; padding:6px 12px;}
+  .topbar{flex-wrap:nowrap; gap:8px;}
+  @media(max-width:900px){.topbar{flex-wrap:wrap;} .topbar-actions{flex-wrap:wrap;}}
   .btn{
     display:inline-flex; align-items:center; gap:7px;
     font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
@@ -1372,10 +1376,10 @@
       </div>
 
       <!-- Action group -->
-      <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings">⚙ Admin</button>
-      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;">🔑 Owner</button>
-      <button class="btn btn-primary" id="btnAddVendor">+ Add vendor</button>
-      <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:12px;">↩ Sign out</button>
+      <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings" style="font-size:11.5px;padding:5px 10px;">⚙ Admin</button>
+      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;font-size:11.5px;padding:5px 10px;">🔑 Owner</button>
+      <button class="btn btn-primary" id="btnAddVendor" style="font-size:12px;padding:6px 12px;">+ Add vendor</button>
+      <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:11.5px;padding:5px 10px;">↩ Sign out</button>
     </div>
   </div>
 
@@ -5104,7 +5108,22 @@ function expandGuests(compressed){
 }
 
 document.getElementById('btnGoogleSignIn').onclick = ()=>{
-  if(!googleTokenClient){ showToast('Still loading Google sign-in — try again in a second'); return; }
+  if(!googleTokenClient){
+    // Google script not ready yet - wait up to 5 seconds and retry
+    showToast('Loading Google sign-in…');
+    var _gsiWait = 0;
+    var _gsiTimer = setInterval(function(){
+      _gsiWait += 500;
+      if(googleTokenClient){
+        clearInterval(_gsiTimer);
+        googleTokenClient.requestAccessToken({prompt:''});
+      } else if(_gsiWait >= 5000){
+        clearInterval(_gsiTimer);
+        showToast('Google sign-in unavailable — check your internet connection and refresh');
+      }
+    }, 500);
+    return;
+  }
   googleTokenClient.requestAccessToken({prompt:'consent'});
 };
 
