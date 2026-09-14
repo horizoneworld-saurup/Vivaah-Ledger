@@ -556,17 +556,9 @@
     .print-header h1{font-family:'Cormorant Garamond',serif; font-size:26px; color:var(--maroon-dark); margin:0;}
     .print-header .meta{font-size:12px; color:var(--ink-soft); margin-top:4px;}
     /* When overlay is active — hide entire main page, only overlay prints */
-    body.vl-printing .topbar,
-    body.vl-printing .sync-banner,
-    body.vl-printing .global-search-wrap,
-    body.vl-printing #countdownWrap,
-    body.vl-printing .ledger,
-    body.vl-printing .footnote,
-    body.vl-printing .ticker-wrap,
-    body.vl-printing .voice-fab,
-    body.vl-printing .sponsored-wrap,
-    body.vl-printing #printPanelOverlay { display:none !important; }
-    body.vl-printing #vivaahPrintOverlay { display:block !important; position:static !important; overflow:visible !important; }
+    /* When overlay is active — hide EVERYTHING except the overlay */
+    body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
+    body.vl-printing #vivaahPrintOverlay { display:block !important; position:static !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     /* When kankotri print area is present — hide everything else, show only the print area */
@@ -3872,18 +3864,31 @@ function printSection(section) {
       '</tr></thead><tbody>'+(evRows||'<tr><td colspan="5">No events added yet.</td></tr>')+'</tbody></table>';
 
   } else if (section === 'reminders') {
-    var remRows = (reminders||[]).map(function(r,i){
+    // reminders is {trial:[], clothes:[], guest:[]} — not a flat array
+    var TYPE_LABELS = {trial:'🥻 Trial', clothes:'👗 Clothes', guest:'📋 Guest'};
+    var TYPE_COLORS = {trial:'#5C1A2B', clothes:'#856404', guest:'#1A3A8A'};
+    var allRems = [];
+    ['trial','clothes','guest'].forEach(function(key){
+      (reminders[key]||[]).forEach(function(r){
+        allRems.push({type:key, text:r.text||'—', date:r.date||'—', time:r.time||'—', done:r.done||false});
+      });
+    });
+    var remRows = allRems.map(function(r,i){
+      var tc = TYPE_COLORS[r.type]||cfg.color;
+      var tl = TYPE_LABELS[r.type]||r.type;
       return '<tr>' +
         '<td>'+(i+1)+'</td>' +
-        '<td><span class="badge" style="background:'+cfg.light+';color:'+cfg.color+';">'+escapeHtml(r.type||'Guest')+'</span></td>' +
-        '<td>'+escapeHtml(r.label||r.name||'—')+'</td>' +
-        '<td>'+escapeHtml(r.date||'—')+'</td>' +
-        '<td>'+escapeHtml(r.email||'—')+'</td>' +
+        '<td><span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:'+tc+'18;color:'+tc+';border:0.5px solid '+tc+'40;">'+tl+'</span></td>' +
+        '<td>'+escapeHtml(r.text)+'</td>' +
+        '<td>'+escapeHtml(r.date)+(r.time?' · '+escapeHtml(r.time):'')+'</td>' +
+        '<td style="text-align:center;">'+(r.done?'✅ Done':'⏳ Pending')+'</td>' +
         '</tr>';
     }).join('');
-    bodyHTML = '<table><thead><tr>' +
-      '<th>#</th><th>Type</th><th>Reminder For</th><th>Event Date</th><th>Alert Email</th>' +
-      '</tr></thead><tbody>'+(remRows||'<tr><td colspan="5">No reminders set yet.</td></tr>')+'</tbody></table>';
+    bodyHTML = allRems.length === 0
+      ? '<p style="color:#6b5d52;padding:16px;">No reminders set yet.</p>'
+      : '<table><thead><tr>' +
+          '<th>#</th><th>Type</th><th>Reminder</th><th>Date · Time</th><th class="c">Status</th>' +
+        '</tr></thead><tbody>'+remRows+'</tbody></table>';
 
   } else if (section === 'notes') {
     var noteRows = (notes||[]).map(function(n,i){
@@ -4056,10 +4061,11 @@ function updateSectionBadges() {
   const premCount = guests ? guests.filter(g=>g.invTier==='premium').length : 0;
   const normCount = guests ? guests.filter(g=>g.invTier==='normal').length : 0;
   const totalCards = guests ? guests.filter(g=>g.invTier==='vip'||g.invTier==='premium').reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
+  const normalCards = guests ? guests.filter(g=>g.invTier==='normal').reduce((s,g)=>s+(parseInt(g.invCards)||0),0) : 0;
   if (document.getElementById('kankotriHeaderVip')) document.getElementById('kankotriHeaderVip').textContent = vipCount;
   if (document.getElementById('kankotriHeaderPremium')) document.getElementById('kankotriHeaderPremium').textContent = premCount;
   if (document.getElementById('kankotriHeaderNormal')) document.getElementById('kankotriHeaderNormal').textContent = normCount;
-  if (document.getElementById('kankotriHeaderCards')) document.getElementById('kankotriHeaderCards').textContent = totalCards;
+  if (document.getElementById('kankotriHeaderCards')) document.getElementById('kankotriHeaderCards').textContent = (totalCards + normalCards);
 
   // Vendor badges
   const vendorCount = vendors ? vendors.length : 0;
@@ -5206,6 +5212,10 @@ async function onSignedIn(){
         });
       }
       applyBranding();
+      // Cache all cloud data to localStorage for faster loading next session
+      await storageSet('wedding-vendors', JSON.stringify(vendors));
+      await storageSet('wedding-guests', JSON.stringify(guests));
+      autoSaveLocalBackup(); // full backup snapshot after every cloud pull
     } else {
       // Only push to sheet if we actually have local data to push
       // Never overwrite cloud with empty data on a fresh load
@@ -5216,6 +5226,13 @@ async function onSignedIn(){
       }
     }
     setSyncStatus('ok','Synced just now');
+    // Notes and reminders must be set BEFORE rendering
+    if(cloudData) {
+      notes = cloudData.notes || notes;
+      reminders = cloudData.reminders || reminders;
+      await storageSet('wedding-notes', JSON.stringify(notes));
+      await storageSet('wedding-reminders', JSON.stringify(reminders));
+    }
     render();
     renderTimeline();
     startCountdown();
@@ -5224,10 +5241,9 @@ async function onSignedIn(){
     // Show admin review section for owner only
     var adminSec = document.getElementById('adminReviewSection');
     if (adminSec) adminSec.style.display = (currentRole === 'owner') ? 'block' : 'none';
-    renderInvTable(); // refresh invitation distribution after cloud data loads
-    notes = cloudData.notes || notes;
-    await storageSet('wedding-notes', JSON.stringify(notes));
+    renderInvTable();
     renderNotes();
+    renderReminders();
     updateSectionBadges();
   }catch(e){
     console.error(e);
@@ -7476,6 +7492,7 @@ function renderInvTable(){
   const unassC   = allG.filter(g=>!g.invTier).length;
   const sentC    = allG.filter(g=>g.invSent).length;
   const totalCards = allG.filter(g=>g.invTier==='vip'||g.invTier==='premium').reduce((s,g)=>s+(Number(g.invCards)||0),0);
+  const normalCards = allG.filter(g=>g.invTier==='normal').reduce((s,g)=>s+(Number(g.invCards)||0),0);
 
   summaryBar.innerHTML = `
     <span>👑 VIP: <b>${vipC}</b></span>
@@ -7483,7 +7500,9 @@ function renderInvTable(){
     <span>🎟 Normal: <b>${normC}</b></span>
     <span>⭕ Unassigned: <b>${unassC}</b></span>
     <span style="margin-left:8px;">✓ Sent: <b>${sentC}</b></span>
-    <span>📦 Total cards: <b>${totalCards}</b></span>
+    <span>📦 VIP+Premium cards: <b>${totalCards}</b></span>
+    <span>✏️ Normal cards: <b>${normalCards}</b></span>
+    <span style="font-weight:700;color:var(--gold);">🎴 Grand total: <b>${totalCards + normalCards}</b></span>
   `;
 
   if(guests.length === 0){ emptyMsg.style.display=''; tbody.innerHTML=''; return; }
