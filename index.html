@@ -89,11 +89,12 @@
   .utility-divider{width:1px;height:20px;background:rgba(92,26,43,0.2);margin:0 2px;}
   .backup-status{font-size:10px;color:var(--ink-soft);white-space:nowrap;padding:0 4px;}
 
-  .topbar-actions{display:flex; gap:4px; flex-wrap:nowrap; align-items:center; overflow-x:auto;}
+  .topbar{flex-wrap:wrap; gap:6px; align-items:center;}
+  .topbar-actions{display:flex; gap:4px; flex-wrap:wrap; align-items:center; width:100%;}
+  .topbar-row1{display:flex; gap:4px; align-items:center; flex-wrap:nowrap; overflow-x:auto; flex:1;}
+  .topbar-row2{display:flex; gap:4px; align-items:center; margin-left:auto;}
   .topbar-actions .btn{font-size:11.5px; padding:5px 10px; white-space:nowrap;}
   .topbar-actions .btn-primary{font-size:12px; padding:6px 12px;}
-  .topbar{flex-wrap:nowrap; gap:8px;}
-  @media(max-width:900px){.topbar{flex-wrap:wrap;} .topbar-actions{flex-wrap:wrap;}}
   .btn{
     display:inline-flex; align-items:center; gap:7px;
     font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
@@ -1358,31 +1359,34 @@
       </div>
       <button class="icon-btn" id="btnEditBranding" title="Edit logo &amp; header">✎</button>
     </div>
-    <div class="topbar-actions">
-      <span class="role-badge" id="roleBadge"></span>
+        <div class="topbar-actions">
       <input type="file" id="fileInput" accept=".xlsx,.xls">
       <input type="file" id="importGuestsInput" accept=".xlsx,.xls" style="display:none;">
       <button style="display:none;" id="btnPrint"></button>
-      <button class="btn btn-ghost" id="btnGoogleSignIn">⛁ Sign in with Google</button>
 
-      <!-- Utility group -->
-      <div class="utility-group">
-        <button class="btn btn-utility" id="btnBackupTop" title="Download full backup — guests, vendors, timeline, notes, kankotri, all data">💾 Backup</button>
-        <button class="btn btn-utility" id="btnRestoreTop" title="Restore from downloaded JSON backup file">⭱ Restore</button>
-        <button class="btn btn-utility" id="btnAutoRestoreTop" title="Restore from last auto-saved backup (this device only)" onclick="restoreAutoBackup()">🔄 Auto-Restore</button>
-        <div class="utility-divider"></div>
-        <button class="btn btn-utility" id="btnTemplate" title="Download guest Excel template">⬇ Template</button>
-        <button class="btn btn-utility" id="btnImportGuests" title="Import guests from Excel">⬆ Import</button>
-        <button class="btn btn-utility" id="btnExport" title="Export guest list as Excel">⬇ Export</button>
+      <!-- Row 1: Role + Google + Utility tools -->
+      <div class="topbar-row1">
+        <span class="role-badge" id="roleBadge"></span>
+        <button class="btn btn-ghost" id="btnGoogleSignIn" style="font-size:11.5px;padding:5px 10px;">⛁ Sign in with Google</button>
+        <div class="utility-group">
+          <button class="btn btn-utility" id="btnBackupTop" title="Download full backup">💾 Backup</button>
+          <button class="btn btn-utility" id="btnRestoreTop" title="Restore from backup file">⭱ Restore</button>
+          <button class="btn btn-utility" id="btnAutoRestoreTop" title="Restore from last auto-save" onclick="restoreAutoBackup()">🔄 Auto-Restore</button>
+          <div class="utility-divider"></div>
+          <button class="btn btn-utility" id="btnTemplate" title="Download guest Excel template">⬇ Template</button>
+          <button class="btn btn-utility" id="btnImportGuests" title="Import guests from Excel">⬆ Import</button>
+          <button class="btn btn-utility" id="btnExport" title="Export full report">⬇ Export</button>
+        </div>
       </div>
 
-      <!-- Action group -->
-      <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings" style="font-size:11.5px;padding:5px 10px;">⚙ Admin</button>
-      <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;font-size:11.5px;padding:5px 10px;">🔑 Owner</button>
-      <button class="btn btn-primary" id="btnAddVendor" style="font-size:12px;padding:6px 12px;">+ Add vendor</button>
-      <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:11.5px;padding:5px 10px;">↩ Sign out</button>
-    </div>
-  </div>
+      <!-- Row 2: Actions -->
+      <div class="topbar-row2">
+        <button class="btn btn-ghost admin-only" id="btnAdminSettings" title="Admin settings" style="font-size:11.5px;padding:5px 10px;">⚙ Admin</button>
+        <button class="btn btn-ghost owner-only" id="btnOwnerPanel" style="background:#F0E8FF;border-color:#C4A0E8;color:#5C1A8A;font-size:11.5px;padding:5px 10px;">🔑 Owner</button>
+        <button class="btn btn-primary" id="btnAddVendor" style="font-size:12px;padding:6px 12px;">+ Add vendor</button>
+        <button class="btn btn-ghost" id="btnSignOutRole" style="border-color:rgba(92,26,43,0.4);font-size:11.5px;padding:5px 10px;">↩ Sign out</button>
+      </div>
+    </div>  </div>
 
   <div class="sync-banner" id="syncBanner" style="cursor:pointer;" onclick="document.getElementById('btnGoogleSignIn').click()">
     <span id="syncBannerText">⟲ Sign in with Google to save your ledger online — it'll then load automatically on every device, no exporting or uploading needed.</span>
@@ -2354,7 +2358,10 @@ async function tryUnlock(){
       setRole('owner');
       const remember = document.getElementById('lockRemember').checked;
       const _oemail = egCurrentEmail || localStorage.getItem('vivaah-approved-email') || '';
-      if(remember){ localStorage.setItem('vivaah-role','owner'); localStorage.setItem('vivaah-remembered-email', _oemail); }
+      // Always save owner email — never ask for email again on this device
+      localStorage.setItem('vivaah-approved-email', _oemail);
+      localStorage.setItem('vivaah-remembered-email', _oemail);
+      localStorage.setItem('vivaah-role', 'owner');
       sessionStorage.setItem('vivaah-role','owner');
       sessionStorage.setItem('vivaah-session-email', _oemail);
       document.getElementById('lockOverlay').classList.add('hidden');
@@ -2374,7 +2381,10 @@ async function tryUnlock(){
     setRole(lockSelectedRole);
     const remember = document.getElementById('lockRemember').checked;
     const _remail = egCurrentEmail || localStorage.getItem('vivaah-approved-email') || '';
-    if(remember){ localStorage.setItem('vivaah-role', lockSelectedRole); localStorage.setItem('vivaah-remembered-email', _remail); }
+    // Always save — never ask for email again on this device
+    localStorage.setItem('vivaah-approved-email', _remail);
+    localStorage.setItem('vivaah-remembered-email', _remail);
+    localStorage.setItem('vivaah-role', lockSelectedRole);
     sessionStorage.setItem('vivaah-role', lockSelectedRole);
     sessionStorage.setItem('vivaah-session-email', _remail);
     document.getElementById('lockOverlay').classList.add('hidden');
@@ -5076,24 +5086,42 @@ function expandGuests(compressed){
 
 document.getElementById('btnGoogleSignIn').onclick = ()=>{
   if(!googleTokenClient){
-    // Google script not ready yet - wait up to 15 seconds and retry
     showToast('Connecting to Google…');
     var _gsiWait = 0;
     var _gsiTimer = setInterval(function(){
       _gsiWait += 500;
       if(googleTokenClient){
         clearInterval(_gsiTimer);
+        // Try silent first then fallback to consent
+        window._googleSilentFailed = false;
         googleTokenClient.requestAccessToken({prompt:''});
+        // If silent fails within 4s, try with consent
+        window._gsiConsentFallback = setTimeout(function(){
+          if(!googleAccessToken){
+            window._googleSilentFailed = true;
+            googleTokenClient.requestAccessToken({prompt:'consent'});
+          }
+        }, 4000);
       } else if(_gsiWait >= 15000){
         clearInterval(_gsiTimer);
-        // Don't block — just show the banner message, user can click again
         setSyncStatus(null,'');
-        document.getElementById('syncBanner') && (document.getElementById('syncBannerText').textContent = '⟲ Click here to sign in with Google — if it fails, refresh the page and try again');
+        document.getElementById('syncBannerText') && (document.getElementById('syncBannerText').textContent = '⟲ Click here to sign in with Google — if it fails, refresh the page and try again');
       }
     }, 500);
     return;
   }
-  googleTokenClient.requestAccessToken({prompt:'consent'});
+  // Clear any pending consent fallback
+  if(window._gsiConsentFallback) clearTimeout(window._gsiConsentFallback);
+  window._googleSilentFailed = false;
+  // Try silent first
+  googleTokenClient.requestAccessToken({prompt:''});
+  // Fallback to consent if silent fails within 4s
+  window._gsiConsentFallback = setTimeout(function(){
+    if(!googleAccessToken){
+      window._googleSilentFailed = true;
+      googleTokenClient.requestAccessToken({prompt:'consent'});
+    }
+  }, 4000);
 };
 
 document.getElementById('btnSignOut').onclick = async ()=>{
