@@ -9157,13 +9157,25 @@ window.mobActivate = function(){
 
 // ── Google sign-in (delegates to main app) ────────────────────────
 window.mobGoogleSignIn = function(){
-  var btn = document.getElementById('btnGoogleSignIn');
-  if(btn){ btn.click(); }
-  else if(typeof googleTokenClient !== 'undefined' && googleTokenClient){
-    googleTokenClient.requestAccessToken({prompt:''});
-  } else {
-    alert('Google not ready yet — wait a moment and try again.');
+  if(typeof google === 'undefined' || !google.accounts){
+    alert('Google not loaded — check your internet connection');
+    return;
   }
+  // Exact same approach as vivaah_mobile.html which worked on mobile:
+  // Create fresh initTokenClient on every tap, call requestAccessToken immediately.
+  google.accounts.oauth2.initTokenClient({
+    client_id: '429176691438-fso38ksuhb3tbaodn67erkb0gbg0q5sr.apps.googleusercontent.com',
+    scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file',
+    callback: async function(resp){
+      if(resp.error){
+        alert('Sign-in failed: ' + resp.error);
+        return;
+      }
+      // Hand token to desktop app's variable and trigger onSignedIn
+      window.googleAccessToken = resp.access_token;
+      if(typeof onSignedIn === 'function') await onSignedIn();
+    }
+  }).requestAccessToken();
 };
 window.mobSignOut = function(){
   var btn = document.getElementById('btnSignOut');
