@@ -5025,6 +5025,11 @@ let sheetId = null;
 let isSyncing = false;
 let cloudSaveTimer = null;
 
+// Expose setters so mobile script (separate <script> block) can update these let variables
+window.setGoogleToken = function(token){ googleAccessToken = token; };
+window.setGoogleUserEmail = function(email){ googleUserEmail = email; };
+window.callOnSignedIn = async function(){ if(typeof onSignedIn==='function') await onSignedIn(); };
+
 const fmt = n => '₹' + Math.round(n||0).toLocaleString('en-IN');
 const uid = () => 'v_' + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
 
@@ -9171,23 +9176,21 @@ window.mobGoogleSignIn = function(){
         alert('Sign-in failed: ' + resp.error);
         return;
       }
-      // Mirror desktop flow exactly: set token, fetch user info, save cache, then onSignedIn
-      googleAccessToken = resp.access_token;
-      window.googleAccessToken = resp.access_token;
+      // Use window setters — direct assignment to Script 1's `let` vars doesn't work cross-script
+      window.setGoogleToken(resp.access_token);
       try {
         var userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { 'Authorization': 'Bearer ' + resp.access_token }
         });
         var info = await userInfo.json();
-        googleUserEmail = info.email || null;
-        window.googleUserEmail = info.email || null;
+        window.setGoogleUserEmail(info.email || null);
       } catch(e) {}
       await storageSet('google-token-cache', JSON.stringify({
         token: resp.access_token,
         expiresAt: Date.now() + (resp.expires_in||3500)*1000,
         email: googleUserEmail || null
       }));
-      if(typeof onSignedIn === 'function') await onSignedIn();
+      await window.callOnSignedIn();
     }
   }).requestAccessToken();
 };
