@@ -1125,9 +1125,21 @@
    desktop shell and show a native-app-style mobile UI instead.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
-  /* Hide entire desktop shell */
-  .wrap, .topbar:not(.mob-topbar), nav, .sidebar,
-  [class*="desktop-"], .print-only { display:none !important; }
+  /* Hide all desktop chrome — lock overlay stays visible for PIN entry */
+  .wrap,
+  #pageFooter,
+  #adminSettingsOverlay,
+  #ownerPanelOverlay,
+  #platformVendorModalOverlay,
+  #printPanelOverlay,
+  #hcModalOverlay,
+  #setupOverlay,
+  .modal-overlay,
+  .print-panel-overlay { display:none !important; }
+
+  /* Lock overlay: show until unlocked, then JS adds .hidden */
+  .lock-overlay { display:flex; }
+  .lock-overlay.hidden { display:none !important; }
 
   body { background:var(--ivory); padding-bottom:68px; font-family:'Segoe UI',Arial,sans-serif; }
 
@@ -2599,6 +2611,7 @@ async function tryUnlock(){
       document.getElementById('lockOverlay').classList.add('hidden');
       // Always load data + render — ensures ticker and all sections appear immediately
       await loadData();
+      if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
       // Remind to connect Google for cross-device sync
       setTimeout(function() {
         if (!googleAccessToken) {
@@ -2622,6 +2635,7 @@ async function tryUnlock(){
     document.getElementById('lockOverlay').classList.add('hidden');
     // Always load data + render — ensures ticker and all sections appear immediately
     await loadData();
+    if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
   } else {
     lockError('Wrong PIN — try again');
   }
@@ -4915,6 +4929,7 @@ async function initAuth(){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
+    if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
     return;
   }
 
