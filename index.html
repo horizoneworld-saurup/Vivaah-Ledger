@@ -6599,7 +6599,8 @@ document.getElementById('btnPrint').onclick = ()=>{
 };
 
 /* ---------------- Excel Upload ---------------- */
-document.getElementById('btnUpload').onclick = ()=>document.getElementById('fileInput').click();
+// btnUpload removed from topbar — vendor Excel upload via fileInput directly
+if(document.getElementById('btnUpload')) document.getElementById('btnUpload').onclick = ()=>document.getElementById('fileInput').click();
 
 // ── Utility bar button handlers ──
 document.getElementById('btnBackupTop').onclick = function() {
