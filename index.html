@@ -2611,7 +2611,7 @@ async function tryUnlock(){
       document.getElementById('lockOverlay').classList.add('hidden');
       // Always load data + render — ensures ticker and all sections appear immediately
       await loadData();
-      if(typeof window.mobActivate === 'function') window.mobActivate();
+      setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
       // Remind to connect Google for cross-device sync
       setTimeout(function() {
         if (!googleAccessToken) {
@@ -2635,7 +2635,7 @@ async function tryUnlock(){
     document.getElementById('lockOverlay').classList.add('hidden');
     // Always load data + render — ensures ticker and all sections appear immediately
     await loadData();
-    if(typeof window.mobActivate === 'function') window.mobActivate();
+    setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
   } else {
     lockError('Wrong PIN — try again');
   }
@@ -4929,7 +4929,7 @@ async function initAuth(){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
-    if(typeof window.mobActivate === 'function') window.mobActivate();
+    setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
     return;
   }
 
@@ -5518,6 +5518,27 @@ async function onSignedIn(){
     renderNotes();
     renderReminders();
     updateSectionBadges();
+    // Update mobile Google bar if mobile UI is active
+    if(typeof _mobActive !== 'undefined' && _mobActive){
+      var nm = googleUserEmail || 'Signed in';
+      var avatarEl = document.getElementById('mobGAvatar');
+      var nameEl = document.getElementById('mobGName');
+      var gOutEl = document.getElementById('mobGOut');
+      var gInEl = document.getElementById('mobGIn');
+      if(avatarEl) avatarEl.textContent = nm.charAt(0).toUpperCase();
+      if(nameEl) nameEl.textContent = nm;
+      if(gOutEl) gOutEl.style.display = 'none';
+      if(gInEl) gInEl.style.display = 'flex';
+      // Refresh mobile dashboard with fresh cloud data
+      if(typeof mobUpdateDash === 'function') mobUpdateDash();
+      if(typeof mobStartCountdown === 'function') mobStartCountdown();
+      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
+      var av = document.querySelector('.mob-view.active');
+      if(av){
+        var sid = av.id.replace('mobV','').toLowerCase();
+        if(typeof MOB_SECS !== 'undefined' && MOB_SECS[sid] && MOB_SECS[sid].render) MOB_SECS[sid].render();
+      }
+    }
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -8421,6 +8442,8 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   initVoiceControl();
   await initAuth();
   await tryRestoreGoogleSession();
+  // Call mobActivate after a tick — ensures mobile script block has registered
+  setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
 })();
 
 /* ================================================================
@@ -9134,11 +9157,17 @@ window.mobActivate = function(){
 
 // ── Google sign-in (delegates to main app) ────────────────────────
 window.mobGoogleSignIn = function(){
-  if(typeof googleSignIn === 'function'){ googleSignIn(); }
-  else alert('Google sign-in unavailable. Please sign in on desktop first.');
+  var btn = document.getElementById('btnGoogleSignIn');
+  if(btn){ btn.click(); }
+  else if(typeof googleTokenClient !== 'undefined' && googleTokenClient){
+    googleTokenClient.requestAccessToken({prompt:''});
+  } else {
+    alert('Google not ready yet — wait a moment and try again.');
+  }
 };
 window.mobSignOut = function(){
-  if(typeof googleSignOut === 'function') googleSignOut();
+  var btn = document.getElementById('btnSignOut');
+  if(btn) btn.click();
   document.getElementById('mobGOut').style.display = 'block';
   document.getElementById('mobGIn').style.display = 'none';
 };
@@ -9699,7 +9728,7 @@ var _origOpenApp = window.openApp;
 if(typeof _origOpenApp === 'function'){
   window.openApp = function(){
     return Promise.resolve(_origOpenApp.apply(this,arguments)).then(function(r){
-      if(typeof window.mobActivate === 'function') window.mobActivate();
+      setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
       return r;
     });
   };
