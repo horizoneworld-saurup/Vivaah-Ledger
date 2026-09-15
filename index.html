@@ -1125,21 +1125,24 @@
    desktop shell and show a native-app-style mobile UI instead.
    ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 767px) {
-  /* Hide all desktop chrome — lock overlay stays visible for PIN entry */
+  /* Hide all desktop chrome — lock overlay and setupOverlay stay visible */
   .wrap,
   #pageFooter,
+  #countdownWrap,
   #adminSettingsOverlay,
   #ownerPanelOverlay,
   #platformVendorModalOverlay,
   #printPanelOverlay,
   #hcModalOverlay,
-  #setupOverlay,
   .modal-overlay,
   .print-panel-overlay { display:none !important; }
 
   /* Lock overlay: show until unlocked, then JS adds .hidden */
   .lock-overlay { display:flex; }
   .lock-overlay.hidden { display:none !important; }
+  /* Setup overlay: position:fixed full screen — works fine on mobile as-is */
+  .setup-overlay { display:flex; }
+  .setup-overlay.hidden { display:none !important; }
 
   body { background:var(--ivory); padding-bottom:68px; font-family:'Segoe UI',Arial,sans-serif; }
 
@@ -3362,6 +3365,7 @@ async function loadCoupleBranding(email) {
       var groom = d.groomName || '';
       if (bride || groom) {
         var names = bride + (bride && groom ? ' & ' : '') + groom;
+        // Desktop elements
         var brandTitle = document.getElementById('brandTitle');
         if (brandTitle) brandTitle.textContent = names + ' — Vivaah Ledger';
         var cdNames = document.getElementById('countdownCoupleNames');
@@ -3374,8 +3378,13 @@ async function loadCoupleBranding(email) {
           if (cdDate) cdDate.textContent = dt.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) + ' · Shubh Vivah';
         }
         document.title = names + ' — Vivaah Ledger';
+        // Mobile elements
+        var mobTitle = document.getElementById('mobTopTitle');
+        if (mobTitle) mobTitle.textContent = '🌸 ' + names;
+        var mobSub = document.getElementById('mobTopSub');
+        if (mobSub) mobSub.textContent = 'Vivaah Ledger';
       }
-      // Fix: apply couple music using correct element id weddingMusic
+      // Desktop music
       if (d.musicUrl) {
         var audio = document.getElementById('weddingMusic');
         if (audio) {
@@ -3383,8 +3392,14 @@ async function loadCoupleBranding(email) {
           audio.load();
           window._coupleMusic = d.musicUrl;
         }
+        // Mobile music — same URL
+        var mobAudio = document.getElementById('mobWeddingMusic');
+        if (mobAudio) {
+          mobAudio.innerHTML = '<source src="' + d.musicUrl + '" type="audio/mpeg">';
+          mobAudio.load();
+        }
       }
-      // Apply rangoli style (apply for all styles — mandala stays as-is, others swap SVG)
+      // Desktop rangoli
       if (d.rangoli) {
         applyRangoliStyle(d.rangoli);
       }
@@ -5524,7 +5539,7 @@ async function onSignedIn(){
     renderReminders();
     updateSectionBadges();
     // Update mobile Google bar if mobile UI is active
-    if(typeof _mobActive !== 'undefined' && _mobActive){
+    if(window._mobActive){
       var nm = googleUserEmail || 'Signed in';
       var avatarEl = document.getElementById('mobGAvatar');
       var nameEl = document.getElementById('mobGName');
@@ -8814,6 +8829,8 @@ function runGlobalSearch(q, gsInput, gsResults){
 
   <!-- Countdown -->
   <div class="mob-cd-wrap hidden" id="mobCdWrap" style="position:relative;overflow:hidden;">
+    <audio id="mobWeddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <button id="mobMusicBtn" onclick="mobToggleMusic()" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:3px 8px;font-size:13px;cursor:pointer;color:#7a1838;">🎵</button>
     <div id="mobPetals" style="position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;"></div>
     <div class="mob-cd-left">
       <span style="font-size:22px;">🌸</span>
@@ -9135,6 +9152,7 @@ window.mobActivate = function(){
   var isMobile = window.matchMedia('(max-width: 767px)').matches;
   if(!isMobile) return;
   _mobActive = true;
+  window._mobActive = true;
 
   // Hide desktop elements directly via JS (belt-and-suspenders alongside CSS)
   var hide = ['.wrap','#pageFooter','#adminSettingsOverlay','#ownerPanelOverlay',
@@ -9270,6 +9288,43 @@ function mobUpdateDash(){
   s('mobDC1',fn.length>0?mobFmt(cTotal)+' total':'No functions yet');
   s('mobDC2',fn.length>0?cGuests+' guests · '+fn.length+' events':'Add in full tool');
 }
+
+// ── Music — exact same approach as vivaah_mobile.html ────────────
+var _mobMusicPlaying = false;
+window.mobToggleMusic = function() {
+  var audio = document.getElementById('mobWeddingMusic');
+  var btn = document.getElementById('mobMusicBtn');
+  if (!audio) return;
+  if (_mobMusicPlaying) {
+    audio.pause();
+    _mobMusicPlaying = false;
+    if (btn) { btn.textContent = '🎵'; btn.style.background = 'rgba(255,255,255,0.85)'; }
+  } else {
+    audio.volume = 0.45;
+    var p = audio.play();
+    if (p !== undefined) {
+      p.then(function() {
+        _mobMusicPlaying = true;
+        if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
+      }).catch(function(e) { if (btn) btn.textContent = '▶'; });
+    }
+  }
+};
+
+// Auto-play on first tap — exact copy from vivaah_mobile.html
+document.addEventListener('click', function _mobFirstClick() {
+  var audio = document.getElementById('mobWeddingMusic');
+  var wrap = document.getElementById('mobCdWrap');
+  if (audio && wrap && !wrap.classList.contains('hidden') && !_mobMusicPlaying) {
+    audio.volume = 0.45;
+    audio.play().then(function() {
+      _mobMusicPlaying = true;
+      var btn = document.getElementById('mobMusicBtn');
+      if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
+    }).catch(function(){});
+  }
+  document.removeEventListener('click', _mobFirstClick);
+});
 
 // ── Countdown ─────────────────────────────────────────────────────
 function mobStartCountdown(){
