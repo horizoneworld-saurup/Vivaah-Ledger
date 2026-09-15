@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#5C1A2B">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.svg">
 <title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -1112,6 +1118,232 @@
   .setup-btn{width:100%;background:linear-gradient(135deg,#6A1B9A,#5C1A2B,#8B2A3F);color:#fff;border:1px solid rgba(212,164,76,0.2);border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(106,27,154,0.4);}
   .setup-btn:hover{opacity:0.9;}
   .setup-note{text-align:center;font-size:11px;color:rgba(255,255,255,0.3);margin-top:14px;}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE / TABLET RESPONSIVE LAYER  (≤ 767px)
+   The desktop layout is untouched. On small screens we hide the
+   desktop shell and show a native-app-style mobile UI instead.
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* Hide entire desktop shell */
+  .wrap, .topbar:not(.mob-topbar), nav, .sidebar,
+  [class*="desktop-"], .print-only { display:none !important; }
+
+  body { background:var(--ivory); padding-bottom:68px; font-family:'Segoe UI',Arial,sans-serif; }
+
+  /* ── Mobile top bar ── */
+  .mob-topbar { display:flex !important; background:var(--maroon); padding:12px 14px;
+    align-items:center; justify-content:space-between; position:sticky; top:0; z-index:90;
+    box-shadow:0 2px 8px rgba(0,0,0,0.2); }
+  .mob-top-left { display:flex; align-items:center; gap:10px; }
+  .mob-title { color:var(--gold); font-size:16px; font-weight:700; }
+  .mob-sub { color:#C4906A; font-size:10px; margin-top:1px; }
+  .mob-btn-back { background:rgba(255,255,255,0.15); border:none; color:var(--gold);
+    padding:5px 12px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; display:none; }
+  .mob-btn-back.show { display:block; }
+  .mob-sync-dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; flex-shrink:0; }
+  .mob-sync-dot.busy { background:#FFA726; animation:mobPulse 1s infinite; }
+  @keyframes mobPulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+  /* ── Google bar ── */
+  .mob-gbar { background:#fff; margin:10px; border-radius:12px; padding:12px 14px;
+    border:1px solid var(--line); }
+  .mob-gbar-out .mob-gbar-title { font-size:12px; font-weight:600; color:var(--maroon); margin-bottom:8px; }
+  .mob-btn-google { display:flex; align-items:center; gap:8px; padding:9px 14px;
+    border:1.5px solid var(--line); border-radius:9px; font-size:13px; font-weight:600;
+    cursor:pointer; background:#fff; color:var(--maroon); }
+  .mob-gbar-in { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .mob-g-user { display:flex; align-items:center; gap:8px; }
+  .mob-g-avatar { width:30px; height:30px; border-radius:50%; background:var(--maroon);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); font-size:13px;
+    font-weight:700; flex-shrink:0; }
+  .mob-g-name { font-size:12px; font-weight:600; color:var(--ink); }
+  .mob-g-sync { font-size:10px; color:#888; }
+  .mob-btn-signout { background:none; border:none; font-size:11px; color:#888; cursor:pointer; padding:4px; }
+
+  /* ── Views ── */
+  .mob-view { display:none; }
+  .mob-view.active { display:block; animation:mobFadeUp .2s ease; }
+  @keyframes mobFadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ── Summary bar ── */
+  .mob-sum-bar { background:#fff; margin:10px; border-radius:12px; padding:10px 14px;
+    display:flex; justify-content:space-around; border:1px solid var(--line); }
+  .mob-sum-val { font-size:15px; font-weight:700; color:var(--maroon); text-align:center; }
+  .mob-sum-lbl { font-size:9px; color:#888; margin-top:1px; text-align:center; }
+
+  /* ── Dashboard grid (coloured cards) ── */
+  .mob-dash-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 10px 10px; }
+  .mob-dash-card { border-radius:16px; padding:14px 12px; cursor:pointer;
+    transition:transform .15s,opacity .15s; position:relative; min-height:110px; }
+  .mob-dash-card:active { transform:scale(0.95); opacity:0.85; }
+  .mob-dc-icon { font-size:24px; margin-bottom:6px; display:block; }
+  .mob-dc-name { font-size:13px; font-weight:700; color:#fff; }
+  .mob-dc-stat { font-size:10px; display:block; margin-top:2px; color:rgba(255,255,255,0.85); }
+  .mob-dc-arr { position:absolute; bottom:10px; right:12px; color:rgba(255,255,255,0.3); font-size:14px; }
+  .mob-cB{background:linear-gradient(135deg,#856404,#C8960E);}
+  .mob-cV{background:linear-gradient(135deg,#1A3A8A,#2952C4);}
+  .mob-cG{background:linear-gradient(135deg,#5C1A2B,#8A2A3F);}
+  .mob-cK{background:linear-gradient(135deg,#3E0F1C,#5C1A2B);border:1px solid rgba(212,164,76,0.3);}
+  .mob-cK .mob-dc-name{color:var(--gold);} .mob-cK .mob-dc-stat{color:#F0D8A8;}
+  .mob-cR{background:linear-gradient(135deg,#5C1A8A,#8A2AC4);}
+  .mob-cT{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
+  .mob-cN{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
+  .mob-cC{background:linear-gradient(135deg,#C45000,#E67300);}
+
+  /* ── Section header ── */
+  .mob-sec-head{padding:12px 14px;}
+  .mob-sec-title{color:#fff;font-size:15px;font-weight:700;}
+  .mob-sec-sub{color:rgba(255,255,255,0.75);font-size:10px;margin-top:2px;}
+  .mob-sec-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+  .mob-sbadge{background:rgba(255,255,255,0.2);color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;}
+  .mob-sbadge.gold{background:rgba(212,164,76,0.3);color:var(--gold);}
+
+  /* ── Search ── */
+  .mob-srch{padding:8px 10px 4px;}
+  .mob-srch input{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;
+    font-size:13px;outline:none;background:#fff;color:var(--ink);}
+  .mob-srch input:focus{border-color:var(--maroon);}
+  .mob-evt-chip{padding:4px 10px;border-radius:20px;font-size:11px;white-space:nowrap;
+    cursor:pointer;border:1px solid #c4a882;background:#fff;color:#5C1A2B;flex-shrink:0;}
+  .mob-evt-chip.active{background:#5C1A2B;color:#fff;border-color:#5C1A2B;}
+  .mob-evt-sum-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .mob-evt-sum-card{background:#fff;border:1px solid #e8d5b0;border-radius:8px;padding:6px 8px;text-align:center;cursor:pointer;}
+  .mob-evt-sum-name{font-size:9px;color:#666;}
+  .mob-evt-sum-count{font-size:16px;font-weight:700;color:#5C1A2B;}
+  .mob-evt-sum-sub{font-size:9px;color:#999;}
+
+  /* ── Accordion ── */
+  .mob-acc-wrap{padding:6px 10px;}
+  .mob-acc-grp{background:#fff;border-radius:10px;margin-bottom:8px;overflow:hidden;
+    border:1px solid var(--line);box-shadow:0 1px 6px rgba(92,26,43,0.06);}
+  .mob-acc-hd{padding:11px 12px;display:flex;justify-content:space-between;align-items:center;
+    cursor:pointer;user-select:none;}
+  .mob-acc-hd-left{display:flex;align-items:center;gap:8px;}
+  .mob-acc-hd-title{font-size:12px;font-weight:700;}
+  .mob-acc-hd-cnt{font-size:10px;padding:1px 6px;border-radius:8px;}
+  .mob-acc-arr{font-size:12px;color:#888;transition:transform .2s;}
+  .mob-acc-arr.open{transform:rotate(90deg);}
+  .mob-acc-bd{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .mob-acc-bd.open{max-height:none;}
+
+  /* ── Row items ── */
+  .mob-row-item{padding:10px 12px;border-top:1px solid var(--ivory-deep);display:flex;
+    justify-content:space-between;align-items:center;gap:8px;cursor:pointer;}
+  .mob-row-item:active{background:var(--ivory);}
+  .mob-row-name{font-size:12px;font-weight:600;color:var(--ink);}
+  .mob-row-sub{font-size:10px;color:#888;margin-top:2px;}
+  .mob-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+  .mob-badge{padding:2px 7px;border-radius:7px;font-size:10px;font-weight:600;white-space:nowrap;}
+  .mob-bs{background:#E8F5E9;color:#2E7D32;} .mob-bp{background:#FFF8E1;color:#F57F17;}
+  .mob-bu{background:#FFEBEE;color:#C62828;} .mob-bpd{background:#FFF3E0;color:#C45000;}
+  .mob-bc{background:#E8F5E9;color:#2E7D32;} .mob-bd{background:#FFEBEE;color:#C62828;}
+  .mob-bsent{background:#E8F5E9;color:#2E7D32;} .mob-buns{background:#FFF3E0;color:#C45000;}
+
+  /* ── Countdown ── */
+  .mob-cd-wrap{background:linear-gradient(135deg,#fce4ec,#f8bbd0,#fce4ec);
+    border:1px solid rgba(212,164,76,0.3);border-radius:14px;padding:14px 18px;
+    margin:0 12px 14px;display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;position:relative;overflow:hidden;}
+  .mob-cd-wrap.hidden{display:none;}
+  .mob-cd-left{display:flex;align-items:center;gap:10px;}
+  .mob-cd-title{color:#7a1838;font-size:10px;letter-spacing:0.5px;text-transform:uppercase;}
+  .mob-cd-event{color:#4a0826;font-size:13px;font-weight:700;}
+  .mob-cd-units{display:flex;gap:6px;}
+  .mob-cd-unit{text-align:center;}
+  .mob-cd-num{background:rgba(255,255,255,0.92);border:2px solid #e8892a;border-radius:8px;
+    padding:6px 10px;min-width:42px;font-size:20px;font-weight:700;color:#4a0826;display:block;line-height:1;}
+  .mob-cd-lbl{color:#9a2a58;font-size:9px;margin-top:3px;text-transform:uppercase;}
+
+  /* ── Budget chart ── */
+  .mob-chart-wrap{background:#fff;border-radius:14px;padding:16px;margin:0 12px 14px;
+    border:1px solid #E0C8A0;}
+  .mob-chart-bar-row{margin-bottom:10px;}
+  .mob-chart-bar-label{display:flex;justify-content:space-between;font-size:10px;
+    font-weight:600;color:var(--ink);margin-bottom:3px;}
+  .mob-chart-bar-label span{color:#888;font-weight:400;}
+  .mob-chart-bar-bg{background:#F5EDE0;border-radius:6px;height:16px;overflow:hidden;position:relative;}
+  .mob-chart-bar-q{position:absolute;top:0;left:0;height:100%;background:rgba(212,164,76,0.3);border-radius:6px;}
+  .mob-chart-bar-p{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#2E7D32,#4CAF50);border-radius:6px;}
+  .mob-chart-totals{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;
+    padding-top:10px;border-top:1px solid #E0C8A0;}
+  .mob-chart-total-card{text-align:center;padding:8px 4px;border-radius:8px;}
+
+  /* ── Budget summary cards ── */
+  .mob-bud-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;}
+  .mob-bud-card{background:#fff;border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line);}
+  .mob-bud-val{font-size:16px;font-weight:700;color:var(--maroon);}
+  .mob-bud-lbl{font-size:10px;color:#888;margin-top:3px;}
+
+  /* ── Action buttons ── */
+  .mob-act-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+    border-radius:8px;border:none;font-size:16px;cursor:pointer;text-decoration:none;flex-shrink:0;}
+  .mob-act-call{background:#E8F5E9;} .mob-act-wa{background:#E8F5E9;} .mob-act-tick{background:var(--ivory-deep);font-size:14px;}
+
+  /* ── Timeline ── */
+  .mob-tl-wrap{padding:8px 14px;}
+  .mob-tl-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--ivory-deep);}
+  .mob-tl-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+  .mob-tl-past{background:#bbb;} .mob-tl-next{background:#2E7D32;box-shadow:0 0 0 3px rgba(46,125,50,0.2);}
+  .mob-tl-future{background:var(--gold);}
+
+  /* ── Notes ── */
+  .mob-note-card{background:#fff;border-radius:10px;padding:12px;margin-bottom:8px;
+    border-left:3px solid var(--gold);box-shadow:0 1px 6px rgba(92,26,43,0.06);}
+  .mob-note-tag{display:inline-block;padding:2px 7px;border-radius:7px;font-size:10px;
+    font-weight:600;background:var(--ivory-deep);color:var(--maroon);margin-bottom:5px;}
+
+  /* ── Reminder rows ── */
+  .mob-rem-row{padding:10px 12px;border-top:1px solid var(--ivory-deep);display:flex;align-items:center;gap:10px;}
+  .mob-rem-days{padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700;flex-shrink:0;}
+  .mob-d-over,.mob-d-today{background:#FFEBEE;color:#C62828;}
+  .mob-d-soon{background:#FFF3E0;color:#C45000;} .mob-d-ok{background:#E8F5E9;color:#2E7D32;}
+
+  /* ── Empty ── */
+  .mob-empty{text-align:center;padding:28px 16px;color:#888;font-size:13px;}
+
+  /* ── Open-full link ── */
+  .mob-open-full{display:block;margin:10px;padding:12px;background:var(--maroon);color:var(--gold);
+    border:none;border-radius:12px;font-size:13px;font-weight:700;text-align:center;
+    cursor:pointer;text-decoration:none;}
+
+  /* ── Bottom nav ── */
+  .mob-bnav{position:fixed;bottom:0;left:0;right:0;background:var(--maroon);display:flex;
+    border-top:1px solid rgba(212,164,76,0.25);z-index:100;
+    padding-bottom:env(safe-area-inset-bottom,0);}
+  .mob-bnav-item{flex:1;padding:7px 4px 5px;text-align:center;cursor:pointer;border-top:2px solid transparent;}
+  .mob-bnav-item.active{border-top-color:var(--gold);}
+  .mob-bnav-icon{font-size:18px;display:block;line-height:1;}
+  .mob-bnav-lbl{font-size:9px;color:rgba(255,255,255,0.4);margin-top:2px;display:block;}
+  .mob-bnav-item.active .mob-bnav-lbl{color:var(--gold);}
+
+  /* ── Detail sheet ── */
+  .mob-detail-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;
+    display:none;align-items:flex-end;justify-content:center;}
+  .mob-detail-overlay.show{display:flex;}
+  .mob-detail-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 28px;
+    max-height:80vh;overflow-y:auto;width:100%;}
+  .mob-detail-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+  .mob-detail-title{font-size:16px;font-weight:700;color:var(--maroon);margin-bottom:4px;}
+  .mob-detail-sub{font-size:12px;color:#888;margin-bottom:14px;}
+  .mob-drow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ivory-deep);font-size:12px;}
+  .mob-drow-lbl{color:#888;} .mob-drow-val{font-weight:600;color:var(--ink);max-width:60%;text-align:right;}
+  .mob-d-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .mob-dbtn{flex:1;min-width:80px;padding:11px 8px;border:none;border-radius:10px;
+    font-size:13px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:block;}
+  .mob-dbtn-call{background:#1A5C1A;color:#fff;} .mob-dbtn-wa{background:#25D366;color:#fff;}
+  .mob-dbtn-confirm{background:var(--maroon);color:var(--gold);} .mob-dbtn-close{background:var(--ivory-deep);color:var(--ink);}
+
+  /* ── Confirm overlay ── */
+  .mob-clbl{font-size:12px;color:#888;margin-bottom:2px;display:block;}
+  .mob-cinput{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;margin:4px 0 10px;outline:none;}
+  .mob-cinput:focus{border-color:var(--maroon);}
+  .mob-cselect{width:100%;padding:9px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;margin:4px 0 10px;background:#fff;outline:none;}
+
+  /* ── Petal animation ── */
+  .mob-petal{position:absolute;animation:mobPetalFall linear infinite;opacity:0;pointer-events:none;z-index:3;}
+  @keyframes mobPetalFall{0%{transform:translateY(-20px) rotate(0deg);opacity:0;}10%{opacity:.9;}90%{opacity:.6;}100%{transform:translateY(500px) rotate(360deg);opacity:0;}}
+}
 </style>
 </head>
 <body>
@@ -2249,7 +2481,7 @@
    PINs are SHA-256 hashed before storage, never saved as plain text.
    Default PINs:  Admin 1234 · Editor 5678 · Viewer 9999
    ================================================================ */
-const DEFAULT_PINS = {admin:'1234', editor:'5678', viewer:'9999'};
+const DEFAULT_PINS = {admin:'2710', editor:'5678', viewer:'9999'};
 
 /* ================================================================
    OWNER PIN — Change this before delivering to a customer.
@@ -8518,6 +8750,952 @@ function runGlobalSearch(q, gsInput, gsResults){
       </div>
     </div>
   </div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MOBILE APP SHELL  — only rendered/active on screens ≤ 767px
+     Hidden via CSS on desktop; JS activates after PIN unlock.
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="mobApp" style="display:none;">
+
+  <!-- Top bar -->
+  <div class="mob-topbar">
+    <div class="mob-top-left">
+      <button class="mob-btn-back" id="mobBtnBack" onclick="mobShowDash()">← Back</button>
+      <div>
+        <div class="mob-title" id="mobTopTitle">🌸 Vivaah Ledger</div>
+        <div class="mob-sub" id="mobTopSub">Wedding Planner</div>
+      </div>
+    </div>
+    <span class="mob-sync-dot" id="mobSyncDot"></span>
+  </div>
+
+  <!-- Countdown -->
+  <div class="mob-cd-wrap hidden" id="mobCdWrap" style="position:relative;overflow:hidden;">
+    <div id="mobPetals" style="position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;"></div>
+    <div class="mob-cd-left">
+      <span style="font-size:22px;">🌸</span>
+      <div><div class="mob-cd-title">Countdown to</div><div class="mob-cd-event" id="mobCdEvent">Marriage</div></div>
+    </div>
+    <div class="mob-cd-units">
+      <div class="mob-cd-unit"><span class="mob-cd-num" id="mobCdD">00</span><div class="mob-cd-lbl">Days</div></div>
+      <div class="mob-cd-unit"><span class="mob-cd-num" id="mobCdH">00</span><div class="mob-cd-lbl">Hrs</div></div>
+      <div class="mob-cd-unit"><span class="mob-cd-num" id="mobCdM">00</span><div class="mob-cd-lbl">Min</div></div>
+      <div class="mob-cd-unit"><span class="mob-cd-num" id="mobCdS">00</span><div class="mob-cd-lbl">Sec</div></div>
+    </div>
+  </div>
+
+  <!-- Google bar -->
+  <div class="mob-gbar">
+    <div class="mob-gbar-out" id="mobGOut">
+      <div class="mob-gbar-title">Sign in with Google to sync your data</div>
+      <button class="mob-btn-google" onclick="mobGoogleSignIn()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" height="16" alt="G">
+        Sign in with Google
+      </button>
+    </div>
+    <div class="mob-gbar-in" id="mobGIn" style="display:none;">
+      <div class="mob-g-user">
+        <div class="mob-g-avatar" id="mobGAvatar">?</div>
+        <div>
+          <div class="mob-g-name" id="mobGName">—</div>
+          <div class="mob-g-sync" id="mobGSync">✅ Synced</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <button class="mob-btn-signout" style="color:var(--maroon);font-weight:700;" onclick="mobSyncNow()">Sync Now</button>
+        <button class="mob-btn-signout" onclick="mobSignOut()">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div class="mob-view active" id="mobVDash">
+    <div class="mob-sum-bar">
+      <div><div class="mob-sum-val" id="mobSB">₹0</div><div class="mob-sum-lbl">Budget</div></div>
+      <div><div class="mob-sum-val" id="mobSV">0</div><div class="mob-sum-lbl">Vendors</div></div>
+      <div><div class="mob-sum-val" id="mobSG">0</div><div class="mob-sum-lbl">Families</div></div>
+      <div><div class="mob-sum-val" id="mobSA">0</div><div class="mob-sum-lbl">Alerts</div></div>
+    </div>
+    <div class="mob-dash-grid">
+      <div class="mob-dash-card mob-cB" onclick="mobShowSec('budget')">
+        <span class="mob-dc-icon">💰</span><div class="mob-dc-name">Budget</div>
+        <div><span class="mob-dc-stat" id="mobDB1">—</span><span class="mob-dc-stat" id="mobDB2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cV" onclick="mobShowSec('vendor')">
+        <span class="mob-dc-icon">🏪</span><div class="mob-dc-name">Vendors</div>
+        <div><span class="mob-dc-stat" id="mobDV1">—</span><span class="mob-dc-stat" id="mobDV2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cG" onclick="mobShowSec('guest')">
+        <span class="mob-dc-icon">👥</span><div class="mob-dc-name">Guests</div>
+        <div><span class="mob-dc-stat" id="mobDG1">—</span><span class="mob-dc-stat" id="mobDG2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cK" onclick="mobShowSec('kankotri')">
+        <span class="mob-dc-icon">𖥸</span><div class="mob-dc-name">Kankotri</div>
+        <div><span class="mob-dc-stat" id="mobDK1">—</span><span class="mob-dc-stat" id="mobDK2"></span></div>
+        <span class="mob-dc-arr" style="color:rgba(212,164,76,0.4);">→</span>
+      </div>
+      <div class="mob-dash-card mob-cR" onclick="mobShowSec('reminder')">
+        <span class="mob-dc-icon">🔔</span><div class="mob-dc-name">Reminders</div>
+        <div><span class="mob-dc-stat" id="mobDR1">—</span><span class="mob-dc-stat" id="mobDR2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cT" onclick="mobShowSec('timeline')">
+        <span class="mob-dc-icon">📅</span><div class="mob-dc-name">Timeline</div>
+        <div><span class="mob-dc-stat" id="mobDT1">—</span><span class="mob-dc-stat" id="mobDT2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cN" onclick="mobShowSec('notes')">
+        <span class="mob-dc-icon">📝</span><div class="mob-dc-name">Notes</div>
+        <div><span class="mob-dc-stat" id="mobDN1">—</span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+      <div class="mob-dash-card mob-cC" onclick="mobShowSec('catering')">
+        <span class="mob-dc-icon">🍽️</span><div class="mob-dc-name">Catering</div>
+        <div><span class="mob-dc-stat" id="mobDC1">—</span><span class="mob-dc-stat" id="mobDC2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUDGET VIEW -->
+  <div class="mob-view" id="mobVBudget">
+    <div class="mob-chart-wrap" id="mobChartWrap" style="display:none;">
+      <div style="font-size:13px;font-weight:700;color:var(--maroon);margin-bottom:10px;">📊 Budget vs Actual</div>
+      <div id="mobChartBars"></div>
+      <div class="mob-chart-totals">
+        <div class="mob-chart-total-card" style="background:#FFF8E1;"><div style="font-size:13px;font-weight:700;color:#856404;" id="mobChartQ">₹0</div><div style="font-size:9px;color:#888;margin-top:2px;">Quoted</div></div>
+        <div class="mob-chart-total-card" style="background:#E8F5E9;"><div style="font-size:13px;font-weight:700;color:#2E7D32;" id="mobChartP">₹0</div><div style="font-size:9px;color:#888;margin-top:2px;">Paid</div></div>
+        <div class="mob-chart-total-card" style="background:#FFE4E8;"><div style="font-size:13px;font-weight:700;color:#8B2A3F;" id="mobChartO">₹0</div><div style="font-size:9px;color:#888;margin-top:2px;">Due</div></div>
+      </div>
+    </div>
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#856404,#C8960E);">
+      <div class="mob-sec-title">💰 Budget & Payment Tracking</div>
+      <div class="mob-sec-sub">Total spend, advances and outstanding dues</div>
+      <div class="mob-sec-badges" id="mobBudBadges"></div>
+    </div>
+    <div class="mob-bud-cards" id="mobBudCards"></div>
+    <div class="mob-acc-wrap" id="mobBudList"></div>
+  </div>
+
+  <!-- VENDOR VIEW -->
+  <div class="mob-view" id="mobVVendor">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#1A3A8A,#2952C4);">
+      <div class="mob-sec-title">🏪 Vendor Management</div>
+      <div class="mob-sec-sub">Tap any vendor to call, WhatsApp or view payments</div>
+      <div class="mob-sec-badges" id="mobVendBadges"></div>
+    </div>
+    <div class="mob-srch"><input id="mobVendSearch" placeholder="Search vendor or category…" oninput="mobRenderVendors()"></div>
+    <div class="mob-acc-wrap" id="mobVendList"></div>
+  </div>
+
+  <!-- GUEST VIEW -->
+  <div class="mob-view" id="mobVGuest">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#5C1A2B,#8A2A3F);">
+      <div class="mob-sec-title">👥 Guest List</div>
+      <div class="mob-sec-sub">Tap any family to call, WhatsApp or confirm headcount</div>
+      <div class="mob-sec-badges" id="mobGuestBadges"></div>
+      <button onclick="mobCopyMarriageNums()" style="margin-top:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.5);color:var(--gold);padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">📋 Copy All Marriage Guest Numbers</button>
+    </div>
+    <div class="mob-srch"><input id="mobGuestSearch" placeholder="Search family name or phone…" oninput="mobRenderGuests()"></div>
+    <div id="mobEvtSummary" style="padding:10px 14px;background:#fff8e1;border-bottom:1px solid #e8d5b0;"></div>
+    <div id="mobEvtChips" style="display:flex;gap:6px;padding:8px 14px;overflow-x:auto;background:#faf0e6;border-bottom:1px solid #e8d5b0;">
+      <div class="mob-evt-chip active" onclick="mobFilterEvent(null)">All</div>
+    </div>
+    <div class="mob-acc-wrap" id="mobGuestList"></div>
+  </div>
+
+  <!-- KANKOTRI VIEW -->
+  <div class="mob-view" id="mobVKankotri">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);">
+      <div class="mob-sec-title" style="color:var(--gold);">𖥸 Kankotri Invitations</div>
+      <div class="mob-sec-sub" style="color:#F0D8A8;">VIP · Premium · Normal tiers · Dispatch tracking</div>
+      <div class="mob-sec-badges" id="mobKankBadges"></div>
+    </div>
+    <div class="mob-acc-wrap" id="mobKankList"></div>
+  </div>
+
+  <!-- REMINDER VIEW -->
+  <div class="mob-view" id="mobVReminder">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#5C1A8A,#8A2AC4);">
+      <div class="mob-sec-title">🔔 Reminders & Alerts</div>
+      <div class="mob-sec-sub">Auto email at 8:00 AM IST · 7, 3, 2, 1 days before event</div>
+      <div class="mob-sec-badges" id="mobRemBadges"></div>
+    </div>
+    <div class="mob-acc-wrap" id="mobRemList"></div>
+  </div>
+
+  <!-- TIMELINE VIEW -->
+  <div class="mob-view" id="mobVTimeline">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#1A5C5C,#2E8B8B);">
+      <div class="mob-sec-title">📅 Wedding Event Timeline</div>
+      <div class="mob-sec-sub">All events — dates, venues and schedules</div>
+      <div class="mob-sec-badges" id="mobTlBadges"></div>
+    </div>
+    <div class="mob-tl-wrap" id="mobTlList"></div>
+  </div>
+
+  <!-- NOTES VIEW -->
+  <div class="mob-view" id="mobVNotes">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#2E6B1A,#4A9B2A);">
+      <div class="mob-sec-title">📝 Notes & References</div>
+      <div class="mob-sec-sub">Linked to vendors or guests — synced to Google Sheets</div>
+      <div class="mob-sec-badges" id="mobNotesBadges"></div>
+    </div>
+    <div style="padding:12px 14px;background:#f5f5f5;border-bottom:1px solid #e0e0e0;">
+      <div style="font-size:12px;font-weight:700;color:#2E7D32;margin-bottom:8px;">✏️ Add Quick Note</div>
+      <textarea id="mobQuickNote" rows="3" placeholder="Type your note here…" style="width:100%;border:1.5px solid #c8e6c9;border-radius:8px;padding:8px 10px;font-size:12px;resize:none;font-family:inherit;outline:none;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <select id="mobQuickNoteTag" style="flex:1;border:1px solid #e0e0e0;border-radius:6px;padding:6px;font-size:11px;">
+          <option value="">🏷️ Tag (optional)</option>
+          <option value="Marriage">💍 Marriage</option><option value="Mehendi">🌿 Mehendi</option>
+          <option value="Catering">🍽️ Catering</option><option value="Photography">📸 Photography</option>
+          <option value="Venue">🏛️ Venue</option><option value="Urgent">⚡ Urgent</option>
+        </select>
+        <button onclick="mobSaveNote()" style="background:#2E7D32;color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;font-weight:700;cursor:pointer;">💾 Save</button>
+      </div>
+    </div>
+    <div class="mob-acc-wrap" id="mobNotesList"></div>
+  </div>
+
+  <!-- CATERING VIEW -->
+  <div class="mob-view" id="mobVCatering">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#C45000,#E67300);">
+      <div class="mob-sec-title">🍽️ Guest & Catering Calculator</div>
+      <div class="mob-sec-sub">Estimate food quantities per event</div>
+    </div>
+    <div class="mob-bud-cards" id="mobCaterSummary"></div>
+    <div id="mobCaterList" style="padding:10px;"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="mob-bnav">
+    <div class="mob-bnav-item active" id="mobNavHome" onclick="mobShowDash()"><span class="mob-bnav-icon">🏠</span><span class="mob-bnav-lbl">Home</span></div>
+    <div class="mob-bnav-item" id="mobNavVend" onclick="mobShowSec('vendor')"><span class="mob-bnav-icon">🏪</span><span class="mob-bnav-lbl">Vendors</span></div>
+    <div class="mob-bnav-item" id="mobNavGuest" onclick="mobShowSec('guest')"><span class="mob-bnav-icon">👥</span><span class="mob-bnav-lbl">Guests</span></div>
+    <div class="mob-bnav-item" id="mobNavRem" onclick="mobShowSec('reminder')"><span class="mob-bnav-icon">🔔</span><span class="mob-bnav-lbl">Alerts</span></div>
+    <div class="mob-bnav-item" id="mobNavKank" onclick="mobShowSec('kankotri')"><span class="mob-bnav-icon">𖥸</span><span class="mob-bnav-lbl">Kankotri</span></div>
+  </div>
+
+  <!-- Guest detail sheet -->
+  <div class="mob-detail-overlay" id="mobGuestOverlay" onclick="if(event.target===this)mobCloseGuest()">
+    <div class="mob-detail-sheet">
+      <div class="mob-detail-handle"></div>
+      <div class="mob-detail-title" id="mobGdTitle">—</div>
+      <div class="mob-detail-sub" id="mobGdSub">—</div>
+      <div id="mobGdRows"></div>
+      <div class="mob-d-actions" id="mobGdActions"></div>
+    </div>
+  </div>
+
+  <!-- Confirm overlay -->
+  <div class="mob-detail-overlay" id="mobConfirmOverlay" onclick="if(event.target===this)mobCloseConfirm()">
+    <div class="mob-detail-sheet">
+      <div class="mob-detail-handle"></div>
+      <div class="mob-detail-title">✓ Confirm Headcount</div>
+      <div class="mob-detail-sub" id="mobConfName">—</div>
+      <span class="mob-clbl">Adults confirmed</span><input type="number" id="mobConfAdults" class="mob-cinput" min="0" max="99" placeholder="0">
+      <span class="mob-clbl">Kids confirmed</span><input type="number" id="mobConfKids" class="mob-cinput" min="0" max="99" placeholder="0">
+      <span class="mob-clbl">Call status</span>
+      <select id="mobConfStatus" class="mob-cselect">
+        <option value="">— Select status —</option>
+        <option value="confirmed">✅ Confirmed Attending</option>
+        <option value="declined">❌ Declined</option>
+        <option value="maybe">🤔 Maybe</option>
+        <option value="no_answer">📵 No Answer</option>
+      </select>
+      <div class="mob-d-actions">
+        <button class="mob-dbtn mob-dbtn-close" onclick="mobCloseConfirm()" style="flex:1;">Cancel</button>
+        <button class="mob-dbtn mob-dbtn-confirm" onclick="mobSaveConfirm()" style="flex:2;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor detail sheet -->
+  <div class="mob-detail-overlay" id="mobVendorOverlay" onclick="if(event.target===this)mobCloseVendor()">
+    <div class="mob-detail-sheet">
+      <div class="mob-detail-handle"></div>
+      <div class="mob-detail-title" id="mobVdTitle">—</div>
+      <div class="mob-detail-sub" id="mobVdSub">—</div>
+      <div id="mobVdRows"></div>
+      <div class="mob-d-actions" id="mobVdActions"></div>
+    </div>
+  </div>
+
+</div><!-- /mobApp -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE BRIDGE — reads data from the main desktop app's state
+   (vendors, guests, reminders, notes, eventTimeline, functions,
+   branding) after unlock, then renders the mobile UI.
+
+   Key fixes vs vivaah_mobile.html:
+   ✅  PIN 2710 — reads hash from index.html's storageGet system
+   ✅  Event counts — uses same WEDDING_EVENTS + expandGuests logic
+   ✅  Google sync — delegates to main app's syncFromSheets()
+   ✅  Data always in sync — same localStorage keys
+   ═══════════════════════════════════════════════════════════════ */
+
+(function(){
+'use strict';
+
+// Only activate on mobile screens
+if (window.innerWidth > 767) return;
+
+var _mobActive = false;
+var _mobCdInterval = null;
+var _mobActiveFilter = null;
+var _mobCurGuestId = null;
+var _mobCurVendorId = null;
+var _mobAccN = 0;
+
+// ── Utility ──────────────────────────────────────────────────────
+function mobEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function mobFmt(n){
+  n=Number(n)||0;
+  if(n>=100000) return '₹'+(n/100000).toFixed(1)+'L';
+  if(n>=1000)   return '₹'+Math.round(n/1000)+'K';
+  return '₹'+n;
+}
+function mobDrow(lbl,val,col){
+  return '<div class="mob-drow"><span class="mob-drow-lbl">'+mobEsc(lbl)+'</span><span class="mob-drow-val"'+(col?' style="color:'+col+';"':'')+'>'+mobEsc(String(val||'—'))+'</span></div>';
+}
+
+// ── Data access — reads the same globals as desktop ───────────────
+function getVendors(){ return (typeof vendors!=='undefined' && Array.isArray(vendors)) ? vendors : []; }
+function getGuests(){  return (typeof guests!=='undefined'  && Array.isArray(guests))  ? guests  : []; }
+function getReminders(){ return (typeof reminders!=='undefined') ? reminders : {trial:[],clothes:[],guest:[]}; }
+function getNotes(){   return (typeof notes!=='undefined'   && Array.isArray(notes))   ? notes   : []; }
+function getTimeline(){ return (typeof eventTimeline!=='undefined') ? eventTimeline : {}; }
+function getFunctions(){ return (typeof functions!=='undefined' && Array.isArray(functions)) ? functions : []; }
+function getBranding(){ return (typeof branding!=='undefined') ? branding : {}; }
+var MOB_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+
+function vPaid(v){ return (v.payments||[]).reduce(function(s,p){return s+Number(p.amount||0);},0); }
+function vDue(v){ return Math.max(0,Number(v.quoted||0)-vPaid(v)); }
+function vStat(v){ var p=vPaid(v),q=Number(v.quoted||0); return p>=q&&q>0?'settled':p>0?'partial':'unpaid'; }
+
+// ── Sync dot ──────────────────────────────────────────────────────
+function mobSetSync(type,msg){
+  var el=document.getElementById('mobGSync'), dot=document.getElementById('mobSyncDot');
+  if(!el) return;
+  if(type==='ok'){ el.textContent='✅ '+msg; if(dot){dot.className='mob-sync-dot';} }
+  else if(type==='error'){ el.textContent='❌ '+msg; if(dot){dot.className='mob-sync-dot';} }
+  else{ el.textContent='🔄 '+msg; if(dot){dot.className='mob-sync-dot busy';} }
+}
+
+// ── Activate after desktop unlock ─────────────────────────────────
+window.mobActivate = function(){
+  if(window.innerWidth > 767) return;
+  _mobActive = true;
+  document.getElementById('mobApp').style.display = 'block';
+  mobApplyBranding();
+  mobUpdateDash();
+  mobStartCountdown();
+  mobRenderBudgetChart();
+  // Restore Google session display if already signed in on desktop
+  var gName = document.getElementById('gUserName') || document.getElementById('userName');
+  var desktopGIn = document.getElementById('googleSignedInSection') || document.getElementById('signedInSection');
+  if(typeof googleToken !== 'undefined' && googleToken){
+    var nm = (typeof currentUserName !== 'undefined' && currentUserName) ||
+             (document.getElementById('gUserName') && document.getElementById('gUserName').textContent) || 'Signed in';
+    document.getElementById('mobGAvatar').textContent = nm.charAt(0).toUpperCase();
+    document.getElementById('mobGName').textContent = nm;
+    document.getElementById('mobGOut').style.display = 'none';
+    document.getElementById('mobGIn').style.display = 'flex';
+    mobSetSync('ok','Synced');
+  }
+};
+
+// ── Google sign-in (delegates to main app) ────────────────────────
+window.mobGoogleSignIn = function(){
+  if(typeof googleSignIn === 'function'){ googleSignIn(); }
+  else alert('Google sign-in unavailable. Please sign in on desktop first.');
+};
+window.mobSignOut = function(){
+  if(typeof googleSignOut === 'function') googleSignOut();
+  document.getElementById('mobGOut').style.display = 'block';
+  document.getElementById('mobGIn').style.display = 'none';
+};
+window.mobSyncNow = function(){
+  mobSetSync('syncing','Syncing…');
+  if(typeof syncFromSheets === 'function'){
+    syncFromSheets().then(function(){
+      mobSetSync('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+      mobUpdateDash(); mobStartCountdown(); mobRenderBudgetChart();
+      var av = document.querySelector('.mob-view.active');
+      if(av){ var sid=av.id.replace('mobV','').toLowerCase(); if(MOB_SECS[sid]&&MOB_SECS[sid].render) MOB_SECS[sid].render(); }
+    }).catch(function(){ mobSetSync('error','Sync failed'); });
+  }
+};
+
+// ── After main app syncs, refresh mobile too ──────────────────────
+// Hook into the main syncFromSheets completion
+var _origSync = window.syncFromSheets;
+if(typeof _origSync === 'function'){
+  window.syncFromSheets = function(){
+    return _origSync.apply(this,arguments).then ? _origSync.apply(this,arguments).then(function(r){
+      if(_mobActive){ mobUpdateDash(); mobStartCountdown(); mobRenderBudgetChart(); }
+      return r;
+    }) : _origSync.apply(this,arguments);
+  };
+}
+
+// ── Branding ──────────────────────────────────────────────────────
+function mobApplyBranding(){
+  var b = getBranding();
+  var el = document.getElementById('mobTopTitle');
+  if(el) el.textContent = b.title || '🌸 Vivaah Ledger';
+}
+
+// ── Dashboard stats — uses same data as desktop ───────────────────
+function mobUpdateDash(){
+  var vs = getVendors(), gs = getGuests(), rm = getReminders(), fn = getFunctions();
+  var tl = getTimeline();
+  var totalB = vs.reduce(function(s,v){return s+Number(v.quoted||0);},0);
+  var totalP = vs.reduce(function(s,v){return s+vPaid(v);},0);
+  var pending = vs.filter(function(v){return vDue(v)>0;}).length;
+  var allRem = [].concat(rm.trial||[],rm.clothes||[],rm.guest||[]).filter(function(r){return !r.done;});
+  var conf = gs.filter(function(g){return g.callStatus==='confirmed';}).length;
+  // ✅ FIX: correct marriage count — families with at least 1 adult/kid at Marriage
+  var mrgInv = gs.filter(function(g){
+    var e=g.events&&g.events['Marriage'];
+    return e&&(Number(e.adults||0)+Number(e.kids||0))>0;
+  }).length;
+  var vip = gs.filter(function(g){return g.invTier==='vip';}).length;
+  var prem = gs.filter(function(g){return g.invTier==='premium';}).length;
+  var norm = gs.filter(function(g){return g.invTier==='normal';}).length;
+  var cards = gs.reduce(function(s,g){return s+(parseInt(g.invCards)||0);},0);
+  var evCount = Object.values(tl).filter(function(e){return e&&e.date;}).length;
+  var upcoming = Object.entries(tl).filter(function(kv){return kv[1]&&kv[1].date&&new Date(kv[1].date)>=new Date();})
+    .sort(function(a,b){return new Date(a[1].date)-new Date(b[1].date);});
+  var cTotal = fn.reduce(function(s,f){return s+((parseInt(f.guests)||0)*(parseInt(f.rate)||0));},0);
+  var cGuests = fn.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
+
+  function s(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+  s('mobSB',mobFmt(totalB)); s('mobSV',vs.length); s('mobSG',gs.length); s('mobSA',allRem.length);
+  s('mobDB1',mobFmt(totalB)+' total budget');
+  s('mobDB2',mobFmt(totalP)+' paid · '+mobFmt(totalB-totalP)+' due');
+  s('mobDV1',vs.length+' vendors tracked'); s('mobDV2',pending+' pending payment');
+  s('mobDG1',gs.length+' families · '+mrgInv+' marriage');
+  s('mobDG2',conf+' confirmed · '+(gs.length-conf)+' pending');
+  s('mobDK1','👑 '+vip+' · ⭐ '+prem+' · 🎟 '+norm);
+  s('mobDK2','📦 '+cards+' total cards');
+  s('mobDR1',allRem.length+' active reminders'); s('mobDR2','Auto email at 8:00 AM IST');
+  s('mobDT1',evCount+' events'); s('mobDT2',upcoming.length>0?'Next: '+upcoming[0][0]:'No upcoming events');
+  s('mobDN1',getNotes().length+' notes saved');
+  s('mobDC1',fn.length>0?mobFmt(cTotal)+' total':'No functions yet');
+  s('mobDC2',fn.length>0?cGuests+' guests · '+fn.length+' events':'Add in full tool');
+}
+
+// ── Countdown ─────────────────────────────────────────────────────
+function mobStartCountdown(){
+  var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
+  var tl = getTimeline(); var target=null, name='Marriage';
+  for(var i=0;i<order.length;i++){
+    var t=tl[order[i]];
+    if(t&&t.date){ var d=new Date(t.date);
+      if(t.startTime){var p=t.startTime.split(':');d.setHours(Number(p[0])||20,Number(p[1])||0,0,0);}else d.setHours(20,0,0,0);
+      if(d>new Date()){target=d;name=order[i];break;}
+    }
+  }
+  var wrap=document.getElementById('mobCdWrap'); if(!wrap) return;
+  if(!target){wrap.classList.add('hidden');return;}
+  wrap.classList.remove('hidden');
+  document.getElementById('mobCdEvent').textContent=name;
+  if(_mobCdInterval) clearInterval(_mobCdInterval);
+  function tick(){
+    var diff=target-new Date(); if(diff<=0){clearInterval(_mobCdInterval);return;}
+    document.getElementById('mobCdD').textContent=String(Math.floor(diff/86400000)).padStart(2,'0');
+    document.getElementById('mobCdH').textContent=String(Math.floor(diff%86400000/3600000)).padStart(2,'0');
+    document.getElementById('mobCdM').textContent=String(Math.floor(diff%3600000/60000)).padStart(2,'0');
+    document.getElementById('mobCdS').textContent=String(Math.floor(diff%60000/1000)).padStart(2,'0');
+  }
+  tick(); _mobCdInterval=setInterval(tick,1000);
+  // Petals
+  var pw=document.getElementById('mobPetals'); if(pw&&pw.children.length===0){
+    var em=['🌸','🌺','🌹','🌼','🪷'];
+    for(var j=0;j<12;j++){var p=document.createElement('div');p.className='mob-petal';
+      p.textContent=em[Math.floor(Math.random()*em.length)];
+      p.style.cssText='left:'+Math.random()*96+'%;font-size:'+(12+Math.random()*10)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
+      pw.appendChild(p);}
+  }
+}
+
+// ── Budget chart ──────────────────────────────────────────────────
+function mobRenderBudgetChart(){
+  var wrap=document.getElementById('mobChartWrap'),barsEl=document.getElementById('mobChartBars');
+  var vs=getVendors();
+  if(!wrap||!barsEl||!vs.length){if(wrap)wrap.style.display='none';return;}
+  wrap.style.display='block';
+  var cats={};
+  vs.forEach(function(v){ var cat=(v.category||'Other').trim();
+    if(!cats[cat])cats[cat]={q:0,p:0};
+    cats[cat].q+=Number(v.quoted||0);
+    cats[cat].p+=vPaid(v);
+  });
+  var allQ=Object.values(cats).reduce(function(s,c){return s+c.q;},0);
+  var allP=Object.values(cats).reduce(function(s,c){return s+c.p;},0);
+  function s(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+  s('mobChartQ',mobFmt(allQ));s('mobChartP',mobFmt(allP));s('mobChartO',mobFmt(Math.max(0,allQ-allP)));
+  var maxV=Math.max.apply(null,Object.values(cats).map(function(c){return c.q;}))||1;
+  barsEl.innerHTML=Object.entries(cats).sort(function(a,b){return b[1].q-a[1].q;}).map(function(e){
+    var cat=e[0],v=e[1];
+    return '<div class="mob-chart-bar-row">'+
+      '<div class="mob-chart-bar-label"><span>'+cat+'</span><span>'+mobFmt(v.q)+' / '+mobFmt(v.p)+'</span></div>'+
+      '<div class="mob-chart-bar-bg">'+
+        '<div class="mob-chart-bar-q" style="width:'+(v.q/maxV*100).toFixed(1)+'%"></div>'+
+        '<div class="mob-chart-bar-p" style="width:'+(v.p/maxV*100).toFixed(1)+'%"></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+// ── Accordion helper ──────────────────────────────────────────────
+function mobAccGroup(title,hBg,hColor,cBg,cColor,items,renderFn,open){
+  var id='ma'+(++_mobAccN);
+  var rows=items.length===0?'<div class="mob-empty">Nothing here yet</div>':items.map(renderFn).join('');
+  return '<div class="mob-acc-grp">'+
+    '<div class="mob-acc-hd" style="background:'+hBg+';" onclick="mobToggleAcc(\''+id+'\')">'+
+      '<div class="mob-acc-hd-left">'+
+        '<span class="mob-acc-hd-title" style="color:'+hColor+';">'+mobEsc(title)+'</span>'+
+        '<span class="mob-acc-hd-cnt" style="background:'+cBg+';color:'+cColor+';">'+items.length+'</span>'+
+      '</div>'+
+      '<span class="mob-acc-arr'+(open?' open':'') + '" id="mobarr_'+id+'">▶</span>'+
+    '</div>'+
+    '<div class="mob-acc-bd'+(open?' open':'') + '" id="'+id+'">'+rows+'</div>'+
+  '</div>';
+}
+window.mobToggleAcc=function(id){
+  var b=document.getElementById(id),a=document.getElementById('mobarr_'+id);
+  if(b)b.classList.toggle('open'); if(a)a.classList.toggle('open');
+};
+
+// ── Render Budget ─────────────────────────────────────────────────
+function mobRenderBudget(){
+  var vs=getVendors();
+  var totalB=vs.reduce(function(s,v){return s+Number(v.quoted||0);},0);
+  var totalP=vs.reduce(function(s,v){return s+vPaid(v);},0);
+  var settled=vs.filter(function(v){return vStat(v)==='settled';}).length;
+  document.getElementById('mobBudBadges').innerHTML=
+    '<span class="mob-sbadge">'+mobFmt(totalB)+' total</span>'+
+    '<span class="mob-sbadge">'+mobFmt(totalP)+' paid</span>'+
+    '<span class="mob-sbadge">'+mobFmt(totalB-totalP)+' due</span>';
+  document.getElementById('mobBudCards').innerHTML=
+    '<div class="mob-bud-card"><div class="mob-bud-val">'+mobFmt(totalB)+'</div><div class="mob-bud-lbl">Total Budget</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val" style="color:#2E7D32;">'+mobFmt(totalP)+'</div><div class="mob-bud-lbl">Total Paid</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val" style="color:#B5562F;">'+mobFmt(Math.max(0,totalB-totalP))+'</div><div class="mob-bud-lbl">Outstanding</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val">'+settled+'/'+vs.length+'</div><div class="mob-bud-lbl">Settled</div></div>';
+  function rV(v){
+    var st=vStat(v),cls=st==='settled'?'mob-bs':st==='partial'?'mob-bp':'mob-bu';
+    var lbl=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial':'⏳ Unpaid';
+    return '<div class="mob-row-item" onclick="mobOpenVendor(\''+v.id+'\')">'+
+      '<div><div class="mob-row-name">'+mobEsc(v.name||'—')+'</div><div class="mob-row-sub">'+mobEsc(v.category||'')+'</div></div>'+
+      '<div class="mob-row-right"><span class="mob-badge '+cls+'">'+lbl+'</span>'+
+      '<span style="font-size:10px;color:#888;">'+mobFmt(vDue(v))+' due</span></div></div>';
+  }
+  var unpaid=vs.filter(function(v){return vStat(v)==='unpaid';});
+  var partial=vs.filter(function(v){return vStat(v)==='partial';});
+  var settledV=vs.filter(function(v){return vStat(v)==='settled';});
+  _mobAccN=0;
+  document.getElementById('mobBudList').innerHTML=
+    mobAccGroup('⏳ Unpaid','#FFEBEE','#C62828','#FFC5C5','#C62828',unpaid,rV,true)+
+    mobAccGroup('⚡ Partial','#FFF8E1','#C45000','#FFE08A','#C45000',partial,rV)+
+    mobAccGroup('✅ Settled','#E8F5E9','#2E7D32','#C8E6C9','#2E7D32',settledV,rV);
+}
+
+// ── Render Vendors ────────────────────────────────────────────────
+function mobRenderVendors(){
+  var vs=getVendors();
+  var q=(document.getElementById('mobVendSearch').value||'').toLowerCase();
+  var filtered=q?vs.filter(function(v){return(v.name||'').toLowerCase().includes(q)||(v.category||'').toLowerCase().includes(q);}):vs;
+  var pending=vs.filter(function(v){return vDue(v)>0;}).length;
+  document.getElementById('mobVendBadges').innerHTML='<span class="mob-sbadge">'+vs.length+' vendors</span><span class="mob-sbadge">'+pending+' pending payment</span>';
+  function rV(v){
+    var st=vStat(v),cls=st==='settled'?'mob-bs':st==='partial'?'mob-bp':'mob-bu';
+    var lbl=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial':'⏳ Unpaid';
+    return '<div class="mob-row-item" onclick="mobOpenVendor(\''+v.id+'\')">'+
+      '<div><div class="mob-row-name">'+mobEsc(v.name||'—')+'</div>'+
+      '<div class="mob-row-sub">'+mobFmt(v.quoted||0)+' quoted'+(v.phone?' · '+v.phone:'')+'</div></div>'+
+      '<div class="mob-row-right"><span class="mob-badge '+cls+'">'+lbl+'</span></div></div>';
+  }
+  var cats=[];
+  filtered.forEach(function(v){var c=v.category||'Uncategorized';if(!cats.includes(c))cats.push(c);});
+  cats.sort();
+  _mobAccN=0;
+  document.getElementById('mobVendList').innerHTML=cats.length===0?
+    '<div class="mob-empty">No vendors found</div>':
+    cats.map(function(cat){
+      var cv=filtered.filter(function(v){return(v.category||'Uncategorized')===cat;});
+      return mobAccGroup(cat,'#fff','var(--maroon)','var(--ivory-deep)','#888',cv,rV,cats.length===1);
+    }).join('');
+}
+
+// ── Event summary (guest view) ────────────────────────────────────
+function mobBuildEvtSummary(){
+  var gs=getGuests();
+  var LABELS={'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
+  var cardsEl=document.getElementById('mobEvtSummary'); if(!cardsEl) return;
+  var html='<div style="font-size:11px;font-weight:700;color:#856404;margin-bottom:6px;">📊 Guests per Event</div><div class="mob-evt-sum-grid">';
+  MOB_EVENTS.forEach(function(ev){
+    var count=gs.filter(function(g){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+    html+='<div class="mob-evt-sum-card" onclick="mobFilterEvent(\''+ev+'\')">'+
+      '<div class="mob-evt-sum-name">'+(LABELS[ev]||ev)+'</div>'+
+      '<div class="mob-evt-sum-count">'+count+'</div>'+
+      '<div class="mob-evt-sum-sub">families</div></div>';
+  });
+  html+='</div>';
+  cardsEl.innerHTML=html;
+  var chipsEl=document.getElementById('mobEvtChips'); if(!chipsEl) return;
+  var chipsHtml='<div class="mob-evt-chip'+(!_mobActiveFilter?' active':'')+ '" onclick="mobFilterEvent(null)">All '+gs.length+'</div>';
+  MOB_EVENTS.forEach(function(ev){
+    var count=gs.filter(function(g){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+    chipsHtml+='<div class="mob-evt-chip'+(_mobActiveFilter===ev?' active':'')+ '" onclick="mobFilterEvent(\''+ev+'\')">'+mobEsc((LABELS[ev]||ev).replace(/\S+\s/,''))+' '+count+'</div>';
+  });
+  chipsEl.innerHTML=chipsHtml;
+}
+window.mobFilterEvent=function(ev){ _mobActiveFilter=ev; mobBuildEvtSummary(); mobRenderGuests(); };
+
+// ── Render Guests ─────────────────────────────────────────────────
+function mobRenderGuests(){
+  var gs=getGuests();
+  var q=(document.getElementById('mobGuestSearch').value||'').toLowerCase();
+  var filtered=gs;
+  if(_mobActiveFilter) filtered=filtered.filter(function(g){var e=g.events&&g.events[_mobActiveFilter];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;});
+  if(q) filtered=filtered.filter(function(g){return(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q);});
+  var conf=gs.filter(function(g){return g.callStatus==='confirmed';}).length;
+  // ✅ FIX: correct marriage count
+  var mrgCnt=gs.filter(function(g){var e=g.events&&g.events['Marriage'];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+  document.getElementById('mobGuestBadges').innerHTML=
+    '<span class="mob-sbadge">'+gs.length+' families</span>'+
+    '<span class="mob-sbadge">'+conf+' confirmed</span>'+
+    '<span class="mob-sbadge">'+mrgCnt+' marriage</span>';
+  var EMOJIS={'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
+  function rG(g){
+    var cls=g.callStatus==='confirmed'?'mob-bc':g.callStatus==='declined'?'mob-bd':'mob-bpd';
+    var lbl=g.callStatus==='confirmed'?'✅':g.callStatus==='declined'?'❌':'⏳';
+    var ph=(g.phone||'').replace(/\D/g,'');
+    var waMsg=encodeURIComponent('Dear *'+g.name+'* 🌸\n\nWe warmly invite you to our wedding celebration.\n— Shah Family');
+    var evs=MOB_EVENTS.filter(function(ev){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).map(function(ev){return EMOJIS[ev];});
+    return '<div class="mob-row-item" style="flex-wrap:wrap;gap:4px;cursor:default;padding:8px 10px;">'+
+      '<div style="flex:1;min-width:180px;" onclick="mobOpenGuest(\''+g.id+'\')">'+
+        '<div class="mob-row-name">'+mobEsc(g.name||'—')+'</div>'+
+        '<div class="mob-row-sub">'+(g.phone||'')+' '+(evs.join(' '))+'</div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
+        (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
+        (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">💬</a>':'')+
+        '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
+      '</div></div>';
+  }
+  var bride=filtered.filter(function(g){return g.side==='Bride';});
+  var groom=filtered.filter(function(g){return g.side==='Groom';});
+  var both=filtered.filter(function(g){return g.side!=='Bride'&&g.side!=='Groom';});
+  _mobAccN=0;
+  document.getElementById('mobGuestList').innerHTML=
+    (bride.length?mobAccGroup('👰 Bride Side','#FAF0F2','#5C1A2B','#F7D4DB','#5C1A2B',bride,rG,true):'')+
+    (groom.length?mobAccGroup('🤵 Groom Side','#F0F4FF','#1A3A8A','#C5D5F7','#1A3A8A',groom,rG):'')+
+    (both.length?mobAccGroup('Both Sides','#F5F5F5','#555','#E0E0E0','#555',both,rG):'')+
+    (filtered.length===0?'<div class="mob-empty">No families found</div>':'');
+}
+window.mobCopyMarriageNums=function(){
+  var nums=getGuests().filter(function(g){var e=g.events&&g.events['Marriage'];return e&&(Number(e.adults||0)+Number(e.kids||0))>0&&g.phone;}).map(function(g){return g.phone.replace(/\D/g,'');}).filter(Boolean);
+  if(!nums.length){alert('No Marriage guests with phone numbers found.');return;}
+  navigator.clipboard.writeText(nums.join('\n')).then(function(){alert('✅ '+nums.length+' numbers copied!');});
+};
+
+// ── Render Kankotri ───────────────────────────────────────────────
+function mobRenderKankotri(){
+  var gs=getGuests();
+  var vip=gs.filter(function(g){return g.invTier==='vip';});
+  var prem=gs.filter(function(g){return g.invTier==='premium';});
+  var norm=gs.filter(function(g){return g.invTier==='normal';});
+  var unassigned=gs.filter(function(g){return !g.invTier;});
+  var cards=gs.reduce(function(s,g){return s+(parseInt(g.invCards)||0);},0);
+  var sent=gs.filter(function(g){return g.invSent;}).length;
+  document.getElementById('mobKankBadges').innerHTML=
+    '<span class="mob-sbadge gold">👑 '+vip.length+' VIP</span>'+
+    '<span class="mob-sbadge gold">⭐ '+prem.length+' Premium</span>'+
+    '<span class="mob-sbadge gold">🎟 '+norm.length+' Normal</span>'+
+    '<span class="mob-sbadge gold">📦 '+cards+' cards</span>';
+  function rK(g){
+    var sentCls=g.invSent?'mob-bsent':'mob-buns';
+    var sentLbl=g.invSent?'✅ Sent':'⏳ Pending';
+    var tierLbl=g.invTier==='vip'?'👑 VIP':g.invTier==='premium'?'⭐ Premium':g.invTier==='normal'?'🎟 Normal':'';
+    return '<div class="mob-row-item" style="flex-wrap:wrap;">'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div class="mob-row-name">'+mobEsc(g.name||'—')+'</div>'+
+        '<div class="mob-row-sub">'+(g.side||'')+' · '+(g.invCards||0)+' cards'+(tierLbl?' · '+tierLbl:'')+'</div>'+
+      '</div>'+
+      '<div class="mob-row-right">'+
+        '<button onclick="mobToggleSent(\''+g.id+'\')" class="mob-badge '+sentCls+'" style="border:none;cursor:pointer;padding:5px 10px;">'+sentLbl+'</button>'+
+      '</div></div>';
+  }
+  _mobAccN=0;
+  document.getElementById('mobKankList').innerHTML=
+    mobAccGroup('👑 VIP Premium','#FFF8E8','#856404','#FFE082','#856404',vip,rK,true)+
+    mobAccGroup('⭐ Premium','#F0F4FF','#1A3A8A','#BBCEF8','#1A3A8A',prem,rK)+
+    mobAccGroup('🎟 Normal','#F5F5F5','#555','#E0E0E0','#555',norm,rK)+
+    mobAccGroup('⚪ Unassigned','#FAFAFA','#999','#EEEEEE','#999',unassigned,rK);
+}
+window.mobToggleSent=function(gid){
+  if(typeof guests==='undefined') return;
+  var g=guests.find(function(x){return x.id===gid;}); if(!g) return;
+  g.invSent=!g.invSent;
+  if(typeof saveGuests==='function') saveGuests();
+  mobRenderKankotri(); mobUpdateDash();
+};
+
+// ── Render Reminders ──────────────────────────────────────────────
+function mobRenderReminders(){
+  var rm=getReminders();
+  var now=new Date(); now.setHours(0,0,0,0);
+  var trial=(rm.trial||[]).filter(function(r){return !r.done;});
+  var clothes=(rm.clothes||[]).filter(function(r){return !r.done;});
+  var guest=(rm.guest||[]).filter(function(r){return !r.done;});
+  document.getElementById('mobRemBadges').innerHTML=
+    '<span class="mob-sbadge">🪡 Trial: '+trial.length+'</span>'+
+    '<span class="mob-sbadge">👗 Clothes: '+clothes.length+'</span>'+
+    '<span class="mob-sbadge">📋 Guest: '+guest.length+'</span>';
+  function makeRR(emoji){
+    return function(r){
+      var d=new Date(r.date||''); d.setHours(0,0,0,0);
+      var days=isNaN(d.getTime())?999:Math.round((d-now)/86400000);
+      var cls=days<0?'mob-d-over':days===0?'mob-d-today':days<=3?'mob-d-soon':'mob-d-ok';
+      var dTxt=days<0?'Overdue':days===0?'Today!':days===1?'Tomorrow':days+'d left';
+      return '<div class="mob-rem-row">'+
+        '<span style="font-size:20px;">'+emoji+'</span>'+
+        '<div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--ink);">'+mobEsc(r.text||'Reminder')+'</div>'+
+        '<div style="font-size:10px;color:#888;">'+(r.date||'')+(r.time?' at '+r.time:'')+'</div></div>'+
+        '<span class="mob-rem-days '+cls+'">'+dTxt+'</span></div>';
+    };
+  }
+  if(!trial.length&&!clothes.length&&!guest.length){
+    document.getElementById('mobRemList').innerHTML='<div class="mob-empty">No active reminders</div>'; return;
+  }
+  _mobAccN=0;
+  document.getElementById('mobRemList').innerHTML=
+    mobAccGroup('🪡 Trial','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',trial,makeRR('🪡'),true)+
+    mobAccGroup('👗 Clothes','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',clothes,makeRR('👗'))+
+    mobAccGroup('📋 Guest','#F5F0FF','#5C1A8A','#D4C5F7','#5C1A8A',guest,makeRR('📋'));
+}
+
+// ── Render Timeline ───────────────────────────────────────────────
+function mobRenderTimeline(){
+  var tl=getTimeline();
+  var entries=Object.entries(tl).filter(function(kv){return kv[1]&&kv[1].date;}).sort(function(a,b){return new Date(a[1].date)-new Date(b[1].date);});
+  var now=new Date();
+  document.getElementById('mobTlBadges').innerHTML='<span class="mob-sbadge">'+entries.length+' events</span>';
+  if(!entries.length){document.getElementById('mobTlList').innerHTML='<div class="mob-empty">No events added yet</div>';return;}
+  document.getElementById('mobTlList').innerHTML=entries.map(function(kv){
+    var name=kv[0],ev=kv[1],d=new Date(ev.date);
+    var isPast=d<now, isNext=!isPast&&entries.filter(function(x){return new Date(x[1].date)>=now;})[0]===kv;
+    var dotCls=isPast?'mob-tl-past':isNext?'mob-tl-next':'mob-tl-future';
+    return '<div class="mob-tl-row"><div class="mob-tl-dot '+dotCls+'"></div>'+
+      '<div><div style="font-size:13px;font-weight:700;color:var(--maroon);">'+mobEsc(name)+'</div>'+
+      '<div style="font-size:10px;color:#888;margin-top:2px;">'+d.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})+'</div>'+
+      (ev.venue?'<div style="font-size:10px;color:#666;margin-top:1px;">📍 '+mobEsc(ev.venue)+'</div>':'')+
+      '</div></div>';
+  }).join('');
+}
+
+// ── Render Notes ──────────────────────────────────────────────────
+function mobRenderNotes(){
+  var ns=getNotes();
+  document.getElementById('mobNotesBadges').innerHTML='<span class="mob-sbadge">'+ns.length+' notes</span>';
+  if(!ns.length){document.getElementById('mobNotesList').innerHTML='<div class="mob-empty">No notes yet</div>';return;}
+  document.getElementById('mobNotesList').innerHTML=ns.slice().sort(function(a,b){return (b.createdAt||0)-(a.createdAt||0);}).map(function(n){
+    return '<div class="mob-note-card">'+
+      '<span class="mob-note-tag">'+(n.tag||'📌 General')+'</span>'+
+      '<div style="font-size:13px;font-weight:700;color:var(--maroon);">'+mobEsc(n.title||'')+'</div>'+
+      '<div style="font-size:11px;color:#555;margin-top:4px;line-height:1.5;">'+mobEsc(n.content||n.text||'')+'</div>'+
+      '</div>';
+  }).join('');
+}
+window.mobSaveNote=function(){
+  if(typeof notes==='undefined') return;
+  var text=(document.getElementById('mobQuickNote').value||'').trim();
+  var tag=document.getElementById('mobQuickNoteTag').value;
+  if(!text){alert('Please enter a note');return;}
+  var n={id:Date.now().toString(),text:text,content:text,tag:tag,title:'',createdAt:new Date().toISOString(),vendor:tag||'',guest:''};
+  notes.unshift(n);
+  document.getElementById('mobQuickNote').value='';
+  document.getElementById('mobQuickNoteTag').value='';
+  mobRenderNotes();
+  if(typeof saveNotes==='function') saveNotes().catch(function(){});
+};
+
+// ── Render Catering ───────────────────────────────────────────────
+function mobRenderCatering(){
+  var fn=getFunctions();
+  var sumEl=document.getElementById('mobCaterSummary'),listEl=document.getElementById('mobCaterList');
+  if(!fn.length){
+    if(sumEl)sumEl.innerHTML='';
+    if(listEl)listEl.innerHTML='<div class="mob-empty">No functions added yet.<br>Add them in the full desktop tool.</div>';
+    return;
+  }
+  var tG=fn.reduce(function(s,f){return s+(parseInt(f.guests)||0);},0);
+  var tC=fn.reduce(function(s,f){return s+((parseInt(f.guests)||0)*(parseInt(f.rate)||0));},0);
+  if(sumEl) sumEl.innerHTML=
+    '<div class="mob-bud-card"><div class="mob-bud-val">'+fn.length+'</div><div class="mob-bud-lbl">Functions</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val">'+tG+'</div><div class="mob-bud-lbl">Total Guests</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val" style="color:#2E7D32;">'+mobFmt(tC)+'</div><div class="mob-bud-lbl">Total Budget</div></div>'+
+    '<div class="mob-bud-card"><div class="mob-bud-val">'+(tG>0?mobFmt(Math.round(tC/tG)):'—')+'</div><div class="mob-bud-lbl">Avg/Plate</div></div>';
+  if(listEl) listEl.innerHTML=fn.map(function(f){
+    var g=parseInt(f.guests)||0,r=parseInt(f.rate)||0,c=g*r;
+    return '<div style="background:#fff;border-radius:12px;margin-bottom:10px;border:1px solid var(--line);overflow:hidden;">'+
+      '<div style="background:linear-gradient(135deg,#C45000,#E67300);padding:10px 14px;">'+
+        '<div style="font-size:14px;font-weight:700;color:#fff;">'+mobEsc(f.name||'Function')+'</div></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;">'+
+        '<div style="padding:12px;border-right:1px solid var(--line);text-align:center;">'+
+          '<div style="font-size:10px;color:#888;">Guests</div><div style="font-size:18px;font-weight:700;color:var(--maroon);">'+g+'</div></div>'+
+        '<div style="padding:12px;border-right:1px solid var(--line);text-align:center;">'+
+          '<div style="font-size:10px;color:#888;">Per Plate</div><div style="font-size:18px;font-weight:700;color:var(--maroon);">'+(r>0?mobFmt(r):'—')+'</div></div>'+
+        '<div style="padding:12px;text-align:center;">'+
+          '<div style="font-size:10px;color:#888;">Total</div><div style="font-size:18px;font-weight:700;color:'+(c>0?'#2E7D32':'#888')+';">'+(c>0?mobFmt(c):'—')+'</div></div>'+
+      '</div></div>';
+  }).join('');
+}
+
+// ── Guest detail ──────────────────────────────────────────────────
+window.mobOpenGuest=function(id){
+  if(typeof guests==='undefined') return;
+  var g=guests.find(function(x){return x.id===id;}); if(!g) return;
+  _mobCurGuestId=id;
+  var sLbl=g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':g.callStatus==='maybe'?'🤔 Maybe':'⏳ Pending';
+  document.getElementById('mobGdTitle').textContent=g.name||'—';
+  document.getElementById('mobGdSub').textContent=(g.side||'')+(g.city?' · '+g.city:'');
+  document.getElementById('mobGdRows').innerHTML=
+    mobDrow('Phone',g.phone||'—')+mobDrow('Side',g.side||'—')+mobDrow('Status',sLbl)+
+    mobDrow('Adults confirmed',g.confirmedAdults||0)+mobDrow('Kids confirmed',g.confirmedKids||0);
+  var ph=(g.phone||'').replace(/\D/g,'');
+  var waMsg=encodeURIComponent('Dear '+g.name+', we warmly invite you to our wedding. — Shah Family 🌸');
+  document.getElementById('mobGdActions').innerHTML=
+    (ph?'<a href="tel:+'+ph+'" class="mob-dbtn mob-dbtn-call">📞 Call</a>':'')+
+    (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" class="mob-dbtn mob-dbtn-wa">💬 WhatsApp</a>':'')+
+    '<button class="mob-dbtn mob-dbtn-confirm" onclick="mobOpenConfirm(\''+id+'\')">✓ Confirm</button>'+
+    '<button class="mob-dbtn mob-dbtn-close" onclick="mobCloseGuest()">Close</button>';
+  document.getElementById('mobGuestOverlay').classList.add('show');
+};
+window.mobCloseGuest=function(){document.getElementById('mobGuestOverlay').classList.remove('show');_mobCurGuestId=null;};
+
+// ── Confirm headcount ─────────────────────────────────────────────
+window.mobOpenConfirm=function(id){
+  if(typeof guests==='undefined') return;
+  var g=guests.find(function(x){return x.id===id;}); if(!g) return;
+  _mobCurGuestId=id;
+  document.getElementById('mobConfName').textContent=g.name||'—';
+  document.getElementById('mobConfAdults').value=g.confirmedAdults||0;
+  document.getElementById('mobConfKids').value=g.confirmedKids||0;
+  document.getElementById('mobConfStatus').value=g.callStatus||'';
+  mobCloseGuest();
+  document.getElementById('mobConfirmOverlay').classList.add('show');
+};
+window.mobCloseConfirm=function(){document.getElementById('mobConfirmOverlay').classList.remove('show');_mobCurGuestId=null;};
+window.mobSaveConfirm=function(){
+  if(typeof guests==='undefined') return;
+  var g=guests.find(function(x){return x.id===_mobCurGuestId;}); if(!g) return;
+  g.confirmedAdults=parseInt(document.getElementById('mobConfAdults').value)||0;
+  g.confirmedKids=parseInt(document.getElementById('mobConfKids').value)||0;
+  g.callStatus=document.getElementById('mobConfStatus').value||'';
+  if(typeof saveGuests==='function') saveGuests();
+  mobUpdateDash(); mobRenderGuests(); mobCloseConfirm();
+};
+
+// ── Vendor detail ─────────────────────────────────────────────────
+window.mobOpenVendor=function(id){
+  if(typeof vendors==='undefined') return;
+  var v=vendors.find(function(x){return x.id===id;}); if(!v) return;
+  _mobCurVendorId=id;
+  var paid=vPaid(v),due=vDue(v),st=vStat(v);
+  var stLbl=st==='settled'?'✅ Settled':st==='partial'?'⚡ Partial':'⏳ Unpaid';
+  document.getElementById('mobVdTitle').textContent=v.name||'—';
+  document.getElementById('mobVdSub').textContent=(v.category||'')+(v.phone?' · '+v.phone:'');
+  var pmts=(v.payments||[]).map(function(p){
+    return '<div class="mob-drow"><span class="mob-drow-lbl">'+(p.date||'—')+(p.note?' · '+p.note:'')+'</span>'+
+      '<span class="mob-drow-val">'+mobFmt(p.amount||0)+'</span></div>';
+  }).join('');
+  document.getElementById('mobVdRows').innerHTML=
+    mobDrow('Category',v.category||'—')+mobDrow('Phone',v.phone||'—')+
+    mobDrow('Quoted',mobFmt(v.quoted||0))+
+    '<div class="mob-drow"><span class="mob-drow-lbl">Paid</span><span class="mob-drow-val" style="color:#2E7D32;">'+mobFmt(paid)+'</span></div>'+
+    '<div class="mob-drow"><span class="mob-drow-lbl">Due</span><span class="mob-drow-val" style="color:#B5562F;">'+mobFmt(due)+'</span></div>'+
+    mobDrow('Status',stLbl)+(v.notes?mobDrow('Notes',v.notes):'')+
+    '<div style="margin-top:10px;font-size:11px;font-weight:600;color:#888;margin-bottom:4px;">Payment History</div>'+
+    (pmts||mobDrow('No payments yet',''));
+  var ph=(v.phone||'').replace(/\D/g,'');
+  document.getElementById('mobVdActions').innerHTML=
+    (ph?'<a href="tel:+'+ph+'" class="mob-dbtn mob-dbtn-call">📞 Call</a>':'')+
+    (ph?'<a href="https://wa.me/'+ph+'" target="_blank" class="mob-dbtn mob-dbtn-wa">💬 WhatsApp</a>':'')+
+    '<button class="mob-dbtn mob-dbtn-close" onclick="mobCloseVendor()" style="flex:2;">Close</button>';
+  document.getElementById('mobVendorOverlay').classList.add('show');
+};
+window.mobCloseVendor=function(){document.getElementById('mobVendorOverlay').classList.remove('show');_mobCurVendorId=null;};
+
+// ── Navigation ────────────────────────────────────────────────────
+var MOB_SECS={
+  budget:   {title:'💰 Budget',    nav:'mobNavHome', render:function(){mobRenderBudget();mobRenderBudgetChart();}},
+  vendor:   {title:'🏪 Vendors',   nav:'mobNavVend', render:mobRenderVendors},
+  guest:    {title:'👥 Guests',    nav:'mobNavGuest',render:function(){mobBuildEvtSummary();mobRenderGuests();}},
+  kankotri: {title:'𖥸 Kankotri',  nav:'mobNavKank', render:mobRenderKankotri},
+  reminder: {title:'🔔 Reminders', nav:'mobNavRem',  render:mobRenderReminders},
+  timeline: {title:'📅 Timeline',  nav:null,         render:mobRenderTimeline},
+  notes:    {title:'📝 Notes',     nav:null,         render:mobRenderNotes},
+  catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering}
+};
+
+window.mobShowDash=function(){
+  document.querySelectorAll('.mob-view').forEach(function(v){v.classList.remove('active');});
+  document.getElementById('mobVDash').classList.add('active');
+  document.getElementById('mobTopTitle').textContent=(typeof branding!=='undefined'&&branding.title)||'🌸 Vivaah Ledger';
+  document.getElementById('mobTopSub').textContent=(typeof branding!=='undefined'&&branding.tagline)||'Wedding Planner';
+  document.getElementById('mobBtnBack').classList.remove('show');
+  document.querySelectorAll('.mob-bnav-item').forEach(function(n){n.classList.remove('active');});
+  document.getElementById('mobNavHome').classList.add('active');
+  mobUpdateDash(); window.scrollTo(0,0);
+};
+
+window.mobShowSec=function(sec){
+  document.querySelectorAll('.mob-view').forEach(function(v){v.classList.remove('active');});
+  var cfg=MOB_SECS[sec]; if(!cfg) return;
+  var el=document.getElementById('mobV'+sec.charAt(0).toUpperCase()+sec.slice(1));
+  if(el) el.classList.add('active');
+  document.getElementById('mobTopTitle').textContent=cfg.title;
+  document.getElementById('mobTopSub').textContent='Tap ← to return home';
+  document.getElementById('mobBtnBack').classList.add('show');
+  document.querySelectorAll('.mob-bnav-item').forEach(function(n){n.classList.remove('active');});
+  if(cfg.nav) document.getElementById(cfg.nav).classList.add('active');
+  if(cfg.render) cfg.render();
+  window.scrollTo(0,0);
+};
+
+// ── Hook into desktop unlock to also activate mobile ─────────────
+// Intercept the desktop openApp function
+var _origOpenApp = window.openApp;
+if(typeof _origOpenApp === 'function'){
+  window.openApp = function(){
+    return Promise.resolve(_origOpenApp.apply(this,arguments)).then(function(r){
+      if(window.innerWidth <= 767){
+        setTimeout(function(){ window.mobActivate(); }, 100);
+      }
+      return r;
+    });
+  };
+}
+
+})(); // end IIFE
+</script>
+
+<script>
+/* PWA Service Worker registration */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  });
+}
+</script>
 
 </body>
 </html>
