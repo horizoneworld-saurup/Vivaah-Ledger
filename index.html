@@ -9171,8 +9171,22 @@ window.mobGoogleSignIn = function(){
         alert('Sign-in failed: ' + resp.error);
         return;
       }
-      // Hand token to desktop app's variable and trigger onSignedIn
+      // Mirror desktop flow exactly: set token, fetch user info, save cache, then onSignedIn
+      googleAccessToken = resp.access_token;
       window.googleAccessToken = resp.access_token;
+      try {
+        var userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { 'Authorization': 'Bearer ' + resp.access_token }
+        });
+        var info = await userInfo.json();
+        googleUserEmail = info.email || null;
+        window.googleUserEmail = info.email || null;
+      } catch(e) {}
+      await storageSet('google-token-cache', JSON.stringify({
+        token: resp.access_token,
+        expiresAt: Date.now() + (resp.expires_in||3500)*1000,
+        email: googleUserEmail || null
+      }));
       if(typeof onSignedIn === 'function') await onSignedIn();
     }
   }).requestAccessToken();
