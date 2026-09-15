@@ -2611,7 +2611,7 @@ async function tryUnlock(){
       document.getElementById('lockOverlay').classList.add('hidden');
       // Always load data + render — ensures ticker and all sections appear immediately
       await loadData();
-      if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
+      if(typeof window.mobActivate === 'function') window.mobActivate();
       // Remind to connect Google for cross-device sync
       setTimeout(function() {
         if (!googleAccessToken) {
@@ -2635,7 +2635,7 @@ async function tryUnlock(){
     document.getElementById('lockOverlay').classList.add('hidden');
     // Always load data + render — ensures ticker and all sections appear immediately
     await loadData();
-    if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
+    if(typeof window.mobActivate === 'function') window.mobActivate();
   } else {
     lockError('Wrong PIN — try again');
   }
@@ -4929,7 +4929,7 @@ async function initAuth(){
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
-    if(window.innerWidth <= 767 && typeof window.mobActivate === 'function') window.mobActivate();
+    if(typeof window.mobActivate === 'function') window.mobActivate();
     return;
   }
 
@@ -9057,8 +9057,7 @@ function runGlobalSearch(q, gsInput, gsResults){
 (function(){
 'use strict';
 
-// Only activate on mobile screens
-if (window.innerWidth > 767) return;
+// Functions registered globally — mobActivate decides whether to show mobile UI
 
 var _mobActive = false;
 var _mobCdInterval = null;
@@ -9104,19 +9103,27 @@ function mobSetSync(type,msg){
 
 // ── Activate after desktop unlock ─────────────────────────────────
 window.mobActivate = function(){
-  if(window.innerWidth > 767) return;
+  // Use matchMedia — more reliable than innerWidth at script parse time
+  var isMobile = window.matchMedia('(max-width: 767px)').matches;
+  if(!isMobile) return;
   _mobActive = true;
+
+  // Hide desktop elements directly via JS (belt-and-suspenders alongside CSS)
+  var hide = ['.wrap','#pageFooter','#adminSettingsOverlay','#ownerPanelOverlay',
+    '#platformVendorModalOverlay','#printPanelOverlay','#hcModalOverlay','.modal-overlay','.print-panel-overlay'];
+  hide.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
+  });
+
   document.getElementById('mobApp').style.display = 'block';
+  window.scrollTo(0,0);
   mobApplyBranding();
   mobUpdateDash();
   mobStartCountdown();
   mobRenderBudgetChart();
   // Restore Google session display if already signed in on desktop
-  var gName = document.getElementById('gUserName') || document.getElementById('userName');
-  var desktopGIn = document.getElementById('googleSignedInSection') || document.getElementById('signedInSection');
   if(typeof googleToken !== 'undefined' && googleToken){
-    var nm = (typeof currentUserName !== 'undefined' && currentUserName) ||
-             (document.getElementById('gUserName') && document.getElementById('gUserName').textContent) || 'Signed in';
+    var nm = (typeof currentUserName !== 'undefined' && currentUserName) || 'Signed in';
     document.getElementById('mobGAvatar').textContent = nm.charAt(0).toUpperCase();
     document.getElementById('mobGName').textContent = nm;
     document.getElementById('mobGOut').style.display = 'none';
@@ -9692,9 +9699,7 @@ var _origOpenApp = window.openApp;
 if(typeof _origOpenApp === 'function'){
   window.openApp = function(){
     return Promise.resolve(_origOpenApp.apply(this,arguments)).then(function(r){
-      if(window.innerWidth <= 767){
-        setTimeout(function(){ window.mobActivate(); }, 100);
-      }
+      if(typeof window.mobActivate === 'function') window.mobActivate();
       return r;
     });
   };
