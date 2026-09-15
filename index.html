@@ -8023,29 +8023,79 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
 
   function buildNormalTable(list) {
     if (!list.length) return '<p style="color:#888;font-size:12px;padding:8px;">No Normal families.</p>';
+
+    // Same 5 functions as VIP/Premium — no Kankotri for Normal
+    var NORM_FUNS = ['Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+    var NORM_SHORT = {
+      'Ganesh-Grahshanti-Mosalu':'Ganesh',
+      'Mehendi':'Mehendi',
+      'Sangeet':'Sangeet',
+      'Marriage':'Marriage',
+      'Reception':'Reception'
+    };
+    var NORM_COLOR = {
+      'Ganesh-Grahshanti-Mosalu': '#856404',
+      'Mehendi':                   '#2E7D32',
+      'Sangeet':                   '#1A3A8A',
+      'Marriage':                  '#880E4F',
+      'Reception':                 '#4A148C'
+    };
+    var NORM_LIGHT = {
+      'Ganesh-Grahshanti-Mosalu': '#FFF8E1',
+      'Mehendi':                   '#F0F8EB',
+      'Sangeet':                   '#EEF2FF',
+      'Marriage':                  '#FCE4EC',
+      'Reception':                 '#F3E5F5'
+    };
+
+    function normChip(fn) {
+      var c = NORM_COLOR[fn];
+      var l = NORM_LIGHT[fn];
+      return '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:'+l+';color:'+c+';border:0.5px solid '+c+'60;">'+NORM_SHORT[fn]+'</span>';
+    }
+
+    function normCell(g, fn) {
+      var e = g.events && g.events[fn];
+      var has = e && (Number(e.adults||0) + Number(e.kids||0) + Number(e.ladies||0)) > 0;
+      if (has) return '<td style="padding:5px 6px;text-align:center;">'+normChip(fn)+'</td>';
+      return '<td style="padding:5px 6px;text-align:center;color:#ccc;font-size:12px;">—</td>';
+    }
+
+    var thS = 'padding:6px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;color:#555;';
+    var thC = 'padding:6px;text-align:center;font-size:11px;font-weight:700;text-transform:uppercase;color:#555;';
+
     var rows = list.map(function(g, i) {
-      var fns = FUNS.filter(function(fn){ return guestHasFunction(g, fn); });
-      var chips = fns.length ? fns.map(chip).join(' ') : '<span style="color:#aaa;font-size:11px;font-style:italic;">Not confirmed</span>';
+      var cells = NORM_FUNS.map(function(fn){ return normCell(g, fn); }).join('');
       return '<tr style="background:'+(i%2?'#F3EBDB':'#fff')+';">' +
-        '<td style="padding:5px 8px;font-size:11px;color:#aaa;">'+(i+1)+'</td>' +
-        '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:#2A1F1A;">' + escapeHtml(g.name) + '</td>' +
-        '<td style="padding:5px 8px;font-size:11px;color:#6b5d52;">' + escapeHtml(g.phone||'—') + '</td>' +
-        '<td style="padding:5px 8px;">' + chips + '</td>' +
-        '<td style="padding:5px 8px;text-align:center;font-size:12px;font-weight:700;">' + (Number(g.invCards)||0) + '</td>' +
+        '<td style="padding:5px 6px;font-size:11px;color:#aaa;">'+(i+1)+'</td>' +
+        '<td style="padding:5px 6px;font-size:12px;font-weight:600;color:#2A1F1A;">' + escapeHtml(g.name) + '</td>' +
+        cells +
         '</tr>';
     }).join('');
-    var normalTotal = list.reduce(function(s,g){ return s+(Number(g.invCards)||0); }, 0);
+
+    // Totals row — count per function
+    var totals = NORM_FUNS.map(function(fn){
+      var t = list.reduce(function(s,g){
+        var e = g.events && g.events[fn];
+        return s + (e ? Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0) : 0);
+      }, 0);
+      return '<td style="padding:6px;text-align:center;font-weight:700;color:#555;">'+(t > 0 ? t : '—')+'</td>';
+    }).join('');
+
     var totalRow = '<tr style="background:#e8d5b0;font-weight:700;">' +
-      '<td colspan="4" style="padding:6px 8px;">Total (' + list.length + ' families)</td>' +
-      '<td style="padding:6px;text-align:center;">' + normalTotal + '</td>' +
+      '<td colspan="2" style="padding:6px 8px;font-size:11px;color:#555;">Total inserts needed</td>' +
+      totals +
       '</tr>';
+
+    var funHeaders = NORM_FUNS.map(function(fn){
+      return '<th style="'+thC+'">' + NORM_SHORT[fn] + '</th>';
+    }).join('');
+
     return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;">' +
-      '<thead><tr>' +
-        '<th style="'+thNameStyle+';width:24px;">#</th>' +
-        '<th style="'+thNameStyle+'">Family / Guest Name</th>' +
-        '<th style="'+thNameStyle+'">Phone</th>' +
-        '<th style="'+thNameStyle+'">Functions Invited To</th>' +
-        '<th style="'+thNameStyle+';text-align:center;">Cards</th>' +
+      '<thead><tr style="background:#55555518;border-bottom:2px solid #555;">' +
+        '<th style="'+thS+';width:28px;">#</th>' +
+        '<th style="'+thS+'">Family / Guest Name</th>' +
+        funHeaders +
       '</tr></thead>' +
       '<tbody>' + rows + totalRow + '</tbody>' +
     '</table>';
