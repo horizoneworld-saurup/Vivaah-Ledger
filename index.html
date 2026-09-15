@@ -4675,29 +4675,34 @@ async function initAuth(){
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
   const VALID_ROLES = ['owner','admin','editor','viewer'];
 
-  // Step 1: Check session storage first (fastest — same tab/session)
+  // Step 1: Check session storage (same browser tab/session — PIN already entered this session)
   const sessionRole = sessionStorage.getItem('vivaah-role');
   const sessionEmail = sessionStorage.getItem('vivaah-session-email') || '';
   if(sessionRole && VALID_ROLES.includes(sessionRole)){
+    // Same session — no need to re-enter PIN
     setRole(sessionRole);
     document.getElementById('lockOverlay').classList.add('hidden');
     await loadData();
     return;
   }
 
-  // Step 2: Check localStorage remembered login
+  // Step 2: Check localStorage — email known, show PIN screen directly (skip email gate only)
   const rememberedRole = localStorage.getItem('vivaah-role');
   const rememberedEmail = localStorage.getItem('vivaah-remembered-email') || '';
   if(rememberedRole && VALID_ROLES.includes(rememberedRole) && rememberedEmail){
-    // Owner emails always valid — regular users must match approved email
     var savedEmail = localStorage.getItem('vivaah-approved-email') || '';
     if(OWNER_EMAILS.includes(rememberedEmail) || rememberedEmail === savedEmail){
-      setRole(rememberedRole);
-      sessionStorage.setItem('vivaah-role', rememberedRole);
-      sessionStorage.setItem('vivaah-session-email', rememberedEmail);
+      // Email known — skip email gate, show PIN screen
       egCurrentEmail = rememberedEmail;
-      document.getElementById('lockOverlay').classList.add('hidden');
-      await loadData();
+      // Pre-select the correct role tab
+      if(rememberedRole === 'owner') {
+        var ownerTab = document.querySelector('.lock-tab[data-role="owner"]');
+        if(ownerTab) ownerTab.click();
+      } else {
+        var roleTab = document.querySelector('.lock-tab[data-role="'+rememberedRole+'"]');
+        if(roleTab) roleTab.click();
+      }
+      showLockStep('pin');
       return;
     }
   }
@@ -8026,16 +8031,23 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
         '<td style="padding:5px 8px;font-size:12px;font-weight:600;color:#2A1F1A;">' + escapeHtml(g.name) + '</td>' +
         '<td style="padding:5px 8px;font-size:11px;color:#6b5d52;">' + escapeHtml(g.phone||'—') + '</td>' +
         '<td style="padding:5px 8px;">' + chips + '</td>' +
+        '<td style="padding:5px 8px;text-align:center;font-size:12px;font-weight:700;">' + (Number(g.invCards)||0) + '</td>' +
         '</tr>';
     }).join('');
+    var normalTotal = list.reduce(function(s,g){ return s+(Number(g.invCards)||0); }, 0);
+    var totalRow = '<tr style="background:#e8d5b0;font-weight:700;">' +
+      '<td colspan="4" style="padding:6px 8px;">Total (' + list.length + ' families)</td>' +
+      '<td style="padding:6px;text-align:center;">' + normalTotal + '</td>' +
+      '</tr>';
     return '<table style="width:100%;border-collapse:collapse;margin-bottom:4px;">' +
       '<thead><tr>' +
         '<th style="'+thNameStyle+';width:24px;">#</th>' +
         '<th style="'+thNameStyle+'">Family / Guest Name</th>' +
         '<th style="'+thNameStyle+'">Phone</th>' +
         '<th style="'+thNameStyle+'">Functions Invited To</th>' +
+        '<th style="'+thNameStyle+';text-align:center;">Cards</th>' +
       '</tr></thead>' +
-      '<tbody>' + rows + '</tbody>' +
+      '<tbody>' + rows + totalRow + '</tbody>' +
     '</table>';
   }
 
