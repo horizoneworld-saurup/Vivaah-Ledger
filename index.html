@@ -5550,6 +5550,7 @@ async function onSignedIn(){
       if(gOutEl) gOutEl.style.display = 'none';
       if(gInEl) gInEl.style.display = 'flex';
       // Refresh mobile dashboard with fresh cloud data
+      if(typeof mobApplyBranding === 'function') mobApplyBranding();
       if(typeof mobUpdateDash === 'function') mobUpdateDash();
       if(typeof mobStartCountdown === 'function') mobStartCountdown();
       if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
@@ -8819,9 +8820,12 @@ function runGlobalSearch(q, gsInput, gsResults){
   <div class="mob-topbar">
     <div class="mob-top-left">
       <button class="mob-btn-back" id="mobBtnBack" onclick="mobShowDash()">← Back</button>
-      <div>
-        <div class="mob-title" id="mobTopTitle">🌸 Vivaah Ledger</div>
-        <div class="mob-sub" id="mobTopSub">Wedding Planner</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <img id="mobTopLogo" src="" alt="" style="height:32px;width:auto;display:none;border-radius:4px;">
+        <div>
+          <div class="mob-title" id="mobTopTitle">🌸 Vivaah Ledger</div>
+          <div class="mob-sub" id="mobTopSub">Wedding Planner</div>
+        </div>
       </div>
     </div>
     <span class="mob-sync-dot" id="mobSyncDot"></span>
@@ -9245,8 +9249,17 @@ if(typeof _origSync === 'function'){
 // ── Branding ──────────────────────────────────────────────────────
 function mobApplyBranding(){
   var b = getBranding();
-  var el = document.getElementById('mobTopTitle');
-  if(el) el.textContent = b.title || '🌸 Vivaah Ledger';
+  var titleEl = document.getElementById('mobTopTitle');
+  if(titleEl) titleEl.textContent = b.title || '🌸 Vivaah Ledger';
+  var logoEl = document.getElementById('mobTopLogo');
+  if(logoEl){
+    if(b.logo){
+      logoEl.src = b.logo;
+      logoEl.style.display = 'block';
+    } else {
+      logoEl.style.display = 'none';
+    }
+  }
 }
 
 // ── Dashboard stats — uses same data as desktop ───────────────────
@@ -9311,8 +9324,12 @@ window.mobToggleMusic = function() {
   }
 };
 
-// Auto-play on first tap — exact copy from vivaah_mobile.html
-document.addEventListener('click', function _mobFirstClick() {
+// Auto-play on first tap — skip if user tapped the music button directly
+document.addEventListener('click', function _mobFirstClick(e) {
+  if (e.target && e.target.id === 'mobMusicBtn') {
+    document.removeEventListener('click', _mobFirstClick);
+    return;
+  }
   var audio = document.getElementById('mobWeddingMusic');
   var wrap = document.getElementById('mobCdWrap');
   if (audio && wrap && !wrap.classList.contains('hidden') && !_mobMusicPlaying) {
