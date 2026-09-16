@@ -5235,12 +5235,6 @@ async function loadData(){
     const nt = await storageGet('wedding-notes');
     if(nt){ notes = JSON.parse(nt); }
   }catch(e){ notes = []; }
-  try{
-    const ep = await storageGet('wedding-eventplanner');
-    if(ep){ var epData=JSON.parse(ep);
-      eventPlanner = Object.assign({catering:{},decor:{},homeDecor:{inside:'',outside:'',images:[],status:'pending',notes:''},puja:{},gifts:{},carnival:{stalls:[]},clothes:[]}, epData);
-    }
-  }catch(e){ /* keep defaults */ }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200, vendorId:''}];
   }
@@ -5253,8 +5247,23 @@ async function loadData(){
   updateSectionBadges();
   // Start rangoli countdown from local timeline (works without Google sign-in too)
   startCountdown();
+  // Load Event Planner data
+  try{
+    var epRaw = await storageGet('wedding-eventplanner');
+    if(epRaw){
+      var epParsed = JSON.parse(epRaw);
+      eventPlanner = Object.assign(
+        {catering:{},decor:{},homeDecor:{inside:'',outside:'',images:[],status:'pending',notes:''},
+         puja:{},gifts:{},carnival:{stalls:[]},clothes:[]},
+        epParsed
+      );
+    }
+    if(typeof epUpdateBadges==='function') epUpdateBadges();
+  }catch(ex){ console.log('EP load error:',ex); }
   // Extra safety: re-render notes after short delay in case DOM wasn't ready
   setTimeout(() => { if(notes && notes.length > 0) renderNotes(); }, 300);
+  // Update EP badges after Script 2 has loaded
+  setTimeout(function(){ if(typeof epUpdateBadges==='function') epUpdateBadges(); }, 600);
 }
 async function saveData(){
   await storageSet('wedding-vendors', JSON.stringify(vendors));
@@ -9377,16 +9386,7 @@ function epInjectIntoReminders(items){
 }
 
 // ── Integrate with loadData & pushToSheet ──────────────────────
-// Hook into loadData to load EP data
-var _origLoadData = window.loadData;
-if(typeof _origLoadData === 'function'){
-  window.loadData = async function(){
-    await _origLoadData.apply(this, arguments);
-    await epLoad();
-    epUpdateBadges();
-    epScanReminders();
-  };
-}
+// EP data is loaded directly inside loadData() in Script 1
 
 // Hook into pushToSheet to include EP data
 var _origPushToSheet = window.pushToSheet;
