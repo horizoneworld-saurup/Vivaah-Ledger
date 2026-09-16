@@ -1684,6 +1684,9 @@
   <div class="rangoli-wrap countdown-hide" id="countdownWrap">
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
     <audio id="weddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <script>/* Mute desktop audio immediately on mobile — runs inline before any other JS */
+    (function(){ if(window.matchMedia('(max-width:767px)').matches){ var a=document.getElementById('weddingMusic'); if(a){a.muted=true;a.volume=0;} } })();
+    </script>
     <div class="card">
       <svg class="bg-svg" viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -5565,6 +5568,24 @@ async function onSignedIn(){
         if(typeof MOB_SECS !== 'undefined' && MOB_SECS[sid] && MOB_SECS[sid].render) MOB_SECS[sid].render();
       }
     }
+    // Also schedule a mobile refresh after mobActivate has had time to run
+    // Handles the case where onSignedIn fires before mobActivate completes
+    setTimeout(function(){
+      if(!window._mobActive) return;
+      var nm2 = googleUserEmail || 'Signed in';
+      var gO = document.getElementById('mobGOut');
+      var gI = document.getElementById('mobGIn');
+      var av2 = document.getElementById('mobGAvatar');
+      var nm2El = document.getElementById('mobGName');
+      if(av2) av2.textContent = nm2.charAt(0).toUpperCase();
+      if(nm2El) nm2El.textContent = nm2;
+      if(gO) gO.style.display = 'none';
+      if(gI) gI.style.display = 'flex';
+      if(typeof mobApplyBranding === 'function') mobApplyBranding();
+      if(typeof mobUpdateDash === 'function') mobUpdateDash();
+      if(typeof mobStartCountdown === 'function') mobStartCountdown();
+      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
+    }, 800);
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
