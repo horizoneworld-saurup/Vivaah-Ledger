@@ -5407,6 +5407,8 @@ function initGoogleAuth(){
       await onSignedIn();
     }
   });
+  // Step 3+4: Now that googleTokenClient exists, restore session after short delay
+  setTimeout(function(){ tryRestoreGoogleSession(); }, 800);
 }
 
 async function tryRestoreGoogleSession(){
@@ -8619,7 +8621,8 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   await initAuth();
   // Activate mobile UI BEFORE syncing — so it's ready to receive data when sync completes
   setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
-  await tryRestoreGoogleSession();
+  // tryRestoreGoogleSession is now called from inside initGoogleAuth
+  // after googleTokenClient is ready — no flicker
 })();
 
 /* ================================================================
