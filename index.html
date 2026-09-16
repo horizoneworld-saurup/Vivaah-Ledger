@@ -3543,6 +3543,11 @@ function selectRangoli(el) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  // Immediately mute desktop audio on mobile — prevents it playing alongside mobile audio
+  if(window.matchMedia('(max-width:767px)').matches){
+    var da = document.getElementById('weddingMusic');
+    if(da){ da.muted = true; da.volume = 0; }
+  }
   var btn = document.getElementById('btnCompleteSetup');
   if (!btn) return;
   btn.addEventListener('click', async function() {
@@ -3787,6 +3792,8 @@ function toggleMusic() {
 }
 
 document.addEventListener('click', function _firstClick() {
+  // On mobile, desktop audio is disabled — mobile has its own audio
+  if(window._mobActive){ document.removeEventListener('click', _firstClick); return; }
   var audio = document.getElementById('weddingMusic');
   var wrap = document.getElementById('countdownWrap');
   if (audio && wrap && !wrap.classList.contains('countdown-hide') && !_musicPlaying) {
@@ -9155,6 +9162,10 @@ window.mobActivate = function(){
   if(!isMobile) return;
   _mobActive = true;
   window._mobActive = true;
+
+  // Mute desktop audio element so only mobile audio plays
+  var desktopAudio = document.getElementById('weddingMusic');
+  if(desktopAudio){ desktopAudio.muted = true; desktopAudio.pause(); }
 
   // Hide desktop elements directly via JS (belt-and-suspenders alongside CSS)
   var hide = ['.wrap','#pageFooter','#adminSettingsOverlay','#ownerPanelOverlay',
