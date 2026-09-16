@@ -3381,8 +3381,6 @@ async function loadCoupleBranding(email) {
         // Mobile elements
         var mobTitle = document.getElementById('mobTopTitle');
         if (mobTitle) mobTitle.textContent = '🌸 ' + names;
-        var mobSub = document.getElementById('mobTopSub');
-        if (mobSub) mobSub.textContent = 'Vivaah Ledger';
       }
       // Desktop music
       if (d.musicUrl) {
@@ -9251,6 +9249,8 @@ function mobApplyBranding(){
   var b = getBranding();
   var titleEl = document.getElementById('mobTopTitle');
   if(titleEl) titleEl.textContent = b.title || '🌸 Vivaah Ledger';
+  var subEl = document.getElementById('mobTopSub');
+  if(subEl && !subEl.textContent.includes('←')) subEl.textContent = b.tagline || 'Wedding Planner';
   var logoEl = document.getElementById('mobTopLogo');
   if(logoEl){
     if(b.logo){
@@ -9308,19 +9308,25 @@ window.mobToggleMusic = function() {
   var audio = document.getElementById('mobWeddingMusic');
   var btn = document.getElementById('mobMusicBtn');
   if (!audio) return;
-  if (_mobMusicPlaying) {
-    audio.pause();
-    _mobMusicPlaying = false;
-    if (btn) { btn.textContent = '🎵'; btn.style.background = 'rgba(255,255,255,0.85)'; }
-  } else {
+  if (!_mobMusicPlaying) {
+    // Not playing yet — start it
     audio.volume = 0.45;
+    audio.muted = false;
     var p = audio.play();
     if (p !== undefined) {
       p.then(function() {
         _mobMusicPlaying = true;
         if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
-      }).catch(function(e) { if (btn) btn.textContent = '▶'; });
+      }).catch(function() { if (btn) btn.textContent = '▶'; });
     }
+  } else if (!audio.muted) {
+    // Playing and unmuted — mute it
+    audio.muted = true;
+    if (btn) { btn.textContent = '🎵'; btn.style.background = 'rgba(255,255,255,0.85)'; }
+  } else {
+    // Playing but muted — unmute it
+    audio.muted = false;
+    if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
   }
 };
 
