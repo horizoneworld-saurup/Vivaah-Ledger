@@ -1359,6 +1359,64 @@
   .mob-petal{position:absolute;animation:mobPetalFall linear infinite;opacity:0;pointer-events:none;z-index:3;}
   @keyframes mobPetalFall{0%{transform:translateY(-20px) rotate(0deg);opacity:0;}10%{opacity:.9;}90%{opacity:.6;}100%{transform:translateY(500px) rotate(360deg);opacity:0;}}
 }
+  /* ═══════════════ EVENT PLANNER SECTION ═══════════════ */
+  .sec-eventplanner{background:linear-gradient(135deg,#8B1A6B,#C4306A);}
+  .ep-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px 0;}
+  .ep-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.08);transition:all .2s;}
+  .ep-tab.active{background:rgba(255,255,255,0.95);color:#8B1A6B;border-color:transparent;}
+  .ep-panel{display:none;padding:14px;}
+  .ep-panel.active{display:block;}
+  .ep-event-card{background:#fff;border-radius:12px;margin-bottom:12px;border:1px solid var(--line);overflow:hidden;}
+  .ep-event-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:linear-gradient(135deg,#fce4ec,#f8bbd0);}
+  .ep-event-title{font-size:13px;font-weight:700;color:#5C1A2B;}
+  .ep-event-date{font-size:11px;color:#888;}
+  .ep-event-body{display:none;padding:0 14px 14px;}
+  .ep-event-body.open{display:block;}
+  .ep-meal-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5e8e8;cursor:pointer;gap:8px;}
+  .ep-meal-row:last-child{border-bottom:none;}
+  .ep-meal-icon{font-size:16px;flex-shrink:0;}
+  .ep-meal-name{font-size:12px;font-weight:600;color:var(--ink);flex:1;}
+  .ep-meal-caterer{font-size:10px;color:#666;}
+  .ep-meal-status{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;flex-shrink:0;}
+  .ep-s-confirmed{background:#E8F5E9;color:#2E7D32;}
+  .ep-s-pending{background:#FFF3E0;color:#C45000;}
+  .ep-s-overdue{background:#FFEBEE;color:#C62828;}
+  .ep-item-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5e8e8;}
+  .ep-item-row:last-child{border-bottom:none;}
+  .ep-check{width:18px;height:18px;border-radius:4px;border:1.5px solid #ccc;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;}
+  .ep-check.done{background:#2E7D32;border-color:#2E7D32;color:#fff;}
+  .ep-item-text{font-size:12px;color:var(--ink);flex:1;}
+  .ep-item-tag{font-size:10px;padding:1px 6px;border-radius:6px;background:#f0e8f0;color:#8B1A6B;}
+  .ep-add-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:8px;background:rgba(139,26,107,0.1);border:1px dashed rgba(139,26,107,0.4);color:#8B1A6B;font-size:12px;font-weight:600;cursor:pointer;margin-top:8px;}
+  .ep-add-btn:hover{background:rgba(139,26,107,0.15);}
+  .ep-two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+  .ep-col-head{font-size:11px;font-weight:700;color:#8B1A6B;margin-bottom:6px;padding-bottom:4px;border-bottom:1.5px solid #e8c8d8;}
+  .ep-summary-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .ep-chip{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:600;}
+  .ep-chip-ok{background:#E8F5E9;color:#2E7D32;}
+  .ep-chip-warn{background:#FFF3E0;color:#C45000;}
+  .ep-chip-err{background:#FFEBEE;color:#C62828;}
+  .ep-jpeg-thumb{width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid #e0c8d0;cursor:pointer;}
+  .ep-upload-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:7px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;font-size:11px;cursor:pointer;}
+  .ep-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+  .ep-modal-overlay.show{display:flex;}
+  .ep-modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;}
+  .ep-modal-title{font-size:16px;font-weight:700;color:#8B1A6B;margin-bottom:14px;}
+  .ep-field{margin-bottom:12px;}
+  .ep-field label{display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:4px;}
+  .ep-field input,.ep-field select,.ep-field textarea{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:inherit;outline:none;}
+  .ep-field input:focus,.ep-field select:focus,.ep-field textarea:focus{border-color:#8B1A6B;}
+  .ep-field textarea{resize:vertical;min-height:60px;}
+  .ep-modal-actions{display:flex;gap:8px;margin-top:14px;}
+  .ep-btn{flex:1;padding:10px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;}
+  .ep-btn-save{background:#8B1A6B;color:#fff;}
+  .ep-btn-cancel{background:#f5f5f5;color:#555;}
+  .ep-btn-del{background:#FFEBEE;color:#C62828;}
+  .ep-reminder-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5e8e8;}
+  .ep-reminder-row:last-child{border-bottom:none;}
+  .ep-rem-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .ep-rem-ok{background:#4CAF50;} .ep-rem-warn{background:#FF9800;} .ep-rem-err{background:#F44336;}
+  .mob-cEP{background:linear-gradient(135deg,#8B1A6B,#C4306A);}
 </style>
 </head>
 <body>
@@ -2366,6 +2424,57 @@
 
 <!-- Add/Edit Vendor Modal -->
   </div><!-- end vendor sec-body -->
+
+  <!-- ═══════════════ EVENT PLANNER SECTION ═══════════════ -->
+  <div class="sec-header sec-collapsed sec-eventplanner" id="epSectionHeader" onclick="toggleSecBody('epSectionHeader','epSecBody')" style="margin-top:28px;">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">🌺</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Event Planner</div>
+        <div class="sec-header-sub" style="color:#f9c8e8;">Catering · Decor · Puja · Gifts · Carnival · Clothes</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="epBadgePending">0 pending</span>
+          <span class="sec-badge" id="epBadgeConfirmed">0 confirmed</span>
+        </div>
+      </div>
+    </div>
+    <div class="sec-header-actions">
+      <button class="btn-print-sec" onclick="event.stopPropagation();epScanReminders()">🔔 Check Reminders</button>
+    </div>
+  </div>
+  <div class="sec-body collapsed" id="epSecBody">
+    <!-- Tab bar -->
+    <div class="ep-tabs">
+      <button class="ep-tab active" onclick="epShowTab('catering',this)">🍽️ Catering</button>
+      <button class="ep-tab" onclick="epShowTab('decor',this)">🌸 Decor</button>
+      <button class="ep-tab" onclick="epShowTab('puja',this)">🪔 Puja</button>
+      <button class="ep-tab" onclick="epShowTab('gifts',this)">🎁 Gifts & Covers</button>
+      <button class="ep-tab" onclick="epShowTab('carnival',this)">🎪 Carnival</button>
+      <button class="ep-tab" onclick="epShowTab('clothes',this)">👗 Clothes</button>
+      <button class="ep-tab" onclick="epShowTab('reminders',this)">🔔 Reminders</button>
+    </div>
+
+    <!-- CATERING PANEL -->
+    <div class="ep-panel active" id="epPanelCatering"></div>
+
+    <!-- DECOR PANEL -->
+    <div class="ep-panel" id="epPanelDecor"></div>
+
+    <!-- PUJA PANEL -->
+    <div class="ep-panel" id="epPanelPuja"></div>
+
+    <!-- GIFTS PANEL -->
+    <div class="ep-panel" id="epPanelGifts"></div>
+
+    <!-- CARNIVAL PANEL -->
+    <div class="ep-panel" id="epPanelCarnival"></div>
+
+    <!-- CLOTHES PANEL -->
+    <div class="ep-panel" id="epPanelClothes"></div>
+
+    <!-- REMINDERS PANEL -->
+    <div class="ep-panel" id="epPanelReminders"></div>
+  </div>
 <div class="modal-overlay" id="vendorModalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add vendor</h3>
@@ -5035,6 +5144,17 @@ let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 const REMINDER_KEYS = ['trial','clothes','guest'];
+
+/* ── Event Planner data ── */
+let eventPlanner = {
+  catering: {},   // { [eventName]: { breakfast:{}, lunch:{}, dinner:{}, latenight:{} } }
+  decor: {},      // { [eventName]: { vendorId, theme, items, setupTime, notes, images[], pendingItems[], status } }
+  homeDecor: { inside:'', outside:'', images:[], status:'pending', notes:'' },
+  puja: {},       // { [eventName]: { maharajName, maharajPhone, listText, listImages:[], maharajBrings:[], weProvide:[] } }
+  gifts: {},      // { [eventName]: { covers:[], ladies:[], akhand:[] } }
+  carnival: { stalls:[] },
+  clothes: [],    // { id, person, event, description, images:[], vendorId, cost, status, deadline }
+};
 let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per tier
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
@@ -5127,6 +5247,12 @@ async function loadData(){
     const nt = await storageGet('wedding-notes');
     if(nt){ notes = JSON.parse(nt); }
   }catch(e){ notes = []; }
+  try{
+    const ep = await storageGet('wedding-eventplanner');
+    if(ep){ var epData=JSON.parse(ep);
+      eventPlanner = Object.assign({catering:{},decor:{},homeDecor:{inside:'',outside:'',images:[],status:'pending',notes:''},puja:{},gifts:{},carnival:{stalls:[]},clothes:[]}, epData);
+    }
+  }catch(e){ /* keep defaults */ }
   if(functions.length===0){
     functions = [{id:uid(), name:'Wedding day', guests:300, rate:1200, vendorId:''}];
   }
@@ -5494,6 +5620,11 @@ async function onSignedIn(){
           await storageSet('pin-hash-'+role, hash);
         }
       }
+      // Restore Event Planner data from cloud
+      if(cloudData.eventPlanner){
+        eventPlanner = Object.assign({catering:{},decor:{},homeDecor:{inside:'',outside:'',images:[],status:'pending',notes:''},puja:{},gifts:{},carnival:{stalls:[]},clothes:[]}, cloudData.eventPlanner);
+        await storageSet('wedding-eventplanner', JSON.stringify(eventPlanner));
+      }
       // Save notes to localStorage so they persist after sign-out
       await storageSet('wedding-notes', JSON.stringify(notes));
       // Branding logo: prefer cloud, fall back to local
@@ -5644,6 +5775,7 @@ async function pushToSheet(){
     vendors:vendorsForSync, functions, reminders,
     branding:brandingForSync, timeline:timelineForSync,
     notes:notes, pinHashes:pinHashes,
+    eventPlanner:eventPlanner,
     savedAt:new Date().toISOString()
   });
   const logosPayload = JSON.stringify({
@@ -8488,9 +8620,9 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   initGoogleAuth();
   initVoiceControl();
   await initAuth();
-  await tryRestoreGoogleSession();
-  // Call mobActivate after a tick — ensures mobile script block has registered
+  // Activate mobile UI BEFORE syncing — so it's ready to receive data when sync completes
   setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
+  await tryRestoreGoogleSession();
 })();
 
 /* ================================================================
@@ -8596,6 +8728,851 @@ function runGlobalSearch(q, gsInput, gsResults){
   gsResults.innerHTML=html; gsResults.style.display='block';
 }
 </script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   EVENT PLANNER — All 7 modules
+   Storage key: wedding-eventplanner
+   Does NOT modify any existing variable or function.
+   ═══════════════════════════════════════════════════════════════ */
+
+const EP_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+const EP_MEALS = [
+  {id:'breakfast', icon:'🌅', name:'Breakfast + Morning Tea/Coffee'},
+  {id:'lunch',     icon:'🍛', name:'Lunch'},
+  {id:'dinner',    icon:'🌙', name:'Dinner'},
+  {id:'latenight', icon:'🌃', name:'Late Night Tea/Coffee + Snacks'}
+];
+const EP_PUJA_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Marriage'];
+const EP_GIFT_EVENTS = ['Ganesh-Grahshanti-Mosalu'];
+
+// ── Storage ────────────────────────────────────────────────────
+async function epSave(){
+  try{ await storageSet('wedding-eventplanner', JSON.stringify(eventPlanner)); }catch(e){}
+  queueCloudSave();
+}
+async function epLoad(){
+  try{
+    var raw = await storageGet('wedding-eventplanner');
+    if(raw){ var d=JSON.parse(raw);
+      eventPlanner.catering = d.catering||{};
+      eventPlanner.decor    = d.decor||{};
+      eventPlanner.homeDecor= d.homeDecor||{inside:'',outside:'',images:[],status:'pending',notes:''};
+      eventPlanner.puja     = d.puja||{};
+      eventPlanner.gifts    = d.gifts||{};
+      eventPlanner.carnival = d.carnival||{stalls:[]};
+      eventPlanner.clothes  = d.clothes||[];
+    }
+  }catch(e){}
+}
+
+// ── Tab switching ──────────────────────────────────────────────
+function epShowTab(tab, btn){
+  document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.ep-panel').forEach(function(p){p.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  var panel = document.getElementById('epPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if(panel){ panel.classList.add('active'); epRender(tab); }
+}
+function epRender(tab){
+  if(tab==='catering') epRenderCatering();
+  else if(tab==='decor') epRenderDecor();
+  else if(tab==='puja') epRenderPuja();
+  else if(tab==='gifts') epRenderGifts();
+  else if(tab==='carnival') epRenderCarnival();
+  else if(tab==='clothes') epRenderClothes();
+  else if(tab==='reminders') epRenderReminders();
+}
+
+// ── Helpers ────────────────────────────────────────────────────
+function epEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function epFmt(n){n=Number(n)||0; return n>=100000?'₹'+(n/100000).toFixed(1)+'L':n>=1000?'₹'+Math.round(n/1000)+'K':'₹'+n;}
+function epEventDate(ev){ var t=eventTimeline&&eventTimeline[ev]; return t&&t.date?new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'Date not set'; }
+function epDaysTo(ev){ var t=eventTimeline&&eventTimeline[ev]; if(!t||!t.date) return 9999; return Math.ceil((new Date(t.date)-new Date())/86400000); }
+function epFirstFuncDate(skip){ // first function date excluding Kankotri if skip=true
+  var evs = skip ? EP_EVENTS.filter(function(e){return e!=='Kankotri';}) : EP_EVENTS;
+  var d=null; evs.forEach(function(ev){ var t=eventTimeline&&eventTimeline[ev]; if(t&&t.date){var dt=new Date(t.date); if(!d||dt<d)d=dt;} }); return d;
+}
+function epVendorOptions(selected){
+  var opts='<option value="">— Select vendor —</option><option value="__new__">+ Type new name</option>';
+  if(typeof vendors!=='undefined') vendors.forEach(function(v){ opts+='<option value="'+epEsc(v.id)+'"'+(v.id===selected?' selected':'')+'>'+epEsc(v.name)+'</option>'; });
+  return opts;
+}
+function epVendorName(id){ if(!id||id==='__new__') return ''; var v=vendors&&vendors.find(function(x){return x.id===id;}); return v?v.name:id; }
+function epGuestCount(ev){ return guests?guests.filter(function(g){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length:0; }
+function epStatusBadge(s){ return s==='confirmed'?'<span class="ep-meal-status ep-s-confirmed">✅ Confirmed</span>':'<span class="ep-meal-status ep-s-pending">⚠️ Pending</span>'; }
+function epToggleBody(id){ var el=document.getElementById(id); if(el) el.classList.toggle('open'); }
+function epImageHtml(images){
+  if(!images||!images.length) return '';
+  return '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">' + images.map(function(src,i){ return '<img src="'+epEsc(src)+'" class="ep-jpeg-thumb" onclick="epViewImage(\''+epEsc(src)+'\')">'; }).join('') + '</div>';
+}
+function epViewImage(src){ window.open(src,'_blank'); }
+function epReadFile(file,cb){
+  var r=new FileReader(); r.onload=function(e){cb(e.target.result);}; r.readAsDataURL(file);
+}
+
+// ── Update section badges ──────────────────────────────────────
+function epUpdateBadges(){
+  var pending=0, confirmed=0;
+  EP_EVENTS.forEach(function(ev){
+    EP_MEALS.forEach(function(m){
+      var slot=(eventPlanner.catering[ev]||{})[m.id]||{};
+      if(slot.status==='confirmed') confirmed++; else if(slot.caterer||slot.menu) pending++;
+    });
+    var dec=eventPlanner.decor[ev]||{};
+    if(dec.status==='confirmed') confirmed++; else if(dec.vendorId||dec.theme) pending++;
+  });
+  var pb=document.getElementById('epBadgePending'), cb=document.getElementById('epBadgeConfirmed');
+  if(pb) pb.textContent=pending+' pending'; if(cb) cb.textContent=confirmed+' confirmed';
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 1 — CATERING
+// ════════════════════════════════════════════════════════════════
+function epRenderCatering(){
+  var html='';
+  EP_EVENTS.forEach(function(ev){
+    var meals=eventPlanner.catering[ev]||{};
+    var pendCount=EP_MEALS.filter(function(m){return (meals[m.id]||{}).status!=='confirmed';}).length;
+    var badge=pendCount===0?'<span class="ep-chip ep-chip-ok">All confirmed</span>':'<span class="ep-chip ep-chip-warn">'+pendCount+' pending</span>';
+    html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epCat_'+ev+'\')">'+
+      '<div><div class="ep-event-title">🍽️ '+epEsc(ev)+'</div><div class="ep-event-date">'+epEventDate(ev)+' · '+epGuestCount(ev)+' guests</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px;">'+badge+'<span style="color:#888;font-size:12px;">▾</span></div></div>'+
+      '<div class="ep-event-body" id="epCat_'+ev+'">';
+    EP_MEALS.forEach(function(m){
+      var slot=meals[m.id]||{};
+      var catName=slot.vendorName||(slot.vendorId&&epVendorName(slot.vendorId))||'';
+      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+epEsc(ev)+'\',\''+m.id+'\')">'+
+        '<span class="ep-meal-icon">'+m.icon+'</span>'+
+        '<div style="flex:1"><div class="ep-meal-name">'+epEsc(m.name)+'</div>'+
+        (catName?'<div class="ep-meal-caterer">'+epEsc(catName)+(slot.headcount?' · '+slot.headcount+' people':'')+(slot.costPerPerson?' · '+epFmt(slot.costPerPerson)+'/person':'')+' → '+epFmt((slot.headcount||0)*(slot.costPerPerson||0))+'</div>':'')+
+        (slot.menu?'<div class="ep-meal-caterer">Menu: '+epEsc(slot.menu.substring(0,60))+'</div>':'')+
+        '</div>'+epStatusBadge(slot.status||'pending')+'</div>';
+      if(slot.images&&slot.images.length) html+='<div style="padding:0 0 6px;">'+epImageHtml(slot.images)+'</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('epPanelCatering').innerHTML=html;
+}
+
+var _epMealEv='', _epMealId='';
+function epOpenMealModal(ev,mealId){
+  _epMealEv=ev; _epMealId=mealId;
+  var slot=(eventPlanner.catering[ev]||{})[mealId]||{};
+  var meal=EP_MEALS.find(function(m){return m.id===mealId;});
+  var guestCount=epGuestCount(ev);
+  document.getElementById('epMealModalTitle').textContent=meal.icon+' '+meal.name+' — '+ev;
+  document.getElementById('epMealVendor').innerHTML=epVendorOptions(slot.vendorId||'');
+  document.getElementById('epMealVendorNew').style.display=(slot.vendorId==='__new__')?'block':'none';
+  document.getElementById('epMealVendorNew').value=slot.vendorName||'';
+  document.getElementById('epMealHeadcount').value=slot.headcount||guestCount;
+  document.getElementById('epMealHeadcountType').value=slot.headcountType||'full';
+  document.getElementById('epMealMenu').value=slot.menu||'';
+  document.getElementById('epMealCostPP').value=slot.costPerPerson||'';
+  document.getElementById('epMealTotal').textContent=epFmt((slot.headcount||guestCount)*(slot.costPerPerson||0));
+  document.getElementById('epMealStatus').value=slot.status||'pending';
+  document.getElementById('epMealImgPreview').innerHTML=epImageHtml(slot.images||[]);
+  document.getElementById('epMealModal').classList.add('show');
+}
+function epMealCalcTotal(){
+  var h=Number(document.getElementById('epMealHeadcount').value)||0;
+  var c=Number(document.getElementById('epMealCostPP').value)||0;
+  document.getElementById('epMealTotal').textContent=epFmt(h*c);
+}
+async function epSaveMeal(){
+  var vendorSel=document.getElementById('epMealVendor').value;
+  var vendorName=vendorSel==='__new__'?document.getElementById('epMealVendorNew').value:epVendorName(vendorSel);
+  if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
+  var existing=eventPlanner.catering[_epMealEv][_epMealId]||{};
+  eventPlanner.catering[_epMealEv][_epMealId]=Object.assign({},existing,{
+    vendorId:vendorSel, vendorName:vendorName,
+    headcount:Number(document.getElementById('epMealHeadcount').value)||0,
+    headcountType:document.getElementById('epMealHeadcountType').value,
+    menu:document.getElementById('epMealMenu').value.trim(),
+    costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,
+    status:document.getElementById('epMealStatus').value
+  });
+  // Handle image upload
+  var fileInput=document.getElementById('epMealImgInput');
+  if(fileInput.files.length){
+    var imgs=existing.images||[];
+    for(var i=0;i<fileInput.files.length;i++){
+      await new Promise(function(res){epReadFile(fileInput.files[i],function(d){imgs.push(d);res();});});
+    }
+    eventPlanner.catering[_epMealEv][_epMealId].images=imgs;
+  }
+  document.getElementById('epMealModal').classList.remove('show');
+  await epSave(); epRenderCatering(); epUpdateBadges();
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 2 — DECOR
+// ════════════════════════════════════════════════════════════════
+function epRenderDecor(){
+  var html='';
+  // Home Decor card first
+  var hd=eventPlanner.homeDecor||{};
+  html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epDecorHome\')">'+
+    '<div><div class="ep-event-title">🏠 Home Decor</div><div class="ep-event-date">Inside + Outside · Finalise 10 days before first function</div></div>'+
+    '<div>'+epStatusBadge(hd.status||'pending')+'</div></div>'+
+    '<div class="ep-event-body" id="epDecorHome">'+
+    '<div style="margin-top:8px;"><button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\')">✏️ Edit Home Decor</button></div>'+
+    (hd.inside?'<div style="margin-top:6px;font-size:12px;"><strong>Inside:</strong> '+epEsc(hd.inside)+'</div>':'')+
+    (hd.outside?'<div style="margin-top:4px;font-size:12px;"><strong>Outside:</strong> '+epEsc(hd.outside)+'</div>':'')+
+    (hd.notes?'<div style="margin-top:4px;font-size:12px;color:#888;">'+epEsc(hd.notes)+'</div>':'')+
+    epImageHtml(hd.images||[])+'</div></div>';
+
+  EP_EVENTS.forEach(function(ev){
+    var dec=eventPlanner.decor[ev]||{};
+    var vName=dec.vendorName||(dec.vendorId&&epVendorName(dec.vendorId))||'Not assigned';
+    html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epDecor_'+ev+'\')">'+
+      '<div><div class="ep-event-title">🌸 '+epEsc(ev)+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+
+      '<div>'+epStatusBadge(dec.status||'pending')+'</div></div>'+
+      '<div class="ep-event-body" id="epDecor_'+ev+'">'+
+      '<div style="margin-top:8px;"><button class="ep-add-btn" onclick="epOpenDecorModal(\''+epEsc(ev)+'\')">✏️ Edit Decor</button></div>'+
+      (dec.vendorId||dec.vendorName?'<div style="margin-top:6px;font-size:12px;"><strong>Decorator:</strong> '+epEsc(vName)+'</div>':'')+
+      (dec.theme?'<div style="font-size:12px;"><strong>Theme:</strong> '+epEsc(dec.theme)+'</div>':'')+
+      (dec.items?'<div style="font-size:12px;"><strong>Items:</strong> '+epEsc(dec.items)+'</div>':'')+
+      (dec.setupTime?'<div style="font-size:12px;"><strong>Setup time:</strong> '+epEsc(dec.setupTime)+'</div>':'')+
+      (dec.pending?'<div style="font-size:12px;color:#C45000;"><strong>⚠️ Pending:</strong> '+epEsc(dec.pending)+'</div>':'')+
+      (dec.notes?'<div style="font-size:12px;color:#888;">'+epEsc(dec.notes)+'</div>':'')+
+      epImageHtml(dec.images||[])+'</div></div>';
+  });
+  document.getElementById('epPanelDecor').innerHTML=html;
+}
+
+var _epDecorEv='';
+function epOpenDecorModal(ev){
+  _epDecorEv=ev;
+  var dec=ev==='__home__'?eventPlanner.homeDecor:(eventPlanner.decor[ev]||{});
+  document.getElementById('epDecorModalTitle').textContent=ev==='__home__'?'🏠 Home Decor':'🌸 Decor — '+ev;
+  var vendorRow=document.getElementById('epDecorVendorRow');
+  if(vendorRow) vendorRow.style.display=ev==='__home__'?'none':'block';
+  var vendorSel=document.getElementById('epDecorVendor');
+  if(vendorSel){ vendorSel.innerHTML=epVendorOptions(dec.vendorId||''); }
+  var vnew=document.getElementById('epDecorVendorNew');
+  if(vnew){ vnew.style.display=(dec.vendorId==='__new__')?'block':'none'; vnew.value=dec.vendorName||''; }
+  document.getElementById('epDecorTheme').value=dec.theme||'';
+  document.getElementById('epDecorItems').value=ev==='__home__'?'':(dec.items||'');
+  document.getElementById('epDecorSetup').value=dec.setupTime||'';
+  document.getElementById('epDecorInside').style.display=ev==='__home__'?'block':'none';
+  document.getElementById('epDecorOutside').style.display=ev==='__home__'?'block':'none';
+  if(ev==='__home__'){ document.getElementById('epDecorInsideVal').value=dec.inside||''; document.getElementById('epDecorOutsideVal').value=dec.outside||''; }
+  document.getElementById('epDecorPending').value=dec.pending||'';
+  document.getElementById('epDecorNotes').value=dec.notes||'';
+  document.getElementById('epDecorStatus').value=dec.status||'pending';
+  document.getElementById('epDecorImgPreview').innerHTML=epImageHtml(dec.images||[]);
+  document.getElementById('epDecorModal').classList.add('show');
+}
+async function epSaveDecor(){
+  var ev=_epDecorEv;
+  var vendorSel=document.getElementById('epDecorVendor');
+  var vendorId=vendorSel?vendorSel.value:'';
+  var vnew=document.getElementById('epDecorVendorNew');
+  var vendorName=vendorId==='__new__'?(vnew?vnew.value:''):epVendorName(vendorId);
+  var fileInput=document.getElementById('epDecorImgInput');
+  var existing=ev==='__home__'?eventPlanner.homeDecor:(eventPlanner.decor[ev]||{});
+  var imgs=existing.images||[];
+  if(fileInput&&fileInput.files.length){
+    for(var i=0;i<fileInput.files.length;i++){
+      await new Promise(function(res){epReadFile(fileInput.files[i],function(d){imgs.push(d);res();});});
+    }
+  }
+  var data={
+    vendorId:vendorId, vendorName:vendorName,
+    theme:document.getElementById('epDecorTheme').value.trim(),
+    items:document.getElementById('epDecorItems').value.trim(),
+    setupTime:document.getElementById('epDecorSetup').value.trim(),
+    inside:document.getElementById('epDecorInsideVal')?document.getElementById('epDecorInsideVal').value.trim():'',
+    outside:document.getElementById('epDecorOutsideVal')?document.getElementById('epDecorOutsideVal').value.trim():'',
+    pending:document.getElementById('epDecorPending').value.trim(),
+    notes:document.getElementById('epDecorNotes').value.trim(),
+    status:document.getElementById('epDecorStatus').value,
+    images:imgs
+  };
+  if(ev==='__home__') eventPlanner.homeDecor=Object.assign({},existing,data);
+  else { if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={}; eventPlanner.decor[ev]=Object.assign({},existing,data); }
+  document.getElementById('epDecorModal').classList.remove('show');
+  await epSave(); epRenderDecor(); epUpdateBadges();
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 3 — PUJA SAMAGRI
+// ════════════════════════════════════════════════════════════════
+function epRenderPuja(){
+  var html='';
+  EP_PUJA_EVENTS.forEach(function(ev){
+    var puja=eventPlanner.puja[ev]||{};
+    var mBrings=puja.maharajBrings||[];
+    var weProvide=puja.weProvide||[];
+    var pendCount=(mBrings.filter(function(i){return !i.done;}).length)+(weProvide.filter(function(i){return !i.done;}).length);
+    html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epPuja_'+ev+'\')">'+
+      '<div><div class="ep-event-title">🪔 '+epEsc(ev)+'</div>'+
+      '<div class="ep-event-date">'+epEventDate(ev)+(puja.maharajName?' · Maharaj: '+epEsc(puja.maharajName):'')+'</div></div>'+
+      '<div>'+(pendCount>0?'<span class="ep-chip ep-chip-warn">'+pendCount+' pending</span>':'<span class="ep-chip ep-chip-ok">All done</span>')+'</div></div>'+
+      '<div class="ep-event-body" id="epPuja_'+ev+'">'+
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">'+
+      '<button class="ep-add-btn" onclick="epOpenPujaModal(\''+epEsc(ev)+'\')">✏️ Edit Maharaj Details</button>'+
+      '<button class="ep-add-btn" onclick="epAddPujaItem(\''+epEsc(ev)+'\',\'maharaj\')">+ Maharaj Brings</button>'+
+      '<button class="ep-add-btn" onclick="epAddPujaItem(\''+epEsc(ev)+'\',\'home\')">+ We Provide</button></div>'+
+      (puja.maharajPhone?'<div style="margin-top:6px;font-size:12px;">📞 '+epEsc(puja.maharajPhone)+'</div>':'')+
+      (puja.listText?'<div style="font-size:12px;margin-top:4px;color:#666;">'+epEsc(puja.listText)+'</div>':'')+
+      epImageHtml(puja.listImages||[])+
+      '<div class="ep-two-col" style="margin-top:10px;">'+
+      '<div><div class="ep-col-head">Maharaj Brings</div>'+
+      mBrings.map(function(it,idx){return '<div class="ep-item-row">'+
+        '<div class="ep-check'+(it.done?' done':'')+'" onclick="epTogglePujaItem(\''+epEsc(ev)+'\',\'maharaj\','+idx+')">'+(it.done?'✓':'')+'</div>'+
+        '<div class="ep-item-text">'+epEsc(it.text)+'</div>'+
+        '<button onclick="epDeletePujaItem(\''+epEsc(ev)+'\',\'maharaj\','+idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;">×</button></div>';}).join('')+
+      '</div><div><div class="ep-col-head">We Provide from Home</div>'+
+      weProvide.map(function(it,idx){return '<div class="ep-item-row">'+
+        '<div class="ep-check'+(it.done?' done':'')+'" onclick="epTogglePujaItem(\''+epEsc(ev)+'\',\'home\','+idx+')">'+(it.done?'✓':'')+'</div>'+
+        '<div class="ep-item-text">'+epEsc(it.text)+'</div>'+
+        '<button onclick="epDeletePujaItem(\''+epEsc(ev)+'\',\'home\','+idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;">×</button></div>';}).join('')+
+      '</div></div></div></div>';
+  });
+  document.getElementById('epPanelPuja').innerHTML=html;
+}
+var _epPujaEv='';
+function epOpenPujaModal(ev){
+  _epPujaEv=ev;
+  var puja=eventPlanner.puja[ev]||{};
+  document.getElementById('epPujaModalTitle').textContent='🪔 Puja — '+ev;
+  document.getElementById('epPujaMaharajName').value=puja.maharajName||'';
+  document.getElementById('epPujaMaharajPhone').value=puja.maharajPhone||'';
+  document.getElementById('epPujaListText').value=puja.listText||'';
+  document.getElementById('epPujaImgPreview').innerHTML=epImageHtml(puja.listImages||[]);
+  document.getElementById('epPujaModal').classList.add('show');
+}
+async function epSavePuja(){
+  var ev=_epPujaEv;
+  if(!eventPlanner.puja[ev]) eventPlanner.puja[ev]={maharajBrings:[],weProvide:[]};
+  var existing=eventPlanner.puja[ev];
+  var fileInput=document.getElementById('epPujaImgInput');
+  var imgs=existing.listImages||[];
+  if(fileInput&&fileInput.files.length){
+    for(var i=0;i<fileInput.files.length;i++){
+      await new Promise(function(res){epReadFile(fileInput.files[i],function(d){imgs.push(d);res();});});
+    }
+  }
+  eventPlanner.puja[ev].maharajName=document.getElementById('epPujaMaharajName').value.trim();
+  eventPlanner.puja[ev].maharajPhone=document.getElementById('epPujaMaharajPhone').value.trim();
+  eventPlanner.puja[ev].listText=document.getElementById('epPujaListText').value.trim();
+  eventPlanner.puja[ev].listImages=imgs;
+  document.getElementById('epPujaModal').classList.remove('show');
+  await epSave(); epRenderPuja();
+}
+function epAddPujaItem(ev,type){
+  var text=prompt(type==='maharaj'?'Item Maharaj will bring:':'Item we provide from home:'); if(!text) return;
+  if(!eventPlanner.puja[ev]) eventPlanner.puja[ev]={maharajBrings:[],weProvide:[]};
+  if(type==='maharaj') eventPlanner.puja[ev].maharajBrings.push({text:text,done:false});
+  else eventPlanner.puja[ev].weProvide.push({text:text,done:false});
+  epSave(); epRenderPuja();
+}
+function epTogglePujaItem(ev,type,idx){
+  var arr=type==='maharaj'?eventPlanner.puja[ev].maharajBrings:eventPlanner.puja[ev].weProvide;
+  if(arr&&arr[idx]) arr[idx].done=!arr[idx].done;
+  epSave(); epRenderPuja();
+}
+function epDeletePujaItem(ev,type,idx){
+  var arr=type==='maharaj'?eventPlanner.puja[ev].maharajBrings:eventPlanner.puja[ev].weProvide;
+  if(arr) arr.splice(idx,1);
+  epSave(); epRenderPuja();
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 4 — GIFTS & COVERS
+// ════════════════════════════════════════════════════════════════
+function epRenderGifts(){
+  var html='';
+  EP_GIFT_EVENTS.forEach(function(ev){
+    var gift=eventPlanner.gifts[ev]||{covers:[],ladies:[],akhand:[]};
+    var pendCount=(gift.covers||[]).filter(function(i){return i.status!=='given';}).length+
+                  (gift.ladies||[]).filter(function(i){return i.status!=='given';}).length+
+                  (gift.akhand||[]).filter(function(i){return i.status!=='given';}).length;
+    html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epGift_'+ev+'\')">'+
+      '<div><div class="ep-event-title">🎁 '+epEsc(ev)+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+
+      '<div>'+(pendCount>0?'<span class="ep-chip ep-chip-warn">'+pendCount+' pending</span>':'<span class="ep-chip ep-chip-ok">All done</span>')+'</div></div>'+
+      '<div class="ep-event-body" id="epGift_'+ev+'">'+
+      '<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">'+
+      '<button class="ep-add-btn" onclick="epAddGift(\''+epEsc(ev)+'\',\'covers\')">+ Add Cover</button>'+
+      '<button class="ep-add-btn" onclick="epAddGift(\''+epEsc(ev)+'\',\'ladies\')">+ Lady/Girl Gift</button>'+
+      '<button class="ep-add-btn" onclick="epAddGift(\''+epEsc(ev)+'\',\'akhand\')">+ Akhand Saubhagya Vati</button></div>'+
+      epRenderGiftList(gift.covers||[],'💌 Covers','covers',ev)+
+      epRenderGiftList(gift.ladies||[],'👩 Ladies & Girls Gifts','ladies',ev)+
+      epRenderGiftList(gift.akhand||[],'🪔 Akhand Saubhagya Vati','akhand',ev)+
+      '</div></div>';
+  });
+  document.getElementById('epPanelGifts').innerHTML=html;
+}
+function epRenderGiftList(items,title,type,ev){
+  if(!items.length) return '<div style="font-size:12px;color:#aaa;margin-top:8px;">'+title+': None added yet</div>';
+  var statusColors={'prepared':'ep-chip-warn','given':'ep-chip-ok','pending':'ep-chip-err'};
+  return '<div style="margin-top:10px;"><div class="ep-col-head">'+title+'</div>'+
+    items.map(function(it,idx){
+      return '<div class="ep-item-row">'+
+        '<div class="ep-item-text"><strong>'+epEsc(it.name)+'</strong>'+(it.amount?' — ₹'+it.amount:'')+(it.notes?' · '+epEsc(it.notes):'')+'</div>'+
+        '<span class="ep-chip '+(statusColors[it.status]||'ep-chip-warn')+'">'+epEsc(it.status||'pending')+'</span>'+
+        '<select onchange="epUpdateGiftStatus(\''+epEsc(ev)+'\',\''+type+'\','+idx+',this.value)" style="font-size:10px;border:1px solid #ddd;border-radius:6px;padding:2px;">'+
+          '<option value="pending"'+(it.status==='pending'?' selected':'')+'>Pending</option>'+
+          '<option value="prepared"'+(it.status==='prepared'?' selected':'')+'>Prepared</option>'+
+          '<option value="given"'+(it.status==='given'?' selected':'')+'>Given</option></select>'+
+        '<button onclick="epDeleteGift(\''+epEsc(ev)+'\',\''+type+'\','+idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;">×</button></div>';
+    }).join('')+'</div>';
+}
+function epAddGift(ev,type){
+  var name=prompt(type==='covers'?'Cover to whom (name):':type==='ladies'?'Lady/Girl name:':'Akhand Saubhagya Vati name:'); if(!name) return;
+  var amount=type==='covers'?prompt('Amount in cover (₹):'):'';
+  var notes=prompt('Notes (optional):');
+  if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+  eventPlanner.gifts[ev][type].push({name:name,amount:amount||'',notes:notes||'',status:'pending'});
+  epSave(); epRenderGifts();
+}
+function epUpdateGiftStatus(ev,type,idx,val){
+  if(eventPlanner.gifts[ev]&&eventPlanner.gifts[ev][type]&&eventPlanner.gifts[ev][type][idx])
+    eventPlanner.gifts[ev][type][idx].status=val;
+  epSave(); epRenderGifts();
+}
+function epDeleteGift(ev,type,idx){
+  if(eventPlanner.gifts[ev]&&eventPlanner.gifts[ev][type]) eventPlanner.gifts[ev][type].splice(idx,1);
+  epSave(); epRenderGifts();
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 5 — MEHENDI CARNIVAL
+// ════════════════════════════════════════════════════════════════
+function epRenderCarnival(){
+  var stalls=eventPlanner.carnival.stalls||[];
+  var html='<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+
+    '<div><strong>Mehendi Carnival Stalls</strong><br><span style="font-size:11px;color:#888;">'+epEventDate('Mehendi')+'</span></div>'+
+    '<button class="ep-add-btn" onclick="epOpenCarnivalModal(-1)">+ Add Stall</button></div>';
+  if(!stalls.length) html+='<div style="text-align:center;color:#aaa;padding:20px;">No stalls added yet</div>';
+  stalls.forEach(function(s,i){
+    html+='<div class="ep-event-card"><div style="padding:10px 14px;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;">'+
+      '<div><div style="font-size:13px;font-weight:700;">🎪 '+epEsc(s.name)+'</div>'+
+      '<div style="font-size:11px;color:#888;">'+epEsc(s.provides||'')+'</div></div>'+
+      '<div style="display:flex;gap:6px;align-items:center;">'+
+      (s.status==='finalised'?'<span class="ep-chip ep-chip-ok">Finalised</span>':'<span class="ep-chip ep-chip-warn">Pending</span>')+
+      '<button class="ep-add-btn" style="margin:0;" onclick="epOpenCarnivalModal('+i+')">Edit</button>'+
+      '<button onclick="epDeleteCarnival('+i+')" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;">×</button></div></div>'+
+      (s.weProvide?'<div style="font-size:11px;margin-top:4px;"><strong>We provide:</strong> '+epEsc(s.weProvide)+'</div>':'')+
+      (s.procured!==undefined?'<div style="font-size:11px;margin-top:2px;color:'+(s.procured?'#2E7D32':'#C45000')+'">'+(s.procured?'✅ Procured':'⚠️ Not yet procured')+'</div>':'')+
+      epImageHtml(s.images||[])+
+      '</div></div>';
+  });
+  document.getElementById('epPanelCarnival').innerHTML=html;
+}
+var _epCarnivalIdx=-1;
+function epOpenCarnivalModal(idx){
+  _epCarnivalIdx=idx;
+  var s=idx>=0?(eventPlanner.carnival.stalls[idx]||{}):{};
+  document.getElementById('epCarnivalName').value=s.name||'';
+  document.getElementById('epCarnivalProvides').value=s.provides||'';
+  document.getElementById('epCarnivalWeProvide').value=s.weProvide||'';
+  document.getElementById('epCarnivalProcured').value=s.procured?'yes':'no';
+  document.getElementById('epCarnivalStatus').value=s.status||'pending';
+  document.getElementById('epCarnivalNotes').value=s.notes||'';
+  document.getElementById('epCarnivalImgPreview').innerHTML=epImageHtml(s.images||[]);
+  document.getElementById('epCarnivalModal').classList.add('show');
+}
+async function epSaveCarnival(){
+  var idx=_epCarnivalIdx;
+  var existing=idx>=0?(eventPlanner.carnival.stalls[idx]||{}):{};
+  var fileInput=document.getElementById('epCarnivalImgInput');
+  var imgs=existing.images||[];
+  if(fileInput&&fileInput.files.length){
+    for(var i=0;i<fileInput.files.length;i++){
+      await new Promise(function(res){epReadFile(fileInput.files[i],function(d){imgs.push(d);res();});});
+    }
+  }
+  var s={name:document.getElementById('epCarnivalName').value.trim(),
+    provides:document.getElementById('epCarnivalProvides').value.trim(),
+    weProvide:document.getElementById('epCarnivalWeProvide').value.trim(),
+    procured:document.getElementById('epCarnivalProcured').value==='yes',
+    status:document.getElementById('epCarnivalStatus').value,
+    notes:document.getElementById('epCarnivalNotes').value.trim(),
+    images:imgs};
+  if(!eventPlanner.carnival.stalls) eventPlanner.carnival.stalls=[];
+  if(idx>=0) eventPlanner.carnival.stalls[idx]=s; else eventPlanner.carnival.stalls.push(s);
+  document.getElementById('epCarnivalModal').classList.remove('show');
+  await epSave(); epRenderCarnival();
+}
+function epDeleteCarnival(idx){ if(confirm('Delete this stall?')){ eventPlanner.carnival.stalls.splice(idx,1); epSave(); epRenderCarnival(); } }
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 6 — CLOTHES
+// ════════════════════════════════════════════════════════════════
+function epRenderClothes(){
+  var items=eventPlanner.clothes||[];
+  var html='<div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">'+
+    '<div><strong>Clothes Management</strong><br><span style="font-size:11px;color:#888;">Per person per function · Delivery 30 days before event</span></div>'+
+    '<button class="ep-add-btn" onclick="epOpenClothesModal(-1)">+ Add Outfit</button></div>';
+  // Group by event
+  var byEvent={};
+  items.forEach(function(item,i){ var ev=item.event||'Other'; if(!byEvent[ev]) byEvent[ev]=[]; byEvent[ev].push({item:item,idx:i}); });
+  if(!Object.keys(byEvent).length) html+='<div style="text-align:center;color:#aaa;padding:20px;">No outfits added yet</div>';
+  Object.keys(byEvent).forEach(function(ev){
+    html+='<div class="ep-event-card"><div class="ep-event-head" onclick="epToggleBody(\'epClothes_'+ev+'\')">'+
+      '<div class="ep-event-title">👗 '+epEsc(ev)+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+
+      '<div class="ep-event-body" id="epClothes_'+ev+'">';
+    byEvent[ev].forEach(function(entry){
+      var item=entry.item, idx=entry.idx;
+      var vName=item.vendorName||(item.vendorId&&epVendorName(item.vendorId))||'';
+      var statusCls=item.status==='delivered'?'ep-chip-ok':item.status==='ordered'?'ep-chip-warn':'ep-chip-err';
+      html+='<div class="ep-item-row" style="flex-wrap:wrap;padding:8px 0;">'+
+        '<div style="flex:1;min-width:180px;">'+
+        '<div style="font-size:13px;font-weight:600;">'+epEsc(item.person)+'</div>'+
+        '<div style="font-size:11px;color:#666;">'+epEsc(item.description||'')+(vName?' · '+epEsc(vName):'')+(item.cost?' · ₹'+item.cost:'')+'</div>'+
+        '</div>'+
+        '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">'+
+        '<span class="ep-chip '+statusCls+'">'+epEsc(item.status||'pending')+'</span>'+
+        '<button class="ep-add-btn" style="margin:0;padding:3px 8px;font-size:11px;" onclick="epOpenClothesModal('+idx+')">Edit</button>'+
+        '<button onclick="epDeleteClothes('+idx+')" style="background:none;border:none;color:#ccc;cursor:pointer;">×</button></div>'+
+        epImageHtml(item.images||[])+'</div>';
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('epPanelClothes').innerHTML=html;
+}
+var _epClothesIdx=-1;
+function epOpenClothesModal(idx){
+  _epClothesIdx=idx;
+  var item=idx>=0?(eventPlanner.clothes[idx]||{}):{};
+  document.getElementById('epClothesPerson').value=item.person||'';
+  document.getElementById('epClothesEvent').innerHTML=EP_EVENTS.map(function(ev){return '<option value="'+epEsc(ev)+'"'+(item.event===ev?' selected':'')+'>'+ev+'</option>';}).join('');
+  document.getElementById('epClothesDesc').value=item.description||'';
+  document.getElementById('epClothesVendor').innerHTML=epVendorOptions(item.vendorId||'');
+  var vnew=document.getElementById('epClothesVendorNew');
+  if(vnew){vnew.style.display=(item.vendorId==='__new__')?'block':'none';vnew.value=item.vendorName||'';}
+  document.getElementById('epClothesCost').value=item.cost||'';
+  document.getElementById('epClothesStatus').value=item.status||'pending';
+  document.getElementById('epClothesImgPreview').innerHTML=epImageHtml(item.images||[]);
+  document.getElementById('epClothesModal').classList.add('show');
+}
+async function epSaveClothes(){
+  var idx=_epClothesIdx;
+  var existing=idx>=0?(eventPlanner.clothes[idx]||{}):{};
+  var vendorId=document.getElementById('epClothesVendor').value;
+  var vnew=document.getElementById('epClothesVendorNew');
+  var vendorName=vendorId==='__new__'?(vnew?vnew.value:''):epVendorName(vendorId);
+  var ev=document.getElementById('epClothesEvent').value;
+  var fileInput=document.getElementById('epClothesImgInput');
+  var imgs=existing.images||[];
+  if(fileInput&&fileInput.files.length){
+    for(var i=0;i<fileInput.files.length;i++){
+      await new Promise(function(res){epReadFile(fileInput.files[i],function(d){imgs.push(d);res();});});
+    }
+  }
+  var item={id:existing.id||('c'+Date.now()),
+    person:document.getElementById('epClothesPerson').value.trim(),
+    event:ev,description:document.getElementById('epClothesDesc').value.trim(),
+    vendorId:vendorId,vendorName:vendorName,
+    cost:Number(document.getElementById('epClothesCost').value)||0,
+    status:document.getElementById('epClothesStatus').value,
+    images:imgs};
+  if(!eventPlanner.clothes) eventPlanner.clothes=[];
+  if(idx>=0) eventPlanner.clothes[idx]=item; else eventPlanner.clothes.push(item);
+  document.getElementById('epClothesModal').classList.remove('show');
+  await epSave(); epRenderClothes();
+}
+function epDeleteClothes(idx){ if(confirm('Delete this outfit?')){ eventPlanner.clothes.splice(idx,1); epSave(); epRenderClothes(); } }
+
+// ════════════════════════════════════════════════════════════════
+// MODULE 7 — REMINDERS ENGINE
+// ════════════════════════════════════════════════════════════════
+function epScanReminders(){
+  var items=[];
+  var today=new Date(); today.setHours(0,0,0,0);
+  function addRem(text,triggerDate,module){
+    if(!triggerDate) return;
+    var dt=new Date(triggerDate); dt.setHours(0,0,0,0);
+    var daysLeft=Math.round((dt-today)/86400000);
+    var status=daysLeft<0?'overdue':daysLeft<=7?'soon':'ok';
+    items.push({text:text,daysLeft:daysLeft,status:status,module:module,dt:dt});
+  }
+
+  // Rule 1: Catering — 60 days before Kankotri
+  var kankDate=eventTimeline&&eventTimeline['Kankotri']&&eventTimeline['Kankotri'].date?new Date(eventTimeline['Kankotri'].date):null;
+  if(kankDate){
+    var catTrigger=new Date(kankDate); catTrigger.setDate(catTrigger.getDate()-60);
+    EP_EVENTS.forEach(function(ev){
+      EP_MEALS.forEach(function(m){
+        var slot=(eventPlanner.catering[ev]||{})[m.id]||{};
+        if(slot.status!=='confirmed') addRem('Catering: '+m.name+' for '+ev+' not confirmed',catTrigger,'catering');
+      });
+    });
+
+    // Rule 3: Puja — 2 months before Kankotri
+    var pujaTrigger=new Date(kankDate); pujaTrigger.setDate(pujaTrigger.getDate()-60);
+    EP_PUJA_EVENTS.forEach(function(ev){
+      var puja=eventPlanner.puja[ev]||{};
+      var pending=(puja.weProvide||[]).filter(function(i){return !i.done;});
+      if(pending.length) addRem('Puja: '+pending.length+' items to provide for '+ev,pujaTrigger,'puja');
+    });
+
+    // Rule 5: Carnival — 3 months before Kankotri
+    var carnTrigger=new Date(kankDate); carnTrigger.setDate(carnTrigger.getDate()-90);
+    var pendStalls=(eventPlanner.carnival.stalls||[]).filter(function(s){return s.status!=='finalised';});
+    if(pendStalls.length) addRem('Carnival: '+pendStalls.length+' stalls not finalised for Mehendi',carnTrigger,'carnival');
+
+    // Rule 2b: Home decor — 3 months before Kankotri
+    var hdTrigger=new Date(kankDate); hdTrigger.setDate(hdTrigger.getDate()-90);
+    if((eventPlanner.homeDecor||{}).status!=='confirmed') addRem('Home Decor: Not yet finalised (inside + outside)',hdTrigger,'decor');
+  }
+
+  // Rule 2a: Decor — 60 days before each function
+  EP_EVENTS.forEach(function(ev){
+    var evDate=eventTimeline&&eventTimeline[ev]&&eventTimeline[ev].date?new Date(eventTimeline[ev].date):null;
+    if(!evDate) return;
+    var trigger=new Date(evDate); trigger.setDate(trigger.getDate()-60);
+    var dec=eventPlanner.decor[ev]||{};
+    if(dec.status!=='confirmed') addRem('Decor: '+ev+' not confirmed',trigger,'decor');
+    // Rule 6: Clothes — 30 days before each function
+    var cTrigger=new Date(evDate); cTrigger.setDate(cTrigger.getDate()-30);
+    var undelivered=(eventPlanner.clothes||[]).filter(function(c){return c.event===ev&&c.status!=='delivered';});
+    if(undelivered.length) addRem('Clothes: '+undelivered.length+' outfits not delivered for '+ev,cTrigger,'clothes');
+  });
+
+  // Rule 4: Gifts — 1 month before Ganesh
+  var ganeshDate=eventTimeline&&eventTimeline['Ganesh-Grahshanti-Mosalu']&&eventTimeline['Ganesh-Grahshanti-Mosalu'].date?new Date(eventTimeline['Ganesh-Grahshanti-Mosalu'].date):null;
+  if(ganeshDate){
+    var giftTrigger=new Date(ganeshDate); giftTrigger.setDate(giftTrigger.getDate()-30);
+    EP_GIFT_EVENTS.forEach(function(ev){
+      var gift=eventPlanner.gifts[ev]||{};
+      var allItems=[].concat(gift.covers||[],gift.ladies||[],gift.akhand||[]);
+      var notDone=allItems.filter(function(i){return i.status!=='given';});
+      if(notDone.length) addRem('Gifts & Covers: '+notDone.length+' items not given for '+ev,giftTrigger,'gifts');
+    });
+  }
+
+  // Sort by urgency
+  items.sort(function(a,b){return a.daysLeft-b.daysLeft;});
+  return items;
+}
+
+function epRenderReminders(){
+  var items=epScanReminders();
+  if(!items.length){
+    document.getElementById('epPanelReminders').innerHTML='<div style="text-align:center;padding:28px;color:#888;">🟢 All on track — no pending reminders</div>';
+    return;
+  }
+  var html=items.map(function(r){
+    var dotCls=r.status==='overdue'?'ep-rem-err':r.status==='soon'?'ep-rem-warn':'ep-rem-ok';
+    var dayTxt=r.daysLeft<0?'Overdue by '+Math.abs(r.daysLeft)+' days':r.daysLeft===0?'Due today!':r.daysLeft===1?'Due tomorrow':'Due in '+r.daysLeft+' days';
+    return '<div class="ep-reminder-row"><div class="ep-rem-dot '+dotCls+'"></div>'+
+      '<div style="flex:1"><div style="font-size:12px;font-weight:600;">'+epEsc(r.text)+'</div>'+
+      '<div style="font-size:11px;color:#888;">'+dayTxt+'</div></div>'+
+      '<span class="ep-chip '+(r.status==='overdue'?'ep-chip-err':r.status==='soon'?'ep-chip-warn':'ep-chip-ok')+'">'+
+      (r.status==='overdue'?'🔴':r.status==='soon'?'🟡':'🟢')+'</span></div>';
+  }).join('');
+  document.getElementById('epPanelReminders').innerHTML=html;
+  // Also inject EP reminders into main Reminders section
+  epInjectIntoReminders(items);
+}
+
+function epInjectIntoReminders(items){
+  // Add EP reminders to the existing reminders section without modifying reminders variable
+  var container=document.getElementById('epRemindersInMain');
+  if(!container) return;
+  var overdueOrSoon=items.filter(function(r){return r.status!=='ok';});
+  if(!overdueOrSoon.length){ container.innerHTML=''; return; }
+  container.innerHTML='<div style="margin-top:12px;border-top:1.5px dashed #e8c8d8;padding-top:12px;">'+
+    '<div style="font-size:11px;font-weight:700;color:#8B1A6B;margin-bottom:8px;">🌺 Event Planner Alerts</div>'+
+    overdueOrSoon.map(function(r){
+      var col=r.status==='overdue'?'#C62828':'#C45000';
+      return '<div style="padding:6px 0;border-bottom:1px solid #f5f5f5;display:flex;gap:8px;align-items:center;">'+
+        '<span style="font-size:14px;">'+(r.status==='overdue'?'🔴':'🟡')+'</span>'+
+        '<div><div style="font-size:12px;font-weight:600;color:'+col+';">'+epEsc(r.text)+'</div>'+
+        '<div style="font-size:11px;color:#888;">'+(r.daysLeft<0?'Overdue '+Math.abs(r.daysLeft)+'d':'Due in '+r.daysLeft+'d')+'</div></div></div>';
+    }).join('')+'</div>';
+}
+
+// ── Integrate with loadData & pushToSheet ──────────────────────
+// Hook into loadData to load EP data
+var _origLoadData = window.loadData;
+if(typeof _origLoadData === 'function'){
+  window.loadData = async function(){
+    await _origLoadData.apply(this, arguments);
+    await epLoad();
+    epUpdateBadges();
+    epScanReminders();
+  };
+}
+
+// Hook into pushToSheet to include EP data
+var _origPushToSheet = window.pushToSheet;
+if(typeof _origPushToSheet === 'function'){
+  window.pushToSheet = async function(){
+    // Save EP to localStorage before push
+    await epSave();
+    return _origPushToSheet.apply(this, arguments);
+  };
+}
+
+// Hook into pullFromSheet to restore EP data
+var _origPullFromSheet = window.pullFromSheet;
+if(typeof _origPullFromSheet === 'function'){
+  window.pullFromSheet = async function(){
+    var result = await _origPullFromSheet.apply(this, arguments);
+    // If cloud data has eventPlanner, restore it
+    if(result && result.eventPlanner){
+      eventPlanner = Object.assign({catering:{},decor:{},homeDecor:{},puja:{},gifts:{},carnival:{stalls:[]},clothes:[]}, result.eventPlanner);
+    }
+    return result;
+  };
+}
+
+// Hook toggleSecBody to render EP when opened
+var _origToggle = window.toggleSecBody;
+if(typeof _origToggle === 'function'){
+  window.toggleSecBody = function(headerId, bodyId){
+    _origToggle.apply(this, arguments);
+    if(bodyId === 'epSecBody'){
+      epRenderCatering();
+      epUpdateBadges();
+    }
+  };
+}
+</script>
+
+<!-- ── Event Planner Modals ── -->
+<div class="ep-modal-overlay" id="epMealModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title" id="epMealModalTitle">Meal Details</div>
+    <div class="ep-field"><label>Caterer / Cook</label>
+      <select id="epMealVendor" onchange="document.getElementById('epMealVendorNew').style.display=this.value==='__new__'?'block':'none'"></select>
+      <input type="text" id="epMealVendorNew" placeholder="Type caterer name" style="display:none;margin-top:6px;">
+    </div>
+    <div class="ep-field"><label>Headcount Type</label>
+      <select id="epMealHeadcountType">
+        <option value="full">Full function guests</option>
+        <option value="staying">Staying guests (25-30)</option>
+        <option value="visitors">Late visitors</option>
+        <option value="custom">Custom</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Number of People</label>
+      <input type="number" id="epMealHeadcount" min="0" oninput="epMealCalcTotal()"></div>
+    <div class="ep-field"><label>Menu Items</label><textarea id="epMealMenu" placeholder="e.g. Dal, Rice, 3 Sabzi, Roti, Sweet..."></textarea></div>
+    <div class="ep-field"><label>Upload Menu Photo (JPEG)</label>
+      <label class="ep-upload-btn"><input type="file" id="epMealImgInput" accept="image/*" multiple style="display:none;">📷 Upload Image</label>
+      <div id="epMealImgPreview" style="margin-top:6px;"></div>
+    </div>
+    <div class="ep-field"><label>Cost per Person (₹)</label>
+      <input type="number" id="epMealCostPP" min="0" oninput="epMealCalcTotal()"></div>
+    <div style="background:#f9f9f9;border-radius:8px;padding:8px;margin-bottom:12px;font-size:13px;">
+      Total: <strong id="epMealTotal">₹0</strong></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epMealStatus"><option value="pending">⚠️ Pending</option><option value="confirmed">✅ Confirmed</option></select>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epMealModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveMeal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="epDecorModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title" id="epDecorModalTitle">Decor Details</div>
+    <div class="ep-field" id="epDecorVendorRow"><label>Decorator (from vendors)</label>
+      <select id="epDecorVendor" onchange="document.getElementById('epDecorVendorNew').style.display=this.value==='__new__'?'block':'none'"></select>
+      <input type="text" id="epDecorVendorNew" placeholder="Type decorator name" style="display:none;margin-top:6px;">
+    </div>
+    <div class="ep-field"><label>Theme</label><input type="text" id="epDecorTheme" placeholder="e.g. Royal Maroon & Gold"></div>
+    <div class="ep-field"><label>Items / Setup</label><textarea id="epDecorItems" placeholder="e.g. Mandap, Stage, Entrance arch, Flowers..."></textarea></div>
+    <div class="ep-field"><label>Setup Time</label><input type="text" id="epDecorSetup" placeholder="e.g. 6:00 AM"></div>
+    <div class="ep-field" id="epDecorInside" style="display:none;"><label>Inside Decor</label><textarea id="epDecorInsideVal" placeholder="Inside home decor details..."></textarea></div>
+    <div class="ep-field" id="epDecorOutside" style="display:none;"><label>Outside Decor</label><textarea id="epDecorOutsideVal" placeholder="Outside home decor details..."></textarea></div>
+    <div class="ep-field"><label>Pending Items</label><input type="text" id="epDecorPending" placeholder="e.g. Lighting quote awaited"></div>
+    <div class="ep-field"><label>Notes</label><textarea id="epDecorNotes"></textarea></div>
+    <div class="ep-field"><label>Upload Photo (JPEG)</label>
+      <label class="ep-upload-btn"><input type="file" id="epDecorImgInput" accept="image/*" multiple style="display:none;">📷 Upload</label>
+      <div id="epDecorImgPreview" style="margin-top:6px;"></div>
+    </div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epDecorStatus"><option value="pending">⚠️ Pending</option><option value="confirmed">✅ Confirmed</option></select>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epDecorModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveDecor()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="epPujaModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title" id="epPujaModalTitle">Puja Details</div>
+    <div class="ep-field"><label>Maharaj Name</label><input type="text" id="epPujaMaharajName" placeholder="e.g. Pt. Rameshbhai"></div>
+    <div class="ep-field"><label>Maharaj Phone</label><input type="tel" id="epPujaMaharajPhone"></div>
+    <div class="ep-field"><label>Samagri List Notes</label><textarea id="epPujaListText" placeholder="General notes about puja requirements..."></textarea></div>
+    <div class="ep-field"><label>Upload List Photo (JPEG)</label>
+      <label class="ep-upload-btn"><input type="file" id="epPujaImgInput" accept="image/*" multiple style="display:none;">📷 Upload</label>
+      <div id="epPujaImgPreview" style="margin-top:6px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epPujaModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSavePuja()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="epCarnivalModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">🎪 Carnival Stall Details</div>
+    <div class="ep-field"><label>Stall / Vendor Name</label><input type="text" id="epCarnivalName" placeholder="e.g. Mehendi Artist, Balloon Art..."></div>
+    <div class="ep-field"><label>What the stall provides</label><textarea id="epCarnivalProvides"></textarea></div>
+    <div class="ep-field"><label>What we need to provide</label><textarea id="epCarnivalWeProvide"></textarea></div>
+    <div class="ep-field"><label>Have we procured?</label>
+      <select id="epCarnivalProcured"><option value="no">⚠️ Not yet</option><option value="yes">✅ Yes, procured</option></select>
+    </div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epCarnivalStatus"><option value="pending">⚠️ Pending</option><option value="finalised">✅ Finalised</option></select>
+    </div>
+    <div class="ep-field"><label>Notes</label><textarea id="epCarnivalNotes"></textarea></div>
+    <div class="ep-field"><label>Upload Photo / Document (JPEG)</label>
+      <label class="ep-upload-btn"><input type="file" id="epCarnivalImgInput" accept="image/*" multiple style="display:none;">📷 Upload</label>
+      <div id="epCarnivalImgPreview" style="margin-top:6px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epCarnivalModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveCarnival()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="ep-modal-overlay" id="epClothesModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">👗 Outfit Details</div>
+    <div class="ep-field"><label>Person Name</label><input type="text" id="epClothesPerson" placeholder="e.g. Mrishana, Spandan, Mum..."></div>
+    <div class="ep-field"><label>Function</label><select id="epClothesEvent"></select></div>
+    <div class="ep-field"><label>Outfit Description</label><textarea id="epClothesDesc" placeholder="e.g. Red lehenga with gold border, size 38..."></textarea></div>
+    <div class="ep-field"><label>Vendor (from vendor list)</label>
+      <select id="epClothesVendor" onchange="document.getElementById('epClothesVendorNew').style.display=this.value==='__new__'?'block':'none'"></select>
+      <input type="text" id="epClothesVendorNew" placeholder="Type vendor name" style="display:none;margin-top:6px;">
+    </div>
+    <div class="ep-field"><label>Cost (₹)</label><input type="number" id="epClothesCost" min="0"></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epClothesStatus">
+        <option value="pending">⏳ Pending</option>
+        <option value="ordered">📦 Ordered</option>
+        <option value="delivered">✅ Delivered</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Upload Outfit Photo (JPEG)</label>
+      <label class="ep-upload-btn"><input type="file" id="epClothesImgInput" accept="image/*" multiple style="display:none;">📷 Upload</label>
+      <div id="epClothesImgPreview" style="margin-top:6px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epClothesModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveClothes()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP reminders injection point in main Reminders section -->
+<div id="epRemindersInMain"></div>
 <!-- ── WhatsApp Message Editor Modal ── -->
 <!-- SUBMIT TO VIVAAH DIRECTORY POPUP -->
 <div class="submit-review-overlay" id="submitReviewOverlay" style="display:none;">
@@ -8947,6 +9924,11 @@ function runGlobalSearch(q, gsInput, gsResults){
         <div><span class="mob-dc-stat" id="mobDC1">—</span><span class="mob-dc-stat" id="mobDC2"></span></div>
         <span class="mob-dc-arr">→</span>
       </div>
+      <div class="mob-dash-card mob-cEP" onclick="mobShowSec('eventplanner')" style="grid-column:span 2;">
+        <span class="mob-dc-icon">🌺</span><div class="mob-dc-name">Event Planner</div>
+        <div><span class="mob-dc-stat" id="mobDEP1">—</span><span class="mob-dc-stat" id="mobDEP2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
     </div>
   </div>
 
@@ -9058,6 +10040,25 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
     <div class="mob-bud-cards" id="mobCaterSummary"></div>
     <div id="mobCaterList" style="padding:10px;"></div>
+  </div>
+
+  <!-- EVENT PLANNER VIEW -->
+  <div class="mob-view" id="mobVEventplanner">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#8B1A6B,#C4306A);">
+      <div class="mob-sec-title">🌺 Event Planner</div>
+      <div class="mob-sec-sub">Catering · Decor · Puja · Gifts · Carnival · Clothes</div>
+      <div class="mob-sec-badges" id="mobEPBadges"></div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:10px 14px;background:#fff8f0;border-bottom:1px solid #e8d0e0;">
+      <button class="mob-evt-chip active" id="mobEPTab0" onclick="mobEPShowTab(0)">🍽️ Catering</button>
+      <button class="mob-evt-chip" id="mobEPTab1" onclick="mobEPShowTab(1)">🌸 Decor</button>
+      <button class="mob-evt-chip" id="mobEPTab2" onclick="mobEPShowTab(2)">🪔 Puja</button>
+      <button class="mob-evt-chip" id="mobEPTab3" onclick="mobEPShowTab(3)">🎁 Gifts</button>
+      <button class="mob-evt-chip" id="mobEPTab4" onclick="mobEPShowTab(4)">🎪 Carnival</button>
+      <button class="mob-evt-chip" id="mobEPTab5" onclick="mobEPShowTab(5)">👗 Clothes</button>
+      <button class="mob-evt-chip" id="mobEPTab6" onclick="mobEPShowTab(6)">🔔 Alerts</button>
+    </div>
+    <div id="mobEPContent" style="padding:10px;"></div>
   </div>
 
   <!-- Bottom nav -->
@@ -9332,6 +10333,20 @@ function mobUpdateDash(){
   s('mobDN1',getNotes().length+' notes saved');
   s('mobDC1',fn.length>0?mobFmt(cTotal)+' total':'No functions yet');
   s('mobDC2',fn.length>0?cGuests+' guests · '+fn.length+' events':'Add in full tool');
+
+  // Event Planner stats
+  var epPending=0, epConfirmed=0;
+  if(typeof eventPlanner!=='undefined'){
+    EP_EVENTS.forEach(function(ev){
+      EP_MEALS.forEach(function(m){
+        var slot=(eventPlanner.catering[ev]||{})[m.id]||{};
+        if(slot.status==='confirmed') epConfirmed++; else if(slot.caterer||slot.menu||slot.vendorId) epPending++;
+      });
+    });
+    var alerts=typeof epScanReminders==='function'?epScanReminders().filter(function(r){return r.status!=='ok';}).length:0;
+    s('mobDEP1',epConfirmed+' confirmed · '+epPending+' pending');
+    s('mobDEP2',alerts>0?alerts+' alerts need attention':'All on track');
+  }
 }
 
 // ── Music — exact same approach as vivaah_mobile.html ────────────
@@ -9749,6 +10764,145 @@ function mobRenderCatering(){
   }).join('');
 }
 
+// ── Event Planner Mobile ──────────────────────────────────────
+var _mobEPTab = 0;
+function mobEPShowTab(idx){
+  _mobEPTab = idx;
+  for(var i=0;i<7;i++){
+    var t=document.getElementById('mobEPTab'+i);
+    if(t) t.classList.toggle('active', i===idx);
+  }
+  mobRenderEPContent();
+}
+function mobRenderEP(){
+  var alerts=typeof epScanReminders==='function'?epScanReminders().filter(function(r){return r.status!=='ok';}).length:0;
+  var bdg=document.getElementById('mobEPBadges');
+  if(bdg) bdg.innerHTML='<span class="mob-sbadge">'+alerts+' alerts</span>';
+  mobRenderEPContent();
+}
+function mobRenderEPContent(){
+  var el=document.getElementById('mobEPContent'); if(!el) return;
+  if(typeof eventPlanner==='undefined'){el.innerHTML='<div class="mob-empty">Loading…</div>';return;}
+  if(_mobEPTab===0) el.innerHTML=mobEPCatering();
+  else if(_mobEPTab===1) el.innerHTML=mobEPDecor();
+  else if(_mobEPTab===2) el.innerHTML=mobEPPuja();
+  else if(_mobEPTab===3) el.innerHTML=mobEPGifts();
+  else if(_mobEPTab===4) el.innerHTML=mobEPCarnival();
+  else if(_mobEPTab===5) el.innerHTML=mobEPClothes();
+  else el.innerHTML=mobEPAlerts();
+}
+function mobEPCatering(){
+  var html='';
+  EP_EVENTS.forEach(function(ev){
+    var meals=eventPlanner.catering[ev]||{};
+    var pendCount=EP_MEALS.filter(function(m){return (meals[m.id]||{}).status!=='confirmed';}).length;
+    html+='<div style="background:#fff;border-radius:10px;margin-bottom:10px;border:1px solid #e8d0e0;overflow:hidden;">'+
+      '<div style="background:linear-gradient(135deg,#fce4ec,#f8bbd0);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">'+
+      '<div><div style="font-size:13px;font-weight:700;color:#5C1A2B;">🍽️ '+mobEsc(ev)+'</div>'+
+      '<div style="font-size:10px;color:#888;">'+epEventDate(ev)+'</div></div>'+
+      (pendCount===0?'<span style="background:#E8F5E9;color:#2E7D32;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">All confirmed</span>':
+      '<span style="background:#FFF3E0;color:#C45000;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;">'+pendCount+' pending</span>')+'</div>'+
+      '<div style="padding:6px 12px;">'+
+      EP_MEALS.map(function(m){
+        var slot=meals[m.id]||{};
+        var catName=slot.vendorName||'';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5e8e8;">'+
+          '<div><span style="font-size:14px;">'+m.icon+'</span> <span style="font-size:11px;font-weight:600;">'+mobEsc(m.name.split('+')[0].trim())+'</span>'+
+          (catName?'<div style="font-size:10px;color:#888;margin-left:20px;">'+mobEsc(catName)+'</div>':'')+
+          '</div>'+(slot.status==='confirmed'?'<span style="color:#2E7D32;font-size:12px;">✅</span>':'<span style="color:#C45000;font-size:12px;">⚠️</span>')+'</div>';
+      }).join('')+'</div></div>';
+  });
+  return html||'<div class="mob-empty">Open desktop to add catering details</div>';
+}
+function mobEPDecor(){
+  var html='';
+  var hd=eventPlanner.homeDecor||{};
+  html+='<div style="background:#fff;border-radius:10px;margin-bottom:10px;border:1px solid #e8d0e0;padding:12px;">'+
+    '<div style="font-size:13px;font-weight:700;color:#8B1A6B;">🏠 Home Decor</div>'+
+    (hd.inside?'<div style="font-size:11px;margin-top:4px;"><strong>Inside:</strong> '+mobEsc(hd.inside)+'</div>':'')+
+    (hd.outside?'<div style="font-size:11px;"><strong>Outside:</strong> '+mobEsc(hd.outside)+'</div>':'')+
+    (hd.status==='confirmed'?'<div style="color:#2E7D32;font-size:11px;margin-top:4px;">✅ Confirmed</div>':'<div style="color:#C45000;font-size:11px;margin-top:4px;">⚠️ Pending</div>')+'</div>';
+  EP_EVENTS.forEach(function(ev){
+    var dec=eventPlanner.decor[ev]||{};
+    html+='<div style="background:#fff;border-radius:10px;margin-bottom:8px;border:1px solid #e8d0e0;padding:12px;">'+
+      '<div style="display:flex;justify-content:space-between;"><div style="font-size:13px;font-weight:700;color:#5C1A2B;">🌸 '+mobEsc(ev)+'</div>'+
+      (dec.status==='confirmed'?'<span style="color:#2E7D32;">✅</span>':'<span style="color:#C45000;">⚠️</span>')+'</div>'+
+      (dec.theme?'<div style="font-size:11px;color:#666;margin-top:4px;">Theme: '+mobEsc(dec.theme)+'</div>':'')+
+      (dec.setupTime?'<div style="font-size:11px;color:#666;">Setup: '+mobEsc(dec.setupTime)+'</div>':'')+
+      (dec.pending?'<div style="font-size:11px;color:#C45000;">⚠️ '+mobEsc(dec.pending)+'</div>':'')+'</div>';
+  });
+  return html;
+}
+function mobEPPuja(){
+  return EP_PUJA_EVENTS.map(function(ev){
+    var puja=eventPlanner.puja[ev]||{};
+    var mBrings=puja.maharajBrings||[], weProvide=puja.weProvide||[];
+    var pendCount=mBrings.filter(function(i){return !i.done;}).length+weProvide.filter(function(i){return !i.done;}).length;
+    return '<div style="background:#fff;border-radius:10px;margin-bottom:10px;border:1px solid #e8d0e0;padding:12px;">'+
+      '<div style="font-size:13px;font-weight:700;color:#5C1A2B;">🪔 '+mobEsc(ev)+'</div>'+
+      (puja.maharajName?'<div style="font-size:11px;color:#666;margin-top:4px;">Maharaj: '+mobEsc(puja.maharajName)+'</div>':'')+
+      '<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">'+
+      '<div><div style="font-size:10px;font-weight:700;color:#8B1A6B;margin-bottom:4px;">Maharaj Brings</div>'+
+      mBrings.map(function(i){return '<div style="font-size:11px;">'+(i.done?'✅':'⚠️')+' '+mobEsc(i.text)+'</div>';}).join('')+'</div>'+
+      '<div><div style="font-size:10px;font-weight:700;color:#8B1A6B;margin-bottom:4px;">We Provide</div>'+
+      weProvide.map(function(i){return '<div style="font-size:11px;">'+(i.done?'✅':'⚠️')+' '+mobEsc(i.text)+'</div>';}).join('')+'</div></div>'+
+      (pendCount>0?'<div style="margin-top:6px;font-size:11px;color:#C45000;">'+pendCount+' items still pending</div>':'<div style="margin-top:6px;font-size:11px;color:#2E7D32;">All items ready ✅</div>')+'</div>';
+  }).join('');
+}
+function mobEPGifts(){
+  return EP_GIFT_EVENTS.map(function(ev){
+    var gift=eventPlanner.gifts[ev]||{covers:[],ladies:[],akhand:[]};
+    var all=[].concat(gift.covers||[],gift.ladies||[],gift.akhand||[]);
+    var given=all.filter(function(i){return i.status==='given';}).length;
+    return '<div style="background:#fff;border-radius:10px;margin-bottom:10px;border:1px solid #e8d0e0;padding:12px;">'+
+      '<div style="font-size:13px;font-weight:700;color:#5C1A2B;">🎁 '+mobEsc(ev)+'</div>'+
+      '<div style="font-size:11px;color:#666;margin-top:4px;">'+given+' of '+all.length+' given</div>'+
+      (gift.covers.length?'<div style="margin-top:6px;font-size:11px;font-weight:600;">💌 Covers: '+gift.covers.map(function(c){return mobEsc(c.name);}).join(', ')+'</div>':'')+
+      (gift.akhand.length?'<div style="font-size:11px;font-weight:600;">🪔 Akhand: '+gift.akhand.map(function(c){return mobEsc(c.name);}).join(', ')+'</div>':'')+'</div>';
+  }).join('')||'<div class="mob-empty">No gifts added yet</div>';
+}
+function mobEPCarnival(){
+  var stalls=eventPlanner.carnival.stalls||[];
+  if(!stalls.length) return '<div class="mob-empty">No carnival stalls added yet</div>';
+  return stalls.map(function(s){
+    return '<div style="background:#fff;border-radius:10px;margin-bottom:8px;border:1px solid #e8d0e0;padding:12px;">'+
+      '<div style="display:flex;justify-content:space-between;"><div style="font-size:13px;font-weight:700;">🎪 '+mobEsc(s.name)+'</div>'+
+      (s.status==='finalised'?'<span style="color:#2E7D32;font-size:11px;">✅ Finalised</span>':'<span style="color:#C45000;font-size:11px;">⚠️ Pending</span>')+'</div>'+
+      (s.provides?'<div style="font-size:11px;color:#666;margin-top:4px;">Provides: '+mobEsc(s.provides)+'</div>':'')+
+      (s.weProvide?'<div style="font-size:11px;color:#666;">We provide: '+mobEsc(s.weProvide)+(s.procured?' ✅':' ⚠️')+'</div>':'')+'</div>';
+  }).join('');
+}
+function mobEPClothes(){
+  var items=eventPlanner.clothes||[];
+  if(!items.length) return '<div class="mob-empty">No outfits added yet</div>';
+  var delivered=items.filter(function(i){return i.status==='delivered';}).length;
+  var html='<div style="background:#f9f0f7;border-radius:10px;padding:10px;margin-bottom:10px;font-size:12px;">'+
+    delivered+' of '+items.length+' outfits delivered</div>';
+  items.forEach(function(item){
+    var stCol=item.status==='delivered'?'#2E7D32':item.status==='ordered'?'#C45000':'#C62828';
+    html+='<div style="background:#fff;border-radius:10px;margin-bottom:8px;border:1px solid #e8d0e0;padding:12px;">'+
+      '<div style="display:flex;justify-content:space-between;"><div>'+
+      '<div style="font-size:13px;font-weight:700;">👗 '+mobEsc(item.person)+'</div>'+
+      '<div style="font-size:11px;color:#666;">'+mobEsc(item.event||'')+(item.cost?' · ₹'+item.cost:'')+'</div>'+
+      (item.description?'<div style="font-size:11px;color:#888;">'+mobEsc(item.description.substring(0,60))+'</div>':'')+
+      '</div><span style="color:'+stCol+';font-size:11px;font-weight:600;">'+mobEsc(item.status||'pending')+'</span></div></div>';
+  });
+  return html;
+}
+function mobEPAlerts(){
+  if(typeof epScanReminders!=='function') return '<div class="mob-empty">Loading…</div>';
+  var items=epScanReminders();
+  if(!items.length) return '<div class="mob-empty">🟢 All on track — no pending alerts</div>';
+  return items.map(function(r){
+    var icon=r.status==='overdue'?'🔴':r.status==='soon'?'🟡':'🟢';
+    var col=r.status==='overdue'?'#C62828':r.status==='soon'?'#C45000':'#2E7D32';
+    return '<div style="background:#fff;border-radius:10px;margin-bottom:8px;border:1px solid #e8d0e0;padding:10px;display:flex;gap:8px;align-items:flex-start;">'+
+      '<span style="font-size:16px;">'+icon+'</span>'+
+      '<div><div style="font-size:12px;font-weight:600;color:'+col+';">'+mobEsc(r.text)+'</div>'+
+      '<div style="font-size:11px;color:#888;">'+(r.daysLeft<0?'Overdue by '+Math.abs(r.daysLeft)+' days':r.daysLeft===0?'Due today!':'Due in '+r.daysLeft+' days')+'</div></div></div>';
+  }).join('');
+}
+
 // ── Guest detail ──────────────────────────────────────────────────
 window.mobOpenGuest=function(id){
   if(typeof guests==='undefined') return;
@@ -9833,7 +10987,8 @@ var MOB_SECS={
   reminder: {title:'🔔 Reminders', nav:'mobNavRem',  render:mobRenderReminders},
   timeline: {title:'📅 Timeline',  nav:null,         render:mobRenderTimeline},
   notes:    {title:'📝 Notes',     nav:null,         render:mobRenderNotes},
-  catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering}
+  catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering},
+  eventplanner: {title:'🌺 Event Planner', nav:null, render:mobRenderEP}
 };
 
 window.mobShowDash=function(){
