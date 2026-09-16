@@ -2420,10 +2420,6 @@
   </div>
 
   <div class="footnote">All amounts in ₹ (INR) · Sign in with Google above to sync this ledger across all your devices · Excel export remains available any time as a backup or offline copy</div>
-</div>
-
-<!-- Add/Edit Vendor Modal -->
-  </div><!-- end vendor sec-body -->
 
   <!-- ═══════════════ EVENT PLANNER SECTION ═══════════════ -->
   <div class="sec-header sec-collapsed sec-eventplanner" id="epSectionHeader" onclick="toggleSecBody('epSectionHeader','epSecBody')" style="margin-top:28px;">
@@ -2443,7 +2439,6 @@
     </div>
   </div>
   <div class="sec-body collapsed" id="epSecBody">
-    <!-- Tab bar -->
     <div class="ep-tabs">
       <button class="ep-tab active" onclick="epShowTab('catering',this)">🍽️ Catering</button>
       <button class="ep-tab" onclick="epShowTab('decor',this)">🌸 Decor</button>
@@ -2453,28 +2448,19 @@
       <button class="ep-tab" onclick="epShowTab('clothes',this)">👗 Clothes</button>
       <button class="ep-tab" onclick="epShowTab('reminders',this)">🔔 Reminders</button>
     </div>
-
-    <!-- CATERING PANEL -->
     <div class="ep-panel active" id="epPanelCatering"></div>
-
-    <!-- DECOR PANEL -->
     <div class="ep-panel" id="epPanelDecor"></div>
-
-    <!-- PUJA PANEL -->
     <div class="ep-panel" id="epPanelPuja"></div>
-
-    <!-- GIFTS PANEL -->
     <div class="ep-panel" id="epPanelGifts"></div>
-
-    <!-- CARNIVAL PANEL -->
     <div class="ep-panel" id="epPanelCarnival"></div>
-
-    <!-- CLOTHES PANEL -->
     <div class="ep-panel" id="epPanelClothes"></div>
-
-    <!-- REMINDERS PANEL -->
     <div class="ep-panel" id="epPanelReminders"></div>
   </div>
+
+</div>
+
+<!-- Add/Edit Vendor Modal -->
+  </div><!-- end vendor sec-body -->
 <div class="modal-overlay" id="vendorModalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add vendor</h3>
@@ -3809,6 +3795,7 @@ function toggleSecBody(headerId, bodyId) {
       else if (bodyId === 'timelineSecBody') { renderTimeline ? renderTimeline() : null; }
       else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
       else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
+      else if (bodyId === 'epSecBody') { if(typeof epRenderCatering==='function'){epRenderCatering();epUpdateBadges();} }
     } catch(e) {}
   } else {
     body.classList.add('collapsed');
@@ -3826,7 +3813,8 @@ function toggleSecBody(headerId, bodyId) {
     ['cateringSectionHeader','cateringSecBody'],
     ['guestSectionHeader','guestSecBody'],
     ['kankotriSectionHeader','kankotriSecBody'],
-    ['vendorSectionHeader','vendorSecBody']
+    ['vendorSectionHeader','vendorSecBody'],
+    ['epSectionHeader','epSecBody']
   ];
   document.addEventListener('DOMContentLoaded', function() {
     pairs.forEach(function(pair) {
