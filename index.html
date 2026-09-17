@@ -5519,6 +5519,7 @@ async function onSignedIn(){
       // Cache all cloud data to localStorage for faster loading next session
       await storageSet('wedding-vendors', JSON.stringify(vendors));
       await storageSet('wedding-guests', JSON.stringify(guests));
+      await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
       autoSaveLocalBackup(); // full backup snapshot after every cloud pull
     } else {
       // Only push to sheet if we actually have local data to push
@@ -5571,10 +5572,12 @@ async function onSignedIn(){
         if(typeof MOB_SECS !== 'undefined' && MOB_SECS[sid] && MOB_SECS[sid].render) MOB_SECS[sid].render();
       }
     }
-    // Also schedule a mobile refresh after mobActivate has had time to run
-    // Handles the case where onSignedIn fires before mobActivate completes
+    // Deferred mobile refresh — runs after sync, regardless of timing
     setTimeout(function(){
-      if(!window._mobActive) return;
+      if(typeof mobApplyBranding === 'function') mobApplyBranding();
+      if(typeof mobUpdateDash === 'function') mobUpdateDash();
+      if(typeof mobStartCountdown === 'function') mobStartCountdown();
+      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
       var nm2 = googleUserEmail || 'Signed in';
       var gO = document.getElementById('mobGOut');
       var gI = document.getElementById('mobGIn');
@@ -5584,25 +5587,7 @@ async function onSignedIn(){
       if(nm2El) nm2El.textContent = nm2;
       if(gO) gO.style.display = 'none';
       if(gI) gI.style.display = 'flex';
-      if(typeof mobApplyBranding === 'function') mobApplyBranding();
-      if(typeof mobUpdateDash === 'function') mobUpdateDash();
-      if(typeof mobStartCountdown === 'function') mobStartCountdown();
-      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
-    }, 800);
-    // Safety: if mobActivate fires AFTER onSignedIn (timing race), refresh again
-    setTimeout(function(){
-      if(!window._mobActive) return;
-      if(typeof mobApplyBranding==='function') mobApplyBranding();
-      if(typeof mobUpdateDash==='function') mobUpdateDash();
-      if(typeof mobStartCountdown==='function') mobStartCountdown();
-      var gO=document.getElementById('mobGOut'),gI=document.getElementById('mobGIn');
-      var av=document.getElementById('mobGAvatar'),nEl=document.getElementById('mobGName');
-      var nm=googleUserEmail||'Signed in';
-      if(av) av.textContent=nm.charAt(0).toUpperCase();
-      if(nEl) nEl.textContent=nm;
-      if(gO) gO.style.display='none';
-      if(gI) gI.style.display='flex';
-    }, 1500);
+    }, 600);
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
