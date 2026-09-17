@@ -1128,7 +1128,6 @@
   /* Hide all desktop chrome — lock overlay and setupOverlay stay visible */
   .wrap,
   #pageFooter,
-  #countdownWrap,
   #adminSettingsOverlay,
   #ownerPanelOverlay,
   #platformVendorModalOverlay,
@@ -2955,22 +2954,26 @@ function generateStdMsg(g) {
   var dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
   var timeStr = t.startTime ? t.startTime + ' onwards' : '';
   var venueStr = t.venue || '';
-  return '\ud83c\udf38 *Save the Date* \ud83c\udf38\n\n' +
+  var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
+  var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
+  return '🌸 *Save the Date* 🌸\n\n' +
     'Dear *' + (g.name||'') + '*,\n\n' +
     'With great joy we announce the wedding of\n\n' +
-    '\u2728 *Mrishana & Spandan* \u2728\n\n' +
-    '\ud83d\udc8d *Marriage Ceremony*\n' +
-    (dateStr ? '\ud83d\udcc5 ' + dateStr + '\n' : '') +
-    (timeStr ? '\ud83d\udd56 ' + timeStr + '\n' : '') +
-    (venueStr ? '\ud83d\udccd ' + venueStr + '\n' : '') +
-    '\nPlease save this date and grace us\nwith your presence \ud83d\ude4f\n\n' +
+    '✨ *' + coupleName + '* ✨\n\n' +
+    '💍 *Marriage Ceremony*\n' +
+    (dateStr ? '📅 ' + dateStr + '\n' : '') +
+    (timeStr ? '🕐 ' + timeStr + '\n' : '') +
+    (venueStr ? '📍 ' + venueStr + '\n' : '') +
+    '\nPlease save this date and grace us\nwith your presence 🙏\n\n' +
     '_(Formal invitation to follow)_\n\n' +
-    '*\u2014 Shah Family* \ud83c\udf38';
+    '*— ' + familyName + '* 🌸';
 }
 
 function generateInviteMsg(g) {
-  var EMOJIS = {'Kankotri':'\ud83d\udcee','Ganesh-Grahshanti-Mosalu':'\ud83d\udd6f\ufe0f','Mehendi':'\ud83c\udf3f','Haldi':'\ud83d\udc9b','Sangeet':'\ud83c\udfb6','Marriage':'\ud83d\udc8d','Reception':'\ud83c\udf8a'};
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
   var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
+  var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
   var invited = ALL_EVENTS.filter(function(ev) {
     var e = g.events && g.events[ev];
     return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
@@ -2978,17 +2981,17 @@ function generateInviteMsg(g) {
   if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'');
   var lines = invited.map(function(ev) {
     var t = eventTimeline[ev]||{};
-    var line = (EMOJIS[ev]||'\ud83d\udcc5')+' *'+ev+'*';
-    if (t.date) { var d=new Date(t.date); line += '\n\ud83d\udcc5 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' \u00b7 '+t.startTime; }
-    if (t.venue) line += '\n\ud83d\udccd '+t.venue;
+    var line = (EMOJIS[ev]||'📅')+' *'+ev+'*';
+    if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' · '+t.startTime; }
+    if (t.venue) line += '\n📍 '+t.venue;
     return line;
   }).join('\n\n');
-  return 'Dear *'+(g.name||'')+'* \ud83c\udf38\n\n' +
+  return 'Dear *'+(g.name||'')+'* 🌸\n\n' +
     'We joyfully invite you to celebrate\n\n' +
-    '\u2728 *Mrishana & Spandan\'s Wedding!* \u2728\n\n' +
+    '✨ *' + coupleName + '\'s Wedding!* ✨\n\n' +
     lines+'\n\n' +
-    'Your presence will make our celebration truly special \ud83d\ude4f\n\n' +
-    '*\u2014 Shah Family* \ud83c\udf38';
+    'Your presence will make our celebration truly special 🙏\n\n' +
+    '*— ' + familyName + '* 🌸';
 }
 
 let waCurrentGuestId = null;
@@ -5516,6 +5519,7 @@ async function onSignedIn(){
       // Cache all cloud data to localStorage for faster loading next session
       await storageSet('wedding-vendors', JSON.stringify(vendors));
       await storageSet('wedding-guests', JSON.stringify(guests));
+      await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
       autoSaveLocalBackup(); // full backup snapshot after every cloud pull
     } else {
       // Only push to sheet if we actually have local data to push
@@ -5568,10 +5572,12 @@ async function onSignedIn(){
         if(typeof MOB_SECS !== 'undefined' && MOB_SECS[sid] && MOB_SECS[sid].render) MOB_SECS[sid].render();
       }
     }
-    // Also schedule a mobile refresh after mobActivate has had time to run
-    // Handles the case where onSignedIn fires before mobActivate completes
+    // Deferred mobile refresh — runs after sync, regardless of timing
     setTimeout(function(){
-      if(!window._mobActive) return;
+      if(typeof mobApplyBranding === 'function') mobApplyBranding();
+      if(typeof mobUpdateDash === 'function') mobUpdateDash();
+      if(typeof mobStartCountdown === 'function') mobStartCountdown();
+      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
       var nm2 = googleUserEmail || 'Signed in';
       var gO = document.getElementById('mobGOut');
       var gI = document.getElementById('mobGIn');
@@ -5581,11 +5587,7 @@ async function onSignedIn(){
       if(nm2El) nm2El.textContent = nm2;
       if(gO) gO.style.display = 'none';
       if(gI) gI.style.display = 'flex';
-      if(typeof mobApplyBranding === 'function') mobApplyBranding();
-      if(typeof mobUpdateDash === 'function') mobUpdateDash();
-      if(typeof mobStartCountdown === 'function') mobStartCountdown();
-      if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
-    }, 800);
+    }, 600);
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -8488,9 +8490,12 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   initGoogleAuth();
   initVoiceControl();
   await initAuth();
-  await tryRestoreGoogleSession();
-  // Call mobActivate after a tick — ensures mobile script block has registered
+  // Fire mobActivate BEFORE tryRestoreGoogleSession so mobile UI is active
+  // when onSignedIn runs — ensures cloud data updates mobile immediately
   setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
+  // Wait 100ms so mobActivate has fired and _mobActive=true before Sheets sync starts
+  await new Promise(function(res){ setTimeout(res, 120); });
+  await tryRestoreGoogleSession();
 })();
 
 /* ================================================================
@@ -9189,7 +9194,7 @@ window.mobActivate = function(){
   if(desktopAudio){ desktopAudio.muted = true; desktopAudio.pause(); }
 
   // Hide desktop elements directly via JS (belt-and-suspenders alongside CSS)
-  var hide = ['.wrap','#pageFooter','#adminSettingsOverlay','#ownerPanelOverlay',
+  var hide = ['.wrap','#pageFooter','#countdownWrap','#adminSettingsOverlay','#ownerPanelOverlay',
     '#platformVendorModalOverlay','#printPanelOverlay','#hcModalOverlay','.modal-overlay','.print-panel-overlay'];
   hide.forEach(function(sel){
     document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
@@ -9377,8 +9382,13 @@ document.addEventListener('click', function _mobFirstClick(e) {
       var btn = document.getElementById('mobMusicBtn');
       if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
     }).catch(function(){});
+    document.removeEventListener('click', _mobFirstClick);
+  } else if(wrap && wrap.classList.contains('hidden')){
+    // Countdown not visible yet (sync still in progress) — keep listener active
+    // so music plays once countdown appears after sync completes
+  } else {
+    document.removeEventListener('click', _mobFirstClick);
   }
-  document.removeEventListener('click', _mobFirstClick);
 });
 
 // ── Countdown ─────────────────────────────────────────────────────
@@ -9412,6 +9422,21 @@ function mobStartCountdown(){
       p.textContent=em[Math.floor(Math.random()*em.length)];
       p.style.cssText='left:'+Math.random()*96+'%;font-size:'+(12+Math.random()*10)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
       pw.appendChild(p);}
+  }
+  // Try to start music now that countdown is visible
+  // On mobile, autoplay is only allowed after a user gesture has occurred on the page
+  if(!_mobMusicPlaying){
+    var mAudio=document.getElementById('mobWeddingMusic');
+    if(mAudio){
+      mAudio.volume=0.45;
+      mAudio.play().then(function(){
+        _mobMusicPlaying=true;
+        var mbtn=document.getElementById('mobMusicBtn');
+        if(mbtn){mbtn.textContent='🔇';mbtn.style.background='#f9a8c9';}
+      }).catch(function(){
+        // Autoplay blocked - will play on next user tap via _mobFirstClick
+      });
+    }
   }
 }
 
@@ -9567,8 +9592,12 @@ function mobRenderGuests(){
     var cls=g.callStatus==='confirmed'?'mob-bc':g.callStatus==='declined'?'mob-bd':'mob-bpd';
     var lbl=g.callStatus==='confirmed'?'✅':g.callStatus==='declined'?'❌':'⏳';
     var ph=(g.phone||'').replace(/\D/g,'');
-    var waMsg=encodeURIComponent('Dear *'+g.name+'* 🌸\n\nWe warmly invite you to our wedding celebration.\n— Shah Family');
+    // Step 3: use generateInviteMsg for full event list with dates/venues
+    var waMsg=encodeURIComponent(typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear *'+g.name+'* 🌸\n\nWe warmly invite you to our wedding celebration.\n— Shah Family');
     var evs=MOB_EVENTS.filter(function(ev){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).map(function(ev){return EMOJIS[ev];});
+    // Step 4: STD button for Marriage guests
+    var hasMrg=g.events&&g.events['Marriage']&&(Number((g.events['Marriage'].adults)||0)+Number((g.events['Marriage'].kids)||0))>0;
+    var stdBtn=hasMrg?'<button onclick="if(typeof openStd===\'function\')openStd(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+';border-radius:8px;padding:6px;font-size:'+(g.stdSent?'16px':'11px')+';font-weight:600;cursor:pointer;color:'+(g.stdSent?'#C62828':'#856404')+';">'+(g.stdSent?'❤️':'💌 STD')+'</button>':'';
     return '<div class="mob-row-item" style="flex-wrap:wrap;gap:4px;cursor:default;padding:8px 10px;">'+
       '<div style="flex:1;min-width:180px;" onclick="mobOpenGuest(\''+g.id+'\')">'+
         '<div class="mob-row-name">'+mobEsc(g.name||'—')+'</div>'+
@@ -9577,6 +9606,7 @@ function mobRenderGuests(){
       '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
         (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
         (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">💬</a>':'')+
+        stdBtn+
         '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
       '</div></div>';
   }
@@ -9761,10 +9791,15 @@ window.mobOpenGuest=function(id){
     mobDrow('Phone',g.phone||'—')+mobDrow('Side',g.side||'—')+mobDrow('Status',sLbl)+
     mobDrow('Adults confirmed',g.confirmedAdults||0)+mobDrow('Kids confirmed',g.confirmedKids||0);
   var ph=(g.phone||'').replace(/\D/g,'');
-  var waMsg=encodeURIComponent('Dear '+g.name+', we warmly invite you to our wedding. — Shah Family 🌸');
+  // Use full generateInviteMsg with all events, dates, venues
+  var waMsg=encodeURIComponent(typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', we warmly invite you to our wedding. 🌸');
+  // STD button for Marriage guests
+  var hasMrg=g.events&&g.events['Marriage']&&(Number((g.events['Marriage'].adults)||0)+Number((g.events['Marriage'].kids)||0))>0;
+  var stdAction=hasMrg?'<button class="mob-dbtn" style="background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';color:'+(g.stdSent?'#C62828':'#856404')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+'" onclick="mobCloseGuest();if(typeof openStd===\'function\')openStd(\''+id+'\')">'+(g.stdSent?'❤️ STD Sent':'💌 STD')+'</button>':'';
   document.getElementById('mobGdActions').innerHTML=
     (ph?'<a href="tel:+'+ph+'" class="mob-dbtn mob-dbtn-call">📞 Call</a>':'')+
     (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" class="mob-dbtn mob-dbtn-wa">💬 WhatsApp</a>':'')+
+    stdAction+
     '<button class="mob-dbtn mob-dbtn-confirm" onclick="mobOpenConfirm(\''+id+'\')">✓ Confirm</button>'+
     '<button class="mob-dbtn mob-dbtn-close" onclick="mobCloseGuest()">Close</button>';
   document.getElementById('mobGuestOverlay').classList.add('show');
