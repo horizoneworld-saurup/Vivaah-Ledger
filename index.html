@@ -885,6 +885,40 @@
   .ep-panel{display:none;padding:14px;}
   .ep-panel.active{display:block;}
   .ep-empty{text-align:center;padding:28px 16px;color:#aaa;font-size:13px;border:1.5px dashed #e8c8d8;border-radius:10px;margin:8px;}
+  .ep-event-card{background:#fff;border-radius:10px;margin:0 14px 12px;border:1px solid #e8d0e0;overflow:hidden;}
+  .ep-event-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;background:linear-gradient(135deg,#fce4ec,#f8bbd0);}
+  .ep-event-title{font-size:13px;font-weight:700;color:#5C1A2B;}
+  .ep-event-date{font-size:10px;color:#888;margin-top:2px;}
+  .ep-event-body{display:none;}
+  .ep-event-body.open{display:block;}
+  .ep-meal-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid #f5e8e8;cursor:pointer;gap:8px;}
+  .ep-meal-row:hover{background:#fdf5f8;}
+  .ep-meal-icon{font-size:18px;flex-shrink:0;}
+  .ep-meal-info{flex:1;}
+  .ep-meal-name{font-size:12px;font-weight:600;color:#333;}
+  .ep-meal-detail{font-size:11px;color:#888;margin-top:2px;}
+  .ep-status{padding:2px 8px;border-radius:8px;font-size:10px;font-weight:700;flex-shrink:0;}
+  .ep-s-confirmed{background:#E8F5E9;color:#2E7D32;}
+  .ep-s-pending{background:#FFF3E0;color:#C45000;}
+  .ep-s-not-required{background:#F5F5F5;color:#999;}
+  /* EP Modal */
+  .ep-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:600;display:none;align-items:center;justify-content:center;padding:16px;}
+  .ep-modal-overlay.show{display:flex;}
+  .ep-modal{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;}
+  .ep-modal-title{font-size:15px;font-weight:700;color:#8B1A6B;margin-bottom:14px;}
+  .ep-field{margin-bottom:11px;}
+  .ep-field label{display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;}
+  .ep-field input,.ep-field select,.ep-field textarea{width:100%;padding:8px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;}
+  .ep-field input:focus,.ep-field select:focus,.ep-field textarea:focus{border-color:#8B1A6B;}
+  .ep-field textarea{resize:vertical;min-height:56px;}
+  .ep-total-box{background:#f9f0f7;border-radius:8px;padding:10px 14px;margin-bottom:11px;font-size:13px;color:#8B1A6B;font-weight:600;}
+  .ep-modal-actions{display:flex;gap:8px;margin-top:14px;}
+  .ep-btn{flex:1;padding:10px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;}
+  .ep-btn-save{background:#8B1A6B;color:#fff;}
+  .ep-btn-cancel{background:#f0f0f0;color:#555;}
+  .ep-img-thumb{width:52px;height:52px;object-fit:cover;border-radius:7px;border:1px solid #e0c8d0;cursor:pointer;margin-right:5px;}
+  .ep-upload-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:7px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;font-size:11px;cursor:pointer;}
+
 
   /* ── Auto-backup bar ── */
   .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
@@ -2395,9 +2429,7 @@
       <button class="ep-tab" onclick="epShowTab('clothes',this)">&#128087; Clothes</button>
       <button class="ep-tab" onclick="epShowTab('reminders',this)">&#128276; Reminders</button>
     </div>
-    <div class="ep-panel active" id="epPanelCatering">
-      <div class="ep-empty">&#127869;&#65039; Catering &mdash; coming in next step</div>
-    </div>
+    <div class="ep-panel active" id="epPanelCatering"></div>
     <div class="ep-panel" id="epPanelDecor">
       <div class="ep-empty">&#127800; Decor &mdash; coming in next step</div>
     </div>
@@ -3759,7 +3791,7 @@ function toggleSecBody(headerId, bodyId) {
       else if (bodyId === 'timelineSecBody') { renderTimeline ? renderTimeline() : null; }
       else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
       else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
-      else if (bodyId === 'epSecBody') { if(typeof epRenderActive==='function') epRenderActive(); }
+      else if (bodyId === 'epSecBody') { if(typeof epRenderCatering==='function') epRenderCatering(); }
     } catch(e) {}
   } else {
     body.classList.add('collapsed');
@@ -8554,6 +8586,154 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   },300);
 };
 
+/* EP Catering Module */
+var EP_MEALS = [
+  {id:'breakfast', name:'Breakfast + Morning Tea/Coffee'},
+  {id:'lunch',     name:'Lunch'},
+  {id:'dinner',    name:'Dinner'},
+  {id:'latenight', name:'Late Night Tea/Coffee + Snacks'}
+];
+var EP_MEAL_ICONS = {breakfast:'&#127749;',lunch:'&#127834;',dinner:'&#127769;',latenight:'&#127752;'};
+
+function epGuestCountForEvent(ev){
+  if(typeof guests==='undefined') return 0;
+  return guests.filter(function(g){
+    var e=g.events&&g.events[ev];
+    return e&&(Number(e.adults||0)+Number(e.kids||0))>0;
+  }).length;
+}
+function epEventDate(ev){
+  var t=(typeof eventTimeline!=='undefined')&&eventTimeline[ev];
+  if(!t||!t.date) return 'Date not set';
+  return new Date(t.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+function epFmt(n){
+  n=Number(n)||0;
+  if(n>=100000) return String.fromCharCode(8377)+(n/100000).toFixed(1)+'L';
+  if(n>=1000) return String.fromCharCode(8377)+Math.round(n/1000)+'K';
+  return String.fromCharCode(8377)+n;
+}
+function epStatusBadge(s){
+  if(s==='confirmed') return '<span class="ep-status ep-s-confirmed">Confirmed</span>';
+  if(s==='not-required') return '<span class="ep-status ep-s-not-required">Not Required</span>';
+  return '<span class="ep-status ep-s-pending">Pending</span>';
+}
+function epVendorOptions(sel){
+  var o='<option value="">-- Select caterer --</option>';
+  if(typeof vendors!=='undefined') vendors.forEach(function(v){
+    o+='<option value="'+v.id+'"'+(v.id===sel?' selected':'')+'>'+v.name+(v.category?' ('+v.category+')':'')+'</option>';
+  });
+  o+='<option value="__manual__"'+(sel==='__manual__'?' selected':'')+'>+ Type name manually</option>';
+  return o;
+}
+function epRenderThumbs(imgs){
+  if(!imgs||!imgs.length) return '';
+  return imgs.map(function(src){return '<img src="'+src+'" class="ep-img-thumb" onclick="window.open(this.src,\'_blank\')">';}).join('');
+}
+function epToggleEvent(id){
+  var el=document.getElementById(id); if(el) el.classList.toggle('open');
+}
+function epCalcMealTotal(){
+  var h=Number(document.getElementById('epMealHeadcount').value)||0;
+  var c=Number(document.getElementById('epMealCostPP').value)||0;
+  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(h*c)+(h&&c?' ('+h+' x '+epFmt(c)+')':'');
+}
+function epUpdateBadges(){
+  var p=0,c=0;
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+  evs.forEach(function(ev){
+    var d=eventPlanner.catering[ev]||{};
+    EP_MEALS.forEach(function(m){
+      var s=(d[m.id]||{}).status||'pending';
+      if(s==='confirmed') c++; else if(s!=='not-required') p++;
+    });
+  });
+  var bp=document.getElementById('epBadgePending'),bc=document.getElementById('epBadgeConfirmed');
+  if(bp) bp.textContent=p+' pending';
+  if(bc) bc.textContent=c+' confirmed';
+}
+function epRenderCatering(){
+  var el=document.getElementById('epPanelCatering'); if(!el) return;
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var html='<div style="padding:8px 0 4px;">';
+  evs.forEach(function(ev){
+    var evData=eventPlanner.catering[ev]||{};
+    var conf=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='confirmed';}).length;
+    var notR=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='not-required';}).length;
+    var pend=EP_MEALS.length-conf-notR;
+    var chip=conf===EP_MEALS.length?'<span class="ep-status ep-s-confirmed">All confirmed</span>':'<span class="ep-status ep-s-pending">'+pend+' pending</span>';
+    html+='<div class="ep-event-card">';
+    html+='<div class="ep-event-head" onclick="epToggleEvent(\'cat_'+ev+'\')">';
+    html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
+    html+='<div class="ep-event-body" id="cat_'+ev+'">';
+    EP_MEALS.forEach(function(m){
+      var slot=evData[m.id]||{};
+      var catName=slot.vendorName||(slot.vendorId&&slot.vendorId!=='__manual__'?(function(){var v=typeof vendors!=='undefined'&&vendors.find(function(x){return x.id===slot.vendorId;});return v?v.name:'';}()):'');
+      var det=catName?catName:'Not set';
+      if(slot.headcount) det+=' &middot; '+slot.headcount+' people';
+      if(slot.costPerPerson) det+=' &middot; '+epFmt(slot.costPerPerson)+'/head &rarr; Total: '+epFmt((slot.headcount||0)*(slot.costPerPerson||0));
+      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ev+'\',\''+m.id+'\')">';
+      html+='<span class="ep-meal-icon">'+EP_MEAL_ICONS[m.id]+'</span>';
+      html+='<div class="ep-meal-info"><div class="ep-meal-name">'+m.name+'</div><div class="ep-meal-detail">'+det+'</div></div>';
+      html+=epStatusBadge(slot.status||'pending')+'</div>';
+      if(slot.images&&slot.images.length) html+='<div style="padding:4px 14px 6px;display:flex;flex-wrap:wrap;gap:4px;">'+epRenderThumbs(slot.images)+'</div>';
+    });
+    html+='</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  epUpdateBadges();
+}
+var _epMealEv='',_epMealId='';
+function epOpenMealModal(ev,mealId){
+  _epMealEv=ev; _epMealId=mealId;
+  var slot=(eventPlanner.catering[ev]||{})[mealId]||{};
+  var autoCount=epGuestCountForEvent(ev);
+  document.getElementById('epMealModalTitle').textContent=ev+' - '+mealId;
+  document.getElementById('epMealVendor').innerHTML=epVendorOptions(slot.vendorId||'');
+  var mr=document.getElementById('epMealVendorManual');
+  mr.style.display=(slot.vendorId==='__manual__')?'block':'none';
+  document.getElementById('epMealVendorManualName').value=slot.vendorName||'';
+  document.getElementById('epMealHeadcount').value=slot.headcount!==undefined?slot.headcount:autoCount;
+  document.getElementById('epMealMenu').value=slot.menu||'';
+  document.getElementById('epMealCostPP').value=slot.costPerPerson||'';
+  document.getElementById('epMealStatus').value=slot.status||'pending';
+  document.getElementById('epMealImgPreview').innerHTML=epRenderThumbs(slot.images||[]);
+  epCalcMealTotal();
+  document.getElementById('epMealModal').classList.add('show');
+}
+async function epSaveMeal(){
+  if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
+  var vendorId=document.getElementById('epMealVendor').value;
+  var vendorName='';
+  if(vendorId==='__manual__'){
+    vendorName=document.getElementById('epMealVendorManualName').value.trim();
+  } else if(vendorId&&typeof vendors!=='undefined'){
+    var v=vendors.find(function(x){return x.id===vendorId;}); vendorName=v?v.name:'';
+  }
+  var existing=(eventPlanner.catering[_epMealEv]||{})[_epMealId]||{};
+  var imgs=existing.images||[];
+  var fi=document.getElementById('epMealImgInput');
+  if(fi&&fi.files.length){
+    for(var i=0;i<fi.files.length;i++){
+      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
+      imgs.push(b64);
+    }
+  }
+  eventPlanner.catering[_epMealEv][_epMealId]={
+    vendorId:vendorId,vendorName:vendorName,
+    headcount:Number(document.getElementById('epMealHeadcount').value)||0,
+    menu:document.getElementById('epMealMenu').value.trim(),
+    costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,
+    status:document.getElementById('epMealStatus').value,
+    images:imgs
+  };
+  await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  document.getElementById('epMealModal').classList.remove('show');
+  epRenderCatering();
+}
+
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
   document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
@@ -8561,9 +8741,9 @@ function epShowTab(tab, btn){
   if(btn) btn.classList.add('active');
   var panel = document.getElementById('epPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));
   if(panel) panel.classList.add('active');
+  if(tab==='catering') epRenderCatering();
 }
 function epRenderActive(){
-  // Will render active tab content - populated in later changes
   var activeTab = document.querySelector('.ep-tab.active');
   if(activeTab) activeTab.click();
 }
@@ -9227,6 +9407,44 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </div>
 
+
+<!-- EP Meal Modal -->
+<div class="ep-modal-overlay" id="epMealModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title" id="epMealModalTitle">Meal Details</div>
+    <div class="ep-field"><label>Caterer / Cook</label>
+      <select id="epMealVendor" onchange="document.getElementById('epMealVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
+    </div>
+    <div class="ep-field" id="epMealVendorManual" style="display:none;">
+      <label>Caterer name</label><input type="text" id="epMealVendorManualName" placeholder="e.g. Ramesh Catering">
+    </div>
+    <div class="ep-field"><label>Headcount <small style="color:#aaa;">(auto-filled from guest list, edit as needed)</small></label>
+      <input type="number" id="epMealHeadcount" min="0" oninput="epCalcMealTotal()">
+    </div>
+    <div class="ep-field"><label>Cost per person (&#8377;)</label>
+      <input type="number" id="epMealCostPP" min="0" placeholder="0" oninput="epCalcMealTotal()">
+    </div>
+    <div class="ep-total-box" id="epMealTotalBox">Total: &#8377;0</div>
+    <div class="ep-field"><label>Menu items</label>
+      <textarea id="epMealMenu" placeholder="e.g. Dal, Rice, 3 Sabzi, Roti, Sweet, Papad, Pickle..."></textarea>
+    </div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epMealStatus">
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="not-required">Not Required</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Upload menu photo (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epMealImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epMealImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epMealModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveMeal()">Save</button>
+    </div>
+  </div>
+</div>
 </div><!-- /mobApp -->
 
 <script>
@@ -10027,7 +10245,27 @@ function mobRenderEP(){
 function mobRenderEPContent(){
   var el=document.getElementById("mobEPContent");
   if(!el) return;
+  if(_mobEPTabIdx===0 && typeof epRenderCateringMob==='function') { epRenderCateringMob(el); return; }
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
+}
+function epRenderCateringMob(el){
+  if(typeof epRenderCatering==='function'){
+    // Reuse desktop catering panel content in mobile
+    epRenderCatering();
+    var desktop=document.getElementById('epPanelCatering');
+    el.innerHTML=desktop?desktop.innerHTML:'';
+    // Re-bind onclick since cloned HTML needs it
+    el.querySelectorAll('.ep-meal-row').forEach(function(row){
+      var onclick=row.getAttribute('onclick');
+      if(onclick){ row.onclick=function(){eval(onclick);}; }
+    });
+    el.querySelectorAll('.ep-event-head').forEach(function(h){
+      var onclick=h.getAttribute('onclick');
+      if(onclick){ h.onclick=function(){eval(onclick);}; }
+    });
+  } else {
+    el.innerHTML='<div class="mob-empty">Loading catering...</div>';
+  }
 }
 var _origOpenApp = window.openApp;
 if(typeof _origOpenApp === 'function'){
