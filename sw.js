@@ -1,5 +1,5 @@
-/* Vivaah Ledger — Service Worker v1 */
-var CACHE = 'vivaah-v1';
+/* Vivaah Ledger — Service Worker v2 */
+var CACHE = 'vivaah-v2';
 var ASSETS = ['/', '/index.html', '/manifest.json', '/icon-192.svg', '/icon-512.svg'];
 
 self.addEventListener('install', function(e){
@@ -15,12 +15,27 @@ self.addEventListener('activate', function(e){
 });
 
 self.addEventListener('fetch', function(e){
-  /* Always go to network for Google APIs (auth/sheets) */
+  /* Always go to network for Google APIs */
   if(e.request.url.includes('googleapis') || e.request.url.includes('google.com') || e.request.url.includes('gstatic.com')){
     e.respondWith(fetch(e.request));
     return;
   }
-  /* Cache-first for app shell */
+  /* Network-first for HTML — always get latest index.html */
+  if(e.request.mode === 'navigate' || e.request.url.endsWith('.html') || e.request.url.endsWith('/')){
+    e.respondWith(
+      fetch(e.request).then(function(response){
+        if(response.ok){
+          var clone = response.clone();
+          caches.open(CACHE).then(function(c){ c.put(e.request, clone); });
+        }
+        return response;
+      }).catch(function(){
+        return caches.match(e.request) || caches.match('/index.html');
+      })
+    );
+    return;
+  }
+  /* Cache-first for other assets */
   e.respondWith(
     caches.match(e.request).then(function(cached){
       return cached || fetch(e.request).then(function(response){
