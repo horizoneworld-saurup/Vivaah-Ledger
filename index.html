@@ -5038,6 +5038,17 @@ let guests = [];
 let activeEventFilter = ''; // '' = show all
 let reminders = {trial:[], clothes:[], guest:[]};
 const REMINDER_KEYS = ['trial','clothes','guest'];
+
+/* Event Planner global */
+let eventPlanner = {
+  catering:  {},
+  decor:     {},
+  homeDecor: { inside:'', outside:'', notes:'', images:[], status:'pending' },
+  puja:      {},
+  gifts:     {},
+  carnival:  { stalls:[] },
+  clothes:   []
+};
 let kankotriCards = {vip:'', premium:'', normal:''}; // card design images per tier
 let kankotriFilter = ''; // '', 'vip', 'premium', 'normal', 'sent', 'pending'
 
