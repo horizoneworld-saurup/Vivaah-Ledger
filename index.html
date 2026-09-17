@@ -1211,6 +1211,7 @@
   .mob-cT{background:linear-gradient(135deg,#1A5C5C,#2E8B8B);}
   .mob-cN{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
   .mob-cC{background:linear-gradient(135deg,#C45000,#E67300);}
+  .mob-cEP{background:linear-gradient(135deg,#8B1A6B,#C4306A);}
 
   /* ── Section header ── */
   .mob-sec-head{padding:12px 14px;}
@@ -9033,6 +9034,11 @@ function runGlobalSearch(q, gsInput, gsResults){
         <div><span class="mob-dc-stat" id="mobDC1">—</span><span class="mob-dc-stat" id="mobDC2"></span></div>
         <span class="mob-dc-arr">→</span>
       </div>
+      <div class="mob-dash-card mob-cEP" onclick="mobShowSec('eventplanner')" style="grid-column:span 2;">
+        <span class="mob-dc-icon">🌺</span><div class="mob-dc-name">Event Planner</div>
+        <div><span class="mob-dc-stat" id="mobDEP1">—</span><span class="mob-dc-stat" id="mobDEP2"></span></div>
+        <span class="mob-dc-arr">→</span>
+      </div>
     </div>
   </div>
 
@@ -9144,6 +9150,27 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
     <div class="mob-bud-cards" id="mobCaterSummary"></div>
     <div id="mobCaterList" style="padding:10px;"></div>
+  </div>
+
+  <!-- EVENT PLANNER VIEW -->
+  <div class="mob-view" id="mobVEventplanner">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#8B1A6B,#C4306A);">
+      <div class="mob-sec-title">&#127802; Event Planner</div>
+      <div class="mob-sec-sub">Catering &middot; Decor &middot; Puja &middot; Gifts &middot; Carnival &middot; Clothes</div>
+      <div class="mob-sec-badges" id="mobEPBadges"></div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding:8px 12px;background:#fff8f0;border-bottom:1px solid #e8c8d8;">
+      <button class="mob-evt-chip active" id="mobEPTab0" onclick="mobEPTab(0)">Catering</button>
+      <button class="mob-evt-chip" id="mobEPTab1" onclick="mobEPTab(1)">Decor</button>
+      <button class="mob-evt-chip" id="mobEPTab2" onclick="mobEPTab(2)">Puja</button>
+      <button class="mob-evt-chip" id="mobEPTab3" onclick="mobEPTab(3)">Gifts</button>
+      <button class="mob-evt-chip" id="mobEPTab4" onclick="mobEPTab(4)">Carnival</button>
+      <button class="mob-evt-chip" id="mobEPTab5" onclick="mobEPTab(5)">Clothes</button>
+      <button class="mob-evt-chip" id="mobEPTab6" onclick="mobEPTab(6)">Reminders</button>
+    </div>
+    <div id="mobEPContent" style="padding:12px;">
+      <div class="mob-empty">Content coming in next step</div>
+    </div>
   </div>
 
   <!-- Bottom nav -->
@@ -9418,6 +9445,8 @@ function mobUpdateDash(){
   s('mobDN1',getNotes().length+' notes saved');
   s('mobDC1',fn.length>0?mobFmt(cTotal)+' total':'No functions yet');
   s('mobDC2',fn.length>0?cGuests+' guests · '+fn.length+' events':'Add in full tool');
+  s('mobDEP1','Catering · Decor · Puja · more');
+  s('mobDEP2','Tap to manage all events');
 }
 
 // ── Music — exact same approach as vivaah_mobile.html ────────────
@@ -9949,7 +9978,8 @@ var MOB_SECS={
   reminder: {title:'🔔 Reminders', nav:'mobNavRem',  render:mobRenderReminders},
   timeline: {title:'📅 Timeline',  nav:null,         render:mobRenderTimeline},
   notes:    {title:'📝 Notes',     nav:null,         render:mobRenderNotes},
-  catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering}
+  catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering},
+  eventplanner: {title:'Event Planner', nav:null, render:mobRenderEP}
 };
 
 window.mobShowDash=function(){
@@ -9979,6 +10009,26 @@ window.mobShowSec=function(sec){
 
 // ── Hook into desktop unlock to also activate mobile ─────────────
 // Intercept the desktop openApp function
+// Event Planner Mobile
+var _mobEPTabIdx = 0;
+function mobEPTab(idx){
+  _mobEPTabIdx = idx;
+  for(var i=0;i<7;i++){
+    var t=document.getElementById("mobEPTab"+i);
+    if(t) t.classList.toggle("active", i===idx);
+  }
+  mobRenderEPContent();
+}
+function mobRenderEP(){
+  var bdg=document.getElementById("mobEPBadges");
+  if(bdg) bdg.innerHTML='<span class="mob-sbadge">Tap tab to view</span>';
+  mobRenderEPContent();
+}
+function mobRenderEPContent(){
+  var el=document.getElementById("mobEPContent");
+  if(!el) return;
+  el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
+}
 var _origOpenApp = window.openApp;
 if(typeof _origOpenApp === 'function'){
   window.openApp = function(){
