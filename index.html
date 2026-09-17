@@ -9397,8 +9397,13 @@ document.addEventListener('click', function _mobFirstClick(e) {
       var btn = document.getElementById('mobMusicBtn');
       if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
     }).catch(function(){});
+    document.removeEventListener('click', _mobFirstClick);
+  } else if(wrap && wrap.classList.contains('hidden')){
+    // Countdown not visible yet (sync still in progress) — keep listener active
+    // so music plays once countdown appears after sync completes
+  } else {
+    document.removeEventListener('click', _mobFirstClick);
   }
-  document.removeEventListener('click', _mobFirstClick);
 });
 
 // ── Countdown ─────────────────────────────────────────────────────
@@ -9432,6 +9437,21 @@ function mobStartCountdown(){
       p.textContent=em[Math.floor(Math.random()*em.length)];
       p.style.cssText='left:'+Math.random()*96+'%;font-size:'+(12+Math.random()*10)+'px;animation-duration:'+(5+Math.random()*7)+'s;animation-delay:'+(Math.random()*8)+'s;';
       pw.appendChild(p);}
+  }
+  // Try to start music now that countdown is visible
+  // On mobile, autoplay is only allowed after a user gesture has occurred on the page
+  if(!_mobMusicPlaying){
+    var mAudio=document.getElementById('mobWeddingMusic');
+    if(mAudio){
+      mAudio.volume=0.45;
+      mAudio.play().then(function(){
+        _mobMusicPlaying=true;
+        var mbtn=document.getElementById('mobMusicBtn');
+        if(mbtn){mbtn.textContent='🔇';mbtn.style.background='#f9a8c9';}
+      }).catch(function(){
+        // Autoplay blocked - will play on next user tap via _mobFirstClick
+      });
+    }
   }
 }
 
