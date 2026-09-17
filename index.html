@@ -1128,7 +1128,6 @@
   /* Hide all desktop chrome — lock overlay and setupOverlay stay visible */
   .wrap,
   #pageFooter,
-  #countdownWrap,
   #adminSettingsOverlay,
   #ownerPanelOverlay,
   #platformVendorModalOverlay,
@@ -9210,7 +9209,7 @@ window.mobActivate = function(){
   if(desktopAudio){ desktopAudio.muted = true; desktopAudio.pause(); }
 
   // Hide desktop elements directly via JS (belt-and-suspenders alongside CSS)
-  var hide = ['.wrap','#pageFooter','#adminSettingsOverlay','#ownerPanelOverlay',
+  var hide = ['.wrap','#pageFooter','#countdownWrap','#adminSettingsOverlay','#ownerPanelOverlay',
     '#platformVendorModalOverlay','#printPanelOverlay','#hcModalOverlay','.modal-overlay','.print-panel-overlay'];
   hide.forEach(function(sel){
     document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
