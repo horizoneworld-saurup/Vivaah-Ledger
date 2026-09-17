@@ -5590,6 +5590,20 @@ async function onSignedIn(){
       if(typeof mobStartCountdown === 'function') mobStartCountdown();
       if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
     }, 800);
+    // Safety: if mobActivate fires AFTER onSignedIn (timing race), refresh again
+    setTimeout(function(){
+      if(!window._mobActive) return;
+      if(typeof mobApplyBranding==='function') mobApplyBranding();
+      if(typeof mobUpdateDash==='function') mobUpdateDash();
+      if(typeof mobStartCountdown==='function') mobStartCountdown();
+      var gO=document.getElementById('mobGOut'),gI=document.getElementById('mobGIn');
+      var av=document.getElementById('mobGAvatar'),nEl=document.getElementById('mobGName');
+      var nm=googleUserEmail||'Signed in';
+      if(av) av.textContent=nm.charAt(0).toUpperCase();
+      if(nEl) nEl.textContent=nm;
+      if(gO) gO.style.display='none';
+      if(gI) gI.style.display='flex';
+    }, 1500);
   }catch(e){
     console.error(e);
     setSyncStatus('error','Connection issue — data saved locally');
@@ -8492,9 +8506,12 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   initGoogleAuth();
   initVoiceControl();
   await initAuth();
-  await tryRestoreGoogleSession();
-  // Call mobActivate after a tick — ensures mobile script block has registered
+  // Fire mobActivate BEFORE tryRestoreGoogleSession so mobile UI is active
+  // when onSignedIn runs — ensures cloud data updates mobile immediately
   setTimeout(function(){ if(typeof window.mobActivate==='function') window.mobActivate(); }, 50);
+  // Wait 100ms so mobActivate has fired and _mobActive=true before Sheets sync starts
+  await new Promise(function(res){ setTimeout(res, 120); });
+  await tryRestoreGoogleSession();
 })();
 
 /* ================================================================
