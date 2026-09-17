@@ -878,6 +878,12 @@
   .sec-reminder{background:linear-gradient(135deg,#5C1A8A,#8A2AC4);}
   .sec-notes{background:linear-gradient(135deg,#2E6B1A,#4A9B2A);}
   .sec-catering{background:linear-gradient(135deg,#C45000,#E67300);}
+  .sec-eventplanner{background:linear-gradient(135deg,#8B1A6B,#C4306A);}
+  .ep-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;background:#fff8f0;border-bottom:1px solid #e8c8d8;}
+  .ep-tab{padding:5px 12px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid rgba(139,26,107,0.3);color:#8B1A6B;background:#fff;}
+  .ep-tab.active{background:#8B1A6B;color:#fff;border-color:#8B1A6B;}
+  .ep-panel{display:none;padding:14px;}
+  .ep-panel.active{display:block;}
 
   /* ── Auto-backup bar ── */
   .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
@@ -2361,10 +2367,29 @@
   </div>
 
   <div class="footnote">All amounts in ₹ (INR) · Sign in with Google above to sync this ledger across all your devices · Excel export remains available any time as a backup or offline copy</div>
-</div>
+  </div><!-- end vendor sec-body -->
+
+  <!-- EVENT PLANNER SECTION -->
+  <div class="sec-header sec-collapsed sec-eventplanner" id="epSectionHeader" onclick="toggleSecBody('epSectionHeader','epSecBody')">
+    <div class="sec-header-left">
+      <div class="sec-header-icon">&#127802;</div>
+      <div>
+        <div class="sec-header-title" style="color:#fff;">Event Planner</div>
+        <div class="sec-header-sub" style="color:#fce4ec;">Catering &middot; Decor &middot; Puja &middot; Gifts &middot; Carnival &middot; Clothes</div>
+        <div class="sec-header-badges">
+          <span class="sec-badge" id="epBadgePending">0 pending</span>
+          <span class="sec-badge" id="epBadgeConfirmed">0 confirmed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sec-body collapsed" id="epSecBody">
+    <div style="padding:20px;text-align:center;color:#888;">Event Planner content coming soon</div>
+  </div>
+
+</div><!-- end wrap -->
 
 <!-- Add/Edit Vendor Modal -->
-  </div><!-- end vendor sec-body -->
 <div class="modal-overlay" id="vendorModalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add vendor</h3>
@@ -3703,6 +3728,7 @@ function toggleSecBody(headerId, bodyId) {
       else if (bodyId === 'timelineSecBody') { renderTimeline ? renderTimeline() : null; }
       else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
       else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
+      else if (bodyId === 'epSecBody') { if(typeof epRenderActive==='function') epRenderActive(); }
     } catch(e) {}
   } else {
     body.classList.add('collapsed');
@@ -3720,7 +3746,8 @@ function toggleSecBody(headerId, bodyId) {
     ['cateringSectionHeader','cateringSecBody'],
     ['guestSectionHeader','guestSecBody'],
     ['kankotriSectionHeader','kankotriSecBody'],
-    ['vendorSectionHeader','vendorSecBody']
+    ['vendorSectionHeader','vendorSecBody'],
+    ['epSectionHeader','epSecBody']
   ];
   document.addEventListener('DOMContentLoaded', function() {
     pairs.forEach(function(pair) {
