@@ -884,6 +884,7 @@
   .ep-tab.active{background:#8B1A6B;color:#fff;border-color:#8B1A6B;}
   .ep-panel{display:none;padding:14px;}
   .ep-panel.active{display:block;}
+  .ep-empty{text-align:center;padding:28px 16px;color:#aaa;font-size:13px;border:1.5px dashed #e8c8d8;border-radius:10px;margin:8px;}
 
   /* ── Auto-backup bar ── */
   .backup-bar{background:var(--ivory-deep);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12.5px;color:var(--ink-soft);}
@@ -2384,7 +2385,36 @@
     </div>
   </div>
   <div class="sec-body collapsed" id="epSecBody">
-    <div style="padding:20px;text-align:center;color:#888;">Event Planner content coming soon</div>
+    <div class="ep-tabs">
+      <button class="ep-tab active" onclick="epShowTab('catering',this)">&#127869;&#65039; Catering</button>
+      <button class="ep-tab" onclick="epShowTab('decor',this)">&#127800; Decor</button>
+      <button class="ep-tab" onclick="epShowTab('puja',this)">&#128367;&#65039; Puja</button>
+      <button class="ep-tab" onclick="epShowTab('gifts',this)">&#127873; Gifts &amp; Covers</button>
+      <button class="ep-tab" onclick="epShowTab('carnival',this)">&#127914; Carnival</button>
+      <button class="ep-tab" onclick="epShowTab('clothes',this)">&#128087; Clothes</button>
+      <button class="ep-tab" onclick="epShowTab('reminders',this)">&#128276; Reminders</button>
+    </div>
+    <div class="ep-panel active" id="epPanelCatering">
+      <div class="ep-empty">&#127869;&#65039; Catering &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelDecor">
+      <div class="ep-empty">&#127800; Decor &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelPuja">
+      <div class="ep-empty">&#128367;&#65039; Puja &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelGifts">
+      <div class="ep-empty">&#127873; Gifts &amp; Covers &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelCarnival">
+      <div class="ep-empty">&#127914; Carnival &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelClothes">
+      <div class="ep-empty">&#128087; Clothes &mdash; coming in next step</div>
+    </div>
+    <div class="ep-panel" id="epPanelReminders">
+      <div class="ep-empty">&#128276; Reminders &mdash; coming in next step</div>
+    </div>
   </div>
 
 </div><!-- end wrap -->
@@ -8523,6 +8553,19 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   },300);
 };
 
+/* ---------------- Event Planner Tabs ---------------- */
+function epShowTab(tab, btn){
+  document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.ep-panel').forEach(function(p){p.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  var panel = document.getElementById('epPanel'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if(panel) panel.classList.add('active');
+}
+function epRenderActive(){
+  // Will render active tab content - populated in later changes
+  var activeTab = document.querySelector('.ep-tab.active');
+  if(activeTab) activeTab.click();
+}
 /* ---------------- Init ---------------- */
 (async ()=>{
   initGoogleAuth();
