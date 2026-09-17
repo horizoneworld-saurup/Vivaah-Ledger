@@ -10249,23 +10249,35 @@ function mobRenderEPContent(){
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
 }
 function epRenderCateringMob(el){
-  if(typeof epRenderCatering==='function'){
-    // Reuse desktop catering panel content in mobile
-    epRenderCatering();
-    var desktop=document.getElementById('epPanelCatering');
-    el.innerHTML=desktop?desktop.innerHTML:'';
-    // Re-bind onclick since cloned HTML needs it
-    el.querySelectorAll('.ep-meal-row').forEach(function(row){
-      var onclick=row.getAttribute('onclick');
-      if(onclick){ row.onclick=function(){eval(onclick);}; }
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var html='<div style="padding:8px 0 4px;">';
+  evs.forEach(function(ev){
+    var evData=eventPlanner.catering[ev]||{};
+    var conf=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='confirmed';}).length;
+    var notR=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='not-required';}).length;
+    var pend=EP_MEALS.length-conf-notR;
+    var chip=conf===EP_MEALS.length?'<span class="ep-status ep-s-confirmed">All confirmed</span>':'<span class="ep-status ep-s-pending">'+pend+' pending</span>';
+    // Use mob_ prefix for IDs to avoid conflict with desktop DOM IDs
+    var mobId='mob_cat_'+ev.replace(/[^a-zA-Z0-9]/g,'_');
+    html+='<div class="ep-event-card">';
+    html+='<div class="ep-event-head" onclick="var b=document.getElementById(\''+mobId+'\');if(b)b.classList.toggle(\'open\')">';
+    html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
+    html+='<div class="ep-event-body" id="'+mobId+'">';
+    EP_MEALS.forEach(function(m){
+      var slot=evData[m.id]||{};
+      var catName=slot.vendorName||(slot.vendorId&&slot.vendorId!=='__manual__'?(function(){var v=typeof vendors!=='undefined'&&vendors.find(function(x){return x.id===slot.vendorId;});return v?v.name:'';}()):'');
+      var det=catName?catName:'Not set';
+      if(slot.headcount) det+=' &middot; '+slot.headcount+' people';
+      if(slot.costPerPerson) det+=' &middot; '+epFmt(slot.costPerPerson)+'/head';
+      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ev+'\',\''+m.id+'\')">';
+      html+='<span class="ep-meal-icon">'+EP_MEAL_ICONS[m.id]+'</span>';
+      html+='<div class="ep-meal-info"><div class="ep-meal-name">'+m.name+'</div><div class="ep-meal-detail">'+det+'</div></div>';
+      html+=epStatusBadge(slot.status||'pending')+'</div>';
     });
-    el.querySelectorAll('.ep-event-head').forEach(function(h){
-      var onclick=h.getAttribute('onclick');
-      if(onclick){ h.onclick=function(){eval(onclick);}; }
-    });
-  } else {
-    el.innerHTML='<div class="mob-empty">Loading catering...</div>';
-  }
+    html+='</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 var _origOpenApp = window.openApp;
 if(typeof _origOpenApp === 'function'){
