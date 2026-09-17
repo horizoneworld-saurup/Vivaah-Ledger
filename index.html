@@ -2113,7 +2113,8 @@
       <select class="sec-filter-select" id="guestEventFilter" onchange="filterGuestsByEvent(this.value)">
         <option value="all">All Events</option>
         <option value="Kankotri">📮 Kankotri</option>
-        <option value="Ganesh-Grahshanti-Mosalu">🪔 Ganesh</option>
+        <option value="Ganesh-Grahshanti">🪔 Ganesh-Grahshanti</option>
+        <option value="Mosalu">🪔 Mosalu</option>
         <option value="Mehendi">🌿 Mehendi</option>
         <option value="Sangeet">🎶 Sangeet</option>
         <option value="Haldi">💛 Haldi</option>
@@ -3058,8 +3059,8 @@ function generateStdMsg(g) {
 }
 
 function generateInviteMsg(g) {
-  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
-  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
   var invited = ALL_EVENTS.filter(function(ev) {
@@ -3927,7 +3928,7 @@ function initRangoliPetals(style) {
 }
 
 function startCountdown() {
-  var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
+  var preferOrder = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Mosalu','Ganesh-Grahshanti','Kankotri'];
   var targetDate = null, targetName = 'Marriage';
   for (var i=0; i<preferOrder.length; i++) {
     var ev = preferOrder[i];
@@ -4326,10 +4327,10 @@ function printSection(section) {
       var invited = Object.keys(g.events||{}).filter(function(ev){
         var e=g.events[ev]; return e&&(Number(e.adults||0)+Number(e.kids||0)+Number(e.writer||0))>0;
       });
-      var EVCOLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti-Mosalu':'#856404','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
+      var EVCOLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti':'#856404','Mosalu':'#A0522D','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
       var chips = invited.map(function(ev){
         var c=EVCOLORS[ev]||'#555';
-        var short={'Kankotri':'Kank','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'}[ev]||ev;
+        var short={'Kankotri':'Kank','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'}[ev]||ev;
         return '<span class="chip" style="background:'+c+'18;color:'+c+';border:0.5px solid '+c+'40;">'+short+'</span>';
       }).join('');
       var ev = g.events&&g.events[activeFilter]||{};
@@ -5121,8 +5122,8 @@ let lastExportAt = null;
 let branding = {title:'', tagline:'', logo:''}; // empty = use defaults
 
 /* Guest list & reminders state */
-const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti-Mosalu', 'Mehendi', 'Sangeet', 'Haldi', 'Marriage', 'Reception'];
-const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti-Mosalu', 'Mehendi']; // women-specific rituals
+const WEDDING_EVENTS = ['Kankotri', 'Ganesh-Grahshanti', 'Mosalu', 'Mehendi', 'Sangeet', 'Haldi', 'Marriage', 'Reception'];
+const LADIES_TRACKED_EVENTS = ['Ganesh-Grahshanti', 'Mosalu', 'Mehendi']; // women-specific rituals
 const WRITER_TRACKED_EVENTS = ['Kankotri']; // calligrapher count instead of kids
 let guests = [];
 let activeEventFilter = ''; // '' = show all
@@ -6527,7 +6528,7 @@ function renderGuests(){
 
   // Short event name for column headers - keeps header compact
   const EVENT_SHORT = {
-    'Kankotri':'Kankotri','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehendi',
+    'Kankotri':'Kankotri','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehendi',
     'Sangeet':'Sangeet','Haldi':'Haldi','Marriage':'Marriage','Reception':'Reception'
   };
   const shortFilter = EVENT_SHORT[activeEventFilter] || activeEventFilter;
@@ -6660,8 +6661,8 @@ function renderGuests(){
         </td>
         <td class="invited-to">${(function(){
           if(!invited.length) return '<span style="color:var(--ink-soft);font-size:11px;">Not set</span>';
-          const EV_SHORT2 = {'Kankotri':'Kank','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'};
-          const EV_COLOR = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti-Mosalu':'#856404','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#E65100','Marriage':'#880E4F','Reception':'#4A148C'};
+          const EV_SHORT2 = {'Kankotri':'Kank','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'};
+          const EV_COLOR = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti':'#856404','Mosalu':'#A0522D','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#E65100','Marriage':'#880E4F','Reception':'#4A148C'};
           return invited.map(ev=>`<span style="display:inline-block;margin:1px 2px 1px 0;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:600;background:${EV_COLOR[ev]||'#555'}18;color:${EV_COLOR[ev]||'#555'};border:1px solid ${EV_COLOR[ev]||'#555'}40;">${EV_SHORT2[ev]||ev}</span>`).join('');
         })()}</td>
         <td class="num">${rawCounts.adults}</td>
@@ -6800,7 +6801,8 @@ document.getElementById('btnGuestTemplate').onclick = ()=>{
   }
   const example1 = blankRow('Asha Patel Family','9876512345','Bride','Ahmedabad','Gujarat','India');
   example1['Kankotri Adults']=2; example1['Kankotri Writer']=1;
-  example1['Ganesh-Grahshanti-Mosalu Adults']=2; example1['Ganesh-Grahshanti-Mosalu Kids']=0; example1['Ganesh-Grahshanti-Mosalu Ladies']=1;
+  example1['Ganesh-Grahshanti Adults']=2; example1['Ganesh-Grahshanti Kids']=0; example1['Ganesh-Grahshanti Ladies']=1;
+  example1['Mosalu Adults']=0; example1['Mosalu Kids']=0; example1['Mosalu Ladies']=0;
   example1['Mehendi Adults']=2; example1['Mehendi Kids']=1; example1['Mehendi Ladies']=1;
   example1['Sangeet Adults']=2; example1['Sangeet Kids']=0;
   example1['Marriage Adults']=2; example1['Marriage Kids']=2;
@@ -7284,7 +7286,8 @@ function downloadVendorTemplate(){
     if(LADIES_TRACKED_EVENTS.includes(ev)){ guestTemplateRow1[ev+' Ladies']=''; guestTemplateRow2[ev+' Ladies']=''; }
   });
   guestTemplateRow1['Kankotri Adults']=2; guestTemplateRow1['Kankotri Writer']=1;
-  guestTemplateRow1['Ganesh-Grahshanti-Mosalu Adults']=2; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Kids']=0; guestTemplateRow1['Ganesh-Grahshanti-Mosalu Ladies']=1;
+  guestTemplateRow1['Ganesh-Grahshanti Adults']=2; guestTemplateRow1['Ganesh-Grahshanti Kids']=0; guestTemplateRow1['Ganesh-Grahshanti Ladies']=1;
+  guestTemplateRow1['Mosalu Adults']=0; guestTemplateRow1['Mosalu Kids']=0; guestTemplateRow1['Mosalu Ladies']=0;
   guestTemplateRow1['Mehendi Adults']=2; guestTemplateRow1['Mehendi Kids']=1; guestTemplateRow1['Mehendi Ladies']=1;
   guestTemplateRow1['Sangeet Adults']=2; guestTemplateRow1['Sangeet Kids']=0;
   guestTemplateRow1['Marriage Adults']=2; guestTemplateRow1['Marriage Kids']=2;
@@ -7858,8 +7861,8 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
     var t = eventTimeline[ev]||{};
     var isWriter = WRITER_TRACKED_EVENTS.includes(ev);
     var isLadies = LADIES_TRACKED_EVENTS.includes(ev);
-    var EV_COLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti-Mosalu':'#856404','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
-    var EV_LIGHT  = {'Kankotri':'#FBF6EE','Ganesh-Grahshanti-Mosalu':'#FFF8E1','Mehendi':'#F0F8EB','Sangeet':'#EEF2FF','Haldi':'#FFF3E0','Marriage':'#FCE4EC','Reception':'#F3E5F5'};
+    var EV_COLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti':'#856404','Mosalu':'#A0522D','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
+    var EV_LIGHT  = {'Kankotri':'#FBF6EE','Ganesh-Grahshanti':'#FFF8E1','Mosalu':'#FFF3E8','Mehendi':'#F0F8EB','Sangeet':'#EEF2FF','Haldi':'#FFF3E0','Marriage':'#FCE4EC','Reception':'#F3E5F5'};
     var col = EV_COLORS[ev]||'#3E0F1C';
     var light = EV_LIGHT[ev]||'#FBF6EE';
     var dateInfo = t.date ? new Date(t.date+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+(t.startTime?' · '+t.startTime:'')+(t.venue?' · '+t.venue:'') : '';
@@ -8243,8 +8246,8 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   printArea.style.cssText='margin:0;padding:0;position:static;';
 
   // Events to show in print columns
-  const EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
-  const EV_SHORT = {'Kankotri':'Kankotri','Ganesh-Grahshanti-Mosalu':'Ganesh','Mehendi':'Mehendi','Sangeet':'Sangeet','Marriage':'Marriage','Reception':'Reception'};
+  const EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+  const EV_SHORT = {'Kankotri':'Kankotri','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehendi','Sangeet':'Sangeet','Marriage':'Marriage','Reception':'Reception'};
   const TIERS = [
     {key:'vip',     label:'👑 VIP Premium',           color:'#5C1A2B'},
     {key:'premium', label:'⭐ Premium',                color:'#856404'},
@@ -8368,16 +8371,18 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
-  var FUNS = ['Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+  var FUNS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Marriage','Reception'];
   var FUN_SHORT = {
-    'Ganesh-Grahshanti-Mosalu':'Ganesh',
+    'Ganesh-Grahshanti':'Ganesh',
+    'Mosalu':'Mosalu',
     'Mehendi':'Mehendi',
     'Sangeet':'Sangeet',
     'Marriage':'Marriage',
     'Reception':'Reception'
   };
   var FUN_COLOR = {
-    'Ganesh-Grahshanti-Mosalu': {bg:'#85640418', color:'#856404', border:'#85640440'},
+    'Ganesh-Grahshanti': {bg:'#85640418', color:'#856404', border:'#85640440'},
+    'Mosalu': {bg:'#A0522D18', color:'#A0522D', border:'#A0522D40'},
     'Mehendi':                   {bg:'#2E7D3218', color:'#2E7D32', border:'#2E7D3240'},
     'Sangeet':                   {bg:'#1A3A8A18', color:'#1A3A8A', border:'#1A3A8A40'},
     'Marriage':                  {bg:'#880E4F18', color:'#880E4F', border:'#880E4F40'},
@@ -8443,23 +8448,26 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
     if (!list.length) return '<p style="color:#888;font-size:12px;padding:8px;">No Normal families.</p>';
 
     // Same 5 functions as VIP/Premium — no Kankotri for Normal
-    var NORM_FUNS = ['Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Marriage','Reception'];
+    var NORM_FUNS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Marriage','Reception'];
     var NORM_SHORT = {
-      'Ganesh-Grahshanti-Mosalu':'Ganesh',
+      'Ganesh-Grahshanti':'Ganesh',
+      'Mosalu':'Mosalu',
       'Mehendi':'Mehendi',
       'Sangeet':'Sangeet',
       'Marriage':'Marriage',
       'Reception':'Reception'
     };
     var NORM_COLOR = {
-      'Ganesh-Grahshanti-Mosalu': '#856404',
+      'Ganesh-Grahshanti': '#856404',
+      'Mosalu': '#A0522D',
       'Mehendi':                   '#2E7D32',
       'Sangeet':                   '#1A3A8A',
       'Marriage':                  '#880E4F',
       'Reception':                 '#4A148C'
     };
     var NORM_LIGHT = {
-      'Ganesh-Grahshanti-Mosalu': '#FFF8E1',
+      'Ganesh-Grahshanti': '#FFF8E1',
+      'Mosalu': '#FFF3E8',
       'Mehendi':                   '#F0F8EB',
       'Sangeet':                   '#EEF2FF',
       'Marriage':                  '#FCE4EC',
@@ -8654,7 +8662,7 @@ function epUpdateBadges(){
 }
 function epRenderCatering(){
   var el=document.getElementById('epPanelCatering'); if(!el) return;
-  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var html='<div style="padding:8px 0 4px;">';
   evs.forEach(function(ev){
     var evData=eventPlanner.catering[ev]||{};
@@ -9492,7 +9500,7 @@ function getNotes(){   return (typeof notes!=='undefined'   && Array.isArray(not
 function getTimeline(){ return (typeof eventTimeline!=='undefined') ? eventTimeline : {}; }
 function getFunctions(){ return (typeof functions!=='undefined' && Array.isArray(functions)) ? functions : []; }
 function getBranding(){ return (typeof branding!=='undefined') ? branding : {}; }
-var MOB_EVENTS = ['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+var MOB_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
 
 function vPaid(v){ return (v.payments||[]).reduce(function(s,p){return s+Number(p.amount||0);},0); }
 function vDue(v){ return Math.max(0,Number(v.quoted||0)-vPaid(v)); }
@@ -9721,7 +9729,7 @@ document.addEventListener('click', function _mobFirstClick(e) {
 
 // ── Countdown ─────────────────────────────────────────────────────
 function mobStartCountdown(){
-  var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Ganesh-Grahshanti-Mosalu','Kankotri'];
+  var order = ['Marriage','Reception','Sangeet','Haldi','Mehendi','Mosalu','Ganesh-Grahshanti','Kankotri'];
   var tl = getTimeline(); var target=null, name='Marriage';
   for(var i=0;i<order.length;i++){
     var t=tl[order[i]];
@@ -9879,7 +9887,7 @@ function mobRenderVendors(){
 // ── Event summary (guest view) ────────────────────────────────────
 function mobBuildEvtSummary(){
   var gs=getGuests();
-  var LABELS={'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
+  var LABELS={'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
   var cardsEl=document.getElementById('mobEvtSummary'); if(!cardsEl) return;
   var html='<div style="font-size:11px;font-weight:700;color:#856404;margin-bottom:6px;">📊 Guests per Event</div><div class="mob-evt-sum-grid">';
   MOB_EVENTS.forEach(function(ev){
@@ -9915,7 +9923,7 @@ function mobRenderGuests(){
     '<span class="mob-sbadge">'+gs.length+' families</span>'+
     '<span class="mob-sbadge">'+conf+' confirmed</span>'+
     '<span class="mob-sbadge">'+mrgCnt+' marriage</span>';
-  var EMOJIS={'Kankotri':'📮','Ganesh-Grahshanti-Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
+  var EMOJIS={'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Sangeet':'🎶','Haldi':'💛','Marriage':'💍','Reception':'🎊'};
   function rG(g){
     var cls=g.callStatus==='confirmed'?'mob-bc':g.callStatus==='declined'?'mob-bd':'mob-bpd';
     var lbl=g.callStatus==='confirmed'?'✅':g.callStatus==='declined'?'❌':'⏳';
@@ -10249,7 +10257,7 @@ function mobRenderEPContent(){
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
 }
 function epRenderCateringMob(el){
-  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti-Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var html='<div style="padding:8px 0 4px;">';
   evs.forEach(function(ev){
     var evData=eventPlanner.catering[ev]||{};
