@@ -8645,10 +8645,14 @@ function epRenderThumbs(imgs){
   return imgs.map(function(src){return '<img src="'+src+'" class="ep-img-thumb" onclick="window.open(this.src,\'_blank\')">';}).join('');
 }
 function epToggleEvent(id){
-  var el=document.getElementById(id); if(el) el.classList.toggle('open');
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.style.display = (el.style.display==='block') ? 'none' : 'block';
 }
 function epMobToggle(id){
-  var el=document.getElementById(id); if(el) el.classList.toggle('open');
+  var el=document.getElementById(id);
+  if(!el) return;
+  el.style.display = (el.style.display==='block') ? 'none' : 'block';
 }
 function epCalcMealTotal(){
   var h=Number(document.getElementById('epMealHeadcount').value)||0;
