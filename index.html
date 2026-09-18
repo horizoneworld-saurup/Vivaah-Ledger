@@ -8647,6 +8647,9 @@ function epRenderThumbs(imgs){
 function epToggleEvent(id){
   var el=document.getElementById(id); if(el) el.classList.toggle('open');
 }
+function epMobToggle(id){
+  var el=document.getElementById(id); if(el) el.classList.toggle('open');
+}
 function epCalcMealTotal(){
   var h=Number(document.getElementById('epMealHeadcount').value)||0;
   var c=Number(document.getElementById('epMealCostPP').value)||0;
@@ -9554,6 +9557,8 @@ function runGlobalSearch(q, gsInput, gsResults){
   </div>
 
 
+</div><!-- /mobApp -->
+
 <!-- EP Meal Modal -->
 <div class="ep-modal-overlay" id="epMealModal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="ep-modal">
@@ -9628,7 +9633,6 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </div>
 </div>
-</div><!-- /mobApp -->
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
@@ -10438,7 +10442,7 @@ function epRenderDecorMob(el){
   // Home decor card
   var hd=eventPlanner.homeDecor||{};
   html+='<div class="ep-event-card">';
-  html+='<div class="ep-event-head" onclick="var b=document.getElementById(\'mob_decor_home\');if(b)b.classList.toggle(\'open\')">';
+  html+='<div class="ep-event-head" onclick="epMobToggle(\'mob_decor_home\')">';
   html+='<div><div class="ep-event-title">&#127968; Home Decor</div>';
   html+='<div class="ep-event-date">Inside + Outside</div></div>';
   html+=epStatusBadge(hd.status||'pending')+'</div>';
@@ -10457,7 +10461,7 @@ function epRenderDecorMob(el){
     }
     var mobId='mob_decor_'+ev.replace(/[^a-zA-Z0-9]/g,'_');
     html+='<div class="ep-event-card">';
-    html+='<div class="ep-event-head" onclick="var b=document.getElementById(\''+mobId+'\');if(b)b.classList.toggle(\'open\')">';
+    html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')">';
     html+='<div><div class="ep-event-title">'+ev+'</div>';
     html+='<div class="ep-event-date">'+epEventDate(ev)+(vName?' &middot; '+vName:'')+'</div></div>';
     html+=epStatusBadge(dec.status||'pending')+'</div>';
@@ -10484,7 +10488,7 @@ function epRenderCateringMob(el){
     // Use mob_ prefix for IDs to avoid conflict with desktop DOM IDs
     var mobId='mob_cat_'+ev.replace(/[^a-zA-Z0-9]/g,'_');
     html+='<div class="ep-event-card">';
-    html+='<div class="ep-event-head" onclick="var b=document.getElementById(\''+mobId+'\');if(b)b.classList.toggle(\'open\')">';
+    html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')">';
     html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="'+mobId+'">';
     EP_MEALS.forEach(function(m){
