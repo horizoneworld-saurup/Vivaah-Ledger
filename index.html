@@ -8653,8 +8653,10 @@ function epMobToggle(id){
   var el=document.getElementById(id);
   if(!el) return;
   var cur=el.style.display;
-  el.style.display=(cur===''||cur==='none')?'block':'none';
+  if(cur===''||cur==='none') el.style.display='block';
+  else el.style.display='none';
 }
+window.epMobToggle = epMobToggle;
 function epCalcMealTotal(){
   var h=Number(document.getElementById('epMealHeadcount').value)||0;
   var c=Number(document.getElementById('epMealCostPP').value)||0;
@@ -8886,6 +8888,15 @@ async function epSaveDecor(){
   document.getElementById('epDecorModal').classList.remove('show');
   epRenderDecor();
 }
+
+// Expose EP functions globally for mobile onclick attributes
+window.epMobToggle = epMobToggle;
+window.epOpenMealModal = epOpenMealModal;
+window.epOpenDecorModal = epOpenDecorModal;
+window.epSaveMeal = epSaveMeal;
+window.epSaveDecor = epSaveDecor;
+window.epCalcMealTotal = epCalcMealTotal;
+window.epToggleEvent = epToggleEvent;
 
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
@@ -10451,7 +10462,7 @@ function epRenderDecorMob(el){
   html+='<div><div class="ep-event-title">&#127968; Home Decor</div>';
   html+='<div class="ep-event-date">Inside + Outside</div></div>';
   html+=epStatusBadge(hd.status||'pending')+'</div>';
-  html+='<div style="display:none;padding:10px 14px;" id="mob_decor_home">';
+  html+='<div class="ep-event-body" id="mob_decor_home" style="padding:10px 14px;">';
   if(hd.inside) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Inside:</strong> '+hd.inside+'</div>';
   if(hd.outside) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Outside:</strong> '+hd.outside+'</div>';
   if(hd.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:6px;">'+hd.notes+'</div>';
@@ -10470,7 +10481,7 @@ function epRenderDecorMob(el){
     html+='<div><div class="ep-event-title">'+ev+'</div>';
     html+='<div class="ep-event-date">'+epEventDate(ev)+(vName?' &middot; '+vName:'')+'</div></div>';
     html+=epStatusBadge(dec.status||'pending')+'</div>';
-    html+='<div style="display:none;padding:10px 14px;" id="'+mobId+'">';
+    html+='<div class="ep-event-body" id="'+mobId+'" style="padding:10px 14px;">';
     if(dec.theme) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Theme:</strong> '+dec.theme+'</div>';
     if(dec.items) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Items:</strong> '+dec.items+'</div>';
     if(dec.setupTime) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Setup:</strong> '+dec.setupTime+'</div>';
