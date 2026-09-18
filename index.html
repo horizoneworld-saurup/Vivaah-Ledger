@@ -4333,19 +4333,26 @@ function printSection(section) {
         return '<span class="chip" style="background:'+c+'18;color:'+c+';border:0.5px solid '+c+'40;">'+short+'</span>';
       }).join('');
       var ev = g.events&&g.events[activeFilter]||{};
+      var adults = activeFilter&&activeFilter!=='All Events' ? Number(ev.adults||0) : guestTotalAdults(g);
+      var kids = activeFilter&&activeFilter!=='All Events' ? Number(ev.kids||0) : guestTotalKids(g);
+      var ladies = activeFilter&&activeFilter!=='All Events'&&LADIES_TRACKED_EVENTS.includes(activeFilter) ? Number(ev.ladies||0) : guestTotalLadies(g);
+      var showLadies = !activeFilter || activeFilter==='All Events' || LADIES_TRACKED_EVENTS.includes(activeFilter);
       return '<tr>' +
         '<td style="color:#aaa;font-size:11px;">'+(i+1)+'</td>' +
         '<td><strong>'+escapeHtml(g.name||'')+'</strong></td>' +
         '<td>'+escapeHtml(g.phone||'—')+'</td>' +
         '<td>'+escapeHtml(g.side||'—')+'</td>' +
         '<td>'+chips+'</td>' +
-        '<td class="c">'+(activeFilter&&activeFilter!=='All Events'?Number(ev.adults||0):guestTotalAdults(g))+'</td>' +
+        '<td class="c">'+adults+'</td>' +
+        '<td class="c">'+kids+'</td>' +
+        (showLadies?'<td class="c">'+ladies+'</td>':'') +
         '</tr>';
     }).join('');
     bodyHTML = '<p style="font-size:12px;color:#6b5d52;margin-bottom:12px;">Showing: <strong>'+activeFilter+'</strong> — '+filteredGuests.length+' families</p>' +
       '<table><thead><tr>' +
-      '<th>#</th><th>Family / Guest Name</th><th>Phone</th><th>Side</th><th>Invited To</th><th class="c">Adults</th>' +
-      '</tr></thead><tbody>'+(gRows||'<tr><td colspan="6">No guests yet.</td></tr>')+'</tbody></table>';
+      '<th>#</th><th>Family / Guest Name</th><th>Phone</th><th>Side</th><th>Invited To</th><th class="c">Adults</th><th class="c">Kids</th>' +
+      ((!activeFilter||activeFilter==='All Events'||LADIES_TRACKED_EVENTS.includes(activeFilter))?'<th class="c">Ladies</th>':'') +
+      '</tr></thead><tbody>'+(gRows||'<tr><td colspan="8">No guests yet.</td></tr>')+'</tbody></table>';
   }
 
   // Build full HTML for the print overlay
@@ -7828,7 +7835,7 @@ document.getElementById('remindersGrid').addEventListener('click',e=>{
    PRINT PANEL
    ================================================================ */
 document.getElementById('btnPrint').onclick=()=>document.getElementById('printPanelOverlay').classList.add('show');
-document.getElementById('btnPrintGuests').onclick=()=>printSection('guests');
+document.getElementById('btnPrintGuests').onclick=()=>document.getElementById('printPanelOverlay').classList.add('show');
 document.getElementById('printPanelCloseBtn').onclick=()=>document.getElementById('printPanelOverlay').classList.remove('show');
 
 function printPageSection(mode,eventFilter){
