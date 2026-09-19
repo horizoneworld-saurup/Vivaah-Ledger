@@ -2436,9 +2436,7 @@
     <div class="ep-panel" id="epPanelPuja"></div>
     <div class="ep-panel" id="epPanelGifts"></div>
     <div class="ep-panel" id="epPanelCarnival"></div>
-    <div class="ep-panel" id="epPanelClothes">
-      <div class="ep-empty">&#128087; Clothes &mdash; coming in next step</div>
-    </div>
+    <div class="ep-panel" id="epPanelClothes"></div>
     <div class="ep-panel" id="epPanelReminders">
       <div class="ep-empty">&#128276; Reminders &mdash; coming in next step</div>
     </div>
@@ -9185,6 +9183,131 @@ window.epOpenCarnivalModal=epOpenCarnivalModal;
 window.epSaveCarnival=epSaveCarnival;
 window.epDeleteCarnival=epDeleteCarnival;
 
+/* EP Clothes Management Module */
+function epRenderClothes(){
+  var el=document.getElementById('epPanelClothes'); if(!el) return;
+  var items=eventPlanner.clothes||[];
+  var delivered=items.filter(function(i){return i.status==='delivered';}).length;
+  var html='<div style="padding:8px 14px 4px;">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+  html+='<div><div style="font-size:13px;font-weight:700;color:#5C1A2B;">Clothes Management</div>';
+  html+='<div style="font-size:11px;color:#888;">'+delivered+' of '+items.length+' outfits delivered</div></div>';
+  html+='<button class="ep-add-btn" onclick="epOpenClothesModal(-1)">+ Add Outfit</button>';
+  html+='</div>';
+  if(!items.length){
+    html+='<div class="ep-empty">No outfits added yet — click + Add Outfit to start</div>';
+  } else {
+    // Group by event
+    var byEvent={};
+    var evOrder=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+    items.forEach(function(item,i){
+      var ev=item.event||'Other';
+      if(!byEvent[ev]) byEvent[ev]=[];
+      byEvent[ev].push({item:item,idx:i});
+    });
+    evOrder.forEach(function(ev){
+      if(!byEvent[ev]||!byEvent[ev].length) return;
+      html+='<div style="margin-bottom:14px;">';
+      html+='<div style="font-size:12px;font-weight:700;color:#8B1A6B;padding:4px 0;border-bottom:1.5px solid #e8c8d8;margin-bottom:6px;">'+ev+'</div>';
+      byEvent[ev].forEach(function(entry){
+        var item=entry.item; var idx=entry.idx;
+        var vName=item.vendorName||'';
+        if(!vName&&item.vendorId&&typeof vendors!=='undefined'){
+          var v=vendors.find(function(x){return x.id===item.vendorId;}); vName=v?v.name:'';
+        }
+        var stCol=item.status==='delivered'?'#2E7D32':item.status==='ordered'?'#C45000':'#C62828';
+        var stLabel=item.status==='delivered'?'&#10003; Delivered':item.status==='ordered'?'&#128230; Ordered':'&#9888; Pending';
+        html+='<div class="ep-event-card" style="margin:0 0 8px;">';
+        html+='<div style="padding:10px 14px;">';
+        html+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">';
+        html+='<div style="flex:1;">';
+        html+='<div style="font-size:13px;font-weight:700;">'+item.person+'</div>';
+        if(item.description) html+='<div style="font-size:11px;color:#555;margin-top:2px;">'+item.description+'</div>';
+        html+='<div style="font-size:11px;color:#888;margin-top:2px;">';
+        if(vName) html+=vName+' &nbsp;';
+        if(item.cost) html+='&#8377;'+Number(item.cost).toLocaleString('en-IN');
+        html+='</div></div>';
+        html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">';
+        html+='<span style="font-size:11px;font-weight:700;color:'+stCol+';">'+stLabel+'</span>';
+        html+='<div style="display:flex;gap:4px;">';
+        html+='<button class="ep-add-btn" style="margin:0;padding:3px 8px;font-size:11px;" onclick="epOpenClothesModal('+idx+')">Edit</button>';
+        html+='<button onclick="epDeleteClothes('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:16px;padding:0;">&#215;</button>';
+        html+='</div></div></div>';
+        if(item.images&&item.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">'+epRenderThumbs(item.images)+'</div>';
+        html+='</div></div>';
+      });
+      html+='</div>';
+    });
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+var _epClothesIdx=-1;
+function epOpenClothesModal(idx){
+  _epClothesIdx=idx;
+  var item=idx>=0?(eventPlanner.clothes[idx]||{}):{};
+  document.getElementById('epClothesPerson').value=item.person||'';
+  var evSel=document.getElementById('epClothesEvent');
+  evSel.innerHTML=(typeof WEDDING_EVENTS!=='undefined'?WEDDING_EVENTS:[]).map(function(ev){
+    return '<option value="'+ev+'"'+(item.event===ev?' selected':'')+'>'+ev+'</option>';
+  }).join('');
+  document.getElementById('epClothesDesc').value=item.description||'';
+  document.getElementById('epClothesVendor').innerHTML=epVendorOptions(item.vendorId||'');
+  var mr=document.getElementById('epClothesVendorManual');
+  mr.style.display=(item.vendorId==='__manual__')?'block':'none';
+  document.getElementById('epClothesVendorManualName').value=item.vendorName||'';
+  document.getElementById('epClothesCost').value=item.cost||'';
+  document.getElementById('epClothesStatus').value=item.status||'pending';
+  document.getElementById('epClothesImgPreview').innerHTML=epRenderThumbs(item.images||[]);
+  document.getElementById('epClothesModal').classList.add('show');
+}
+async function epSaveClothes(){
+  var idx=_epClothesIdx;
+  var person=document.getElementById('epClothesPerson').value.trim();
+  if(!person){ alert('Please enter person name'); return; }
+  var vendorId=document.getElementById('epClothesVendor').value;
+  var vendorName='';
+  if(vendorId==='__manual__') vendorName=document.getElementById('epClothesVendorManualName').value.trim();
+  else if(vendorId&&typeof vendors!=='undefined'){ var v=vendors.find(function(x){return x.id===vendorId;}); vendorName=v?v.name:''; }
+  var existing=idx>=0?(eventPlanner.clothes[idx]||{}):{};
+  var imgs=existing.images||[];
+  var fi=document.getElementById('epClothesImgInput');
+  if(fi&&fi.files.length){
+    for(var i=0;i<fi.files.length;i++){
+      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
+      imgs.push(b64);
+    }
+  }
+  var item={
+    id:existing.id||('cl'+Date.now()),
+    person:person,
+    event:document.getElementById('epClothesEvent').value,
+    description:document.getElementById('epClothesDesc').value.trim(),
+    vendorId:vendorId, vendorName:vendorName,
+    cost:Number(document.getElementById('epClothesCost').value)||0,
+    status:document.getElementById('epClothesStatus').value,
+    images:imgs
+  };
+  if(!eventPlanner.clothes) eventPlanner.clothes=[];
+  if(idx>=0) eventPlanner.clothes[idx]=item;
+  else eventPlanner.clothes.push(item);
+  await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  document.getElementById('epClothesModal').classList.remove('show');
+  epRenderClothes();
+}
+function epDeleteClothes(idx){
+  if(!confirm('Delete this outfit?')) return;
+  eventPlanner.clothes.splice(idx,1);
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderClothes();
+}
+window.epOpenClothesModal=epOpenClothesModal;
+window.epSaveClothes=epSaveClothes;
+window.epDeleteClothes=epDeleteClothes;
+
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
   document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
@@ -9197,6 +9320,7 @@ function epShowTab(tab, btn){
   else if(tab==='puja') epRenderPuja();
   else if(tab==='gifts') epRenderGifts();
   else if(tab==='carnival') epRenderCarnival();
+  else if(tab==='clothes') epRenderClothes();
 }
 function epRenderActive(){
   var activeTab = document.querySelector('.ep-tab.active');
@@ -9917,6 +10041,38 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epPujaModal').classList.remove('show')">Cancel</button>
       <button class="ep-btn ep-btn-save" onclick="epSavePuja()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP Clothes Modal -->
+<div class="ep-modal-overlay" id="epClothesModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">&#128087; Outfit Details</div>
+    <div class="ep-field"><label>Person Name</label><input type="text" id="epClothesPerson" placeholder="e.g. Mrishana, Spandan, Mum, Dad..."></div>
+    <div class="ep-field"><label>Function</label><select id="epClothesEvent"></select></div>
+    <div class="ep-field"><label>Outfit Description</label><textarea id="epClothesDesc" placeholder="e.g. Red lehenga with gold border, Size 38, 3 pieces..."></textarea></div>
+    <div class="ep-field"><label>Vendor / Shop (from vendor list)</label>
+      <select id="epClothesVendor" onchange="document.getElementById('epClothesVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
+    </div>
+    <div class="ep-field" id="epClothesVendorManual" style="display:none;">
+      <label>Shop / Vendor name</label><input type="text" id="epClothesVendorManualName" placeholder="e.g. Ritu Kumar, Local tailor...">
+    </div>
+    <div class="ep-field"><label>Cost (&#8377;)</label><input type="number" id="epClothesCost" min="0" placeholder="0"></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epClothesStatus">
+        <option value="pending">&#9888; Pending</option>
+        <option value="ordered">&#128230; Ordered</option>
+        <option value="delivered">&#10003; Delivered</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Upload outfit photo (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epClothesImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epClothesImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epClothesModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveClothes()">Save</button>
     </div>
   </div>
 </div>
@@ -10787,7 +10943,45 @@ function mobRenderEPContent(){
   if(_mobEPTabIdx===2) { epRenderPujaMob(el); return; }
   if(_mobEPTabIdx===3) { epRenderGiftsMob(el); return; }
   if(_mobEPTabIdx===4) { epRenderCarnivalMob(el); return; }
+  if(_mobEPTabIdx===5) { epRenderClothesMob(el); return; }
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
+}
+function epRenderClothesMob(el){
+  var items=eventPlanner.clothes||[];
+  var delivered=items.filter(function(i){return i.status==='delivered';}).length;
+  var html='<div style="padding:8px 14px 4px;">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html+='<div style="font-size:12px;color:#888;">'+delivered+' of '+items.length+' delivered</div>';
+  html+='<button class="ep-add-btn" onclick="epOpenClothesModal(-1)">+ Add</button></div>';
+  if(!items.length){ html+='<div class="mob-empty">No outfits added yet</div>'; }
+  else{
+    var byEvent={};
+    var evOrder=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+    items.forEach(function(item,i){ var ev=item.event||'Other'; if(!byEvent[ev]) byEvent[ev]=[]; byEvent[ev].push({item:item,idx:i}); });
+    evOrder.forEach(function(ev){
+      if(!byEvent[ev]||!byEvent[ev].length) return;
+      html+='<div style="font-size:11px;font-weight:700;color:#8B1A6B;padding:4px 0;border-bottom:1px solid #e8c8d8;margin-bottom:6px;">'+ev+'</div>';
+      byEvent[ev].forEach(function(entry){
+        var item=entry.item; var idx=entry.idx;
+        var stCol=item.status==='delivered'?'#2E7D32':item.status==='ordered'?'#C45000':'#C62828';
+        var stLabel=item.status==='delivered'?'&#10003; Delivered':item.status==='ordered'?'&#128230; Ordered':'&#9888; Pending';
+        html+='<div class="ep-event-card" style="margin:0 0 8px;">';
+        html+='<div style="padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:6px;">';
+        html+='<div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+item.person+'</div>';
+        if(item.description) html+='<div style="font-size:11px;color:#555;margin-top:2px;">'+item.description.substring(0,60)+'</div>';
+        if(item.cost) html+='<div style="font-size:11px;color:#888;">&#8377;'+Number(item.cost).toLocaleString('en-IN')+'</div>';
+        html+='</div>';
+        html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">';
+        html+='<span style="font-size:11px;font-weight:700;color:'+stCol+'">'+stLabel+'</span>';
+        html+='<div style="display:flex;gap:4px;">';
+        html+='<button class="ep-add-btn" style="margin:0;padding:2px 7px;font-size:11px;" onclick="epOpenClothesModal('+idx+')">Edit</button>';
+        html+='<button onclick="epDeleteClothes('+idx+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:15px;padding:0;">&#215;</button>';
+        html+='</div></div></div></div>';
+      });
+    });
+  }
+  html+='</div>';
+  el.innerHTML=html;
 }
 function epRenderCarnivalMob(el){
   var stalls=eventPlanner.carnival.stalls||[];
