@@ -1956,6 +1956,7 @@
     </div>
   </div>
 
+  <div id="epRemindersInMain" style="padding:0 16px 8px;"></div>
   </div><!-- end reminders sec-body -->
 
   <!-- NOTES SECTION HEADER -->
@@ -2437,9 +2438,7 @@
     <div class="ep-panel" id="epPanelGifts"></div>
     <div class="ep-panel" id="epPanelCarnival"></div>
     <div class="ep-panel" id="epPanelClothes"></div>
-    <div class="ep-panel" id="epPanelReminders">
-      <div class="ep-empty">&#128276; Reminders &mdash; coming in next step</div>
-    </div>
+    <div class="ep-panel" id="epPanelReminders"></div>
   </div>
 
 </div><!-- end wrap -->
@@ -3783,7 +3782,7 @@ function toggleSecBody(headerId, bodyId) {
       else if (bodyId === 'timelineSecBody') { renderTimeline ? renderTimeline() : null; }
       else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
       else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
-      else if (bodyId === 'epSecBody') { if(typeof epRenderCatering==='function') epRenderCatering(); }
+      else if (bodyId === 'epSecBody') { if(typeof epRenderCatering==='function') epRenderCatering(); if(typeof epScanReminders==='function'){ var _epR=epScanReminders(); epUpdateEPRemindersInMain&&epUpdateEPRemindersInMain(_epR); } }
     } catch(e) {}
   } else {
     body.classList.add('collapsed');
@@ -9308,6 +9307,186 @@ window.epOpenClothesModal=epOpenClothesModal;
 window.epSaveClothes=epSaveClothes;
 window.epDeleteClothes=epDeleteClothes;
 
+/* EP Reminders Engine - scans all modules and generates reminders */
+function epScanReminders(){
+  var today=new Date(); today.setHours(0,0,0,0);
+  var items=[];
+
+  function daysTo(dateStr){
+    if(!dateStr) return null;
+    var d=new Date(dateStr); d.setHours(0,0,0,0);
+    return Math.round((d-today)/86400000);
+  }
+  function addRem(text,triggerDays,module,status){
+    // triggerDays: days remaining until deadline (negative=overdue)
+    var st=status||(triggerDays<0?'overdue':triggerDays<=7?'soon':'ok');
+    items.push({text:text,daysLeft:triggerDays,status:st,module:module});
+  }
+
+  // Get key event dates
+  var tl=(typeof eventTimeline!=='undefined')?eventTimeline:{};
+  var kankDate=tl['Kankotri']&&tl['Kankotri'].date?new Date(tl['Kankotri'].date):null;
+  if(kankDate) kankDate.setHours(0,0,0,0);
+  var ganeshDate=tl['Ganesh-Grahshanti']&&tl['Ganesh-Grahshanti'].date?new Date(tl['Ganesh-Grahshanti'].date):null;
+  if(ganeshDate) ganeshDate.setHours(0,0,0,0);
+  var firstFunc=null; // first function that is NOT Kankotri
+  var evOrder=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+  for(var k=0;k<evOrder.length;k++){
+    var evk=evOrder[k]; if(evk==='Kankotri') continue;
+    if(tl[evk]&&tl[evk].date){firstFunc=new Date(tl[evk].date);firstFunc.setHours(0,0,0,0);break;}
+  }
+
+  var ep=eventPlanner;
+
+  // MODULE 1: Catering - 60 days before Kankotri
+  if(kankDate){
+    var catDeadline=new Date(kankDate); catDeadline.setDate(catDeadline.getDate()-60);
+    var catDays=Math.round((catDeadline-today)/86400000);
+    if(catDays<=60){
+      var EP_MEALS_IDS=['breakfast','lunch','dinner','latenight'];
+      evOrder.forEach(function(ev){
+        var evData=ep.catering[ev]||{};
+        var pendSlots=EP_MEALS_IDS.filter(function(m){
+          var s=(evData[m]||{}).status;
+          return s!=='confirmed'&&s!=='not-required';
+        });
+        if(pendSlots.length>0) addRem('Catering: '+ev+' — '+pendSlots.length+' meal slot'+(pendSlots.length>1?'s':'')+' unconfirmed',catDays,'catering');
+      });
+    }
+  }
+
+  // MODULE 2: Decor - 60 days before each function
+  evOrder.forEach(function(ev){
+    var d=tl[ev]&&tl[ev].date?new Date(tl[ev].date):null;
+    if(!d) return;
+    d.setHours(0,0,0,0);
+    var deadline=new Date(d); deadline.setDate(deadline.getDate()-60);
+    var days=Math.round((deadline-today)/86400000);
+    if(days<=60){
+      var dec=ep.decor[ev]||{};
+      if(dec.status!=='confirmed') addRem('Decor: '+ev+' not confirmed',days,'decor');
+    }
+  });
+  // Home decor - 3 months before Kankotri
+  if(kankDate){
+    var hdDeadline=new Date(kankDate); hdDeadline.setDate(hdDeadline.getDate()-90);
+    var hdDays=Math.round((hdDeadline-today)/86400000);
+    if(hdDays<=90&&(ep.homeDecor||{}).status!=='confirmed') addRem('Home Decor not finalised (inside + outside)',hdDays,'decor');
+  }
+
+  // MODULE 3: Puja - 2 months before Kankotri
+  if(kankDate){
+    var pujaDeadline=new Date(kankDate); pujaDeadline.setDate(pujaDeadline.getDate()-60);
+    var pujaDays=Math.round((pujaDeadline-today)/86400000);
+    if(pujaDays<=60){
+      var EP_PUJA=['Kankotri','Ganesh-Grahshanti','Marriage'];
+      EP_PUJA.forEach(function(ev){
+        var puja=ep.puja[ev]||{};
+        var pending=(puja.weProvide||[]).filter(function(i){return !i.done;}).length;
+        var pendMh=(puja.maharajBrings||[]).filter(function(i){return !i.done;}).length;
+        if(pending+pendMh>0) addRem('Puja Samagri: '+ev+' — '+(pending+pendMh)+' item'+(pending+pendMh>1?'s':'')+' pending',pujaDays,'puja');
+      });
+    }
+  }
+
+  // MODULE 4: Gifts - 1 month before Ganesh
+  if(ganeshDate){
+    var giftDeadline=new Date(ganeshDate); giftDeadline.setDate(giftDeadline.getDate()-30);
+    var giftDays=Math.round((giftDeadline-today)/86400000);
+    if(giftDays<=30){
+      var EP_GIFTS=['Ganesh-Grahshanti','Mosalu','Marriage'];
+      EP_GIFTS.forEach(function(ev){
+        var gift=ep.gifts[ev]||{};
+        var all=(gift.covers||[]).concat(gift.ladies||[]).concat(gift.akhand||[]);
+        var notGiven=all.filter(function(i){return i.status!=='given';}).length;
+        if(notGiven>0) addRem('Gifts & Covers: '+ev+' — '+notGiven+' item'+(notGiven>1?'s':'')+' not given',giftDays,'gifts');
+      });
+    }
+  }
+
+  // MODULE 5: Carnival - 3 months before Kankotri
+  if(kankDate){
+    var carnDeadline=new Date(kankDate); carnDeadline.setDate(carnDeadline.getDate()-90);
+    var carnDays=Math.round((carnDeadline-today)/86400000);
+    if(carnDays<=90){
+      var stalls=ep.carnival.stalls||[];
+      var notFinal=stalls.filter(function(s){return s.status!=='finalised';}).length;
+      var notProc=stalls.filter(function(s){return !s.procured&&s.weProvide;}).length;
+      if(notFinal>0) addRem('Carnival: '+notFinal+' stall'+(notFinal>1?'s':'')+' not finalised for Mehendi',carnDays,'carnival');
+      if(notProc>0) addRem('Carnival: '+notProc+' stall'+(notProc>1?'s':'')+' — we need to procure items',carnDays,'carnival');
+    }
+  }
+
+  // MODULE 6: Clothes - 30 days before each function
+  evOrder.forEach(function(ev){
+    var d=tl[ev]&&tl[ev].date?new Date(tl[ev].date):null;
+    if(!d) return; d.setHours(0,0,0,0);
+    var deadline=new Date(d); deadline.setDate(deadline.getDate()-30);
+    var days=Math.round((deadline-today)/86400000);
+    if(days<=30){
+      var undelivered=(ep.clothes||[]).filter(function(c){return c.event===ev&&c.status!=='delivered';});
+      if(undelivered.length>0) addRem('Clothes: '+undelivered.length+' outfit'+(undelivered.length>1?'s':'')+' not delivered for '+ev,days,'clothes');
+    }
+  });
+
+  // Sort: overdue first, then soonest first
+  items.sort(function(a,b){
+    if(a.status==='overdue'&&b.status!=='overdue') return -1;
+    if(b.status==='overdue'&&a.status!=='overdue') return 1;
+    return a.daysLeft-b.daysLeft;
+  });
+  return items;
+}
+
+function epRenderReminders(){
+  var el=document.getElementById('epPanelReminders'); if(!el) return;
+  var items=epScanReminders();
+  if(!items.length){
+    el.innerHTML='<div class="ep-empty" style="margin:14px;">&#128994; All on track — no pending Event Planner reminders</div>';
+    epUpdateEPRemindersInMain([]);
+    return;
+  }
+  var html='<div style="padding:8px 14px 4px;">';
+  html+='<div style="font-size:12px;color:#888;margin-bottom:10px;">'+items.length+' reminder'+(items.length>1?'s':'')+' — click any module tab to resolve</div>';
+  items.forEach(function(r){
+    var dot=r.status==='overdue'?'&#128308;':r.status==='soon'?'&#128993;':'&#128994;';
+    var col=r.status==='overdue'?'#C62828':r.status==='soon'?'#C45000':'#2E7D32';
+    var dayTxt=r.daysLeft<0?'Overdue by '+Math.abs(r.daysLeft)+' day'+(Math.abs(r.daysLeft)>1?'s':''):r.daysLeft===0?'Due today!':'Due in '+r.daysLeft+' day'+(r.daysLeft>1?'s':'');
+    html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f5e8e8;">';
+    html+='<span style="font-size:14px;flex-shrink:0;">'+dot+'</span>';
+    html+='<div style="flex:1;"><div style="font-size:12px;font-weight:600;color:'+col+';">'+r.text+'</div>';
+    html+='<div style="font-size:11px;color:#888;margin-top:2px;">'+dayTxt+'</div></div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+  epUpdateEPRemindersInMain(items);
+}
+
+function epUpdateEPRemindersInMain(items){
+  // Inject EP alerts into the existing main Reminders section
+  var container=document.getElementById('epRemindersInMain');
+  if(!container) return;
+  var urgent=items.filter(function(r){return r.status!=='ok';});
+  if(!urgent.length){ container.innerHTML=''; return; }
+  var html='<div style="margin-top:14px;padding-top:12px;border-top:2px dashed #e8c8d8;">';
+  html+='<div style="font-size:11px;font-weight:700;color:#8B1A6B;margin-bottom:8px;">&#127802; Event Planner Alerts</div>';
+  urgent.forEach(function(r){
+    var dot=r.status==='overdue'?'&#128308;':'&#128993;';
+    var col=r.status==='overdue'?'#C62828':'#C45000';
+    var dayTxt=r.daysLeft<0?'Overdue '+Math.abs(r.daysLeft)+'d':'Due in '+r.daysLeft+'d';
+    html+='<div style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid #f5f5f5;">';
+    html+='<span>'+dot+'</span><div>';
+    html+='<div style="font-size:12px;font-weight:600;color:'+col+';">'+r.text+'</div>';
+    html+='<div style="font-size:10px;color:#888;">'+dayTxt+'</div>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  container.innerHTML=html;
+}
+window.epScanReminders=epScanReminders;
+window.epRenderReminders=epRenderReminders;
+
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
   document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
@@ -9321,6 +9500,7 @@ function epShowTab(tab, btn){
   else if(tab==='gifts') epRenderGifts();
   else if(tab==='carnival') epRenderCarnival();
   else if(tab==='clothes') epRenderClothes();
+  else if(tab==='reminders') epRenderReminders();
 }
 function epRenderActive(){
   var activeTab = document.querySelector('.ep-tab.active');
@@ -10944,7 +11124,25 @@ function mobRenderEPContent(){
   if(_mobEPTabIdx===3) { epRenderGiftsMob(el); return; }
   if(_mobEPTabIdx===4) { epRenderCarnivalMob(el); return; }
   if(_mobEPTabIdx===5) { epRenderClothesMob(el); return; }
+  if(_mobEPTabIdx===6) { epRenderRemindersMob(el); return; }
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
+}
+function epRenderRemindersMob(el){
+  if(typeof epScanReminders!=='function'){ el.innerHTML='<div class="mob-empty">Loading...</div>'; return; }
+  var items=epScanReminders();
+  if(!items.length){ el.innerHTML='<div class="mob-empty">&#128994; All on track!</div>'; return; }
+  var html='<div style="padding:8px 14px;">';
+  items.forEach(function(r){
+    var dot=r.status==='overdue'?'&#128308;':r.status==='soon'?'&#128993;':'&#128994;';
+    var col=r.status==='overdue'?'#C62828':r.status==='soon'?'#C45000':'#2E7D32';
+    var dayTxt=r.daysLeft<0?'Overdue '+Math.abs(r.daysLeft)+'d':r.daysLeft===0?'Today!':'In '+r.daysLeft+'d';
+    html+='<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #f5e8e8;">';
+    html+='<span style="font-size:14px;flex-shrink:0;">'+dot+'</span>';
+    html+='<div><div style="font-size:12px;font-weight:600;color:'+col+'">'+r.text+'</div>';
+    html+='<div style="font-size:11px;color:#888;">'+dayTxt+'</div></div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 function epRenderClothesMob(el){
   var items=eventPlanner.clothes||[];
