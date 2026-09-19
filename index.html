@@ -9015,7 +9015,9 @@ window.epTogglePujaItem=epTogglePujaItem;
 window.epDeletePujaItem=epDeletePujaItem;
 
 /* EP Gifts & Covers Module - Ganesh-Grahshanti + Mosalu only */
-var EP_GIFT_EVENTS = ['Ganesh-Grahshanti','Mosalu'];
+var EP_GIFT_EVENTS = ['Ganesh-Grahshanti','Mosalu','Marriage'];
+var EP_GIFT_AKHAND_ONLY = ['Marriage']; // Only Akhand Saubhagya Vati for Marriage
+var EP_GIFT_COVERS_LADIES = ['Ganesh-Grahshanti','Mosalu']; // Covers + Ladies for these
 
 function epRenderGifts(){
   var el=document.getElementById('epPanelGifts'); if(!el) return;
@@ -9029,13 +9031,16 @@ function epRenderGifts(){
     html+='<div class="ep-event-card">';
     html+='<div class="ep-event-head" onclick="epToggleEvent(\'gifts_'+ev+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="gifts_'+ev+'" style="padding:10px 14px;">';
+    var isAkhandOnly=EP_GIFT_AKHAND_ONLY.indexOf(ev)>=0;
     html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl Gift</button>';
+    if(!isAkhandOnly){
+      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
+      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl Gift</button>';
+    }
     html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand Saubhagya Vati</button>';
     html+='</div>';
-    html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
-    html+=epRenderGiftList(ev,'ladies','&#128105; Ladies & Girls Gifts',ladies);
+    if(!isAkhandOnly) html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
+    if(!isAkhandOnly) html+=epRenderGiftList(ev,'ladies','&#128105; Ladies & Girls Gifts',ladies);
     html+=epRenderGiftList(ev,'akhand','&#128367; Akhand Saubhagya Vati',akhand);
     html+='</div></div>';
   });
@@ -10680,12 +10685,16 @@ function epRenderGiftsMob(el){
     html+='<div class="ep-event-card">';
     html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="'+mobId+'"style="padding:10px 14px;">';
+    var isAkhandOnly=EP_GIFT_AKHAND_ONLY.indexOf(ev)>=0;
     html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">';
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady Gift</button>';
+    if(!isAkhandOnly){
+      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
+      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady Gift</button>';
+    }
     html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand</button>';
     html+='</div>';
-    ['covers','ladies','akhand'].forEach(function(type){
+    var showTypes=isAkhandOnly?['akhand']:['covers','ladies','akhand'];
+    showTypes.forEach(function(type){
       var items=gift[type]||[];
       var titles={covers:'Covers',ladies:'Ladies & Girls',akhand:'Akhand Saubhagya Vati'};
       if(!items.length) return;
