@@ -2435,9 +2435,7 @@
     <div class="ep-panel" id="epPanelDecor"></div>
     <div class="ep-panel" id="epPanelPuja"></div>
     <div class="ep-panel" id="epPanelGifts"></div>
-    <div class="ep-panel" id="epPanelCarnival">
-      <div class="ep-empty">&#127914; Carnival &mdash; coming in next step</div>
-    </div>
+    <div class="ep-panel" id="epPanelCarnival"></div>
     <div class="ep-panel" id="epPanelClothes">
       <div class="ep-empty">&#128087; Clothes &mdash; coming in next step</div>
     </div>
@@ -9097,6 +9095,96 @@ window.epUpdateGiftStatus=epUpdateGiftStatus;
 window.epDeleteGiftItem=epDeleteGiftItem;
 window.epRenderGifts=epRenderGifts;
 
+/* EP Carnival Module - Mehendi function only */
+function epRenderCarnival(){
+  var el=document.getElementById('epPanelCarnival'); if(!el) return;
+  var stalls=eventPlanner.carnival.stalls||[];
+  var finalised=stalls.filter(function(s){return s.status==='finalised';}).length;
+  var html='<div style="padding:8px 14px 4px;">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+  html+='<div><div style="font-size:13px;font-weight:700;color:#5C1A2B;">Mehendi Carnival Stalls</div>';
+  html+='<div style="font-size:11px;color:#888;">'+epEventDate('Mehendi')+'</div></div>';
+  html+='<button class="ep-add-btn" onclick="epOpenCarnivalModal(-1)">+ Add Stall</button>';
+  html+='</div>';
+  if(!stalls.length){
+    html+='<div class="ep-empty">No carnival stalls added yet</div>';
+  } else {
+    html+='<div style="font-size:11px;color:#888;margin-bottom:10px;">'+finalised+' of '+stalls.length+' stalls finalised</div>';
+    stalls.forEach(function(s,i){
+      var chip=s.status==='finalised'?'<span class="ep-status ep-s-confirmed">Finalised</span>':'<span class="ep-status ep-s-pending">Pending</span>';
+      var procured=s.procured?'<span style="font-size:11px;color:#2E7D32;">&#10003; Procured</span>':'<span style="font-size:11px;color:#C45000;">&#9888; Not yet procured</span>';
+      html+='<div class="ep-event-card" style="margin:0 0 10px;">';
+      html+='<div style="padding:10px 14px;">';
+      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">';
+      html+='<div style="font-size:13px;font-weight:700;">'+s.name+'</div>';
+      html+='<div style="display:flex;gap:6px;align-items:center;">'+chip;
+      html+='<button class="ep-add-btn" style="margin:0;padding:3px 8px;font-size:11px;" onclick="epOpenCarnivalModal('+i+')">Edit</button>';
+      html+='<button onclick="epDeleteCarnival('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:16px;padding:0;">&#215;</button>';
+      html+='</div></div>';
+      if(s.provides) html+='<div style="font-size:11px;color:#555;margin-bottom:3px;"><strong>Stall provides:</strong> '+s.provides+'</div>';
+      if(s.weProvide) html+='<div style="font-size:11px;color:#555;margin-bottom:3px;"><strong>We provide:</strong> '+s.weProvide+' &nbsp;'+procured+'</div>';
+      if(s.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:3px;">'+s.notes+'</div>';
+      if(s.images&&s.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+epRenderThumbs(s.images)+'</div>';
+      html+='</div></div>';
+    });
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+var _epCarnivalIdx=-1;
+function epOpenCarnivalModal(idx){
+  _epCarnivalIdx=idx;
+  var s=idx>=0?(eventPlanner.carnival.stalls[idx]||{}):{};
+  document.getElementById('epCarnivalName').value=s.name||'';
+  document.getElementById('epCarnivalProvides').value=s.provides||'';
+  document.getElementById('epCarnivalWeProvide').value=s.weProvide||'';
+  document.getElementById('epCarnivalProcured').value=s.procured?'yes':'no';
+  document.getElementById('epCarnivalStatus').value=s.status||'pending';
+  document.getElementById('epCarnivalNotes').value=s.notes||'';
+  document.getElementById('epCarnivalImgPreview').innerHTML=epRenderThumbs(s.images||[]);
+  document.getElementById('epCarnivalModal').classList.add('show');
+}
+async function epSaveCarnival(){
+  var idx=_epCarnivalIdx;
+  var existing=idx>=0?(eventPlanner.carnival.stalls[idx]||{}):{};
+  var imgs=existing.images||[];
+  var fi=document.getElementById('epCarnivalImgInput');
+  if(fi&&fi.files.length){
+    for(var i=0;i<fi.files.length;i++){
+      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
+      imgs.push(b64);
+    }
+  }
+  var s={
+    name:document.getElementById('epCarnivalName').value.trim(),
+    provides:document.getElementById('epCarnivalProvides').value.trim(),
+    weProvide:document.getElementById('epCarnivalWeProvide').value.trim(),
+    procured:document.getElementById('epCarnivalProcured').value==='yes',
+    status:document.getElementById('epCarnivalStatus').value,
+    notes:document.getElementById('epCarnivalNotes').value.trim(),
+    images:imgs
+  };
+  if(!s.name){ alert('Please enter stall name'); return; }
+  if(!eventPlanner.carnival.stalls) eventPlanner.carnival.stalls=[];
+  if(idx>=0) eventPlanner.carnival.stalls[idx]=s;
+  else eventPlanner.carnival.stalls.push(s);
+  await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  document.getElementById('epCarnivalModal').classList.remove('show');
+  epRenderCarnival();
+}
+function epDeleteCarnival(idx){
+  if(!confirm('Delete this stall?')) return;
+  eventPlanner.carnival.stalls.splice(idx,1);
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderCarnival();
+}
+window.epOpenCarnivalModal=epOpenCarnivalModal;
+window.epSaveCarnival=epSaveCarnival;
+window.epDeleteCarnival=epDeleteCarnival;
+
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
   document.querySelectorAll('.ep-tab').forEach(function(t){t.classList.remove('active');});
@@ -9108,6 +9196,7 @@ function epShowTab(tab, btn){
   else if(tab==='decor') epRenderDecor();
   else if(tab==='puja') epRenderPuja();
   else if(tab==='gifts') epRenderGifts();
+  else if(tab==='carnival') epRenderCarnival();
 }
 function epRenderActive(){
   var activeTab = document.querySelector('.ep-tab.active');
@@ -9828,6 +9917,31 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epPujaModal').classList.remove('show')">Cancel</button>
       <button class="ep-btn ep-btn-save" onclick="epSavePuja()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP Carnival Modal -->
+<div class="ep-modal-overlay" id="epCarnivalModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">&#127914; Carnival Stall Details</div>
+    <div class="ep-field"><label>Stall / Vendor Name</label><input type="text" id="epCarnivalName" placeholder="e.g. Mehendi Artist, Balloon Stall, Game Stall..."></div>
+    <div class="ep-field"><label>What this stall provides</label><textarea id="epCarnivalProvides" placeholder="e.g. Mehendi, balloon art, face painting..."></textarea></div>
+    <div class="ep-field"><label>What we need to provide / arrange</label><textarea id="epCarnivalWeProvide" placeholder="e.g. Table, chairs, extension cord, water..."></textarea></div>
+    <div class="ep-field"><label>Have we procured what we need to provide?</label>
+      <select id="epCarnivalProcured"><option value="no">&#9888; Not yet</option><option value="yes">&#10003; Yes, procured</option></select>
+    </div>
+    <div class="ep-field"><label>Stall Status</label>
+      <select id="epCarnivalStatus"><option value="pending">&#9888; Pending</option><option value="finalised">&#10003; Finalised</option></select>
+    </div>
+    <div class="ep-field"><label>Notes</label><textarea id="epCarnivalNotes" placeholder="Any notes, vendor contact, cost..."></textarea></div>
+    <div class="ep-field"><label>Upload photo / reference (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epCarnivalImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epCarnivalImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epCarnivalModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveCarnival()">Save</button>
     </div>
   </div>
 </div>
@@ -10672,7 +10786,31 @@ function mobRenderEPContent(){
   if(_mobEPTabIdx===1 && typeof epRenderDecorMob==='function') { epRenderDecorMob(el); return; }
   if(_mobEPTabIdx===2) { epRenderPujaMob(el); return; }
   if(_mobEPTabIdx===3) { epRenderGiftsMob(el); return; }
+  if(_mobEPTabIdx===4) { epRenderCarnivalMob(el); return; }
   el.innerHTML='<div class="mob-empty">Content coming in next step</div>';
+}
+function epRenderCarnivalMob(el){
+  var stalls=eventPlanner.carnival.stalls||[];
+  var html='<div style="padding:8px 14px 4px;">';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html+='<div style="font-size:13px;font-weight:700;color:#5C1A2B;">Mehendi Carnival Stalls</div>';
+  html+='<button class="ep-add-btn" onclick="epOpenCarnivalModal(-1)">+ Add</button></div>';
+  if(!stalls.length){ html+='<div class="mob-empty">No stalls added yet</div>'; }
+  else stalls.forEach(function(s,i){
+    var chip=s.status==='finalised'?'<span class="ep-status ep-s-confirmed">Finalised</span>':'<span class="ep-status ep-s-pending">Pending</span>';
+    html+='<div class="ep-event-card" style="margin:0 0 8px;">';
+    html+='<div style="padding:10px 12px;">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">';
+    html+='<div style="font-size:13px;font-weight:700;">'+s.name+'</div>';
+    html+='<div style="display:flex;gap:4px;align-items:center;">'+chip;
+    html+='<button class="ep-add-btn" style="margin:0;padding:2px 7px;font-size:11px;" onclick="epOpenCarnivalModal('+i+')">Edit</button>';
+    html+='<button onclick="epDeleteCarnival('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:15px;padding:0;">&#215;</button></div></div>';
+    if(s.provides) html+='<div style="font-size:11px;color:#555;margin-bottom:2px;"><strong>Provides:</strong> '+s.provides+'</div>';
+    if(s.weProvide) html+='<div style="font-size:11px;color:#555;"><strong>We provide:</strong> '+s.weProvide+' '+(s.procured?'&#10003;':'&#9888;')+'</div>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
 }
 function epRenderGiftsMob(el){
   var html='<div style="padding:8px 0 4px;">';
