@@ -2423,14 +2423,17 @@
     </div>
   </div>
   <div class="sec-body collapsed" id="epSecBody">
-    <div class="ep-tabs">
-      <button class="ep-tab active" onclick="epShowTab('catering',this)">&#127869;&#65039; Catering</button>
-      <button class="ep-tab" onclick="epShowTab('decor',this)">&#127800; Decor</button>
-      <button class="ep-tab" onclick="epShowTab('puja',this)">&#128367;&#65039; Puja</button>
-      <button class="ep-tab" onclick="epShowTab('gifts',this)">&#127873; Gifts &amp; Covers</button>
-      <button class="ep-tab" onclick="epShowTab('carnival',this)">&#127914; Carnival</button>
-      <button class="ep-tab" onclick="epShowTab('clothes',this)">&#128087; Clothes</button>
-      <button class="ep-tab" onclick="epShowTab('reminders',this)">&#128276; Reminders</button>
+    <div class="ep-tabs" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="ep-tab active" onclick="epShowTab('catering',this)">&#127869;&#65039; Catering</button>
+        <button class="ep-tab" onclick="epShowTab('decor',this)">&#127800; Decor</button>
+        <button class="ep-tab" onclick="epShowTab('puja',this)">&#128367;&#65039; Puja</button>
+        <button class="ep-tab" onclick="epShowTab('gifts',this)">&#127873; Gifts &amp; Covers</button>
+        <button class="ep-tab" onclick="epShowTab('carnival',this)">&#127914; Carnival</button>
+        <button class="ep-tab" onclick="epShowTab('clothes',this)">&#128087; Clothes</button>
+        <button class="ep-tab" onclick="epShowTab('reminders',this)">&#128276; Reminders</button>
+      </div>
+      <button onclick="epRefreshFromCloud()" style="font-size:11px;padding:5px 10px;border-radius:8px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;white-space:nowrap;" title="Pull latest data from cloud">&#8635; Sync latest</button>
     </div>
     <div class="ep-panel active" id="epPanelCatering"></div>
     <div class="ep-panel" id="epPanelDecor"></div>
@@ -5353,13 +5356,19 @@ async function saveGuests(){
 async function saveReminders(){
   await storageSet('wedding-reminders', JSON.stringify(reminders));
   queueCloudSave();
-  // Sync reminders to Cloudflare KV so cron job can send alerts
+  // Sync to Cloudflare KV — includes timeline + branding + EP so cron can send correct emails
   if(googleUserEmail){
     try{
       await fetch('https://vivaah-auth.rms-d21.workers.dev/save-reminders', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ email: googleUserEmail, reminders })
+        body: JSON.stringify({
+          email:     googleUserEmail,
+          reminders: reminders,
+          timeline:  eventTimeline  || {},
+          branding:  branding       || {},
+          ep:        eventPlanner   || {}
+        })
       });
     } catch(e){ console.log('Reminder KV sync skipped:', e.message); }
   }
@@ -5834,7 +5843,16 @@ async function pushToSheet(){
     brandingLogo:branding.logo||''
   });
   const guestPayload = JSON.stringify(compressGuests(guests));
-  const epPayload    = JSON.stringify(eventPlanner);
+  const epForSync = JSON.parse(JSON.stringify(eventPlanner)); // deep copy
+  // Strip images before syncing to Sheets (too large for 50k cell limit)
+  // Images stay in localStorage only
+  if(epForSync.homeDecor) epForSync.homeDecor.images = [];
+  Object.values(epForSync.catering||{}).forEach(ev => Object.values(ev).forEach(slot => { if(slot) slot.images=[]; }));
+  Object.values(epForSync.decor||{}).forEach(ev => { if(ev) ev.images=[]; });
+  Object.values(epForSync.puja||{}).forEach(ev => { if(ev) ev.listImages=[]; });
+  (epForSync.carnival?.stalls||[]).forEach(s => { s.images=[]; });
+  (epForSync.clothes||[]).forEach(c => { c.images=[]; });
+  const epPayload    = JSON.stringify(epForSync);
   try{
     await sheetsApi(`/${sheetId}/values:batchUpdate`,{
       method:'POST',
@@ -9579,46 +9597,9 @@ function epUpdateEPRemindersInMain(items){
 window.epScanReminders=epScanReminders;
 window.epRenderReminders=epRenderReminders;
 
-// Sync EP reminders into the existing KV-based email reminder system
-// so the cron worker picks them up and sends emails at 7/3/1 days before deadline
+// Sync EP data to KV after EP save — calls saveReminders which includes EP
 async function epSyncRemindersToKV(){
-  if(!googleUserEmail) return;
-  var epItems=epScanReminders();
-  if(!epItems.length) return;
-  // Convert EP reminder items to the same format as existing reminders
-  // Use a special key 'ep' in the reminders object
-  var epRems=epItems.filter(function(r){
-    return r.daysLeft!==null;
-  }).map(function(r){
-    // Calculate the actual deadline date from daysLeft
-    var d=new Date();
-    d.setDate(d.getDate()+r.daysLeft);
-    var dateStr=d.toISOString().split('T')[0];
-    return {
-      id:'ep_'+r.module+'_'+r.text.replace(/[^a-zA-Z0-9]/g,'').substring(0,20),
-      text:r.text,
-      date:dateStr,
-      time:'08:00',
-      done:false,
-      vendorId:'',
-      forPerson:''
-    };
-  });
-  // Merge EP reminders with existing reminders for KV sync
-  var allForKV={
-    trial: reminders.trial||[],
-    clothes: reminders.clothes||[],
-    guest: reminders.guest||[],
-    ep: epRems
-  };
-  try{
-    await fetch('https://vivaah-auth.rms-d21.workers.dev/save-reminders',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:googleUserEmail, reminders:allForKV})
-    });
-    console.log('EP reminders synced to KV for email delivery');
-  } catch(e){ console.log('EP KV sync skipped:',e.message); }
+  if(googleUserEmail) await saveReminders();
 }
 window.epSyncRemindersToKV=epSyncRemindersToKV;
 
@@ -9641,10 +9622,12 @@ window.epShowTabFromReminder=epShowTabFromReminder;
 
 // Refresh mobile EP view after any save
 function epMobRefreshAfterSave(){
-  if(!window._mobActive) return;
-  var el=document.getElementById("mobEPContent");
-  if(!el) return;
-  if(typeof mobRenderEPContent==="function") mobRenderEPContent();
+  if(window._mobActive){
+    var el=document.getElementById("mobEPContent");
+    if(el && typeof mobRenderEPContent==="function") mobRenderEPContent();
+  }
+  // Sync updated EP data to KV so Worker sends correct reminder emails
+  if(typeof saveReminders==='function') setTimeout(saveReminders, 500);
 }
 window.epMobRefreshAfterSave=epMobRefreshAfterSave;
 
@@ -9667,6 +9650,30 @@ function epRenderActive(){
   var activeTab = document.querySelector('.ep-tab.active');
   if(activeTab) activeTab.click();
 }
+async function epRefreshFromCloud(){
+  if(!googleAccessToken||!sheetId){ showToast('Sign in with Google first to sync'); return; }
+  showToast('Syncing EP data from cloud...');
+  try{
+    const cloudData = await pullFromSheet();
+    if(cloudData && cloudData._ep){
+      eventPlanner = {
+        catering:  cloudData._ep.catering  || eventPlanner.catering  || {},
+        decor:     cloudData._ep.decor     || eventPlanner.decor     || {},
+        homeDecor: cloudData._ep.homeDecor || eventPlanner.homeDecor || { inside:'', outside:'', notes:'', images:[], status:'pending' },
+        puja:      cloudData._ep.puja      || eventPlanner.puja      || {},
+        gifts:     cloudData._ep.gifts     || eventPlanner.gifts     || {},
+        carnival:  cloudData._ep.carnival  || eventPlanner.carnival  || { stalls:[] },
+        clothes:   cloudData._ep.clothes   || eventPlanner.clothes   || []
+      };
+      await storageSet('wedding-eventplanner', JSON.stringify(eventPlanner));
+      epRenderActive();
+      showToast('EP data synced from cloud ✅');
+    } else {
+      showToast('No EP data in cloud yet — save something first');
+    }
+  } catch(e){ showToast('Sync failed: '+e.message); }
+}
+window.epRefreshFromCloud=epRefreshFromCloud;
 /* ---------------- Init ---------------- */
 (async ()=>{
   initGoogleAuth();
