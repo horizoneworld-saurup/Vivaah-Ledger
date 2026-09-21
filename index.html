@@ -9268,11 +9268,11 @@ function epRenderGifts(){
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl Gift</button>';
     }
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand Saubhagya Vati</button>';
+    if(isAkhandOnly) html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand Saubhagya Vati</button>';
     html+='</div>';
     if(!isAkhandOnly) html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
     if(!isAkhandOnly) html+=epRenderGiftList(ev,'ladies','&#128105; Ladies & Girls Gifts',ladies);
-    html+=epRenderGiftList(ev,'akhand','&#128367; Akhand Saubhagya Vati',akhand);
+    if(isAkhandOnly) html+=epRenderGiftList(ev,'akhand','&#128367; Akhand Saubhagya Vati',akhand);
     html+='</div></div>';
   });
   html+='</div>';
@@ -11545,9 +11545,9 @@ function epRenderGiftsMob(el){
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady Gift</button>';
     }
-    html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand</button>';
+    if(isAkhandOnly) html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand</button>';
     html+='</div>';
-    var showTypes=isAkhandOnly?['akhand']:['covers','ladies','akhand'];
+    var showTypes=isAkhandOnly?['akhand']:['covers','ladies'];
     showTypes.forEach(function(type){
       var items=gift[type]||[];
       var titles={covers:'Covers',ladies:'Ladies & Girls',akhand:'Akhand Saubhagya Vati'};
