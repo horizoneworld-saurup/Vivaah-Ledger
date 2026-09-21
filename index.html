@@ -8924,6 +8924,8 @@ function epSyncVendorAmounts(){
   if(typeof vendors==='undefined'||!vendors.length) return;
   var totals={};
   var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+
+  // Catering: headcount × cost per person per vendor
   evs.forEach(function(ev){
     var evData=eventPlanner.catering[ev]||{};
     EP_MEALS.forEach(function(m){
@@ -8936,11 +8938,30 @@ function epSyncVendorAmounts(){
       });
     });
   });
-  // Also add clothes costs
+
+  // Decor: quoted amount per function
+  evs.forEach(function(ev){
+    var dec=eventPlanner.decor[ev]||{};
+    if(dec.vendorId&&dec.vendorId!=='__manual__'&&dec.cost>0)
+      totals[dec.vendorId]=(totals[dec.vendorId]||0)+Number(dec.cost||0);
+  });
+  // Home Decor
+  var hd=eventPlanner.homeDecor||{};
+  if(hd.vendorId&&hd.vendorId!=='__manual__'&&hd.cost>0)
+    totals[hd.vendorId]=(totals[hd.vendorId]||0)+Number(hd.cost||0);
+
+  // Carnival stalls
+  (eventPlanner.carnival.stalls||[]).forEach(function(s){
+    if(s.vendorId&&s.vendorId!=='__manual__'&&s.cost>0)
+      totals[s.vendorId]=(totals[s.vendorId]||0)+Number(s.cost||0);
+  });
+
+  // Clothes
   (eventPlanner.clothes||[]).forEach(function(c){
     if(!c.vendorId||c.vendorId==='__manual__'||!c.cost) return;
     totals[c.vendorId]=(totals[c.vendorId]||0)+Number(c.cost||0);
   });
+
   var changed=false;
   Object.keys(totals).forEach(function(vid){
     var v=vendors.find(function(x){return x.id===vid;});
@@ -8957,6 +8978,7 @@ function epSyncVendorAmounts(){
   }
 }
 window.epSyncVendorAmounts=epSyncVendorAmounts;
+window.epShowTab=epShowTab;
 
 /* EP Decor Module */
 function epRenderDecor(){
@@ -9027,6 +9049,7 @@ function epOpenDecorModal(ev){
     var mr=document.getElementById('epDecorVendorManual');
     mr.style.display=(dec.vendorId==='__manual__')?'block':'none';
     document.getElementById('epDecorVendorManualName').value=dec.vendorName||'';
+    if(document.getElementById('epDecorCost')) document.getElementById('epDecorCost').value=dec.cost||'';
   }
   // Home decor fields
   document.getElementById('epDecorHomeRow').style.display=isHome?'block':'none';
@@ -9067,6 +9090,7 @@ async function epSaveDecor(){
   }
   var data={
     vendorId:vendorId, vendorName:vendorName,
+    cost:Number((document.getElementById('epDecorCost')||{}).value)||0,
     theme:document.getElementById('epDecorTheme').value.trim(),
     items:document.getElementById('epDecorItems').value.trim(),
     setupTime:document.getElementById('epDecorSetupTime').value.trim(),
@@ -9085,6 +9109,7 @@ async function epSaveDecor(){
   }
   await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
+  if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
   document.getElementById('epDecorModal').classList.remove('show');
   epRenderDecor();
   epMobRefreshAfterSave();
@@ -9351,6 +9376,7 @@ function epOpenCarnivalModal(idx){
   document.getElementById('epCarnivalProcured').value=s.procured?'yes':'no';
   document.getElementById('epCarnivalStatus').value=s.status||'pending';
   document.getElementById('epCarnivalNotes').value=s.notes||'';
+  if(document.getElementById('epCarnivalCost')) document.getElementById('epCarnivalCost').value=s.cost||'';
   document.getElementById('epCarnivalImgPreview').innerHTML=epRenderThumbs(s.images||[]);
   document.getElementById('epCarnivalModal').classList.add('show');
 }
@@ -9371,6 +9397,7 @@ async function epSaveCarnival(){
     weProvide:document.getElementById('epCarnivalWeProvide').value.trim(),
     procured:document.getElementById('epCarnivalProcured').value==='yes',
     status:document.getElementById('epCarnivalStatus').value,
+    cost:Number((document.getElementById('epCarnivalCost')||{}).value)||0,
     notes:document.getElementById('epCarnivalNotes').value.trim(),
     images:imgs
   };
@@ -9380,6 +9407,7 @@ async function epSaveCarnival(){
   else eventPlanner.carnival.stalls.push(s);
   await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
+  if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
   document.getElementById('epCarnivalModal').classList.remove('show');
   epRenderCarnival();
   epMobRefreshAfterSave();
@@ -9506,6 +9534,7 @@ async function epSaveClothes(){
   else eventPlanner.clothes.push(item);
   await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
+  if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
   document.getElementById('epClothesModal').classList.remove('show');
   epRenderClothes();
   epMobRefreshAfterSave();
@@ -10495,6 +10524,83 @@ function runGlobalSearch(q, gsInput, gsResults){
   </div>
 </div>
 
+<!-- EP Puja Modal -->
+<div class="ep-modal-overlay" id="epPujaModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title" id="epPujaModalTitle">Puja Details</div>
+    <div class="ep-field"><label>Maharaj Name</label><input type="text" id="epPujaMaharajName" placeholder="e.g. Pt. Rameshbhai Sharma"></div>
+    <div class="ep-field"><label>Maharaj Phone</label><input type="tel" id="epPujaMaharajPhone" placeholder="e.g. 9876543210"></div>
+    <div class="ep-field"><label>Samagri List Notes</label><textarea id="epPujaListText" placeholder="General notes about puja requirements, special items needed..."></textarea></div>
+    <div class="ep-field"><label>Upload list photo (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epPujaImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epPujaImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epPujaModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSavePuja()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP Clothes Modal -->
+<div class="ep-modal-overlay" id="epClothesModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">&#128087; Outfit Details</div>
+    <div class="ep-field"><label>Person Name</label><input type="text" id="epClothesPerson" placeholder="e.g. Mrishana, Spandan, Mum, Dad..."></div>
+    <div class="ep-field"><label>Function</label><select id="epClothesEvent"></select></div>
+    <div class="ep-field"><label>Outfit Description</label><textarea id="epClothesDesc" placeholder="e.g. Red lehenga with gold border, Size 38, 3 pieces..."></textarea></div>
+    <div class="ep-field"><label>Vendor / Shop (from vendor list)</label>
+      <select id="epClothesVendor" onchange="document.getElementById('epClothesVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
+    </div>
+    <div class="ep-field" id="epClothesVendorManual" style="display:none;">
+      <label>Shop / Vendor name</label><input type="text" id="epClothesVendorManualName" placeholder="e.g. Ritu Kumar, Local tailor...">
+    </div>
+    <div class="ep-field"><label>Cost (&#8377;)</label><input type="number" id="epClothesCost" min="0" placeholder="0"></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="epClothesStatus">
+        <option value="pending">&#9888; Pending</option>
+        <option value="ordered">&#128230; Ordered</option>
+        <option value="delivered">&#10003; Delivered</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Upload outfit photo (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epClothesImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epClothesImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epClothesModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveClothes()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- EP Carnival Modal -->
+<div class="ep-modal-overlay" id="epCarnivalModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="ep-modal">
+    <div class="ep-modal-title">&#127914; Carnival Stall Details</div>
+    <div class="ep-field"><label>Stall / Vendor Name</label><input type="text" id="epCarnivalName" placeholder="e.g. Mehendi Artist, Balloon Stall, Game Stall..."></div>
+    <div class="ep-field"><label>What this stall provides</label><textarea id="epCarnivalProvides" placeholder="e.g. Mehendi, balloon art, face painting..."></textarea></div>
+    <div class="ep-field"><label>What we need to provide / arrange</label><textarea id="epCarnivalWeProvide" placeholder="e.g. Table, chairs, extension cord, water..."></textarea></div>
+    <div class="ep-field"><label>Have we procured what we need to provide?</label>
+      <select id="epCarnivalProcured"><option value="no">&#9888; Not yet</option><option value="yes">&#10003; Yes, procured</option></select>
+    </div>
+    <div class="ep-field"><label>Stall Status</label>
+      <select id="epCarnivalStatus"><option value="pending">&#9888; Pending</option><option value="finalised">&#10003; Finalised</option></select>
+    </div>
+    <div class="ep-field"><label>Quoted Amount (&#8377;)</label><input type="number" id="epCarnivalCost" min="0" placeholder="0"></div>
+    <div class="ep-field"><label>Notes</label><textarea id="epCarnivalNotes" placeholder="Any notes, vendor contact, cost..."></textarea></div>
+    <div class="ep-field"><label>Upload photo / reference (JPEG)</label>
+      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epCarnivalImgInput" accept="image/*" multiple style="display:none;"></label></div>
+      <div id="epCarnivalImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epCarnivalModal').classList.remove('show')">Cancel</button>
+      <button class="ep-btn ep-btn-save" onclick="epSaveCarnival()">Save</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- EP Decor Modal -->
 <div class="ep-modal-overlay" id="epDecorModal" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="ep-modal">
@@ -10505,7 +10611,9 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-field" id="epDecorVendorManual" style="display:none;">
       <label>Decorator name</label><input type="text" id="epDecorVendorManualName" placeholder="e.g. Shree Decors">
     </div>
-    <div id="epDecorHomeRow" style="display:none;">
+    <div class="ep-field" id="epDecorCostRow"><label>Quoted Amount (&#8377;) — syncs to Vendor Management</label>
+      <input type="number" id="epDecorCost" min="0" placeholder="0">
+    </div>
       <div class="ep-field"><label>Inside decor details</label><textarea id="epDecorInside" placeholder="e.g. Living room flowers, entrance rangoli, prayer area..."></textarea></div>
       <div class="ep-field"><label>Outside decor details</label><textarea id="epDecorOutside" placeholder="e.g. Gate decoration, driveway lights, garden setup..."></textarea></div>
     </div>
@@ -11538,22 +11646,24 @@ function epRenderCateringMob(el){
   var html='<div style="padding:8px 0 4px;">';
   evs.forEach(function(ev){
     var evData=eventPlanner.catering[ev]||{};
-    var conf=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='confirmed';}).length;
-    var notR=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='not-required';}).length;
+    var conf=EP_MEALS.filter(function(m){return epMigrateSlot(evData[m.id]).status==='confirmed';}).length;
+    var notR=EP_MEALS.filter(function(m){return epMigrateSlot(evData[m.id]).status==='not-required';}).length;
     var pend=EP_MEALS.length-conf-notR;
     var chip=conf===EP_MEALS.length?'<span class="ep-status ep-s-confirmed">All confirmed</span>':'<span class="ep-status ep-s-pending">'+pend+' pending</span>';
-    // Use mob_ prefix for IDs to avoid conflict with desktop DOM IDs
     var mobId='mob_cat_'+ev.replace(/[^a-zA-Z0-9]/g,'_');
     html+='<div class="ep-event-card">';
     html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')">';
     html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="'+mobId+'">';
     EP_MEALS.forEach(function(m){
-      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m.id]):{vendors:[],headcount:0,status:'pending'};
+      var slot=epMigrateSlot(evData[m.id]);
       var vCount=slot.vendors.length;
-      var total=typeof epSlotTotal==='function'?epSlotTotal(slot):0;
-      var det=vCount===0?'Not set':vCount+' caterer'+(vCount>1?'s':'')+' &middot; '+(slot.headcount||0)+' people';
-      if(total>0) det+=' &middot; Total: '+epFmt(total);
+      var total=epSlotTotal(slot);
+      var det=vCount===0?'Not set':vCount+' caterer'+(vCount>1?'s':'')+' \xb7 '+(slot.headcount||0)+' people';
+      if(total>0) det+=' \xb7 Total: '+epFmt(total);
+      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ev+'\',\''+m.id+'\')">';
+      html+='<span class="ep-meal-icon">'+EP_MEAL_ICONS[m.id]+'</span>';
+      html+='<div class="ep-meal-info"><div class="ep-meal-name">'+m.name+'</div><div class="ep-meal-detail">'+det+'</div></div>';
       html+=epStatusBadge(slot.status||'pending')+'</div>';
     });
     html+='</div></div>';
