@@ -9761,6 +9761,7 @@ function epShowTab(tab, btn){
   else if(tab==='clothes') epRenderClothes();
   else if(tab==='reminders') epRenderReminders();
 }
+window.epShowTab=epShowTab;
 function epRenderActive(){
   var activeTab = document.querySelector('.ep-tab.active');
   if(activeTab) activeTab.click();
