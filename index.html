@@ -8693,7 +8693,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   },300);
 };
 
-/* EP Catering Module */
+/* EP Catering Module - v2 multi-vendor */
 var EP_MEALS = [
   {id:'breakfast', name:'Breakfast + Morning Tea/Coffee'},
   {id:'lunch',     name:'Lunch'},
@@ -8735,25 +8735,41 @@ function epVendorOptions(sel){
 }
 function epRenderThumbs(imgs){
   if(!imgs||!imgs.length) return '';
-  return imgs.map(function(src){return '<img src="'+src+'" class="ep-img-thumb" onclick="window.open(this.src,\'_blank\')">';}).join('');
+  return imgs.map(function(src){return '<img src="'+src+'" class="ep-img-thumb" onclick="window.open(this.src,\'_blank\')">'}).join('');
 }
 function epToggleEvent(id){
-  var el=document.getElementById(id);
-  if(!el) return;
-  el.style.display = (el.style.display==='block') ? 'none' : 'block';
+  var el=document.getElementById(id); if(!el) return;
+  el.style.display=(el.style.display==='block')?'none':'block';
 }
 function epMobToggle(id){
-  var el=document.getElementById(id);
-  if(!el) return;
+  var el=document.getElementById(id); if(!el) return;
   var cur=el.style.display;
   if(cur===''||cur==='none') el.style.display='block';
   else el.style.display='none';
 }
-window.epMobToggle = epMobToggle;
+window.epMobToggle=epMobToggle;
+
+// Migrate old single-vendor slot to new multi-vendor format
+function epMigrateSlot(slot){
+  if(!slot) return {headcount:0,status:'pending',vendors:[]};
+  if(slot.vendors) return slot; // already new format
+  var v=[];
+  if(slot.vendorId||slot.vendorName||slot.costPerPerson){
+    v.push({vendorId:slot.vendorId||'',vendorName:slot.vendorName||'',menu:slot.menu||'',costPerPerson:slot.costPerPerson||0,images:slot.images||[]});
+  }
+  return {headcount:slot.headcount||0,status:slot.status||'pending',vendors:v};
+}
+function epSlotTotal(slot,headcount){
+  var h=headcount||slot.headcount||0;
+  return (slot.vendors||[]).reduce(function(t,v){return t+(Number(v.costPerPerson||0)*h);},0);
+}
+
 function epCalcMealTotal(){
   var h=Number(document.getElementById('epMealHeadcount').value)||0;
-  var c=Number(document.getElementById('epMealCostPP').value)||0;
-  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(h*c)+(h&&c?' ('+h+' x '+epFmt(c)+')':'');
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  var total=epSlotTotal(slot,h);
+  var vCount=slot.vendors.length;
+  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(total)+(vCount?'  ('+vCount+' caterer'+(vCount>1?'s':'')+' × '+h+' people)':'  ('+h+' people)');
 }
 function epUpdateBadges(){
   var p=0,c=0;
@@ -8761,7 +8777,7 @@ function epUpdateBadges(){
   evs.forEach(function(ev){
     var d=eventPlanner.catering[ev]||{};
     EP_MEALS.forEach(function(m){
-      var s=(d[m.id]||{}).status||'pending';
+      var s=epMigrateSlot(d[m.id]).status||'pending';
       if(s==='confirmed') c++; else if(s!=='not-required') p++;
     });
   });
@@ -8775,25 +8791,23 @@ function epRenderCatering(){
   var html='<div style="padding:8px 0 4px;">';
   evs.forEach(function(ev){
     var evData=eventPlanner.catering[ev]||{};
-    var conf=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='confirmed';}).length;
-    var notR=EP_MEALS.filter(function(m){return (evData[m.id]||{}).status==='not-required';}).length;
+    var conf=EP_MEALS.filter(function(m){return epMigrateSlot(evData[m.id]).status==='confirmed';}).length;
+    var notR=EP_MEALS.filter(function(m){return epMigrateSlot(evData[m.id]).status==='not-required';}).length;
     var pend=EP_MEALS.length-conf-notR;
     var chip=conf===EP_MEALS.length?'<span class="ep-status ep-s-confirmed">All confirmed</span>':'<span class="ep-status ep-s-pending">'+pend+' pending</span>';
     html+='<div class="ep-event-card">';
-    html+='<div class="ep-event-head" onclick="epToggleEvent(\'cat_'+ev+'\')">';
-    html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
+    html+='<div class="ep-event-head" onclick="epToggleEvent(\'cat_'+ev+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="cat_'+ev+'">';
     EP_MEALS.forEach(function(m){
-      var slot=evData[m.id]||{};
-      var catName=slot.vendorName||(slot.vendorId&&slot.vendorId!=='__manual__'?(function(){var v=typeof vendors!=='undefined'&&vendors.find(function(x){return x.id===slot.vendorId;});return v?v.name:'';}()):'');
-      var det=catName?catName:'Not set';
-      if(slot.headcount) det+=' &middot; '+slot.headcount+' people';
-      if(slot.costPerPerson) det+=' &middot; '+epFmt(slot.costPerPerson)+'/head &rarr; Total: '+epFmt((slot.headcount||0)*(slot.costPerPerson||0));
-      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ev+'\',\''+m.id+'\')">';
+      var slot=epMigrateSlot(evData[m.id]);
+      var vCount=slot.vendors.length;
+      var total=epSlotTotal(slot);
+      var det=vCount===0?'Not set':vCount+' caterer'+(vCount>1?'s':'')+' &middot; '+slot.headcount+' people';
+      if(total>0) det+=' &middot; Total: '+epFmt(total);
+      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ ev+'\',\''+m.id+'\')">';
       html+='<span class="ep-meal-icon">'+EP_MEAL_ICONS[m.id]+'</span>';
       html+='<div class="ep-meal-info"><div class="ep-meal-name">'+m.name+'</div><div class="ep-meal-detail">'+det+'</div></div>';
       html+=epStatusBadge(slot.status||'pending')+'</div>';
-      if(slot.images&&slot.images.length) html+='<div style="padding:4px 14px 6px;display:flex;flex-wrap:wrap;gap:4px;">'+epRenderThumbs(slot.images)+'</div>';
     });
     html+='</div></div>';
   });
@@ -8804,53 +8818,145 @@ function epRenderCatering(){
 var _epMealEv='',_epMealId='';
 function epOpenMealModal(ev,mealId){
   _epMealEv=ev; _epMealId=mealId;
-  var slot=(eventPlanner.catering[ev]||{})[mealId]||{};
-  var autoCount=epGuestCountForEvent(ev);
-  document.getElementById('epMealModalTitle').textContent=ev+' - '+mealId;
-  document.getElementById('epMealVendor').innerHTML=epVendorOptions(slot.vendorId||'');
-  var mr=document.getElementById('epMealVendorManual');
-  mr.style.display=(slot.vendorId==='__manual__')?'block':'none';
-  document.getElementById('epMealVendorManualName').value=slot.vendorName||'';
-  document.getElementById('epMealHeadcount').value=slot.headcount!==undefined?slot.headcount:autoCount;
-  document.getElementById('epMealMenu').value=slot.menu||'';
-  document.getElementById('epMealCostPP').value=slot.costPerPerson||'';
+  var slot=epMigrateSlot((eventPlanner.catering[ev]||{})[mealId]);
+  var mealObj=EP_MEALS.find(function(m){return m.id===mealId;});
+  document.getElementById('epMealModalTitle').textContent=ev+' \u2014 '+(mealObj?mealObj.name:mealId);
+  document.getElementById('epMealHeadcount').value=slot.headcount||epGuestCountForEvent(ev);
   document.getElementById('epMealStatus').value=slot.status||'pending';
-  document.getElementById('epMealImgPreview').innerHTML=epRenderThumbs(slot.images||[]);
+  epRenderMealVendorList();
   epCalcMealTotal();
+  document.getElementById('epMealVendorForm').style.display='none';
   document.getElementById('epMealModal').classList.add('show');
+}
+function epRenderMealVendorList(){
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  var el=document.getElementById('epMealVendorsList'); if(!el) return;
+  if(!slot.vendors.length){
+    el.innerHTML='<div style="font-size:12px;color:#aaa;padding:6px 0;">No caterers added yet</div>';
+    return;
+  }
+  var h=Number(document.getElementById('epMealHeadcount').value)||slot.headcount||0;
+  var html='';
+  slot.vendors.forEach(function(v,i){
+    var vName=v.vendorName||(v.vendorId&&v.vendorId!=='__manual__'&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===v.vendorId;});return vx?vx.name:'';}()):'');
+    var lineTotal=Number(v.costPerPerson||0)*h;
+    html+='<div style="background:#fff8f0;border:1px solid #e8c8d8;border-radius:8px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;">';
+    html+='<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#5C1A2B;">'+vName+'</div>';
+    if(v.menu) html+='<div style="font-size:11px;color:#666;margin-top:2px;">'+v.menu+'</div>';
+    html+='<div style="font-size:11px;color:#8B1A6B;margin-top:2px;">&#8377;'+Number(v.costPerPerson||0)+'/person \u2192 '+epFmt(lineTotal)+'</div></div>';
+    html+='<div style="display:flex;gap:4px;">';
+    html+='<button onclick="epEditMealVendor('+i+')" style="font-size:11px;padding:3px 8px;border-radius:6px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;">Edit</button>';
+    html+='<button onclick="epRemoveMealVendor('+i+')" style="font-size:11px;padding:3px 8px;border-radius:6px;background:#fee;border:1px solid #fcc;color:#C62828;cursor:pointer;">\u00d7</button>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+}
+var _epEditVendorIdx=-1;
+function epShowAddCatererForm(){
+  _epEditVendorIdx=-1;
+  document.getElementById('epMealVendor').innerHTML=epVendorOptions('');
+  document.getElementById('epMealVendorManual').style.display='none';
+  document.getElementById('epMealVendorManualName').value='';
+  document.getElementById('epMealMenu').value='';
+  document.getElementById('epMealCostPP').value='';
+  document.getElementById('epMealVendorForm').style.display='block';
+}
+function epEditMealVendor(idx){
+  _epEditVendorIdx=idx;
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  var v=slot.vendors[idx]||{};
+  document.getElementById('epMealVendor').innerHTML=epVendorOptions(v.vendorId||'');
+  document.getElementById('epMealVendorManual').style.display=(v.vendorId==='__manual__')?'block':'none';
+  document.getElementById('epMealVendorManualName').value=v.vendorName||'';
+  document.getElementById('epMealMenu').value=v.menu||'';
+  document.getElementById('epMealCostPP').value=v.costPerPerson||'';
+  document.getElementById('epMealVendorForm').style.display='block';
+}
+function epRemoveMealVendor(idx){
+  if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  slot.vendors.splice(idx,1);
+  eventPlanner.catering[_epMealEv][_epMealId]=slot;
+  epRenderMealVendorList();
+  epCalcMealTotal();
+}
+function epConfirmMealVendor(){
+  var vendorId=document.getElementById('epMealVendor').value;
+  var vendorName='';
+  if(vendorId==='__manual__') vendorName=document.getElementById('epMealVendorManualName').value.trim();
+  else if(vendorId&&typeof vendors!=='undefined'){var vx=vendors.find(function(x){return x.id===vendorId;});vendorName=vx?vx.name:'';}
+  if(!vendorId&&!vendorName){alert('Please select or enter a caterer');return;}
+  if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  var entry={vendorId:vendorId,vendorName:vendorName,menu:document.getElementById('epMealMenu').value.trim(),costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,images:[]};
+  if(_epEditVendorIdx>=0) slot.vendors[_epEditVendorIdx]=entry;
+  else slot.vendors.push(entry);
+  eventPlanner.catering[_epMealEv][_epMealId]=slot;
+  document.getElementById('epMealVendorForm').style.display='none';
+  epRenderMealVendorList();
+  epCalcMealTotal();
 }
 async function epSaveMeal(){
   if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
-  var vendorId=document.getElementById('epMealVendor').value;
-  var vendorName='';
-  if(vendorId==='__manual__'){
-    vendorName=document.getElementById('epMealVendorManualName').value.trim();
-  } else if(vendorId&&typeof vendors!=='undefined'){
-    var v=vendors.find(function(x){return x.id===vendorId;}); vendorName=v?v.name:'';
-  }
-  var existing=(eventPlanner.catering[_epMealEv]||{})[_epMealId]||{};
-  var imgs=existing.images||[];
-  var fi=document.getElementById('epMealImgInput');
-  if(fi&&fi.files.length){
-    for(var i=0;i<fi.files.length;i++){
-      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
-      imgs.push(b64);
-    }
-  }
-  eventPlanner.catering[_epMealEv][_epMealId]={
-    vendorId:vendorId,vendorName:vendorName,
-    headcount:Number(document.getElementById('epMealHeadcount').value)||0,
-    menu:document.getElementById('epMealMenu').value.trim(),
-    costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,
-    status:document.getElementById('epMealStatus').value,
-    images:imgs
-  };
+  var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
+  slot.headcount=Number(document.getElementById('epMealHeadcount').value)||0;
+  slot.status=document.getElementById('epMealStatus').value;
+  eventPlanner.catering[_epMealEv][_epMealId]=slot;
+  epSyncVendorAmounts();
   await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
   document.getElementById('epMealModal').classList.remove('show');
   epRenderCatering();
   epMobRefreshAfterSave();
 }
+window.epShowAddCatererForm=epShowAddCatererForm;
+window.epEditMealVendor=epEditMealVendor;
+window.epRemoveMealVendor=epRemoveMealVendor;
+window.epConfirmMealVendor=epConfirmMealVendor;
+window.epSaveMeal=epSaveMeal;
+window.epCalcMealTotal=epCalcMealTotal;
+window.epOpenMealModal=epOpenMealModal;
+window.epMobToggle=epMobToggle;
+window.epToggleEvent=epToggleEvent;
+
+// Sync EP catering totals to Vendor Management quoted amounts + Budget
+function epSyncVendorAmounts(){
+  if(typeof vendors==='undefined'||!vendors.length) return;
+  var totals={};
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+  evs.forEach(function(ev){
+    var evData=eventPlanner.catering[ev]||{};
+    EP_MEALS.forEach(function(m){
+      var slot=epMigrateSlot(evData[m.id]);
+      var h=Number(slot.headcount||0);
+      (slot.vendors||[]).forEach(function(v){
+        if(!v.vendorId||v.vendorId==='__manual__') return;
+        var t=Number(v.costPerPerson||0)*h;
+        if(t>0) totals[v.vendorId]=(totals[v.vendorId]||0)+t;
+      });
+    });
+  });
+  // Also add clothes costs
+  (eventPlanner.clothes||[]).forEach(function(c){
+    if(!c.vendorId||c.vendorId==='__manual__'||!c.cost) return;
+    totals[c.vendorId]=(totals[c.vendorId]||0)+Number(c.cost||0);
+  });
+  var changed=false;
+  Object.keys(totals).forEach(function(vid){
+    var v=vendors.find(function(x){return x.id===vid;});
+    if(v&&String(v.quoted)!==String(totals[vid])){
+      v.quoted=String(totals[vid]);
+      changed=true;
+    }
+  });
+  if(changed){
+    storageSet('wedding-vendors',JSON.stringify(vendors));
+    if(typeof queueCloudSave==='function') queueCloudSave();
+    if(typeof render==='function') render();
+    showToast('Vendor amounts updated \u2705');
+  }
+}
+window.epSyncVendorAmounts=epSyncVendorAmounts;
 
 /* EP Decor Module */
 function epRenderDecor(){
@@ -10339,113 +10445,52 @@ function runGlobalSearch(q, gsInput, gsResults){
 
 <!-- EP Meal Modal -->
 <div class="ep-modal-overlay" id="epMealModal" onclick="if(event.target===this)this.classList.remove('show')">
-  <div class="ep-modal">
+  <div class="ep-modal" style="max-width:500px;">
     <div class="ep-modal-title" id="epMealModalTitle">Meal Details</div>
-    <div class="ep-field"><label>Caterer / Cook</label>
-      <select id="epMealVendor" onchange="document.getElementById('epMealVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
-    </div>
-    <div class="ep-field" id="epMealVendorManual" style="display:none;">
-      <label>Caterer name</label><input type="text" id="epMealVendorManualName" placeholder="e.g. Ramesh Catering">
-    </div>
-    <div class="ep-field"><label>Headcount <small style="color:#aaa;">(auto-filled from guest list, edit as needed)</small></label>
+    <div class="ep-field">
+      <label>Headcount <small style="color:#aaa;">(auto-filled from guest list)</small></label>
       <input type="number" id="epMealHeadcount" min="0" oninput="epCalcMealTotal()">
     </div>
-    <div class="ep-field"><label>Cost per person (&#8377;)</label>
-      <input type="number" id="epMealCostPP" min="0" placeholder="0" oninput="epCalcMealTotal()">
+    <!-- Caterers list -->
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <label style="font-size:11px;font-weight:600;color:#666;margin:0;">Caterers for this meal</label>
+        <button onclick="epShowAddCatererForm()" class="ep-add-btn" style="margin:0;padding:4px 12px;">+ Add Caterer</button>
+      </div>
+      <div id="epMealVendorsList"></div>
+    </div>
+    <!-- Add/Edit caterer form - hidden by default -->
+    <div id="epMealVendorForm" style="display:none;background:#fff8f0;border:1.5px solid #e8c8d8;border-radius:10px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:12px;font-weight:700;color:#8B1A6B;margin-bottom:8px;">Caterer Details</div>
+      <div class="ep-field"><label>Select from vendor list</label>
+        <select id="epMealVendor" onchange="document.getElementById('epMealVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
+      </div>
+      <div class="ep-field" id="epMealVendorManual" style="display:none;">
+        <label>Caterer name</label>
+        <input type="text" id="epMealVendorManualName" placeholder="e.g. Ramesh Catering">
+      </div>
+      <div class="ep-field"><label>Menu items for this caterer</label>
+        <textarea id="epMealMenu" placeholder="e.g. Dal, Rice, 3 Sabzi, Roti, Papad..."></textarea>
+      </div>
+      <div class="ep-field"><label>Cost per person (&#8377;)</label>
+        <input type="number" id="epMealCostPP" min="0" placeholder="0" oninput="epCalcMealTotal()">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epMealVendorForm').style.display='none'" style="flex:1;">Cancel</button>
+        <button class="ep-btn ep-btn-save" onclick="epConfirmMealVendor()" style="flex:1;">Add to List</button>
+      </div>
     </div>
     <div class="ep-total-box" id="epMealTotalBox">Total: &#8377;0</div>
-    <div class="ep-field"><label>Menu items</label>
-      <textarea id="epMealMenu" placeholder="e.g. Dal, Rice, 3 Sabzi, Roti, Sweet, Papad, Pickle..."></textarea>
-    </div>
-    <div class="ep-field"><label>Status</label>
+    <div class="ep-field"><label>Overall Slot Status</label>
       <select id="epMealStatus">
         <option value="pending">Pending</option>
         <option value="confirmed">Confirmed</option>
         <option value="not-required">Not Required</option>
       </select>
     </div>
-    <div class="ep-field"><label>Upload menu photo (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epMealImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epMealImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
-    </div>
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epMealModal').classList.remove('show')">Cancel</button>
       <button class="ep-btn ep-btn-save" onclick="epSaveMeal()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- EP Puja Modal -->
-<div class="ep-modal-overlay" id="epPujaModal" onclick="if(event.target===this)this.classList.remove('show')">
-  <div class="ep-modal">
-    <div class="ep-modal-title" id="epPujaModalTitle">Puja Details</div>
-    <div class="ep-field"><label>Maharaj Name</label><input type="text" id="epPujaMaharajName" placeholder="e.g. Pt. Rameshbhai Sharma"></div>
-    <div class="ep-field"><label>Maharaj Phone</label><input type="tel" id="epPujaMaharajPhone" placeholder="e.g. 9876543210"></div>
-    <div class="ep-field"><label>Samagri List Notes</label><textarea id="epPujaListText" placeholder="General notes about puja requirements, special items needed..."></textarea></div>
-    <div class="ep-field"><label>Upload list photo (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epPujaImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epPujaImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
-    </div>
-    <div class="ep-modal-actions">
-      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epPujaModal').classList.remove('show')">Cancel</button>
-      <button class="ep-btn ep-btn-save" onclick="epSavePuja()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- EP Clothes Modal -->
-<div class="ep-modal-overlay" id="epClothesModal" onclick="if(event.target===this)this.classList.remove('show')">
-  <div class="ep-modal">
-    <div class="ep-modal-title">&#128087; Outfit Details</div>
-    <div class="ep-field"><label>Person Name</label><input type="text" id="epClothesPerson" placeholder="e.g. Mrishana, Spandan, Mum, Dad..."></div>
-    <div class="ep-field"><label>Function</label><select id="epClothesEvent"></select></div>
-    <div class="ep-field"><label>Outfit Description</label><textarea id="epClothesDesc" placeholder="e.g. Red lehenga with gold border, Size 38, 3 pieces..."></textarea></div>
-    <div class="ep-field"><label>Vendor / Shop (from vendor list)</label>
-      <select id="epClothesVendor" onchange="document.getElementById('epClothesVendorManual').style.display=this.value==='__manual__'?'block':'none'"></select>
-    </div>
-    <div class="ep-field" id="epClothesVendorManual" style="display:none;">
-      <label>Shop / Vendor name</label><input type="text" id="epClothesVendorManualName" placeholder="e.g. Ritu Kumar, Local tailor...">
-    </div>
-    <div class="ep-field"><label>Cost (&#8377;)</label><input type="number" id="epClothesCost" min="0" placeholder="0"></div>
-    <div class="ep-field"><label>Status</label>
-      <select id="epClothesStatus">
-        <option value="pending">&#9888; Pending</option>
-        <option value="ordered">&#128230; Ordered</option>
-        <option value="delivered">&#10003; Delivered</option>
-      </select>
-    </div>
-    <div class="ep-field"><label>Upload outfit photo (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epClothesImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epClothesImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
-    </div>
-    <div class="ep-modal-actions">
-      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epClothesModal').classList.remove('show')">Cancel</button>
-      <button class="ep-btn ep-btn-save" onclick="epSaveClothes()">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- EP Carnival Modal -->
-<div class="ep-modal-overlay" id="epCarnivalModal" onclick="if(event.target===this)this.classList.remove('show')">
-  <div class="ep-modal">
-    <div class="ep-modal-title">&#127914; Carnival Stall Details</div>
-    <div class="ep-field"><label>Stall / Vendor Name</label><input type="text" id="epCarnivalName" placeholder="e.g. Mehendi Artist, Balloon Stall, Game Stall..."></div>
-    <div class="ep-field"><label>What this stall provides</label><textarea id="epCarnivalProvides" placeholder="e.g. Mehendi, balloon art, face painting..."></textarea></div>
-    <div class="ep-field"><label>What we need to provide / arrange</label><textarea id="epCarnivalWeProvide" placeholder="e.g. Table, chairs, extension cord, water..."></textarea></div>
-    <div class="ep-field"><label>Have we procured what we need to provide?</label>
-      <select id="epCarnivalProcured"><option value="no">&#9888; Not yet</option><option value="yes">&#10003; Yes, procured</option></select>
-    </div>
-    <div class="ep-field"><label>Stall Status</label>
-      <select id="epCarnivalStatus"><option value="pending">&#9888; Pending</option><option value="finalised">&#10003; Finalised</option></select>
-    </div>
-    <div class="ep-field"><label>Notes</label><textarea id="epCarnivalNotes" placeholder="Any notes, vendor contact, cost..."></textarea></div>
-    <div class="ep-field"><label>Upload photo / reference (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epCarnivalImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epCarnivalImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
-    </div>
-    <div class="ep-modal-actions">
-      <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epCarnivalModal').classList.remove('show')">Cancel</button>
-      <button class="ep-btn ep-btn-save" onclick="epSaveCarnival()">Save</button>
     </div>
   </div>
 </div>
@@ -11504,14 +11549,11 @@ function epRenderCateringMob(el){
     html+='<div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+' &middot; '+epGuestCountForEvent(ev)+' guests</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="'+mobId+'">';
     EP_MEALS.forEach(function(m){
-      var slot=evData[m.id]||{};
-      var catName=slot.vendorName||(slot.vendorId&&slot.vendorId!=='__manual__'?(function(){var v=typeof vendors!=='undefined'&&vendors.find(function(x){return x.id===slot.vendorId;});return v?v.name:'';}()):'');
-      var det=catName?catName:'Not set';
-      if(slot.headcount) det+=' &middot; '+slot.headcount+' people';
-      if(slot.costPerPerson) det+=' &middot; '+epFmt(slot.costPerPerson)+'/head';
-      html+='<div class="ep-meal-row" onclick="epOpenMealModal(\''+ev+'\',\''+m.id+'\')">';
-      html+='<span class="ep-meal-icon">'+EP_MEAL_ICONS[m.id]+'</span>';
-      html+='<div class="ep-meal-info"><div class="ep-meal-name">'+m.name+'</div><div class="ep-meal-detail">'+det+'</div></div>';
+      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m.id]):{vendors:[],headcount:0,status:'pending'};
+      var vCount=slot.vendors.length;
+      var total=typeof epSlotTotal==='function'?epSlotTotal(slot):0;
+      var det=vCount===0?'Not set':vCount+' caterer'+(vCount>1?'s':'')+' &middot; '+(slot.headcount||0)+' people';
+      if(total>0) det+=' &middot; Total: '+epFmt(total);
       html+=epStatusBadge(slot.status||'pending')+'</div>';
     });
     html+='</div></div>';
