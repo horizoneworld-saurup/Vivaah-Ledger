@@ -9247,8 +9247,7 @@ window.epDeletePujaItem=epDeletePujaItem;
 
 /* EP Gifts & Covers Module - Ganesh-Grahshanti + Mosalu only */
 var EP_GIFT_EVENTS = ['Ganesh-Grahshanti','Mosalu','Marriage'];
-var EP_GIFT_AKHAND_ONLY = ['Marriage']; // Only Akhand Saubhagya Vati for Marriage
-var EP_GIFT_COVERS_LADIES = ['Ganesh-Grahshanti','Mosalu']; // Covers + Ladies for these
+var EP_GIFT_AKHAND_ONLY = ['Marriage'];
 
 function epRenderGifts(){
   var el=document.getElementById('epPanelGifts'); if(!el) return;
@@ -9256,22 +9255,25 @@ function epRenderGifts(){
   EP_GIFT_EVENTS.forEach(function(ev){
     var gift=eventPlanner.gifts[ev]||{covers:[],ladies:[],akhand:[]};
     var covers=gift.covers||[]; var ladies=gift.ladies||[]; var akhand=gift.akhand||[];
+    var isAkhandOnly=EP_GIFT_AKHAND_ONLY.indexOf(ev)>=0;
     var allItems=covers.concat(ladies).concat(akhand);
     var pending=allItems.filter(function(i){return i.status!=='given';}).length;
     var chip=allItems.length===0?'<span class="ep-status ep-s-pending">Add items</span>':pending===0?'<span class="ep-status ep-s-confirmed">All given</span>':'<span class="ep-status ep-s-pending">'+pending+' pending</span>';
     html+='<div class="ep-event-card">';
     html+='<div class="ep-event-head" onclick="epToggleEvent(\'gifts_'+ev+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="gifts_'+ev+'" style="padding:10px 14px;">';
-    var isAkhandOnly=EP_GIFT_AKHAND_ONLY.indexOf(ev)>=0;
     html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
     if(!isAkhandOnly){
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
-      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl Gift</button>';
+      html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl</button>';
+      html+='<button class="ep-add-btn" style="background:#f0e8f8;border-color:#c8a0d8;" onclick="epImportLadies(\''+ev+'\')">&#128100; Import from Guest List</button>';
     }
     if(isAkhandOnly) html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand Saubhagya Vati</button>';
     html+='</div>';
-    if(!isAkhandOnly) html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
-    if(!isAkhandOnly) html+=epRenderGiftList(ev,'ladies','&#128105; Ladies & Girls Gifts',ladies);
+    if(!isAkhandOnly){
+      html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
+      html+=epRenderGiftListLadies(ev,ladies);
+    }
     if(isAkhandOnly) html+=epRenderGiftList(ev,'akhand','&#128367; Akhand Saubhagya Vati',akhand);
     html+='</div></div>';
   });
@@ -9279,13 +9281,56 @@ function epRenderGifts(){
   el.innerHTML=html;
 }
 
+function epRenderGiftListLadies(ev,items){
+  var total=items.length;
+  var given=items.filter(function(i){return i.status==='given';}).length;
+  var prepared=items.filter(function(i){return i.status==='prepared';}).length;
+  var pending=total-given-prepared;
+  var html='<div style="margin-bottom:10px;">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;padding-bottom:3px;border-bottom:1.5px solid #e8c8d8;">';
+  html+='<div style="font-size:11px;font-weight:700;color:#8B1A6B;">&#128105; Ladies & Girls Gifts</div>';
+  if(total>0) html+='<div style="font-size:10px;color:#555;">Total: <strong>'+total+'</strong></div>';
+  html+='</div>';
+  if(!items.length){
+    html+='<div style="font-size:11px;color:#aaa;margin-bottom:6px;">No ladies added yet — use &#128100; Import or + Lady / Girl button</div>';
+    html+='</div>';
+    return html;
+  }
+  items.forEach(function(item,i){
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5e8e8;">';
+    html+='<div style="flex:1;">';
+    html+='<div style="font-size:12px;font-weight:600;">'+item.name+'</div>';
+    if(item.family&&item.name.indexOf(item.family)===0) html+='<div style="font-size:10px;color:#aaa;">from '+item.family+' &mdash; tap Edit to add name</div>';
+    else if(item.family) html+='<div style="font-size:10px;color:#999;">'+item.family+'</div>';
+    if(item.notes) html+='<div style="font-size:10px;color:#888;">'+item.notes+'</div>';
+    html+='</div>';
+    html+='<button onclick="epEditLadyName(\''+ev+'\','+i+')" style="font-size:11px;padding:2px 8px;border-radius:6px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;">Edit</button>';
+    html+='<select onchange="epUpdateGiftStatus(\''+ev+'\',\'ladies\','+i+',this.value)" style="font-size:11px;border:1px solid #ddd;border-radius:6px;padding:3px 6px;">';
+    html+='<option value="pending"'+(item.status==='pending'?' selected':'')+'>Pending</option>';
+    html+='<option value="prepared"'+(item.status==='prepared'?' selected':'')+'>Prepared</option>';
+    html+='<option value="given"'+(item.status==='given'?' selected':'')+'>Given</option>';
+    html+='</select>';
+    html+='<button onclick="epDeleteGiftItem(\''+ev+'\',\'ladies\','+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:15px;padding:0;">&#215;</button>';
+    html+='</div>';
+  });
+  // Total summary at bottom
+  html+='<div style="margin-top:8px;padding:8px 12px;background:linear-gradient(135deg,#f9f0f9,#fff8f0);border-radius:8px;border:1px solid #e8c8d8;">';
+  html+='<div style="font-size:12px;font-weight:700;color:#5C1A2B;">&#127873; Total Ladies Gifts: '+total+'</div>';
+  html+='<div style="font-size:11px;color:#666;margin-top:3px;display:flex;gap:12px;">';
+  html+='<span style="color:#2E7D32;">&#10003; Given: '+given+'</span>';
+  html+='<span style="color:#C45000;">&#128230; Prepared: '+prepared+'</span>';
+  html+='<span style="color:#C62828;">&#9888; Pending: '+pending+'</span>';
+  html+='</div></div>';
+  html+='</div>';
+  return html;
+}
+
 function epRenderGiftList(ev,type,title,items){
   if(!items.length) return '<div style="font-size:11px;color:#aaa;margin-bottom:8px;">'+title+': None added</div>';
-  var statusColors={prepared:'ep-s-pending',given:'ep-s-confirmed',pending:'ep-s-not-required'};
   var html='<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:#8B1A6B;margin-bottom:5px;padding-bottom:3px;border-bottom:1.5px solid #e8c8d8;">'+title+'</div>';
   items.forEach(function(item,i){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5e8e8;">';
-    html+='<div style="flex:1;font-size:12px;"><strong>'+item.name+'</strong>'+(item.amount?' — &#8377;'+item.amount:'')+(item.notes?' &middot; <span style="color:#888;">'+item.notes+'</span>':'')+'</div>';
+    html+='<div style="flex:1;font-size:12px;"><strong>'+item.name+'</strong>'+(item.amount?' &mdash; &#8377;'+item.amount:'')+(item.notes?' &middot; <span style="color:#888;">'+item.notes+'</span>':'')+'</div>';
     html+='<select onchange="epUpdateGiftStatus(\''+ev+'\',\''+type+'\','+i+',this.value)" style="font-size:11px;border:1px solid #ddd;border-radius:6px;padding:3px 6px;cursor:pointer;">';
     html+='<option value="pending"'+(item.status==='pending'?' selected':'')+'>Pending</option>';
     html+='<option value="prepared"'+(item.status==='prepared'?' selected':'')+'>Prepared</option>';
@@ -9298,12 +9343,52 @@ function epRenderGiftList(ev,type,title,items){
   return html;
 }
 
+function epImportLadies(ev){
+  if(typeof guests==='undefined'||!guests.length){ alert('No guest data found.'); return; }
+  if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+  if(!eventPlanner.gifts[ev].ladies) eventPlanner.gifts[ev].ladies=[];
+  var existing=eventPlanner.gifts[ev].ladies;
+  var added=0;
+  guests.forEach(function(g){
+    var count=0;
+    if(g.events&&g.events[ev]) count=Number(g.events[ev].ladies||0);
+    if(count<=0) return;
+    var familyName=g.name||'Unknown Family';
+    for(var i=1;i<=count;i++){
+      var alreadyIn=existing.some(function(e){ return e.family===familyName&&e.slot===i; });
+      if(!alreadyIn){
+        existing.push({name:familyName+' (Lady '+i+')',family:familyName,slot:i,notes:'',status:'pending',imported:true});
+        added++;
+      }
+    }
+  });
+  if(added===0){ alert('All ladies from guest list are already imported for '+ev+'.'); return; }
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderGifts();
+  epMobRefreshAfterSave();
+  showToast(added+' ladies imported \u2705');
+}
+
+function epEditLadyName(ev,idx){
+  var item=(eventPlanner.gifts[ev]||{}).ladies&&eventPlanner.gifts[ev].ladies[idx];
+  if(!item) return;
+  var newName=prompt("Lady's name:",item.name);
+  if(!newName||!newName.trim()) return;
+  var newNotes=prompt('Relation / notes (e.g. Bhabhi, Masi, Cousin):',item.notes||'');
+  item.name=newName.trim();
+  item.notes=(newNotes||'').trim();
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderGifts();
+}
+
 function epAddGiftItem(ev,type){
-  var labels={covers:'Cover to whom (name):',ladies:'Lady / Girl name:',akhand:'Akhand Saubhagya Vati — name:'};
+  var labels={covers:'Cover to whom (name):',ladies:"Lady / Girl name:",akhand:'Akhand Saubhagya Vati - name:'};
   var name=prompt(labels[type]||'Name:'); if(!name||!name.trim()) return;
   var amount=''; var notes='';
-  if(type==='covers') amount=prompt('Amount in cover (&#8377;) — leave blank if not decided:')||'';
-  notes=prompt('Notes (optional — e.g. relation, item):')||'';
+  if(type==='covers') amount=prompt('Amount in cover (Rs.) - leave blank if not decided:')||'';
+  notes=prompt('Notes (optional - e.g. relation, item):')||'';
   if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
   if(!eventPlanner.gifts[ev][type]) eventPlanner.gifts[ev][type]=[];
   eventPlanner.gifts[ev][type].push({name:name.trim(),amount:amount.trim(),notes:notes.trim(),status:'pending'});
@@ -9328,6 +9413,11 @@ window.epAddGiftItem=epAddGiftItem;
 window.epUpdateGiftStatus=epUpdateGiftStatus;
 window.epDeleteGiftItem=epDeleteGiftItem;
 window.epRenderGifts=epRenderGifts;
+window.epImportLadies=epImportLadies;
+window.epEditLadyName=epEditLadyName;
+
+
+
 
 /* EP Carnival Module - Mehendi function only */
 function epRenderCarnival(){
