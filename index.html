@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#5C1A2B">
@@ -9085,6 +9086,20 @@ async function epSaveDecor(){
 }
 
 // Expose EP functions globally for mobile onclick attributes
+function epToggleEvent(id){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var cur=el.style.display;
+  if(cur===''||cur==='none') el.style.display='block';
+  else el.style.display='none';
+}
+function epMobToggle(id){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var cur=el.style.display;
+  if(cur===''||cur==='none') el.style.display='block';
+  else el.style.display='none';
+}
 window.epMobToggle = epMobToggle;
 window.epOpenMealModal = epOpenMealModal;
 window.epOpenDecorModal = epOpenDecorModal;
