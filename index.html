@@ -8763,7 +8763,22 @@ function epRenderCatering(){
   });
   html+='</div>';
   el.innerHTML=html;
-  epUpdateBadges();
+  // Update EP section header badges
+  (function(){
+    var p=0,c=0;
+    var evs2=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+    evs2.forEach(function(ev){
+      var d=eventPlanner.catering[ev]||{};
+      EP_MEALS.forEach(function(m){
+        var s=epMigrateSlot(d[m.id]).status||'pending';
+        if(s==='confirmed') c++; else if(s!=='not-required') p++;
+      });
+    });
+    var bp=document.getElementById('epBadgePending');
+    var bc=document.getElementById('epBadgeConfirmed');
+    if(bp) bp.textContent=p+' pending';
+    if(bc) bc.textContent=c+' confirmed';
+  })();
 }
 
 var _epMealEv='',_epMealId='';
@@ -8771,7 +8786,8 @@ function epOpenMealModal(ev,mealId){
   _epMealEv=ev; _epMealId=mealId;
   var slot=epGetSlot(ev,mealId);
   var autoCount=epGuestCountForEvent(ev);
-  document.getElementById('epMealModalTitle').textContent=ev+' — '+EP_MEALS.find(function(m){return m.id===mealId;})?EP_MEALS.find(function(m){return m.id===mealId;}).name:mealId;
+  var mealObj=EP_MEALS.find(function(m){return m.id===mealId;});
+  document.getElementById('epMealModalTitle').textContent=ev+' — '+(mealObj?mealObj.name:mealId);
   document.getElementById('epMealHeadcount').value=slot.headcount||autoCount;
   document.getElementById('epMealStatus').value=slot.status||'pending';
   epRenderMealVendors(slot);
