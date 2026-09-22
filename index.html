@@ -605,7 +605,7 @@
   body.role-viewer .admin-only,
   body.role-editor .admin-only { display:none !important; }
 
-  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button),
+  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn),
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
   body.role-viewer select,
   body.role-viewer textarea { pointer-events:none; opacity:0.6; }
@@ -3051,7 +3051,7 @@ function generateStdMsg(g) {
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
   var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
   return '\uD83C\uDF38 *Save the Date* \uD83C\uDF38\n\n' +
-    'Dear \uD83EDE7 *' + (g.name||'') + '* \uD83EDE7,\n\n' +
+    'Dear 🪷 *' + (g.name||'') + '* 🪷,\n\n' +
     'With great joy we announce the wedding of\n\n' +
     '\u2728 *' + coupleName + '* \u2728\n\n' +
     '\uD83D\uDC8D *Marriage Ceremony*\n' +
