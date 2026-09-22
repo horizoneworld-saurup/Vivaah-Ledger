@@ -2434,6 +2434,7 @@
         <button class="ep-tab" onclick="epShowTab('reminders',this)">&#128276; Reminders</button>
       </div>
       <button onclick="epRefreshFromCloud()" style="font-size:11px;padding:5px 10px;border-radius:8px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;white-space:nowrap;" title="Pull latest data from cloud">&#8635; Sync latest</button>
+      <button onclick="epPrint()" style="font-size:11px;padding:5px 10px;border-radius:8px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;white-space:nowrap;">&#128438; Print EP</button>
     </div>
     <div class="ep-panel active" id="epPanelCatering"></div>
     <div class="ep-panel" id="epPanelDecor"></div>
@@ -2561,6 +2562,11 @@
     <div class="field">
       <label>Tagline</label>
       <input type="text" id="brandTaglineInput" placeholder="Wedding vendor budget & payment intelligence" maxlength="80">
+    </div>
+    <div class="field">
+      <label>With Blessings (names for WhatsApp messages)</label>
+      <textarea id="brandBlessingsInput" rows="2" style="font-size:13px;resize:vertical;" placeholder="e.g. Saurabh Shah &#127800; Bharat Shah"></textarea>
+      <div style="font-size:10px;color:#aaa;margin-top:3px;">Use &#127800; between names. Press Enter for new line.</div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="brandingCancelBtn">Cancel</button>
@@ -2761,6 +2767,10 @@ function applyRoleRestrictions(){
     el.style.opacity = isViewer ? '0.5' : '';
     el.style.cursor = isViewer ? 'not-allowed' : '';
   });
+  // View PIN users CAN use Google sign-in (for sync) and send STD messages
+  // So btnGoogleSignIn and STD buttons are never disabled for viewers
+  var gBtn = document.getElementById('btnGoogleSignIn');
+  if(gBtn){ gBtn.disabled = false; gBtn.style.opacity = ''; gBtn.style.cursor = ''; }
 }
 
 /* Lock screen keypad */
@@ -3038,24 +3048,29 @@ function generateStdMsg(g) {
   var venueStr = t.venue || '';
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
-  return '🌸 *Save the Date* 🌸\n\n' +
-    'Dear *' + (g.name||'') + '*,\n\n' +
+  var blessings = (branding && branding.blessings) ? branding.blessings : '';
+  var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
+  return '\uD83C\uDF38 *Save the Date* \uD83C\uDF38\n\n' +
+    'Dear \uD83EDE7 *' + (g.name||'') + '* \uD83EDE7,\n\n' +
     'With great joy we announce the wedding of\n\n' +
-    '✨ *' + coupleName + '* ✨\n\n' +
-    '💍 *Marriage Ceremony*\n' +
-    (dateStr ? '📅 ' + dateStr + '\n' : '') +
-    (timeStr ? '🕐 ' + timeStr + '\n' : '') +
-    (venueStr ? '📍 ' + venueStr + '\n' : '') +
-    '\nPlease save this date and grace us\nwith your presence 🙏\n\n' +
-    '_(Formal invitation to follow)_\n\n' +
-    '*— ' + familyName + '* 🌸';
+    '\u2728 *' + coupleName + '* \u2728\n\n' +
+    '\uD83D\uDC8D *Marriage Ceremony*\n' +
+    (dateStr ? '\uD83D\uDCC5 ' + dateStr + '\n' : '') +
+    (timeStr ? '\uD83D\uDD50 ' + timeStr + '\n' : '') +
+    (venueStr ? '\uD83D\uDCCD ' + venueStr + '\n' : '') +
+    '\nPlease save this date and grace us\nwith your presence \uD83D\uDE4F\n\n' +
+    '\uD83C\uDF38 (Formal invitation to follow) \uD83C\uDF38\n' +
+    blessLine +
+    '\uD83C\uDF38 ' + familyName + ' \uD83C\uDF38';
 }
 
 function generateInviteMsg(g) {
-  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔🔥','Mosalu':'🪔🔥','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
   var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
+  var blessings = (branding && branding.blessings) ? branding.blessings : '';
+  var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
   var invited = ALL_EVENTS.filter(function(ev) {
     var e = g.events && g.events[ev];
     return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
@@ -3068,12 +3083,13 @@ function generateInviteMsg(g) {
     if (t.venue) line += '\n📍 '+t.venue;
     return line;
   }).join('\n\n');
-  return 'Dear *'+(g.name||'')+'* 🌸\n\n' +
+  return 'Dear 🪷 *'+(g.name||'')+'* 🪷\n\n' +
     'We joyfully invite you to celebrate\n\n' +
     '✨ *' + coupleName + '\'s Wedding!* ✨\n\n' +
     lines+'\n\n' +
-    'Your presence will make our celebration truly special 🙏\n\n' +
-    '*— ' + familyName + '* 🌸';
+    'Your presence will make our celebration truly special 🙏' +
+    blessLine +
+    '🌸 ' + familyName + ' 🌸';
 }
 
 let waCurrentGuestId = null;
@@ -6465,6 +6481,7 @@ function openBrandingModal(){
   pendingLogoData = undefined; // undefined = no change yet; null = explicit reset; string = new logo
   document.getElementById('brandTitleInput').value = branding.title || '';
   document.getElementById('brandTaglineInput').value = branding.tagline || '';
+  document.getElementById('brandBlessingsInput').value = branding.blessings || '';
   refreshLogoPreview(branding.logo || null);
   document.getElementById('brandingModalOverlay').classList.add('show');
 }
@@ -6514,8 +6531,10 @@ document.getElementById('btnResetLogo').onclick = ()=>{
 document.getElementById('brandingSaveBtn').onclick = async ()=>{
   const title = document.getElementById('brandTitleInput').value.trim();
   const tagline = document.getElementById('brandTaglineInput').value.trim();
+  const blessings = document.getElementById('brandBlessingsInput').value.trim();
   branding.title = title;
   branding.tagline = tagline;
+  branding.blessings = blessings;
   if(pendingLogoData !== undefined){
     branding.logo = pendingLogoData || '';
   }
@@ -9855,6 +9874,274 @@ function epMobRefreshAfterSave(){
   if(typeof saveReminders==='function') setTimeout(saveReminders, 500);
 }
 window.epMobRefreshAfterSave=epMobRefreshAfterSave;
+
+/* EP Print Function - prints all 6 EP modules */
+function epPrint(){
+  var ep=eventPlanner;
+  var tl=(typeof eventTimeline!=='undefined')?eventTimeline:{};
+  var br=(typeof branding!=='undefined')?branding:{};
+  var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
+  var meals=(typeof EP_MEALS!=='undefined')?EP_MEALS:[
+    {id:'breakfast',name:'Breakfast + Morning Tea/Coffee'},
+    {id:'lunch',name:'Lunch'},
+    {id:'dinner',name:'Dinner'},
+    {id:'latenight',name:'Late Night Tea/Coffee + Snacks'}
+  ];
+
+  function fmtDate(ev){
+    var t=tl[ev]; if(!t||!t.date) return 'Date not set';
+    return new Date(t.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  }
+  function fmtAmt(n){ n=Number(n)||0; return '\u20b9'+n.toLocaleString('en-IN'); }
+  function badge(s){
+    var col=s==='confirmed'||s==='finalised'||s==='delivered'||s==='given'?'#2E7D32':s==='not-required'?'#666':'#C45000';
+    var bg=s==='confirmed'||s==='finalised'||s==='delivered'||s==='given'?'#E8F5E9':s==='not-required'?'#f5f5f5':'#FFF3E0';
+    return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+bg+';padding:2px 8px;border-radius:10px;border:1px solid '+col+';">'+s.toUpperCase()+'</span>';
+  }
+  function sec(title,emoji,content){
+    return '<div style="margin-bottom:28px;page-break-inside:avoid;">'
+      +'<div style="background:linear-gradient(135deg,#5C1A2B,#8B1A6B);color:#fff;padding:8px 14px;border-radius:6px 6px 0 0;font-size:13px;font-weight:700;letter-spacing:0.5px;">'+emoji+' '+title+'</div>'
+      +'<div style="border:1px solid #e0c8d8;border-top:none;border-radius:0 0 6px 6px;padding:12px 14px;">'+content+'</div>'
+      +'</div>';
+  }
+
+  // ── CATERING ─────────────────────────────────────────────────────
+  var catHtml='';
+  evs.forEach(function(ev){
+    var evData=ep.catering[ev]||{};
+    var hasData=meals.some(function(m){
+      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m.id]):evData[m.id]||{};
+      return (slot.vendors||[]).length>0;
+    });
+    if(!hasData) return;
+    catHtml+='<div style="margin-bottom:12px;">';
+    catHtml+='<div style="font-size:12px;font-weight:700;color:#5C1A2B;border-bottom:1px solid #e8c8d8;padding-bottom:3px;margin-bottom:6px;">'+ev+' &mdash; '+fmtDate(ev)+'</div>';
+    catHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+    catHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Meal</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Caterer</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Menu</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">People</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Rate</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Total</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+    var evTotal=0;
+    meals.forEach(function(m){
+      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m.id]):evData[m.id]||{vendors:[],headcount:0,status:'pending'};
+      if(slot.status==='not-required') return;
+      var vendors=slot.vendors||[];
+      if(!vendors.length){
+        catHtml+='<tr><td style="padding:4px 8px;border:1px solid #e8c8d8;">'+m.name+'</td><td colspan="5" style="padding:4px 8px;border:1px solid #e8c8d8;color:#aaa;">Not set</td><td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge('pending')+'</td></tr>';
+        return;
+      }
+      vendors.forEach(function(v,vi){
+        var vName=v.vendorName||(v.vendorId&&typeof vendors!=='undefined'?''||'':'')||'';
+        var lineTotal=Number(v.costPerPerson||0)*Number(slot.headcount||0);
+        evTotal+=lineTotal;
+        catHtml+='<tr style="'+(vi%2===0?'':'background:#fff8f5;')+'">';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(vi===0?m.name:'')+'</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+vName+'</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;max-width:180px;">'+v.menu+'</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+slot.headcount+'</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+fmtAmt(v.costPerPerson)+'/head</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;font-weight:700;">'+fmtAmt(lineTotal)+'</td>';
+        catHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+(vi===0?badge(slot.status||'pending'):'')+'</td>';
+        catHtml+='</tr>';
+      });
+    });
+    catHtml+='<tr style="background:#f0e8f0;font-weight:700;"><td colspan="5" style="padding:4px 8px;border:1px solid #e8c8d8;">'+ev+' Total</td><td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+fmtAmt(evTotal)+'</td><td style="border:1px solid #e8c8d8;"></td></tr>';
+    catHtml+='</table></div>';
+  });
+  if(!catHtml) catHtml='<div style="color:#aaa;font-size:11px;">No catering data added yet.</div>';
+
+  // ── DECOR ─────────────────────────────────────────────────────────
+  var decHtml='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+  decHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Function</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Date</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Vendor</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Theme</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Amount</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+  var hasDecor=false;
+  evs.forEach(function(ev){
+    var dec=ep.decor[ev]||{};
+    if(!dec.status&&!dec.vendorId&&!dec.vendorName) return;
+    hasDecor=true;
+    var vName=dec.vendorName||(dec.vendorId&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===dec.vendorId;});return vx?vx.name:'';}()):'');
+    decHtml+='<tr><td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+ev+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+fmtDate(ev)+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+vName+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+( dec.theme||'')+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(dec.cost?fmtAmt(dec.cost):'')+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(dec.status||'pending')+'</td></tr>';
+  });
+  // Home Decor
+  var hd=ep.homeDecor||{};
+  if(hd.status||hd.inside||hd.outside){
+    hasDecor=true;
+    var hvName=hd.vendorName||(hd.vendorId&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===hd.vendorId;});return vx?vx.name:'';}()):'');
+    decHtml+='<tr style="background:#fff8f5;"><td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">Home Decor</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">Inside + Outside</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+hvName+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(hd.inside?'Inside: '+hd.inside:'')+(hd.outside?' | Outside: '+hd.outside:'')+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(hd.cost?fmtAmt(hd.cost):'')+'</td>';
+    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(hd.status||'pending')+'</td></tr>';
+  }
+  decHtml+='</table>';
+  if(!hasDecor) decHtml='<div style="color:#aaa;font-size:11px;">No decor data added yet.</div>';
+
+  // ── PUJA ─────────────────────────────────────────────────────────
+  var pujaEvs=['Kankotri','Ganesh-Grahshanti','Marriage'];
+  var pujaHtml='';
+  pujaEvs.forEach(function(ev){
+    var puja=ep.puja[ev]||{};
+    var we=puja.weProvide||[]; var mh=puja.maharajBrings||[];
+    if(!we.length&&!mh.length) return;
+    pujaHtml+='<div style="margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:#5C1A2B;margin-bottom:5px;">'+ev+'</div>';
+    pujaHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+    pujaHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;width:50%;">We Provide</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;width:10%;">Done</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;width:40%;">Maharaj Brings</th></tr>';
+    var maxLen=Math.max(we.length,mh.length);
+    for(var i=0;i<maxLen;i++){
+      var wi=we[i]||null; var mi=mh[i]||null;
+      pujaHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+      pujaHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(wi?wi.item:'')+'</td>';
+      pujaHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+(wi?(wi.done?'&#10003;':'&#9744;'):'')+'</td>';
+      pujaHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(mi?mi.item+(mi.done?' &#10003;':''):'')+'</td>';
+      pujaHtml+='</tr>';
+    }
+    pujaHtml+='</table></div>';
+  });
+  if(!pujaHtml) pujaHtml='<div style="color:#aaa;font-size:11px;">No puja samagri added yet.</div>';
+
+  // ── GIFTS ─────────────────────────────────────────────────────────
+  var giftHtml='';
+  var giftEvs=['Ganesh-Grahshanti','Mosalu','Marriage'];
+  giftEvs.forEach(function(ev){
+    var gift=ep.gifts[ev]||{};
+    var covers=gift.covers||[]; var ladies=gift.ladies||[]; var akhand=gift.akhand||[];
+    var isAkhandOnly=ev==='Marriage';
+    if(!covers.length&&!ladies.length&&!akhand.length) return;
+    giftHtml+='<div style="margin-bottom:12px;">';
+    giftHtml+='<div style="font-size:12px;font-weight:700;color:#5C1A2B;border-bottom:1px solid #e8c8d8;padding-bottom:3px;margin-bottom:6px;">'+ev+'</div>';
+    if(!isAkhandOnly&&ladies.length){
+      var ladiesGiven=ladies.filter(function(i){return i.status==='given';}).length;
+      var ladiesPrepared=ladies.filter(function(i){return i.status==='prepared';}).length;
+      giftHtml+='<div style="font-size:11px;font-weight:600;color:#8B1A6B;margin-bottom:4px;">Ladies & Girls Gifts (Total: '+ladies.length+' | Given: '+ladiesGiven+' | Prepared: '+ladiesPrepared+' | Pending: '+(ladies.length-ladiesGiven-ladiesPrepared)+')</div>';
+      giftHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">';
+      giftHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">#</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Name</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Family</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Relation</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+      ladies.forEach(function(lady,i){
+        giftHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(i+1)+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+lady.name+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(lady.family||'')+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(lady.notes||'')+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(lady.status||'pending')+'</td>';
+        giftHtml+='</tr>';
+      });
+      giftHtml+='</table>';
+    }
+    if(!isAkhandOnly&&covers.length){
+      giftHtml+='<div style="font-size:11px;font-weight:600;color:#8B1A6B;margin-bottom:4px;">Covers ('+covers.length+')</div>';
+      giftHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;">';
+      giftHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">#</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">To Whom</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Amount</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Notes</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+      covers.forEach(function(c,i){
+        giftHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(i+1)+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+c.name+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(c.amount?'\u20b9'+c.amount:'')+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(c.notes||'')+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(c.status||'pending')+'</td>';
+        giftHtml+='</tr>';
+      });
+      giftHtml+='</table>';
+    }
+    if(isAkhandOnly&&akhand.length){
+      giftHtml+='<div style="font-size:11px;font-weight:600;color:#8B1A6B;margin-bottom:4px;">Akhand Saubhagya Vati ('+akhand.length+')</div>';
+      giftHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+      giftHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">#</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Name</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Notes</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+      akhand.forEach(function(a,i){
+        giftHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(i+1)+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+a.name+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(a.notes||'')+'</td>';
+        giftHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(a.status||'pending')+'</td>';
+        giftHtml+='</tr>';
+      });
+      giftHtml+='</table>';
+    }
+    giftHtml+='</div>';
+  });
+  if(!giftHtml) giftHtml='<div style="color:#aaa;font-size:11px;">No gifts data added yet.</div>';
+
+  // ── CARNIVAL ─────────────────────────────────────────────────────
+  var stalls=ep.carnival.stalls||[];
+  var carnHtml='';
+  if(stalls.length){
+    carnHtml='<div style="font-size:11px;color:#555;margin-bottom:8px;">Mehendi &mdash; '+fmtDate('Mehendi')+'</div>';
+    carnHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+    carnHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">#</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Stall</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Provides</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">We Provide</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Procured</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+    stalls.forEach(function(s,i){
+      carnHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(i+1)+'</td>';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+s.name+'</td>';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(s.provides||'')+'</td>';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(s.weProvide||'')+'</td>';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+(s.procured?'&#10003; Yes':'&#9744; No')+'</td>';
+      carnHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(s.status||'pending')+'</td>';
+      carnHtml+='</tr>';
+    });
+    carnHtml+='</table>';
+  } else {
+    carnHtml='<div style="color:#aaa;font-size:11px;">No carnival stalls added yet.</div>';
+  }
+
+  // ── CLOTHES ──────────────────────────────────────────────────────
+  var clothes=ep.clothes||[];
+  var clothHtml='';
+  if(clothes.length){
+    // Group by event
+    var byEv={};
+    clothes.forEach(function(c){ if(!byEv[c.event]) byEv[c.event]=[]; byEv[c.event].push(c); });
+    evs.forEach(function(ev){
+      if(!byEv[ev]||!byEv[ev].length) return;
+      clothHtml+='<div style="margin-bottom:10px;">';
+      clothHtml+='<div style="font-size:12px;font-weight:700;color:#5C1A2B;border-bottom:1px solid #e8c8d8;padding-bottom:3px;margin-bottom:5px;">'+ev+' &mdash; '+fmtDate(ev)+'</div>';
+      clothHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+      clothHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Person</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Description</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Vendor / Shop</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Cost</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+      byEv[ev].forEach(function(c,i){
+        var vName=c.vendorName||(c.vendorId&&c.vendorId!=='__manual__'&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===c.vendorId;});return vx?vx.name:'';}()):'');
+        clothHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'">';
+        clothHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+c.person+'</td>';
+        clothHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(c.description||'')+'</td>';
+        clothHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(vName||c.vendorName||'')+'</td>';
+        clothHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(c.cost?'\u20b9'+Number(c.cost).toLocaleString('en-IN'):'')+'</td>';
+        clothHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(c.status||'pending')+'</td>';
+        clothHtml+='</tr>';
+      });
+      clothHtml+='</table></div>';
+    });
+    // Grand total
+    var clothTotal=clothes.reduce(function(t,c){return t+Number(c.cost||0);},0);
+    if(clothTotal>0) clothHtml+='<div style="text-align:right;font-size:12px;font-weight:700;color:#5C1A2B;margin-top:6px;">Grand Total: '+fmtAmt(clothTotal)+'</div>';
+  } else {
+    clothHtml='<div style="color:#aaa;font-size:11px;">No clothes data added yet.</div>';
+  }
+
+  // ── ASSEMBLE AND PRINT ────────────────────────────────────────────
+  var title=(br.title||'Vivaah Ledger')+' \u2014 Event Planner Summary';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Georgia,serif;color:#333;padding:20px;}'
+    +'@media print{@page{margin:15mm;size:A4;}body{padding:0;}}'
+    +'table{font-size:11px;}th{font-weight:700;}td,th{vertical-align:top;}'
+    +'</style></head><body>'
+    +'<div style="text-align:center;margin-bottom:24px;border-bottom:2px solid #8B1A6B;padding-bottom:12px;">'
+    +'<div style="font-size:22px;font-weight:700;color:#5C1A2B;">&#127802; '+title+'</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:4px;">Printed on '+new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'</div>'
+    +'</div>'
+    +sec('Catering','&#127869;&#65039;',catHtml)
+    +sec('Decor','&#127800;',decHtml)
+    +sec('Puja Samagri','&#128367;&#65039;',pujaHtml)
+    +sec('Gifts & Covers','&#127873;',giftHtml)
+    +sec('Carnival Stalls','&#127914;',carnHtml)
+    +sec('Clothes','&#128087;',clothHtml)
+    +'</body></html>';
+
+  var w=window.open('','_blank','width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},600);
+}
+window.epPrint=epPrint;
+
 
 /* ---------------- Event Planner Tabs ---------------- */
 function epShowTab(tab, btn){
