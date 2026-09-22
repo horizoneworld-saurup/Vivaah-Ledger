@@ -2187,7 +2187,7 @@
   </div><!-- end guest sec-body -->
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
-    <div class="sec-header sec-collapsed" id="kankotriSectionHeader" onclick="toggleSecBody('kankotriSectionHeader','kankotriSecBody')" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
+    <div class="sec-header sec-collapsed sec-kankotri" id="kankotriSectionHeader" onclick="toggleSecBody('kankotriSectionHeader','kankotriSecBody')" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
       <div class="sec-header-left">
         <div class="sec-header-icon">𖥸</div>
         <div>
@@ -11147,6 +11147,10 @@ window.mobActivate = function(){
   mobUpdateDash();
   mobStartCountdown();
   mobRenderBudgetChart();
+  // Event Manager — go straight to Guest section on mobile
+  if(currentRole === 'eventmanager'){
+    setTimeout(function(){ if(typeof mobShowSec==='function') mobShowSec('guest'); }, 200);
+  }
   // Restore Google session display if already signed in on desktop
   if(typeof googleToken !== 'undefined' && googleToken){
     var nm = (typeof currentUserName !== 'undefined' && currentUserName) || 'Signed in';
