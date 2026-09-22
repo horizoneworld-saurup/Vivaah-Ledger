@@ -609,8 +609,6 @@
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
   body.role-viewer select,
   body.role-viewer textarea { pointer-events:none; opacity:0.6; }
-  body.role-viewer .guest-row { cursor:default; }
-  body.role-viewer .vendor-row { cursor:default; }
 
   /* ---------- Lock screen ---------- */
   .lock-overlay{
@@ -1153,6 +1151,29 @@
   .spb-admin{background:rgba(212,164,76,0.2);color:#D4A24C;}
   .spb-editor{background:rgba(106,27,154,0.3);color:#CE93D8;}
   .spb-viewer{background:rgba(33,150,243,0.2);color:#90CAF9;}
+  .spb-em{background:rgba(46,125,50,0.2);color:#81C784;}
+
+  /* Event Manager role — show only Guest List and Kankotri */
+  body.role-eventmanager .sec-header:not(.sec-guest):not(.sec-kankotri),
+  body.role-eventmanager .sec-body:not(#guestSecBody):not(#kankotriSecBody),
+  body.role-eventmanager .vendor-section,
+  body.role-eventmanager #budgetSectionHeader,
+  body.role-eventmanager #budgetSectionBody,
+  body.role-eventmanager #timelineSectionHeader,
+  body.role-eventmanager #timelineSecBody,
+  body.role-eventmanager #reminderSectionHeader,
+  body.role-eventmanager #reminderSecBody,
+  body.role-eventmanager #notesSectionHeader,
+  body.role-eventmanager #notesSecBody,
+  body.role-eventmanager #epSectionHeader,
+  body.role-eventmanager #epSecBody,
+  body.role-eventmanager .admin-only,
+  body.role-eventmanager .editor-only { display:none !important; }
+  /* EM can click WhatsApp, confirm, cancel — same as viewer exemptions */
+  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn),
+  body.role-eventmanager input:not(#lockRemember):not([data-lock-role]):not(.guest-confirm-input),
+  body.role-eventmanager select,
+  body.role-eventmanager textarea { pointer-events:none; opacity:0.6; }
   .setup-pin-lbl{display:block;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
   .setup-pin-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 8px;font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:6px;outline:none;}
   .setup-pin-input:focus{border-color:rgba(212,164,76,0.5);}
@@ -1448,6 +1469,7 @@
         <button class="lock-tab active" data-lock-role="admin">Admin</button>
         <button class="lock-tab" data-lock-role="editor">Editor</button>
         <button class="lock-tab" data-lock-role="viewer">Viewer</button>
+        <button class="lock-tab" data-lock-role="eventmanager" style="color:#81C784;">🎫 Evt Mgr</button>
         <button class="lock-tab lock-tab-owner" data-lock-role="owner" title="Tool owner only" style="border-color:#C4A0E8;color:#5C1A8A;">🔑</button>
       </div>
       <div class="lock-pin-dots" id="lockPinDots">
@@ -1494,6 +1516,10 @@
     <div class="field">
       <label>👁 Viewer PIN (4 digits)</label>
       <input type="password" id="newViewerPin" maxlength="4" placeholder="••••" inputmode="numeric">
+    </div>
+    <div class="field">
+      <label>🎫 Event Manager PIN (4 digits) — Guest + Kankotri only</label>
+      <input type="password" id="newEmPin" maxlength="4" placeholder="••••" inputmode="numeric">
     </div>
     <div style="background:var(--ivory-deep); border-radius:9px; padding:10px 12px; font-size:11.5px; color:var(--ink-soft); margin-bottom:4px;">
       ⚠ Defaults — Owner: 0000 · Admin: 1234 · Editor: 5678 · Viewer: 9999
@@ -2738,13 +2764,21 @@ function setRole(role){
   currentRole = role;
   document.body.className = document.body.className.replace(/role-\w+/g,'').trim() + ' role-' + role;
   const badge = document.getElementById('roleBadge');
-  const labels = {owner:'🔑 Owner', admin:'👑 Admin', editor:'✎ Editor', viewer:'👁 Viewer'};
+  const labels = {owner:'\uD83D\uDD11 Owner', admin:'\uD83D\uDC51 Admin', editor:'\u270E Editor', viewer:'\uD83D\uDC41 Viewer', eventmanager:'\uD83C\uDFAB Event Mgr'};
   badge.textContent = labels[role] || role;
   badge.className = 'role-badge role-' + role;
   const isOwner = role === 'owner';
   const isAdmin = role === 'admin' || isOwner;
+  const isEM = role === 'eventmanager';
   document.querySelectorAll('.admin-only').forEach(el=>el.style.display = isAdmin ? '' : 'none');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display = (isAdmin||role==='editor') ? '' : 'none');
+  // Event Manager — hide mobile nav tabs except Guest and Kankotri
+  ['mobNavHome','mobNavVend','mobNavRem'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display=isEM?'none':'';
+  });
+  ['mobNavGuest','mobNavKank'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.style.display='';
+  });
   // Owner Panel only for master owner emails
   var isMasterOwner = isOwner && (
     googleUserEmail === 'horizoneworld@gmail.com' ||
@@ -2756,21 +2790,25 @@ function setRole(role){
 }
 
 function applyRoleRestrictions(){
-  const isViewer = currentRole === 'viewer';
+  const isRestricted = currentRole === 'viewer' || currentRole === 'eventmanager';
   document.querySelectorAll(
     '#btnAddVendor, #btnUpload, #fileInput, #btnGuestUpload, #guestFileInput, '+
     '#btnAddGuest, #newGuestName, #newGuestPhone, #newGuestSide, '+
     '#searchInput, .rem-row button, .rem-row input, .reminder-add-row button, .reminder-add-row input, '+
     '.catering-actions button, #btnAddFunction, #btnKankotriUpload, #kankotriFileInput'
   ).forEach(el=>{
-    el.disabled = isViewer;
-    el.style.opacity = isViewer ? '0.5' : '';
-    el.style.cursor = isViewer ? 'not-allowed' : '';
+    el.disabled = isRestricted;
+    el.style.opacity = isRestricted ? '0.5' : '';
+    el.style.cursor = isRestricted ? 'not-allowed' : '';
   });
-  // View PIN users CAN use Google sign-in (for sync) and send STD messages
-  // So btnGoogleSignIn and STD buttons are never disabled for viewers
+  // Google sign-in always available
   var gBtn = document.getElementById('btnGoogleSignIn');
   if(gBtn){ gBtn.disabled = false; gBtn.style.opacity = ''; gBtn.style.cursor = ''; }
+  // WhatsApp send button always visible
+  var waSendBtn = document.getElementById('waSendBtn');
+  var waNote = document.getElementById('waViewerNote');
+  if(waSendBtn) waSendBtn.style.display = '';
+  if(waNote) waNote.style.display = 'none';
 }
 
 /* Lock screen keypad */
@@ -3662,6 +3700,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var adminPin = document.getElementById('setupAdminPin').value.trim();
     var editorPin = document.getElementById('setupEditorPin').value.trim();
     var viewerPin = document.getElementById('setupViewerPin').value.trim();
+    var emPin = (document.getElementById('setupEmPin')||{value:''}).value.trim();
     var email = googleUserEmail || window.egCurrentEmail || egCurrentEmail || '';
     console.log('Setup email:', email);
 
@@ -3689,9 +3728,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Save PINs
       var pr = await fetch('https://vivaah-auth.rms-d21.workers.dev/setup-pins', {method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({email, adminPin, editorPin, viewerPin})});
+        body: JSON.stringify({email, adminPin, editorPin, viewerPin, emPin})});
       var pd = await pr.json();
       if (pd.success) {
+        if(emPin && emPin.length===4) await savePin('eventmanager', emPin);
         document.getElementById('setupOverlay').classList.add('hidden');
         loadCoupleBranding(email);
         // Save wedding date to timeline
@@ -5098,7 +5138,7 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 
 async function initAuth(){
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
-  const VALID_ROLES = ['owner','admin','editor','viewer'];
+  const VALID_ROLES = ['owner','admin','editor','viewer','eventmanager'];
 
   // Step 1: Check session storage (same browser tab/session — PIN already entered this session)
   const sessionRole = sessionStorage.getItem('vivaah-role');
@@ -7752,9 +7792,9 @@ document.getElementById('adminSettingsCancelBtn').onclick=()=>document.getElemen
 document.getElementById('adminSettingsOverlay').addEventListener('click',e=>{if(e.target.id==='adminSettingsOverlay')document.getElementById('adminSettingsOverlay').classList.remove('show');});
 document.getElementById('adminSettingsSaveBtn').onclick=async()=>{
   let changed=0;
-  for(const role of ['admin','editor','viewer']){
-    const cap=role.charAt(0).toUpperCase()+role.slice(1);
-    const val=document.getElementById('new'+cap+'Pin').value.trim();
+  for(const role of ['admin','editor','viewer','eventmanager']){
+    const inputId = role==='eventmanager' ? 'newEmPin' : 'new'+role.charAt(0).toUpperCase()+role.slice(1)+'Pin';
+    const val=document.getElementById(inputId)&&document.getElementById(inputId).value.trim();
     if(val){ if(!/^\d{4}$/.test(val)){showToast('PINs must be exactly 4 digits');return;} await savePin(role,val); changed++; }
   }
   document.getElementById('adminSettingsOverlay').classList.remove('show');
@@ -10533,6 +10573,11 @@ function runGlobalSearch(q, gsInput, gsResults){
               <div class="setup-pin-badge spb-viewer">👁️ VIEWER</div>
               <span class="setup-pin-lbl">Read only</span>
               <input class="setup-pin-input" type="password" id="setupViewerPin" maxlength="4" placeholder="••••">
+            </div>
+            <div>
+              <div class="setup-pin-badge spb-em">🎫 EVENT MGR</div>
+              <span class="setup-pin-lbl">Guest + Kankotri only</span>
+              <input class="setup-pin-input" type="password" id="setupEmPin" maxlength="4" placeholder="••••">
             </div>
           </div>
         </div>
