@@ -364,6 +364,25 @@ export default {
       return jsonResp({ success: true });
     }
 
+    // GET /debug-kv — show raw KV data for debugging
+    if (path === '/debug-kv' && request.method === 'GET') {
+      const email = (url.searchParams.get('email') || '').toLowerCase();
+      if (!email) return jsonResp({ error: 'email param required' }, 400);
+      const raw = await env.VIVAAH_KV.get(`reminders:${email}`);
+      if (!raw) return jsonResp({ error: 'No KV data for ' + email }, 404);
+      const data = JSON.parse(raw);
+      return jsonResp({
+        email: data.email,
+        updatedAt: new Date(data.updatedAt||0).toISOString(),
+        hasTimeline: Object.keys(data.timeline||{}).length > 0,
+        kankotriDate: (data.timeline||{}).Kankotri?.date || 'NOT SET',
+        hasEP: Object.keys(data.ep||{}).length > 0,
+        epModules: Object.keys(data.ep||{}),
+        cateringEvents: Object.keys((data.ep||{}).catering||{}),
+        reminderKeys: Object.keys(data.reminders||{})
+      });
+    }
+
     // GET /test-reminder — manually trigger reminder check for your email
     if (path === '/test-reminder' && request.method === 'GET') {
       const email = (url.searchParams.get('email') || '').toLowerCase();
@@ -376,6 +395,24 @@ export default {
       if (!alerts.length) return jsonResp({ message: 'No reminders due today', email });
       await sendReminderEmailToUser(email, alerts, coupleName);
       return jsonResp({ success: true, email, alertCount: alerts.length, alerts });
+    }
+
+    // POST /save-pins — saves PIN hashes to KV (called after Admin Google sync)
+    if (path === '/save-pins' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid' }, 400); }
+      const pinHashes = body.pinHashes || {};
+      if (!Object.keys(pinHashes).length) return jsonResp({ error: 'No pins' }, 400);
+      await env.VIVAAH_KV.put('pin-hashes', JSON.stringify({ pinHashes, updatedAt: Date.now() }), { expirationTtl: 365 * 24 * 3600 });
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-pins — returns PIN hashes so fresh device can unlock without Google OAuth
+    if (path === '/get-pins' && request.method === 'GET') {
+      const raw = await env.VIVAAH_KV.get('pin-hashes');
+      if (!raw) return jsonResp({ pinHashes: {} });
+      const data = JSON.parse(raw);
+      return jsonResp({ pinHashes: data.pinHashes || {} });
     }
 
     return jsonResp({ error: 'Not found' }, 404);
