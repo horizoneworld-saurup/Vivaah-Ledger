@@ -5128,7 +5128,8 @@ async function egCheckStatus(){
             clearTimeout(_pinFetchTimer);
             showLockStep('pin');
           });
-        showLockStep('pin');
+        // PIN screen shows only after fetch completes or 2s timeout
+        // Do NOT call showLockStep('pin') here - .finally() handles it
       }, 800);
     } else if(data.status === 'rejected'){
       egStopPolling();
@@ -5191,7 +5192,23 @@ async function initAuth(){
         var roleTab = document.querySelector('.lock-tab[data-role="'+rememberedRole+'"]');
         if(roleTab) roleTab.click();
       }
-      showLockStep('pin');
+      // Fetch PIN hashes from KV before showing PIN screen
+      // so EM and other custom PINs work on any device
+      var _pinTimer2 = setTimeout(function(){ showLockStep('pin'); }, 2000);
+      fetch('https://vivaah-auth.rms-d21.workers.dev/get-pins')
+        .then(function(r){ return r.json(); })
+        .then(function(pd){
+          if(pd.pinHashes){
+            return Promise.all(Object.keys(pd.pinHashes).map(function(role){
+              return storageSet('pin-hash-'+role, pd.pinHashes[role]);
+            }));
+          }
+        })
+        .catch(function(){})
+        .finally(function(){
+          clearTimeout(_pinTimer2);
+          showLockStep('pin');
+        });
       return;
     }
   }
@@ -10643,7 +10660,10 @@ function runGlobalSearch(q, gsInput, gsResults){
         </div>
       </div>
     </div>
-    <span class="mob-sync-dot" id="mobSyncDot"></span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="mob-sync-dot" id="mobSyncDot"></span>
+      <button onclick="mobSignOutRole()" style="background:none;border:none;font-size:10px;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;white-space:nowrap;">&#x21A9; Sign out</button>
+    </div>
   </div>
 
   <!-- Countdown -->
@@ -11233,6 +11253,26 @@ window.mobGoogleSignIn = function(){
       await window.callOnSignedIn();
     }
   }).requestAccessToken();
+};
+window.mobSignOutRole = function(){
+  // Sign out of PIN role - clears remembered email and goes to lock screen
+  currentRole = null;
+  localStorage.removeItem('vivaah-role');
+  localStorage.removeItem('vivaah-approved-email');
+  localStorage.removeItem('vivaah-remembered-email');
+  sessionStorage.removeItem('vivaah-role');
+  sessionStorage.removeItem('vivaah-session-email');
+  if(typeof egCurrentEmail !== 'undefined') egCurrentEmail = '';
+  if(typeof egStopPolling === 'function') egStopPolling();
+  if(typeof lockPinEntry !== 'undefined') lockPinEntry = '';
+  if(typeof updatePinDots === 'function') updatePinDots();
+  var le = document.getElementById('lockError'); if(le) le.textContent = '';
+  var ei = document.getElementById('egEmailInput'); if(ei) ei.value = '';
+  var sm = document.getElementById('egStatusMsg'); if(sm) sm.textContent = '';
+  if(typeof showLockStep === 'function') showLockStep('email');
+  var lo = document.getElementById('lockOverlay'); if(lo) lo.classList.remove('hidden');
+  // Hide mobile app
+  var ma = document.getElementById('mobApp'); if(ma) ma.style.display = 'none';
 };
 window.mobSignOut = function(){
   var btn = document.getElementById('btnSignOut');
