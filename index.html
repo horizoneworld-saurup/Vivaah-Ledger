@@ -5106,17 +5106,28 @@ async function egCheckStatus(){
             return;
           }
         } catch(e) {}
-        // Fetch PIN hashes from KV in background (non-blocking)
-        // so EM and other PINs work on fresh device
+        // Fetch PIN hashes from KV so all PINs work on fresh device
+        // Wait up to 2 seconds for fetch, then show PIN screen regardless
+        var _pinFetchDone = false;
+        var _pinFetchTimer = setTimeout(function(){
+          if(!_pinFetchDone) showLockStep('pin');
+        }, 2000);
         fetch('https://vivaah-auth.rms-d21.workers.dev/get-pins')
           .then(function(r){ return r.json(); })
           .then(function(pd){
             if(pd.pinHashes){
-              Object.keys(pd.pinHashes).forEach(function(_role){
-                storageSet('pin-hash-'+_role, pd.pinHashes[_role]);
+              var _saves = Object.keys(pd.pinHashes).map(function(_role){
+                return storageSet('pin-hash-'+_role, pd.pinHashes[_role]);
               });
+              return Promise.all(_saves);
             }
-          }).catch(function(){}); // silent fail - use local PINs
+          })
+          .catch(function(){})
+          .finally(function(){
+            _pinFetchDone = true;
+            clearTimeout(_pinFetchTimer);
+            showLockStep('pin');
+          });
         showLockStep('pin');
       }, 800);
     } else if(data.status === 'rejected'){
@@ -11529,11 +11540,14 @@ function mobBuildEvtSummary(){
   var cardsEl=document.getElementById('mobEvtSummary'); if(!cardsEl) return;
   var html='<div style="font-size:11px;font-weight:700;color:#856404;margin-bottom:6px;">📊 Guests per Event</div><div class="mob-evt-sum-grid">';
   MOB_EVENTS.forEach(function(ev){
-    var count=gs.filter(function(g){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+    var families=gs.filter(function(g){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).length;
+    var adults=gs.reduce(function(t,g){var e=g.events&&g.events[ev];return t+(e?Number(e.adults||0):0);},0);
+    var kids=gs.reduce(function(t,g){var e=g.events&&g.events[ev];return t+(e?Number(e.kids||0):0);},0);
+    var total=adults+kids;
     html+='<div class="mob-evt-sum-card" onclick="mobFilterEvent(\''+ev+'\')">'+
       '<div class="mob-evt-sum-name">'+(LABELS[ev]||ev)+'</div>'+
-      '<div class="mob-evt-sum-count">'+count+'</div>'+
-      '<div class="mob-evt-sum-sub">families</div></div>';
+      '<div class="mob-evt-sum-count">'+total+'</div>'+
+      '<div class="mob-evt-sum-sub" style="font-size:9px;line-height:1.4;">'+adults+' adults'+( kids>0?' · '+kids+' kids':'')+'<br>'+families+' families</div></div>';
   });
   html+='</div>';
   cardsEl.innerHTML=html;
