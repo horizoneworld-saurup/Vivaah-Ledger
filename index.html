@@ -605,7 +605,7 @@
   body.role-viewer .admin-only,
   body.role-editor .admin-only { display:none !important; }
 
-  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
+  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.guest-detail-row button):not(.btn-confirm):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
   body.role-viewer a.mob-dbtn,
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
   body.role-viewer select,
@@ -1171,7 +1171,7 @@
   body.role-eventmanager .admin-only,
   body.role-eventmanager .editor-only { display:none !important; }
   /* EM can click WhatsApp, confirm, cancel — same as viewer exemptions */
-  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
+  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.guest-detail-row button):not(.btn-confirm):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
   body.role-eventmanager a.mob-dbtn,
   body.role-eventmanager input:not(#lockRemember):not([data-lock-role]):not(.guest-confirm-input),
   body.role-eventmanager select,
@@ -11920,7 +11920,10 @@ window.mobShowSec=function(sec){
   if(el) el.classList.add('active');
   document.getElementById('mobTopTitle').textContent=cfg.title;
   document.getElementById('mobTopSub').textContent='Tap ← to return home';
-  document.getElementById('mobBtnBack').classList.add('show');
+  // Back button only for non-EM roles (EM has no home dashboard)
+  if(currentRole !== 'eventmanager'){
+    document.getElementById('mobBtnBack').classList.add('show');
+  }
   document.querySelectorAll('.mob-bnav-item').forEach(function(n){n.classList.remove('active');});
   if(cfg.nav) document.getElementById(cfg.nav).classList.add('active');
   if(cfg.render) cfg.render();
