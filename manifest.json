@@ -1,24 +1,18 @@
 {
   "name": "Vivaah Ledger",
   "short_name": "Vivaah",
-  "description": "Wedding planning — vendors, guests, budget & timeline",
-  "start_url": "/",
+  "description": "Wedding vendor budget & payment intelligence",
+  "start_url": "/Vivaah-Ledger/",
+  "scope": "/Vivaah-Ledger/",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#3E0F1C",
+  "background_color": "#5C1A2B",
   "theme_color": "#5C1A2B",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/icon-192.svg",
+      "src": "https://vivaah-auth.rms-d21.workers.dev/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-512.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
