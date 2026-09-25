@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#5C1A2B">
-<link rel="manifest" href="/manifest.json">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="/icon-192.svg">
 <title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -605,7 +605,7 @@
   body.role-viewer .admin-only,
   body.role-editor .admin-only { display:none !important; }
 
-  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.guest-detail-row button):not(.btn-confirm):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
+  body.role-viewer button:not(#btnPrint):not(#btnExport):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-confirm):not(.btn-std):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
   body.role-viewer a.mob-dbtn,
   body.role-viewer input:not(#lockRemember):not([data-lock-role]),
   body.role-viewer select,
@@ -1171,7 +1171,7 @@
   body.role-eventmanager .admin-only,
   body.role-eventmanager .editor-only { display:none !important; }
   /* EM can click WhatsApp, confirm, cancel — same as viewer exemptions */
-  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.guest-detail-row button):not(.btn-confirm):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
+  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-confirm):not(.btn-std):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
   body.role-eventmanager a.mob-dbtn,
   body.role-eventmanager input:not(#lockRemember):not([data-lock-role]):not(.guest-confirm-input),
   body.role-eventmanager select,
@@ -1753,7 +1753,7 @@
   <!-- RANGOLI COUNTDOWN TIMER -->
   <div class="rangoli-wrap countdown-hide" id="countdownWrap">
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
-    <audio id="weddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <audio id="weddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
     <script>/* Mute desktop audio immediately on mobile — runs inline before any other JS */
     (function(){ if(window.matchMedia('(max-width:767px)').matches){ var a=document.getElementById('weddingMusic'); if(a){a.muted=true;a.volume=0;} } })();
     </script>
@@ -6889,7 +6889,7 @@ function renderGuests(){
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
-              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
+              ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button class="btn-std" onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
@@ -10664,13 +10664,13 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
       <span class="mob-sync-dot" id="mobSyncDot"></span>
-      <button onclick="mobSignOutRole()" style="background:none;border:none;font-size:10px;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;white-space:nowrap;">&#x21A9; Sign out</button>
+      <button class="mob-btn-signout" onclick="mobSignOutRole()" style="background:none;border:none;font-size:10px;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;white-space:nowrap;">&#x21A9; Sign out</button>
     </div>
   </div>
 
   <!-- Countdown -->
   <div class="mob-cd-wrap hidden" id="mobCdWrap" style="position:relative;overflow:hidden;">
-    <audio id="mobWeddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <audio id="mobWeddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
     <button id="mobMusicBtn" onclick="mobToggleMusic()" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:3px 8px;font-size:13px;cursor:pointer;color:#7a1838;">🎵</button>
     <div id="mobPetals" style="position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;"></div>
     <div class="mob-cd-left">
@@ -11627,7 +11627,7 @@ function mobRenderGuests(){
     var evs=MOB_EVENTS.filter(function(ev){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).map(function(ev){return EMOJIS[ev];});
     // Step 4: STD button for Marriage guests
     var hasMrg=g.events&&g.events['Marriage']&&(Number((g.events['Marriage'].adults)||0)+Number((g.events['Marriage'].kids)||0))>0;
-    var stdBtn=hasMrg?'<button onclick="if(typeof openStd===\'function\')openStd(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+';border-radius:8px;padding:6px;font-size:'+(g.stdSent?'16px':'11px')+';font-weight:600;cursor:pointer;color:'+(g.stdSent?'#C62828':'#856404')+';">'+(g.stdSent?'❤️':'💌 STD')+'</button>':'';
+    var stdBtn=hasMrg?'<button class="btn-std" onclick="if(typeof openStd===\'function\')openStd(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+';border-radius:8px;padding:6px;font-size:'+(g.stdSent?'16px':'11px')+';font-weight:600;cursor:pointer;color:'+(g.stdSent?'#C62828':'#856404')+';">'+(g.stdSent?'❤️':'💌 STD')+'</button>':'';
     return '<div class="mob-row-item" style="flex-wrap:wrap;gap:4px;cursor:default;padding:8px 10px;">'+
       '<div style="flex:1;min-width:180px;" onclick="mobOpenGuest(\''+g.id+'\')">'+
         '<div class="mob-row-name">'+mobEsc(g.name||'—')+'</div>'+
@@ -12200,7 +12200,7 @@ if(typeof _origOpenApp === 'function'){
 /* PWA Service Worker registration */
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('/sw.js').catch(function(){});
+    navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
 </script>
