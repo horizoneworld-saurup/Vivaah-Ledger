@@ -4059,6 +4059,7 @@ function waSend() {
   g.waCustomMsg = rawMsg;
   g.invitationSent = true;
   if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
+  if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
   saveGuests();
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
@@ -4096,18 +4097,14 @@ function generateKankotriMsg(g){
     '\uD83C\uDF38 '+familyName+' \uD83C\uDF38';
 }
 function openKankotriWA(guestId){
-  var g=guests.find(function(x){return x.id===guestId;}); if(!g||!g.phone) return;
-  var ph=g.phone.replace(/\D/g,'');
-  if(ph.length===10) ph='91'+ph;
-  var url='https://wa.me/'+ph+'?text='+encodeURIComponent(generateKankotriMsg(g));
-  // Use location.href for mobile compatibility (window.open blocked on mobile)
-  var a=document.createElement('a');
-  a.href=url; a.target='_blank'; a.rel='noopener';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  g.kankWASent=true;
-  storageSet('wedding-guests',JSON.stringify(guests));
-  if(typeof queueCloudSave==='function') queueCloudSave();
-  renderGuests();
+  var g=guests.find(function(x){return x.id===guestId;}); if(!g) return;
+  waCurrentGuestId = guestId;
+  window._pendingKank = guestId;
+  if(document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '\uD83D\uDCEE Kankotri Lekhan \u2014 '+(g.name||'');
+  document.getElementById('waGuestName').textContent = g.name;
+  document.getElementById('waGuestPhone').textContent = g.phone||'';
+  document.getElementById('waMessageText').value = generateKankotriMsg(g);
+  document.getElementById('waModalOverlay').classList.add('show');
 }
 window.openKankotriWA=openKankotriWA;
 
