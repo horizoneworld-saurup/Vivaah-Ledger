@@ -3085,7 +3085,8 @@ function copyMarriageNumbers() {
 function generateStdMsg(g) {
   var t = eventTimeline['Marriage'] || {};
   var dateStr = t.date ? new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}) : '';
-  var timeStr = t.startTime ? t.startTime + ' onwards' : '';
+  var timeStr = '';
+  if(t.startTime){ var _p=t.startTime.split(':'); var _h=parseInt(_p[0]||0); var _m=_p[1]||'00'; var _ap=_h>=12?'PM':'AM'; timeStr=(_h%12||12)+':'+_m+' '+_ap+' onwards'; }
   var venueStr = t.venue || '';
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
@@ -3120,7 +3121,7 @@ function generateInviteMsg(g) {
   var lines = invited.map(function(ev) {
     var t = eventTimeline[ev]||{};
     var line = (EMOJIS[ev]||'📅')+' *'+ev+'*';
-    if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime) line += ' · '+t.startTime; }
+    if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime){ var _tp=t.startTime.split(':'); var _th=parseInt(_tp[0]||0); var _tm=_tp[1]||'00'; line += ' · '+(_th%12||12)+':'+_tm+' '+(_th>=12?'PM':'AM'); } }
     if (t.venue) line += '\n📍 '+t.venue;
     return line;
   }).join('\n\n');
@@ -4066,6 +4067,45 @@ function waSend() {
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
 }
+
+// ── Kankotri WhatsApp ─────────────────────────────────────────────
+function generateKankotriMsg(g){
+  var t=eventTimeline['Kankotri']||{};
+  var coupleName=(branding&&branding.title)?branding.title:'Mrishana & Spandan';
+  var familyName=coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop()+' Family';
+  var blessings=(branding&&branding.blessings)?branding.blessings:'';
+  var blessLine=blessings?'\nWith Blessings,\n'+blessings+'\n\n':'\n';
+  var dateStr=t.date?new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+  var timeStr='';
+  if(t.startTime){
+    var parts=t.startTime.split(':');
+    var h=parseInt(parts[0]||0); var m=parts[1]||'00';
+    var ampm=h>=12?'PM':'AM'; var h12=h%12||12;
+    timeStr=h12+':'+m+' '+ampm+' onwards';
+  }
+  var venueStr=t.venue||'';
+  return '\uD83C\uDF38 *Kankotri Lekhan* \uD83C\uDF38\n\n'+
+    'Dear \uD83EDE7 *'+(g.name||'')+'* \uD83EDE7,\n\n'+
+    'We joyfully invite you to the auspicious\n\n'+
+    '\uD83D\uDCEE *Kankotri Lekhan Ceremony*\n'+
+    (dateStr?'\uD83D\uDCC5 '+dateStr+'\n':'')+
+    (timeStr?'\uD83D\uDD50 '+timeStr+'\n':'')+
+    '\uD83D\uDCCD 62, Goyal Park Row House, Satellite, Ahmedabad\n'+
+    '\nYour presence will make this moment\ntruly blessed \uD83D\uDE4F\n'+
+    blessLine+
+    '\uD83C\uDF38 '+familyName+' \uD83C\uDF38';
+}
+function openKankotriWA(guestId){
+  var g=guests.find(function(x){return x.id===guestId;}); if(!g||!g.phone) return;
+  var ph=g.phone.replace(/\D/g,'');
+  if(ph.length===10) ph='91'+ph;
+  window.open('https://wa.me/'+ph+'?text='+encodeURIComponent(generateKankotriMsg(g)),'_blank');
+  g.kankWASent=true;
+  storageSet('wedding-guests',JSON.stringify(guests));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  renderGuests();
+}
+window.openKankotriWA=openKankotriWA;
 
 // ── Headcount confirmation functions ─────────────────────────────
 function hcOpen(guestId) {
@@ -6889,6 +6929,7 @@ function renderGuests(){
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
+              ${(g.events && g.events['Kankotri'] && (Number(g.events['Kankotri'].adults||0)+Number(g.events['Kankotri'].kids||0))>0) ? `<button class="btn-kank btn-std" onclick="openKankotriWA('${g.id}')" style="background:${g.kankWASent?'#E8F5E9':'#FFF3E0'};border:1px solid ${g.kankWASent?'#2E7D32':'#5C1A2B'};color:${g.kankWASent?'#2E7D32':'#5C1A2B'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Kankotri WhatsApp">${g.kankWASent?'📮✓':'📮 Kank'}</button>` : ''}
               ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button class="btn-std" onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
@@ -8885,7 +8926,7 @@ function epCalcMealTotal(){
   var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
   var total=epSlotTotal(slot,h);
   var vCount=slot.vendors.length;
-  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(total)+(vCount?'  ('+vCount+' caterer'+(vCount>1?'s':'')+' � '+h+' people)':'  ('+h+' people)');
+  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(total)+(vCount?'  ('+vCount+' caterer'+(vCount>1?'s':'')+' � '+h+' people)':'  ('+h+' people)');
 }
 function epUpdateBadges(){
   var p=0,c=0;
@@ -11627,6 +11668,8 @@ function mobRenderGuests(){
     var evs=MOB_EVENTS.filter(function(ev){var e=g.events&&g.events[ev];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;}).map(function(ev){return EMOJIS[ev];});
     // Step 4: STD button for Marriage guests
     var hasMrg=g.events&&g.events['Marriage']&&(Number((g.events['Marriage'].adults)||0)+Number((g.events['Marriage'].kids)||0))>0;
+    var hasKank=g.events&&g.events['Kankotri']&&(Number((g.events['Kankotri'].adults)||0)+Number((g.events['Kankotri'].kids)||0))>0;
+    var kankBtn=hasKank?'<button class="btn-std" onclick="if(typeof openKankotriWA===\'function\')openKankotriWA(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.kankWASent?'#E8F5E9':'#FFF3E0')+';border:1px solid '+(g.kankWASent?'#2E7D32':'#5C1A2B')+';border-radius:8px;padding:6px;font-size:11px;font-weight:600;cursor:pointer;color:'+(g.kankWASent?'#2E7D32':'#5C1A2B')+';\">'+(g.kankWASent?'📮 ✓':'📮 Kank')+'</button>':'';
     var stdBtn=hasMrg?'<button class="btn-std" onclick="if(typeof openStd===\'function\')openStd(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+';border-radius:8px;padding:6px;font-size:'+(g.stdSent?'16px':'11px')+';font-weight:600;cursor:pointer;color:'+(g.stdSent?'#C62828':'#856404')+';">'+(g.stdSent?'❤️':'💌 STD')+'</button>':'';
     return '<div class="mob-row-item" style="flex-wrap:wrap;gap:4px;cursor:default;padding:8px 10px;">'+
       '<div style="flex:1;min-width:180px;" onclick="mobOpenGuest(\''+g.id+'\')">'+
@@ -11636,6 +11679,7 @@ function mobRenderGuests(){
       '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
         (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
         (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">💬</a>':'')+
+        kankBtn+
         stdBtn+
         '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
       '</div></div>';
@@ -11823,12 +11867,15 @@ window.mobOpenGuest=function(id){
   var ph=(g.phone||'').replace(/\D/g,'');
   // Use full generateInviteMsg with all events, dates, venues
   var waMsg=encodeURIComponent(typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', we warmly invite you to our wedding. 🌸');
-  // STD button for Marriage guests
+  // STD + Kankotri buttons
   var hasMrg=g.events&&g.events['Marriage']&&(Number((g.events['Marriage'].adults)||0)+Number((g.events['Marriage'].kids)||0))>0;
+  var hasKank2=g.events&&g.events['Kankotri']&&(Number((g.events['Kankotri'].adults)||0)+Number((g.events['Kankotri'].kids)||0))>0;
+  var kankAction=hasKank2?'<button class="mob-dbtn" style="background:'+(g.kankWASent?'#E8F5E9':'#FFF3E0')+';color:'+(g.kankWASent?'#2E7D32':'#5C1A2B')+';border:1px solid '+(g.kankWASent?'#2E7D32':'#5C1A2B')+'" onclick="mobCloseGuest();if(typeof openKankotriWA===\'function\')openKankotriWA(\''+id+'\')">'+(g.kankWASent?'📮 Kank Sent':'📮 Kankotri')+'</button>':'';
   var stdAction=hasMrg?'<button class="mob-dbtn" style="background:'+(g.stdSent?'#FFE4E8':'#FFF8E1')+';color:'+(g.stdSent?'#C62828':'#856404')+';border:1px solid '+(g.stdSent?'#C62828':'#D4A24C')+'" onclick="mobCloseGuest();if(typeof openStd===\'function\')openStd(\''+id+'\')">'+(g.stdSent?'❤️ STD Sent':'💌 STD')+'</button>':'';
   document.getElementById('mobGdActions').innerHTML=
     (ph?'<a href="tel:+'+ph+'" class="mob-dbtn mob-dbtn-call">📞 Call</a>':'')+
     (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" class="mob-dbtn mob-dbtn-wa">💬 WhatsApp</a>':'')+
+    kankAction+
     stdAction+
     '<button class="mob-dbtn mob-dbtn-confirm" onclick="mobOpenConfirm(\''+id+'\')">✓ Confirm</button>'+
     '<button class="mob-dbtn mob-dbtn-close" onclick="mobCloseGuest()">Close</button>';
