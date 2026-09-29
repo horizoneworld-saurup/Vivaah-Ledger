@@ -2592,6 +2592,10 @@
       <input type="text" id="brandTaglineInput" placeholder="Wedding vendor budget & payment intelligence" maxlength="80">
     </div>
     <div class="field">
+      <label>Family Name (shown at end of WhatsApp messages)</label>
+      <input type="text" id="brandFamilyNameInput" placeholder="e.g. Shah Family" maxlength="40">
+    </div>
+    <div class="field">
       <label>With Blessings (names for WhatsApp messages)</label>
       <textarea id="brandBlessingsInput" rows="2" style="font-size:13px;resize:vertical;" placeholder="e.g. Saurabh Shah &#127800; Bharat Shah"></textarea>
       <div style="font-size:10px;color:#aaa;margin-top:3px;">Use &#127800; between names. Press Enter for new line.</div>
@@ -3089,7 +3093,7 @@ function generateStdMsg(g) {
   if(t.startTime){ var _p=t.startTime.split(':'); var _h=parseInt(_p[0]||0); var _m=_p[1]||'00'; var _ap=_h>=12?'PM':'AM'; timeStr=(_h%12||12)+':'+_m+' '+_ap+' onwards'; }
   var venueStr = t.venue || '';
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
-  var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
+  var familyName = (branding&&branding.familyName)?branding.familyName:(coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop()+' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
   var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
   return '\uD83C\uDF38 *Save the Date* \uD83C\uDF38\n\n' +
@@ -3107,10 +3111,20 @@ function generateStdMsg(g) {
 }
 
 function generateInviteMsg(g) {
-  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔🔥','Mosalu':'🪔🔥','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var TAGLINES = {
+    'Kankotri': ['The First Chapter','Where a thousand little moments begin with\none beautiful announcement.\nThe first note of a story soon to unfold.'],
+    'Ganesh-Grahshanti': ['Auspicious Beginnings','With blessings in our hearts and joy in the air,\nwe begin the festivities with divine grace.'],
+    'Mosalu': ['Auspicious Beginnings','With blessings in our hearts and joy in the air,\nwe begin the festivities with divine grace.'],
+    'Mehendi': ['Palm of Celebration','Intricate patterns, playful rituals and a little\nbit of mischief, woven into every shade of celebration.'],
+    'Sangeet': ['An Evening in Rhythm','When two families find their rhythm, every beat\nbecomes a memory and every dance tells a story.'],
+    'Haldi': ['',''],
+    'Marriage': ['The Forever Affair','Two hearts, two families and one beautiful\npromise to cherish a lifetime together.'],
+    'Reception': ['The Afterglow','An evening of elegance and togetherness,\ncelebrating the beginning of their forever.']
+  };
   var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
-  var familyName = coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family';
+  var familyName = (branding && branding.familyName) ? branding.familyName : (coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
   var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
   var invited = ALL_EVENTS.filter(function(ev) {
@@ -3120,7 +3134,9 @@ function generateInviteMsg(g) {
   if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'');
   var lines = invited.map(function(ev) {
     var t = eventTimeline[ev]||{};
-    var line = (EMOJIS[ev]||'📅')+' *'+ev+'*';
+    var tl = TAGLINES[ev]||['',''];
+    var line = (EMOJIS[ev]||'📅')+' *'+ev+(tl[0]?' — '+tl[0]:'')+'*';
+    if(tl[1]) line += '\n'+tl[1];
     if (t.date) { var d=new Date(t.date); line += '\n📅 '+d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); if(t.startTime){ var _tp=t.startTime.split(':'); var _th=parseInt(_tp[0]||0); var _tm=_tp[1]||'00'; line += ' · '+(_th%12||12)+':'+_tm+' '+(_th>=12?'PM':'AM'); } }
     if (t.venue) line += '\n📍 '+t.venue;
     return line;
@@ -4081,25 +4097,42 @@ function generateKankotriMsg(g){
   var familyName=coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop()+' Family';
   var blessings=(branding&&branding.blessings)?branding.blessings:'';
   var blessLine=blessings?'\nWith Blessings,\n'+blessings+'\n\n':'\n';
-  var dateStr=t.date?new Date(t.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'';
+  var _tdate=t.date||'';
+  var _ttime=t.startTime||'';
+  // Parse date correctly regardless of format (YYYY-MM-DD or DD-MM-YYYY)
+  var dateStr='';
+  if(_tdate){
+    var _dp=_tdate.split('-');
+    var _dd,_mm,_yy;
+    if(_dp[0]&&_dp[0].length===4){ _yy=_dp[0];_mm=_dp[1];_dd=_dp[2]; }
+    else { _dd=_dp[0];_mm=_dp[1];_yy=_dp[2]; }
+    var _d=new Date(_yy+'-'+_mm+'-'+_dd);
+    if(!isNaN(_d)) dateStr=_d.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
   var timeStr='';
-  if(t.startTime){
-    var parts=t.startTime.split(':');
+  if(_ttime){
+    var parts=_ttime.split(':');
     var h=parseInt(parts[0]||0); var m=parts[1]||'00';
     var ampm=h>=12?'PM':'AM'; var h12=h%12||12;
     timeStr=h12+':'+m+' '+ampm+' onwards';
   }
   var venueStr=t.venue||'';
+  var familyName2=(branding&&branding.familyName)?branding.familyName:familyName;
+  var venueStr2=t.venue||'62, Goyal Park Row House, Opp Goyal Plaza, Satellite, Ahmedabad';
   return '\uD83C\uDF38 *Kankotri Lekhan* \uD83C\uDF38\n\n'+
+    '*The First Chapter*\n'+
+    'Where a thousand little moments begin with\n'+
+    'one beautiful announcement.\n'+
+    'The first note of a story soon to unfold.\n\n'+
     'Dear \uD83E\uDEB7 *'+(g.name||'')+'* \uD83E\uDEB7,\n\n'+
     'We joyfully invite you to the auspicious\n\n'+
-    '\uD83D\uDCEE *Kankotri Lekhan Ceremony*\n'+
+    '\uD83D\uDCEE *Kankotri Lekhan Ceremony of Mrishana*\n'+
     (dateStr?'\uD83D\uDCC5 '+dateStr+'\n':'')+
     (timeStr?'\uD83D\uDD50 '+timeStr+'\n':'')+
-    '\uD83D\uDCCD 62, Goyal Park Row House, Satellite, Ahmedabad\n'+
-    '\nYour presence will make this moment\ntruly blessed \uD83D\uDE4F\n'+
+    '\uD83D\uDCCD '+venueStr2+'\n'+
+    '\nYour presence will make this moment truly blessed \uD83D\uDE4F\n'+
     blessLine+
-    '\uD83C\uDF38 '+familyName+' \uD83C\uDF38';
+    '\uD83C\uDF38 '+familyName2+' \uD83C\uDF38';
 }
 function openKankotriWA(guestId){
   var g=guests.find(function(x){return x.id===guestId;}); if(!g) return;
@@ -6627,6 +6660,7 @@ function openBrandingModal(){
   document.getElementById('brandTitleInput').value = branding.title || '';
   document.getElementById('brandTaglineInput').value = branding.tagline || '';
   document.getElementById('brandBlessingsInput').value = branding.blessings || '';
+  if(document.getElementById('brandFamilyNameInput')) document.getElementById('brandFamilyNameInput').value = branding.familyName || '';
   refreshLogoPreview(branding.logo || null);
   document.getElementById('brandingModalOverlay').classList.add('show');
 }
@@ -6677,9 +6711,11 @@ document.getElementById('brandingSaveBtn').onclick = async ()=>{
   const title = document.getElementById('brandTitleInput').value.trim();
   const tagline = document.getElementById('brandTaglineInput').value.trim();
   const blessings = document.getElementById('brandBlessingsInput').value.trim();
+  const familyNameVal = document.getElementById('brandFamilyNameInput') ? document.getElementById('brandFamilyNameInput').value.trim() : '';
   branding.title = title;
   branding.tagline = tagline;
   branding.blessings = blessings;
+  if(familyNameVal) branding.familyName = familyNameVal;
   if(pendingLogoData !== undefined){
     branding.logo = pendingLogoData || '';
   }
