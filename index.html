@@ -4055,8 +4055,10 @@ function waSend() {
   const g = guests.find(x => x.id === waCurrentGuestId);
   if (!g) return;
   const rawMsg = document.getElementById('waMessageText').value;
-  // Save custom message per guest
-  g.waCustomMsg = rawMsg;
+  // Only save custom message for regular invite (not STD or Kankotri)
+  if (!window._pendingStd && !window._pendingKank) {
+    g.waCustomMsg = rawMsg;
+  }
   g.invitationSent = true;
   if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
   if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
@@ -4067,6 +4069,9 @@ function waSend() {
   const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
+  // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
+  if(typeof renderGuests === 'function') renderGuests();
+  if(typeof mobRenderGuests === 'function') setTimeout(mobRenderGuests, 100);
 }
 
 // ── Kankotri WhatsApp ─────────────────────────────────────────────
@@ -5649,9 +5654,10 @@ function compressGuests(guestArr){
       g.rooms||0, g.beds||0,
       g.kankotriTier||'', g.kankotriSent ? 1 : 0,
       g.invTier||'', g.invCards||0, g.invSent ? 1 : 0,
-      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', g.waCustomMsg||'',
+      g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', '',
       g.invitationSent?1:0,
-      g.stdSent?1:0
+      g.stdSent?1:0,
+      g.kankWASent?1:0
     ];
   });
 }
@@ -5672,7 +5678,8 @@ function expandGuests(compressed){
       kankotriTier:kankotriTier||'', kankotriSent:!!kankotriSent,
       invTier:invTier||'', invCards:invCards||0, invSent:!!invSent,
       confirmedAdults:Number(arr[16])||0, confirmedKids:Number(arr[17])||0,
-      callStatus:arr[18]||'', waCustomMsg:arr[19]||''
+      callStatus:arr[18]||'', waCustomMsg:'',
+      invitationSent:!!arr[20], stdSent:!!arr[21], kankWASent:!!arr[22]
     };
   });
 }
