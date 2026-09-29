@@ -3097,14 +3097,17 @@ function generateStdMsg(g) {
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
   var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
   return '\uD83C\uDF38 *Save the Date* \uD83C\uDF38\n\n' +
-    'Dear 🪷 *' + (g.name||'') + '* 🪷,\n\n' +
+    '*The Forever Affair*\n' +
+    'Two hearts, two families and one beautiful\n' +
+    'promise to cherish a lifetime together.\n\n' +
+    'Dear \uD83E\uDEB7 *' + (g.name||'') + '* \uD83E\uDEB7,\n\n' +
     'With great joy we announce the wedding of\n\n' +
     '\u2728 *' + coupleName + '* \u2728\n\n' +
     '\uD83D\uDC8D *Marriage Ceremony*\n' +
     (dateStr ? '\uD83D\uDCC5 ' + dateStr + '\n' : '') +
     (timeStr ? '\uD83D\uDD50 ' + timeStr + '\n' : '') +
     (venueStr ? '\uD83D\uDCCD ' + venueStr + '\n' : '') +
-    '\nPlease save this date and grace us\nwith your presence \uD83D\uDE4F\n\n' +
+    '\nYour presence will make this moment truly special \uD83D\uDE4F\n\n' +
     '\uD83C\uDF38 (Formal invitation to follow) \uD83C\uDF38\n' +
     blessLine +
     '\uD83C\uDF38 ' + familyName + ' \uD83C\uDF38';
