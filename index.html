@@ -9266,10 +9266,81 @@ function epOpenDecorModal(ev){
   document.getElementById('epDecorSetupTime').value=dec.setupTime||'';
   document.getElementById('epDecorPending').value=dec.pending||'';
   document.getElementById('epDecorNotes').value=dec.notes||'';
-  document.getElementById('epDecorStatus').value=dec.status||'pending';
+  epSetDecorStatus(dec.status||'pending');
   document.getElementById('epDecorImgPreview').innerHTML=epRenderThumbs(dec.images||[]);
+  // Show saved PDFs
+  var pdfList=document.getElementById('epDecorPdfList');
+  if(pdfList){
+    var pdfs=dec.pdfs||[];
+    pdfList.innerHTML=pdfs.map(function(p,i){
+      return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">'+
+        '<span style="font-size:12px;">📄 '+p.name+'</span>'+
+        '<a href="'+p.data+'" download="'+p.name+'" style="font-size:11px;color:#8B1A6B;">Download</a>'+
+        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">✕</button>'+
+        '</div>';
+    }).join('');
+  }
   document.getElementById('epDecorModal').classList.add('show');
 }
+
+function epDecorPdfUpload(input){
+  if(!input.files.length) return;
+  var file=input.files[0];
+  if(file.size>5*1024*1024){ showToast('PDF too large — max 5MB'); return; }
+  var r=new FileReader();
+  r.onload=function(e){
+    var ev=_epDecorEv;
+    var isHome=(ev==='__home__');
+    var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
+    if(!dec.pdfs) dec.pdfs=[];
+    dec.pdfs.push({name:file.name, data:e.target.result});
+    if(isHome) eventPlanner.homeDecor=dec;
+    else { if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={}; Object.assign(eventPlanner.decor[ev],{pdfs:dec.pdfs}); }
+    storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+    if(typeof queueCloudSave==='function') queueCloudSave();
+    // Refresh PDF list
+    var pdfList=document.getElementById('epDecorPdfList');
+    var pdfs=dec.pdfs||[];
+    pdfList.innerHTML=pdfs.map(function(p,i){
+      return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">'+
+        '<span style="font-size:12px;">📄 '+p.name+'</span>'+
+        '<a href="'+p.data+'" download="'+p.name+'" style="font-size:11px;color:#8B1A6B;">Download</a>'+
+        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">✕</button>'+
+        '</div>';
+    }).join('');
+    showToast('PDF uploaded: '+file.name+' \u2705');
+    input.value='';
+  };
+  r.readAsDataURL(file);
+}
+window.epDecorPdfUpload=epDecorPdfUpload;
+
+function epDecorRemovePdf(idx){
+  var ev=_epDecorEv; var isHome=(ev==='__home__');
+  var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
+  if(dec.pdfs) dec.pdfs.splice(idx,1);
+  if(isHome) eventPlanner.homeDecor=dec;
+  else if(eventPlanner.decor[ev]) eventPlanner.decor[ev].pdfs=dec.pdfs||[];
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epOpenDecorModal(ev); // refresh modal
+}
+window.epDecorRemovePdf=epDecorRemovePdf;
+
+function epSetDecorStatus(val){
+  document.getElementById('epDecorStatus').value=val;
+  var styles={
+    'pending':  {active:'border:2px solid #C45000;background:#FFF3E0;color:#C45000;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'},
+    'confirmed':{active:'border:2px solid #2E7D32;background:#E8F5E9;color:#2E7D32;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'},
+    'not-required':{active:'border:2px solid #555;background:#f5f5f5;color:#555;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'}
+  };
+  var map={'pending':'epDecorStatusPending','confirmed':'epDecorStatusConfirmed','not-required':'epDecorStatusNotReq'};
+  Object.keys(map).forEach(function(k){
+    var el=document.getElementById(map[k]);
+    if(el) el.style.cssText='padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;'+(k===val?styles[k].active:styles[k].inactive);
+  });
+}
+window.epSetDecorStatus=epSetDecorStatus;
 
 async function epSaveDecor(){
   var ev=_epDecorEv;
@@ -9301,7 +9372,8 @@ async function epSaveDecor(){
     pending:document.getElementById('epDecorPending').value.trim(),
     notes:document.getElementById('epDecorNotes').value.trim(),
     status:document.getElementById('epDecorStatus').value,
-    images:imgs
+    images:imgs,
+    pdfs:existing.pdfs||[]
   };
   if(isHome){
     data.inside=document.getElementById('epDecorInside').value.trim();
@@ -11184,6 +11256,7 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-field" id="epDecorCostRow"><label>Quoted Amount (&#8377;) — syncs to Vendor Management</label>
       <input type="number" id="epDecorCost" min="0" placeholder="0">
     </div>
+    <div id="epDecorHomeRow">
       <div class="ep-field"><label>Inside decor details</label><textarea id="epDecorInside" placeholder="e.g. Living room flowers, entrance rangoli, prayer area..."></textarea></div>
       <div class="ep-field"><label>Outside decor details</label><textarea id="epDecorOutside" placeholder="e.g. Gate decoration, driveway lights, garden setup..."></textarea></div>
     </div>
@@ -11193,15 +11266,20 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-field"><label>Pending items</label><input type="text" id="epDecorPending" placeholder="e.g. Lighting quote awaited, colour confirmation pending"></div>
     <div class="ep-field"><label>Notes</label><textarea id="epDecorNotes" placeholder="Any additional notes..."></textarea></div>
     <div class="ep-field"><label>Status</label>
-      <select id="epDecorStatus">
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="not-required">Not Required</option>
-      </select>
+      <input type="hidden" id="epDecorStatus" value="pending">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="epDecorStatusBtns">
+        <button type="button" onclick="epSetDecorStatus('pending')" id="epDecorStatusPending" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #C45000;background:#FFF3E0;color:#C45000;">⏳ Pending</button>
+        <button type="button" onclick="epSetDecorStatus('confirmed')" id="epDecorStatusConfirmed" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #ccc;background:#fff;color:#999;">✅ Confirmed</button>
+        <button type="button" onclick="epSetDecorStatus('not-required')" id="epDecorStatusNotReq" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #ccc;background:#fff;color:#999;">❌ Not Needed</button>
+      </div>
     </div>
-    <div class="ep-field"><label>Upload photo / reference (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epDecorImgInput" accept="image/*" multiple style="display:none;"></label></div>
+    <div class="ep-field"><label>Upload photos / PDF reference (JPEG, PNG, PDF)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <label class="ep-upload-btn">&#128247; Photo (JPEG/PNG)<input type="file" id="epDecorImgInput" accept="image/*" multiple style="display:none;"></label>
+        <label class="ep-upload-btn">&#128196; PDF Reference<input type="file" id="epDecorPdfInput" accept="application/pdf" style="display:none;" onchange="epDecorPdfUpload(this)"></label>
+      </div>
       <div id="epDecorImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+      <div id="epDecorPdfList" style="margin-top:4px;"></div>
     </div>
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epDecorModal').classList.remove('show')">Cancel</button>
