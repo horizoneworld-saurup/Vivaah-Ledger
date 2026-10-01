@@ -9185,103 +9185,218 @@ window.epSyncVendorAmounts=epSyncVendorAmounts;
 window.epShowTab=epShowTab;
 
 /* EP Decor Module */
+// ── DECOR MULTI-VENDOR HELPERS ────────────────────────────────────
+
+function epDecorGetVendors(ev){
+  var isHome=(ev==='__home__');
+  var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
+  // Migrate old single-vendor to new array format
+  if(!dec.vendors){
+    dec.vendors=[];
+    if(dec.vendorId||dec.theme||dec.items||dec.status){
+      dec.vendors.push({
+        vendorId:dec.vendorId||'',vendorName:dec.vendorName||'',
+        cost:dec.cost||0,theme:dec.theme||'',items:dec.items||'',
+        setupTime:dec.setupTime||'',pending:dec.pending||'',
+        notes:dec.notes||'',status:dec.status||'pending',
+        images:dec.images||[],pdfs:dec.pdfs||[]
+      });
+    }
+    if(isHome) eventPlanner.homeDecor=dec;
+    else { if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={}; eventPlanner.decor[ev].vendors=dec.vendors; }
+  }
+  return dec.vendors;
+}
+
 function epRenderDecor(){
   var el=document.getElementById('epPanelDecor'); if(!el) return;
   var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:[];
   var html='<div style="padding:8px 0 4px;">';
 
-  // Home Decor card first
+  // Home Decor
   var hd=eventPlanner.homeDecor||{};
-  var hdStatus=hd.status||'pending';
+  var hdVendors=epDecorGetVendors('__home__');
+  var hdStatus=hdVendors.length?hdVendors[0].status||'pending':'pending';
   html+='<div class="ep-event-card">';
-  html+='<div class="ep-event-head" onclick="epToggleEvent(\'decor_home\')">';
-  html+='<div><div class="ep-event-title">&#127968; Home Decor</div>';
+  html+='<div class="ep-event-head" onclick="epToggleEvent(\'decor_home\')"><div><div class="ep-event-title">&#127968; Home Decor</div>';
   html+='<div class="ep-event-date">Inside + Outside &middot; Must be ready 2 days before first function</div></div>';
   html+=epStatusBadge(hdStatus)+'</div>';
   html+='<div class="ep-event-body" id="decor_home" style="padding:10px 14px;">';
-  if(hd.inside||hd.outside||hd.notes){
+  if(hd.inside||hd.outside) {
     if(hd.inside) html+='<div style="margin-bottom:6px;"><strong style="font-size:11px;color:#8B1A6B;">INSIDE</strong><div style="font-size:12px;margin-top:2px;">'+hd.inside+'</div></div>';
     if(hd.outside) html+='<div style="margin-bottom:6px;"><strong style="font-size:11px;color:#8B1A6B;">OUTSIDE</strong><div style="font-size:12px;margin-top:2px;">'+hd.outside+'</div></div>';
-    if(hd.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:6px;">'+hd.notes+'</div>';
-    if(hd.images&&hd.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+epRenderThumbs(hd.images)+'</div>';
-  } else {
-    html+='<div class="ep-empty" style="margin:0 0 10px;">No home decor details added yet</div>';
   }
-  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\')">&#9998; Edit Home Decor</button>';
-  html+='</div></div>';
+  html+=epDecorRenderVendorList('__home__',hdVendors);
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
+  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\',null)">&#9998; Edit Home Details</button>';
+  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\',\'new\')">+ Add Vendor</button>';
+  html+='</div></div></div>';
 
   // All wedding events
   evs.forEach(function(ev){
-    var dec=eventPlanner.decor[ev]||{};
-    var vName=dec.vendorName||'';
-    if(!vName&&dec.vendorId&&typeof vendors!=='undefined'){
-      var v=vendors.find(function(x){return x.id===dec.vendorId;}); vName=v?v.name:'';
-    }
+    var dvs=epDecorGetVendors(ev);
+    var anyStatus=dvs.length?dvs[0].status||'pending':'pending';
     html+='<div class="ep-event-card">';
-    html+='<div class="ep-event-head" onclick="epToggleEvent(\'decor_'+ev+'\')">';
-    html+='<div><div class="ep-event-title">'+ev+'</div>';
-    html+='<div class="ep-event-date">'+epEventDate(ev)+(vName?' &middot; '+vName:'')+'</div></div>';
-    html+=epStatusBadge(dec.status||'pending')+'</div>';
+    html+='<div class="ep-event-head" onclick="epToggleEvent(\'decor_'+ev+'\')"><div><div class="ep-event-title">'+ev+'</div>';
+    html+='<div class="ep-event-date">'+epEventDate(ev)+(dvs.length?' &middot; '+dvs.length+' vendor'+(dvs.length>1?'s':''):'')+'</div></div>';
+    html+=epStatusBadge(anyStatus)+'</div>';
     html+='<div class="ep-event-body" id="decor_'+ev+'" style="padding:10px 14px;">';
-    if(dec.theme||dec.items||dec.setupTime||dec.pending){
-      if(dec.theme) html+='<div style="margin-bottom:5px;font-size:12px;"><strong>Theme:</strong> '+dec.theme+'</div>';
-      if(dec.items) html+='<div style="margin-bottom:5px;font-size:12px;"><strong>Items:</strong> '+dec.items+'</div>';
-      if(dec.setupTime) html+='<div style="margin-bottom:5px;font-size:12px;"><strong>Setup time:</strong> '+dec.setupTime+'</div>';
-      if(dec.pending) html+='<div style="margin-bottom:5px;font-size:12px;color:#C45000;"><strong>&#9888; Pending:</strong> '+dec.pending+'</div>';
-      if(dec.notes) html+='<div style="margin-bottom:5px;font-size:12px;color:#888;">'+dec.notes+'</div>';
-      if(dec.images&&dec.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">'+epRenderThumbs(dec.images)+'</div>';
-    } else {
-      html+='<div class="ep-empty" style="margin:0 0 10px;">No decor details added yet</div>';
-    }
-    html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\''+ev+'\')">&#9998; Edit Decor</button>';
-    html+='</div></div>';
+    html+=epDecorRenderVendorList(ev,dvs);
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">';
+    html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\''+ev+'\',\'new\')">+ Add Vendor</button>';
+    html+='</div></div></div>';
   });
   html+='</div>';
   el.innerHTML=html;
 }
 
+function epDecorRenderVendorList(ev,vendors){
+  if(!vendors||!vendors.length) return '<div class="ep-empty" style="margin:0 0 10px;">No decor vendors added yet</div>';
+  var html='';
+  vendors.forEach(function(v,i){
+    var vName=v.vendorName||(v.vendorId&&v.vendorId!=='__manual__'&&typeof window.vendors!=='undefined'?(function(){var x=window.vendors.find(function(vx){return vx.id===v.vendorId;});return x?x.name:'';}()):'');
+    html+='<div style="border:1px solid #f0d8e8;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fff;">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
+    html+='<div style="font-size:13px;font-weight:700;color:#5C1A2B;">'+(vName||'Vendor '+(i+1))+'</div>';
+    html+='<div style="display:flex;gap:6px;align-items:center;">';
+    html+=epStatusBadge(v.status||'pending');
+    html+='<button class="ep-add-btn" style="padding:3px 10px;font-size:11px;" onclick="epOpenDecorModal(\''+ev+'\','+i+')">&#9998; Edit</button>';
+    html+='<button onclick="epDecorDeleteVendor(\''+ev+'\','+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:16px;">&#215;</button>';
+    html+='</div></div>';
+    if(v.cost) html+='<div style="font-size:12px;margin-bottom:4px;">&#8377; '+Number(v.cost).toLocaleString('en-IN')+'</div>';
+    if(v.theme) html+='<div style="font-size:11px;color:#666;margin-bottom:3px;"><strong>Theme:</strong> '+v.theme+'</div>';
+    if(v.items) html+='<div style="font-size:11px;color:#666;margin-bottom:3px;"><strong>Items:</strong> '+v.items+'</div>';
+    if(v.setupTime) html+='<div style="font-size:11px;color:#666;margin-bottom:3px;"><strong>Setup:</strong> '+v.setupTime+'</div>';
+    if(v.pending) html+='<div style="font-size:11px;color:#C45000;margin-bottom:3px;"><strong>&#9888; Pending:</strong> '+v.pending+'</div>';
+    if(v.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:3px;">'+v.notes+'</div>';
+    if(v.images&&v.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+epRenderThumbs(v.images)+'</div>';
+    if(v.pdfs&&v.pdfs.length){
+      html+='<div style="margin-top:4px;">';
+      v.pdfs.forEach(function(p){
+        html+='<div style="font-size:11px;">&#128196; <a href="'+p.data+'" download="'+p.name+'" style="color:#8B1A6B;">'+p.name+'</a></div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  return html;
+}
+
 var _epDecorEv='';
-function epOpenDecorModal(ev){
+var _epDecorVIdx=null;
+
+function epOpenDecorModal(ev,vIdx){
   _epDecorEv=ev;
+  _epDecorVIdx=vIdx;
   var isHome=(ev==='__home__');
-  var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
-  document.getElementById('epDecorModalTitle').textContent=isHome?'Home Decor':ev+' — Decor';
-  // Vendor row — only for functions, not home decor
-  document.getElementById('epDecorVendorRow').style.display=isHome?'none':'block';
-  if(!isHome){
-    document.getElementById('epDecorVendor').innerHTML=epVendorOptions(dec.vendorId||'');
+  var vendors=epDecorGetVendors(ev);
+  var v=(vIdx==='new'||vIdx===null)?{}:(vendors[vIdx]||{});
+  var isNew=(vIdx==='new');
+  var isHomeInfo=(vIdx===null&&isHome);
+
+  document.getElementById('epDecorModalTitle').textContent=isHomeInfo?'Home Decor Details':(isNew?'Add Decor Vendor':((v.vendorName||'Vendor '+(Number(vIdx)+1))+' — Edit'));
+  document.getElementById('epDecorVendorRow').style.display=isHomeInfo?'none':'block';
+  if(!isHomeInfo){
+    document.getElementById('epDecorVendor').innerHTML=epVendorOptions(v.vendorId||'');
     var mr=document.getElementById('epDecorVendorManual');
-    mr.style.display=(dec.vendorId==='__manual__')?'block':'none';
-    document.getElementById('epDecorVendorManualName').value=dec.vendorName||'';
-    if(document.getElementById('epDecorCost')) document.getElementById('epDecorCost').value=dec.cost||'';
+    mr.style.display=(v.vendorId==='__manual__')?'block':'none';
+    document.getElementById('epDecorVendorManualName').value=v.vendorName||'';
+    if(document.getElementById('epDecorCost')) document.getElementById('epDecorCost').value=v.cost||'';
   }
-  // Home decor fields
-  document.getElementById('epDecorHomeRow').style.display=isHome?'block':'none';
-  if(isHome){
-    document.getElementById('epDecorInside').value=dec.inside||'';
-    document.getElementById('epDecorOutside').value=dec.outside||'';
+  document.getElementById('epDecorHomeRow').style.display=isHomeInfo?'block':'none';
+  if(isHomeInfo){
+    var hd=eventPlanner.homeDecor||{};
+    document.getElementById('epDecorInside').value=hd.inside||'';
+    document.getElementById('epDecorOutside').value=hd.outside||'';
   }
-  document.getElementById('epDecorTheme').value=dec.theme||'';
-  document.getElementById('epDecorItems').value=dec.items||'';
-  document.getElementById('epDecorSetupTime').value=dec.setupTime||'';
-  document.getElementById('epDecorPending').value=dec.pending||'';
-  document.getElementById('epDecorNotes').value=dec.notes||'';
-  epSetDecorStatus(dec.status||'pending');
-  document.getElementById('epDecorImgPreview').innerHTML=epRenderThumbs(dec.images||[]);
-  // Show saved PDFs
+  document.getElementById('epDecorTheme').value=v.theme||'';
+  document.getElementById('epDecorItems').value=v.items||'';
+  document.getElementById('epDecorSetupTime').value=v.setupTime||'';
+  document.getElementById('epDecorPending').value=v.pending||'';
+  document.getElementById('epDecorNotes').value=v.notes||'';
+  epSetDecorStatus(v.status||'pending');
+  document.getElementById('epDecorImgPreview').innerHTML=epRenderThumbs(v.images||[]);
   var pdfList=document.getElementById('epDecorPdfList');
   if(pdfList){
-    var pdfs=dec.pdfs||[];
+    var pdfs=v.pdfs||[];
     pdfList.innerHTML=pdfs.map(function(p,i){
       return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">'+
-        '<span style="font-size:12px;">📄 '+p.name+'</span>'+
+        '<span style="font-size:12px;">&#128196; '+p.name+'</span>'+
         '<a href="'+p.data+'" download="'+p.name+'" style="font-size:11px;color:#8B1A6B;">Download</a>'+
-        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">✕</button>'+
+        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">&#215;</button>'+
         '</div>';
     }).join('');
   }
   document.getElementById('epDecorModal').classList.add('show');
 }
+
+async function epSaveDecor(){
+  var ev=_epDecorEv;
+  var vIdx=_epDecorVIdx;
+  var isHome=(ev==='__home__');
+  var isHomeInfo=(vIdx===null&&isHome);
+  var isNew=(vIdx==='new');
+
+  if(isHomeInfo){
+    if(!eventPlanner.homeDecor) eventPlanner.homeDecor={};
+    eventPlanner.homeDecor.inside=document.getElementById('epDecorInside').value.trim();
+    eventPlanner.homeDecor.outside=document.getElementById('epDecorOutside').value.trim();
+  } else {
+    var vendors=epDecorGetVendors(ev);
+    var vendorId=document.getElementById('epDecorVendor').value;
+    var vendorName='';
+    if(vendorId==='__manual__'){
+      vendorName=document.getElementById('epDecorVendorManualName').value.trim();
+    } else if(vendorId&&typeof window.vendors!=='undefined'){
+      var vv=window.vendors.find(function(x){return x.id===vendorId;}); vendorName=vv?vv.name:'';
+    }
+    var existing=isNew?{images:[],pdfs:[]}:(vendors[vIdx]||{images:[],pdfs:[]});
+    var imgs=existing.images||[];
+    var fi=document.getElementById('epDecorImgInput');
+    if(fi&&fi.files.length){
+      for(var i=0;i<fi.files.length;i++){
+        var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
+        imgs.push(b64);
+      }
+      fi.value='';
+    }
+    var newV={
+      vendorId:vendorId,vendorName:vendorName,
+      cost:Number((document.getElementById('epDecorCost')||{}).value)||0,
+      theme:document.getElementById('epDecorTheme').value.trim(),
+      items:document.getElementById('epDecorItems').value.trim(),
+      setupTime:document.getElementById('epDecorSetupTime').value.trim(),
+      pending:document.getElementById('epDecorPending').value.trim(),
+      notes:document.getElementById('epDecorNotes').value.trim(),
+      status:document.getElementById('epDecorStatus').value,
+      images:imgs,
+      pdfs:existing.pdfs||[]
+    };
+    if(isNew) vendors.push(newV);
+    else vendors[vIdx]=newV;
+    if(isHome){ if(!eventPlanner.homeDecor) eventPlanner.homeDecor={}; eventPlanner.homeDecor.vendors=vendors; }
+    else { if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={}; eventPlanner.decor[ev].vendors=vendors; }
+  }
+  await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
+  document.getElementById('epDecorModal').classList.remove('show');
+  epRenderDecor();
+  epMobRefreshAfterSave();
+}
+
+function epDecorDeleteVendor(ev,idx){
+  if(!confirm('Remove this decor vendor?')) return;
+  var isHome=(ev==='__home__');
+  var vendors=epDecorGetVendors(ev);
+  vendors.splice(idx,1);
+  if(isHome) eventPlanner.homeDecor.vendors=vendors;
+  else eventPlanner.decor[ev].vendors=vendors;
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderDecor();
+}
+window.epDecorDeleteVendor=epDecorDeleteVendor;
 
 function epDecorPdfUpload(input){
   if(!input.files.length) return;
@@ -9289,23 +9404,21 @@ function epDecorPdfUpload(input){
   if(file.size>5*1024*1024){ showToast('PDF too large — max 5MB'); return; }
   var r=new FileReader();
   r.onload=function(e){
-    var ev=_epDecorEv;
+    var ev=_epDecorEv; var vIdx=_epDecorVIdx;
     var isHome=(ev==='__home__');
-    var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
-    if(!dec.pdfs) dec.pdfs=[];
-    dec.pdfs.push({name:file.name, data:e.target.result});
-    if(isHome) eventPlanner.homeDecor=dec;
-    else { if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={}; Object.assign(eventPlanner.decor[ev],{pdfs:dec.pdfs}); }
+    var vendors=epDecorGetVendors(ev);
+    var isNew=(vIdx==='new');
+    var v=isNew?{images:[],pdfs:[]}:(vendors[vIdx]||{images:[],pdfs:[]});
+    if(!v.pdfs) v.pdfs=[];
+    v.pdfs.push({name:file.name,data:e.target.result});
+    if(!isNew){ vendors[vIdx]=v; if(isHome) eventPlanner.homeDecor.vendors=vendors; else eventPlanner.decor[ev].vendors=vendors; }
     storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
-    if(typeof queueCloudSave==='function') queueCloudSave();
-    // Refresh PDF list
     var pdfList=document.getElementById('epDecorPdfList');
-    var pdfs=dec.pdfs||[];
-    pdfList.innerHTML=pdfs.map(function(p,i){
+    pdfList.innerHTML=v.pdfs.map(function(p,i){
       return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">'+
-        '<span style="font-size:12px;">📄 '+p.name+'</span>'+
+        '<span style="font-size:12px;">&#128196; '+p.name+'</span>'+
         '<a href="'+p.data+'" download="'+p.name+'" style="font-size:11px;color:#8B1A6B;">Download</a>'+
-        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">✕</button>'+
+        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">&#215;</button>'+
         '</div>';
     }).join('');
     showToast('PDF uploaded: '+file.name+' \u2705');
@@ -9316,87 +9429,35 @@ function epDecorPdfUpload(input){
 window.epDecorPdfUpload=epDecorPdfUpload;
 
 function epDecorRemovePdf(idx){
-  var ev=_epDecorEv; var isHome=(ev==='__home__');
-  var dec=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
-  if(dec.pdfs) dec.pdfs.splice(idx,1);
-  if(isHome) eventPlanner.homeDecor=dec;
-  else if(eventPlanner.decor[ev]) eventPlanner.decor[ev].pdfs=dec.pdfs||[];
+  var ev=_epDecorEv; var vIdx=_epDecorVIdx;
+  var isHome=(ev==='__home__');
+  var vendors=epDecorGetVendors(ev);
+  var v=vendors[vIdx]||{};
+  if(v.pdfs) v.pdfs.splice(idx,1);
+  if(vIdx!=='new'&&vIdx!==null){ vendors[vIdx]=v; if(isHome) eventPlanner.homeDecor.vendors=vendors; else eventPlanner.decor[ev].vendors=vendors; }
   storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
-  if(typeof queueCloudSave==='function') queueCloudSave();
-  epOpenDecorModal(ev); // refresh modal
+  epOpenDecorModal(ev,vIdx);
 }
 window.epDecorRemovePdf=epDecorRemovePdf;
 
 function epSetDecorStatus(val){
   document.getElementById('epDecorStatus').value=val;
-  var styles={
-    'pending':  {active:'border:2px solid #C45000;background:#FFF3E0;color:#C45000;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'},
-    'confirmed':{active:'border:2px solid #2E7D32;background:#E8F5E9;color:#2E7D32;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'},
-    'not-required':{active:'border:2px solid #555;background:#f5f5f5;color:#555;', inactive:'border:2px solid #ccc;background:#fff;color:#999;'}
+  var map={
+    'pending':    {id:'epDecorStatusPending',   active:'border:2px solid #C45000;background:#FFF3E0;color:#C45000;'},
+    'confirmed':  {id:'epDecorStatusConfirmed', active:'border:2px solid #2E7D32;background:#E8F5E9;color:#2E7D32;'},
+    'not-required':{id:'epDecorStatusNotReq',   active:'border:2px solid #555;background:#f5f5f5;color:#555;'}
   };
-  var map={'pending':'epDecorStatusPending','confirmed':'epDecorStatusConfirmed','not-required':'epDecorStatusNotReq'};
+  var inactive='border:2px solid #ccc;background:#fff;color:#999;';
   Object.keys(map).forEach(function(k){
-    var el=document.getElementById(map[k]);
-    if(el) el.style.cssText='padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;'+(k===val?styles[k].active:styles[k].inactive);
+    var el=document.getElementById(map[k].id);
+    if(el) el.style.cssText='padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;'+(k===val?map[k].active:inactive);
   });
 }
 window.epSetDecorStatus=epSetDecorStatus;
 
-async function epSaveDecor(){
-  var ev=_epDecorEv;
-  var isHome=(ev==='__home__');
-  var vendorId='',vendorName='';
-  if(!isHome){
-    vendorId=document.getElementById('epDecorVendor').value;
-    if(vendorId==='__manual__'){
-      vendorName=document.getElementById('epDecorVendorManualName').value.trim();
-    } else if(vendorId&&typeof vendors!=='undefined'){
-      var v=vendors.find(function(x){return x.id===vendorId;}); vendorName=v?v.name:'';
-    }
-  }
-  var existing=isHome?(eventPlanner.homeDecor||{}):(eventPlanner.decor[ev]||{});
-  var imgs=existing.images||[];
-  var fi=document.getElementById('epDecorImgInput');
-  if(fi&&fi.files.length){
-    for(var i=0;i<fi.files.length;i++){
-      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
-      imgs.push(b64);
-    }
-  }
-  var data={
-    vendorId:vendorId, vendorName:vendorName,
-    cost:Number((document.getElementById('epDecorCost')||{}).value)||0,
-    theme:document.getElementById('epDecorTheme').value.trim(),
-    items:document.getElementById('epDecorItems').value.trim(),
-    setupTime:document.getElementById('epDecorSetupTime').value.trim(),
-    pending:document.getElementById('epDecorPending').value.trim(),
-    notes:document.getElementById('epDecorNotes').value.trim(),
-    status:document.getElementById('epDecorStatus').value,
-    images:imgs,
-    pdfs:existing.pdfs||[]
-  };
-  if(isHome){
-    data.inside=document.getElementById('epDecorInside').value.trim();
-    data.outside=document.getElementById('epDecorOutside').value.trim();
-    eventPlanner.homeDecor=data;
-  } else {
-    if(!eventPlanner.decor[ev]) eventPlanner.decor[ev]={};
-    eventPlanner.decor[ev]=data;
-  }
-  await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
-  if(typeof queueCloudSave==='function') queueCloudSave();
-  if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
-  document.getElementById('epDecorModal').classList.remove('show');
-  epRenderDecor();
-  epMobRefreshAfterSave();
-}
-
-// Expose EP functions globally for mobile onclick attributes
-window.epMobToggle = epMobToggle;
-window.epOpenMealModal = epOpenMealModal;
-window.epOpenDecorModal = epOpenDecorModal;
-window.epSaveMeal = epSaveMeal;
-window.epSaveDecor = epSaveDecor;
+window.epOpenDecorModal=epOpenDecorModal;
+window.epSaveDecor=epSaveDecor;
+window.epRenderDecor=epRenderDecor;
 window.epCalcMealTotal = epCalcMealTotal;
 window.epToggleEvent = epToggleEvent;
 
