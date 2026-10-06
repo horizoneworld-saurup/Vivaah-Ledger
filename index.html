@@ -2219,6 +2219,15 @@
         <button class="btn-ivory" id="btnKankotriUpload">⭱ Upload</button>
         <button class="btn-ivory" id="btnKankotriTemplate">⬇ Template</button>
         <button class="btn-ivory" id="btnKankotriExport">⬇ Export</button>
+        <select id="kankotriPrintTier" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid #d4a24c;background:#fff8f0;color:#5C1A2B;cursor:pointer;">
+          <option value="all">🖺 All Tiers</option>
+          <option value="vip">👑 VIP Premium only</option>
+          <option value="premium">⭐ Premium only</option>
+          <option value="normal">✏️ Normal only</option>
+          <option value="vip,premium">👑⭐ VIP + Premium</option>
+          <option value="vip,normal">👑✏️ VIP + Normal</option>
+          <option value="premium,normal">⭐✏️ Premium + Normal</option>
+        </select>
         <button class="btn-ivory" id="btnPrintKankotri">🖺 Print</button>
         <button class="btn-ivory" id="btnEnvelopeStuffing" style="background:#5C1A2B;color:#FBF6EE;border-color:#5C1A2B;">📋 Envelope Stuffing</button>
       </div>
@@ -8544,6 +8553,11 @@ document.getElementById('btnKankotriExport').onclick=()=>{
   showToast(`Exported ${kankotriGuests.length} Kankotri guests`);
 };
 document.getElementById('btnPrintKankotri').onclick=()=>{
+  // Get selected tier filter
+  const tierSel = document.getElementById('kankotriPrintTier');
+  const selectedTiers = tierSel ? tierSel.value.split(',') : ['all'];
+  const printAll = selectedTiers[0] === 'all';
+
   const printArea=document.createElement('div');
   printArea.id='kankotriPrintArea';
   printArea.style.cssText='margin:0;padding:0;position:static;';
@@ -8551,11 +8565,12 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   // Events to show in print columns
   const EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Marriage','Reception'];
   const EV_SHORT = {'Kankotri':'Kankotri','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehendi','Sangeet':'Sangeet','Marriage':'Marriage','Reception':'Reception'};
-  const TIERS = [
+  const ALL_TIERS = [
     {key:'vip',     label:'👑 VIP Premium',           color:'#5C1A2B'},
     {key:'premium', label:'⭐ Premium',                color:'#856404'},
     {key:'normal',  label:'✏️ Normal (WhatsApp only)', color:'#555'}
   ];
+  const TIERS = printAll ? ALL_TIERS : ALL_TIERS.filter(t => selectedTiers.includes(t.key));
 
   // Format event count for a guest — Kankotri shows adults+writerW, others show adults+kids
   function kankEvCount(g, ev) {
