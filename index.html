@@ -8285,6 +8285,65 @@ function printVendorDirectory(){
     });
   });
 
+  // ── CATERING FUNCTION-WISE SUMMARY ──────────────────────────────
+  html+='<div style="margin-top:28px;">';
+  html+='<div class="cat-header">🍛 CATERING — FUNCTION WISE SUMMARY</div>';
+  var hasAnyCatering=false;
+  WEDDING_EVTS.forEach(function(ev){
+    var evData=(eventPlanner.catering||{})[ev]||{};
+    var meals=['breakfast','lunch','dinner','latenight'];
+    var mealRows='';
+    meals.forEach(function(m){
+      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m]):evData[m]||{};
+      if(slot.status==='not-required') return;
+      var vendorNames=(slot.vendors||[]).map(function(sv){
+        var vn=sv.vendorName||(sv.vendorId&&sv.vendorId!=='__manual__'&&typeof vendors!=='undefined'?(function(){var x=vendors.find(function(vx){return vx.id===sv.vendorId;});return x?x.name:'';}()):'');
+        return vn?(vn+(sv.menu?' — '+sv.menu:'')):( sv.menu?sv.menu:'');
+      }).filter(Boolean).join(' | ');
+      var statusColor=slot.status==='confirmed'?'#2E7D32':slot.status==='not-required'?'#999':'#C45000';
+      var statusLabel=slot.status==='confirmed'?'✅ Confirmed':slot.status==='not-required'?'N/A':'⏳ Pending';
+      mealRows+='<tr style="border-bottom:1px solid #f5e8e8;">';
+      mealRows+='<td style="padding:5px 8px;font-size:11px;">'+MEAL_ICONS[m]+' '+MEAL_LABELS[m]+'</td>';
+      mealRows+='<td style="padding:5px 8px;font-size:11px;font-weight:600;">'+(slot.headcount||0)+' guests</td>';
+      mealRows+='<td style="padding:5px 8px;font-size:11px;">'+escapeHtml(vendorNames)+'</td>';
+      mealRows+='<td style="padding:5px 8px;font-size:11px;font-weight:700;color:'+statusColor+';">'+statusLabel+'</td>';
+      mealRows+='</tr>';
+    });
+    if(!mealRows) return;
+    hasAnyCatering=true;
+    html+='<div class="vendor-card">';
+    html+='<div style="font-size:13px;font-weight:700;color:#5C1A2B;margin-bottom:6px;">'+ev+'<span style="font-size:10px;font-weight:400;color:#999;margin-left:8px;">'+fmtDate(ev)+'</span></div>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
+    html+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Meal</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Headcount</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Vendor — Menu</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Status</th></tr>';
+    html+=mealRows;
+    html+='</table></div>';
+  });
+  if(!hasAnyCatering) html+='<div class="vendor-card" style="color:#aaa;font-size:12px;">No catering data added yet.</div>';
+  html+='</div>';
+
+  // ── CARNIVAL STALLS ───────────────────────────────────────────────
+  var stalls=(eventPlanner.carnival&&eventPlanner.carnival.stalls)||[];
+  if(stalls.length){
+    html+='<div style="margin-top:28px;">';
+    html+='<div class="cat-header">🎪 CARNIVAL STALLS — MEHENDI</div>';
+    stalls.forEach(function(s,i){
+      var statusColor=s.status==='confirmed'?'#2E7D32':s.status==='not-required'?'#999':'#C45000';
+      var statusLabel=s.status==='confirmed'?'✅ Confirmed':s.status==='not-required'?'Not Required':'⏳ Pending';
+      html+='<div class="vendor-card">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;">';
+      html+='<div style="font-size:13px;font-weight:700;color:#5C1A2B;">'+(i+1)+'. '+escapeHtml(s.name||'Stall '+(i+1))+'</div>';
+      html+='<div style="font-size:11px;font-weight:700;color:'+statusColor+';">'+statusLabel+'</div>';
+      html+='</div>';
+      if(s.provides) html+='<div style="font-size:11px;margin-top:5px;"><strong>Stall Provides:</strong> '+escapeHtml(s.provides)+'</div>';
+      if(s.weProvide) html+='<div style="font-size:11px;margin-top:3px;"><strong>We Provide:</strong> '+escapeHtml(s.weProvide)+'</div>';
+      if(s.notes) html+='<div style="font-size:11px;margin-top:3px;color:#666;"><strong>Notes:</strong> '+escapeHtml(s.notes)+'</div>';
+      var procured=s.procured?'<span style="color:#2E7D32;font-weight:600;">✅ Procured</span>':'<span style="color:#C45000;font-weight:600;">⏳ Not yet procured</span>';
+      html+='<div style="font-size:11px;margin-top:4px;">Setup: '+procured+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
   html+='<div style="text-align:center;font-size:10px;color:#ccc;margin-top:20px;border-top:1px solid #eee;padding-top:10px;">Printed from Vivaah Ledger &nbsp;·&nbsp; No financial information included</div>';
   html+='</body></html>';
 
@@ -9335,6 +9394,125 @@ window.epSyncVendorAmounts=epSyncVendorAmounts;
 window.epShowTab=epShowTab;
 
 /* EP Decor Module */
+// ── Google Drive Upload Helper ─────────────────────────────────────
+// Uploads a file to Google Drive under Vivaah Ledger/[module]/[subfolder]/
+// Returns: { id, name, webViewLink } or throws error
+
+async function gDriveUpload(file, module, subfolder){
+  if(!googleAccessToken) throw new Error('Not signed in to Google');
+
+  // Step 1: Find or create folder structure
+  async function findOrCreateFolder(name, parentId){
+    var q = "name='"+name+"' and mimeType='application/vnd.google-apps.folder' and trashed=false"+(parentId?" and '"+parentId+"' in parents":"");
+    var r = await fetch('https://www.googleapis.com/drive/v3/files?q='+encodeURIComponent(q)+'&fields=files(id,name)',{
+      headers:{'Authorization':'Bearer '+googleAccessToken}
+    });
+    var d = await r.json();
+    if(d.files&&d.files.length) return d.files[0].id;
+    // Create
+    var cr = await fetch('https://www.googleapis.com/drive/v3/files',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+googleAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({name:name,mimeType:'application/vnd.google-apps.folder',parents:parentId?[parentId]:[]})
+    });
+    var cd = await cr.json();
+    return cd.id;
+  }
+
+  // Build folder path: Vivaah Ledger > module > subfolder
+  var rootId = await findOrCreateFolder('Vivaah Ledger', null);
+  var modId  = await findOrCreateFolder(module, rootId);
+  var subId  = subfolder ? await findOrCreateFolder(subfolder, modId) : modId;
+
+  // Step 2: Upload file using multipart upload
+  var boundary = '-------vivaah'+Date.now();
+  var meta = JSON.stringify({name:file.name, parents:[subId]});
+  var fileData = await new Promise(function(res){
+    var r=new FileReader(); r.onload=function(e){res(e.target.result);}; r.readAsArrayBuffer(file);
+  });
+
+  // Build multipart body
+  var metaBlob = new Blob([
+    '--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+meta+'\r\n',
+    '--'+boundary+'\r\nContent-Type: '+file.type+'\r\n\r\n'
+  ]);
+  var endBlob = new Blob(['\r\n--'+boundary+'--']);
+  var body = new Blob([metaBlob, fileData, endBlob]);
+
+  var up = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+googleAccessToken,
+      'Content-Type':'multipart/related; boundary='+boundary
+    },
+    body:body
+  });
+  var ud = await up.json();
+  if(!ud.id) throw new Error('Upload failed: '+(ud.error&&ud.error.message||JSON.stringify(ud)));
+
+  // Step 3: Make file viewable by anyone with link
+  await fetch('https://www.googleapis.com/drive/v3/files/'+ud.id+'/permissions',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+googleAccessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({role:'reader',type:'anyone'})
+  });
+
+  return {id:ud.id, name:ud.name, webViewLink:'https://drive.google.com/file/d/'+ud.id+'/view'};
+}
+window.gDriveUpload=gDriveUpload;
+
+// ── Render file attachments (Drive links + legacy base64) ──────────
+function renderFileAttachments(files, onRemove){
+  if(!files||!files.length) return '';
+  return files.map(function(f,i){
+    var isDrive=f.driveId||f.webViewLink;
+    var icon=f.name&&f.name.match(/\.(pdf)$/i)?'📄':'📷';
+    var link=isDrive?f.webViewLink:(f.data?f.data:'#');
+    var badge=isDrive?'<span style="font-size:9px;background:#e8f5e9;color:#2E7D32;padding:1px 5px;border-radius:4px;margin-left:4px;">Drive</span>':'<span style="font-size:9px;background:#fff3e0;color:#C45000;padding:1px 5px;border-radius:4px;margin-left:4px;">Local</span>';
+    return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;padding:4px 8px;background:#fafafa;border-radius:6px;border:1px solid #eee;">'+
+      '<span style="font-size:12px;">'+icon+' '+escapeHtml(f.name||'File')+'</span>'+
+      badge+
+      '<a href="'+link+'" target="_blank" rel="noopener" style="font-size:11px;color:#8B1A6B;margin-left:4px;">'+(isDrive?'🔗 Open':'⬇ Download')+'</a>'+
+      (onRemove?'<button onclick="'+onRemove+'('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;margin-left:auto;">✕</button>':'')+
+      '</div>';
+  }).join('');
+}
+window.renderFileAttachments=renderFileAttachments;
+
+// ── Generic file upload button handler ────────────────────────────
+// Used by Decor, Catering, Clothes, Carnival
+async function handleFileUpload(input, module, subfolder, existingFiles, onComplete){
+  if(!input.files.length) return;
+  var files=Array.from(input.files);
+  var uploaded=[];
+  for(var i=0;i<files.length;i++){
+    var file=files[i];
+    if(file.size>15*1024*1024){ showToast(file.name+' too large — max 15MB'); continue; }
+    showToast('Uploading '+file.name+'…');
+    try{
+      if(googleAccessToken){
+        var result=await gDriveUpload(file,module,subfolder);
+        uploaded.push({driveId:result.id,name:result.name,webViewLink:result.webViewLink});
+        showToast(file.name+' uploaded to Drive ✅');
+      } else {
+        // Fallback to base64 local storage
+        var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(file);});
+        if(b64.length>5*1024*1024){ showToast(file.name+' too large for local storage — sign in to Google for Drive upload'); continue; }
+        uploaded.push({name:file.name,data:b64});
+        showToast(file.name+' saved locally (sign in to Google for cross-device access)');
+      }
+    }catch(e){
+      console.error('Upload error:',e);
+      showToast('Upload failed: '+e.message);
+    }
+  }
+  input.value='';
+  var allFiles=(existingFiles||[]).concat(uploaded);
+  if(onComplete) onComplete(allFiles);
+}
+window.handleFileUpload=handleFileUpload;
+
+
 // ── DECOR MULTI-VENDOR HELPERS ────────────────────────────────────
 
 function epDecorGetVendors(ev){
@@ -9419,14 +9597,10 @@ function epDecorRenderVendorList(ev,vendors){
     if(v.setupTime) html+='<div style="font-size:11px;color:#666;margin-bottom:3px;"><strong>Setup:</strong> '+v.setupTime+'</div>';
     if(v.pending) html+='<div style="font-size:11px;color:#C45000;margin-bottom:3px;"><strong>&#9888; Pending:</strong> '+v.pending+'</div>';
     if(v.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:3px;">'+v.notes+'</div>';
-    if(v.images&&v.images.length) html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">'+epRenderThumbs(v.images)+'</div>';
-    if(v.pdfs&&v.pdfs.length){
-      html+='<div style="margin-top:4px;">';
-      v.pdfs.forEach(function(p){
-        html+='<div style="font-size:11px;">&#128196; <a href="'+p.data+'" download="'+p.name+'" style="color:#8B1A6B;">'+p.name+'</a></div>';
-      });
-      html+='</div>';
-    }
+    // Show unified files (Drive + local)
+    var allVFiles=(v.files||[]);
+    if(!allVFiles.length){ (v.images||[]).forEach(function(img,i){ if(img) allVFiles.push({name:'image-'+(i+1)+'.jpg',data:img}); }); (v.pdfs||[]).forEach(function(p){ allVFiles.push(p); }); }
+    if(allVFiles.length) html+='<div style="margin-top:6px;">'+renderFileAttachments(allVFiles,null)+'</div>';
     html+='</div>';
   });
   return html;
@@ -9465,18 +9639,17 @@ function epOpenDecorModal(ev,vIdx){
   document.getElementById('epDecorPending').value=v.pending||'';
   document.getElementById('epDecorNotes').value=v.notes||'';
   epSetDecorStatus(v.status||'pending');
-  document.getElementById('epDecorImgPreview').innerHTML=epRenderThumbs(v.images||[]);
-  var pdfList=document.getElementById('epDecorPdfList');
-  if(pdfList){
-    var pdfs=v.pdfs||[];
-    pdfList.innerHTML=pdfs.map(function(p,i){
-      return '<div style="display:flex;align-items:center;gap:6px;margin-top:4px;">'+
-        '<span style="font-size:12px;">&#128196; '+p.name+'</span>'+
-        '<a href="'+p.data+'" download="'+p.name+'" style="font-size:11px;color:#8B1A6B;">Download</a>'+
-        '<button onclick="epDecorRemovePdf('+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;">&#215;</button>'+
-        '</div>';
-    }).join('');
+  // Unified files: Drive links + local images + legacy PDFs
+  var allFiles=(v.files||[]);
+  if(!allFiles.length){
+    (v.images||[]).forEach(function(img,i){ if(img) allFiles.push({name:'image-'+(i+1)+'.jpg',data:img}); });
+    (v.pdfs||[]).forEach(function(p){ allFiles.push(p); });
   }
+  window._epDecorCurrentFiles=allFiles.slice();
+  var fl=document.getElementById('epDecorFileList');
+  if(fl) fl.innerHTML=typeof renderFileAttachments==='function'?renderFileAttachments(allFiles,'epDecorRemoveFile'):'';
+  var ds=document.getElementById('epDecorDriveStatus');
+  if(ds) ds.innerHTML=googleAccessToken?'<span style="color:#2E7D32;">✅ Google Drive connected</span>':'<span style="color:#C45000;">Sign in to Google for cross-device access</span>';
   document.getElementById('epDecorModal').classList.add('show');
 }
 
@@ -9520,7 +9693,8 @@ async function epSaveDecor(){
       notes:document.getElementById('epDecorNotes').value.trim(),
       status:document.getElementById('epDecorStatus').value,
       images:imgs,
-      pdfs:existing.pdfs||[]
+      files:window._epDecorCurrentFiles||[],
+      pdfs:[],images:[]
     };
     if(isNew) vendors.push(newV);
     else vendors[vIdx]=newV;
@@ -9530,6 +9704,7 @@ async function epSaveDecor(){
   await storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
   if(typeof epSyncVendorAmounts==='function') epSyncVendorAmounts();
+  window._epDecorTempPdfs=[];
   document.getElementById('epDecorModal').classList.remove('show');
   epRenderDecor();
   epMobRefreshAfterSave();
@@ -9548,6 +9723,41 @@ function epDecorDeleteVendor(ev,idx){
 }
 window.epDecorDeleteVendor=epDecorDeleteVendor;
 
+async function epDecorHandleUpload(input){
+  var ev=_epDecorEv; var vIdx=_epDecorVIdx;
+  var isHome=(ev==='__home__');
+  var subfolder=isHome?'Home Decor':ev;
+  var existing=window._epDecorCurrentFiles||[];
+  await handleFileUpload(input,'Decor',subfolder,existing,function(allFiles){
+    window._epDecorCurrentFiles=allFiles;
+    var fl=document.getElementById('epDecorFileList');
+    if(fl) fl.innerHTML=renderFileAttachments(allFiles,'epDecorRemoveFile');
+    // Save immediately to eventPlanner
+    var vendors=epDecorGetVendors(ev);
+    var v=vIdx==='new'?null:(vendors[vIdx]||null);
+    if(v){ v.files=allFiles; vendors[vIdx]=v; if(isHome) eventPlanner.homeDecor.vendors=vendors; else eventPlanner.decor[ev].vendors=vendors; storageSet('wedding-eventplanner',JSON.stringify(eventPlanner)); }
+  });
+}
+window.epDecorHandleUpload=epDecorHandleUpload;
+
+function epDecorRemoveFile(idx){
+  window._epDecorCurrentFiles=window._epDecorCurrentFiles||[];
+  window._epDecorCurrentFiles.splice(idx,1);
+  var fl=document.getElementById('epDecorFileList');
+  if(fl) fl.innerHTML=renderFileAttachments(window._epDecorCurrentFiles,'epDecorRemoveFile');
+  // Save immediately
+  var ev=_epDecorEv; var vIdx=_epDecorVIdx; var isHome=(ev==='__home__');
+  if(vIdx!=='new'&&vIdx!==null){
+    var vendors=epDecorGetVendors(ev);
+    var v=vendors[vIdx]||{};
+    v.files=window._epDecorCurrentFiles;
+    vendors[vIdx]=v;
+    if(isHome) eventPlanner.homeDecor.vendors=vendors; else eventPlanner.decor[ev].vendors=vendors;
+    storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  }
+}
+window.epDecorRemoveFile=epDecorRemoveFile;
+
 function epDecorPdfUpload(input){
   if(!input.files.length) return;
   var file=input.files[0];
@@ -9561,7 +9771,16 @@ function epDecorPdfUpload(input){
     var v=isNew?{images:[],pdfs:[]}:(vendors[vIdx]||{images:[],pdfs:[]});
     if(!v.pdfs) v.pdfs=[];
     v.pdfs.push({name:file.name,data:e.target.result});
-    if(!isNew){ vendors[vIdx]=v; if(isHome) eventPlanner.homeDecor.vendors=vendors; else eventPlanner.decor[ev].vendors=vendors; }
+    // Save for both new and existing vendors
+    if(isNew){
+      // Store temp PDFs in window so epSaveDecor can pick them up
+      if(!window._epDecorTempPdfs) window._epDecorTempPdfs=[];
+      window._epDecorTempPdfs=v.pdfs;
+    } else {
+      vendors[vIdx]=v;
+      if(isHome) eventPlanner.homeDecor.vendors=vendors;
+      else eventPlanner.decor[ev].vendors=vendors;
+    }
     storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
     var pdfList=document.getElementById('epDecorPdfList');
     pdfList.innerHTML=v.pdfs.map(function(p,i){
@@ -11499,13 +11718,14 @@ function runGlobalSearch(q, gsInput, gsResults){
         <button type="button" onclick="epSetDecorStatus('not-required')" id="epDecorStatusNotReq" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:2px solid #ccc;background:#fff;color:#999;">❌ Not Needed</button>
       </div>
     </div>
-    <div class="ep-field"><label>Upload photos / PDF reference (JPEG, PNG, PDF)</label>
+    <div class="ep-field">
+      <label>Upload photos / PDF reference
+        <span id="epDecorDriveStatus" style="font-size:10px;font-weight:400;margin-left:8px;"></span>
+      </label>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <label class="ep-upload-btn">&#128247; Photo (JPEG/PNG)<input type="file" id="epDecorImgInput" accept="image/*" multiple style="display:none;"></label>
-        <label class="ep-upload-btn">&#128196; PDF Reference<input type="file" id="epDecorPdfInput" accept="application/pdf" style="display:none;" onchange="epDecorPdfUpload(this)"></label>
+        <label class="ep-upload-btn">&#128247; Photo / PDF<input type="file" id="epDecorImgInput" accept="image/*,application/pdf" multiple style="display:none;" onchange="epDecorHandleUpload(this)"></label>
       </div>
-      <div id="epDecorImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
-      <div id="epDecorPdfList" style="margin-top:4px;"></div>
+      <div id="epDecorFileList" style="margin-top:6px;"></div>
     </div>
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epDecorModal').classList.remove('show')">Cancel</button>
