@@ -1649,6 +1649,7 @@
     <div class="print-options">
       <button class="print-option-btn" id="printOptAll"><span class="po-icon">📋</span><div><div class="po-label">Print everything</div><div class="po-sub">Full report — vendors, guests, timeline, reminders</div></div></button>
       <button class="print-option-btn" id="printOptVendors"><span class="po-icon">🏢</span><div><div class="po-label">Vendor list only</div><div class="po-sub">All vendors with payment status and balances</div></div></button>
+      <button class="print-option-btn" id="printOptVendorDir"><span class="po-icon">📋</span><div><div class="po-label">Vendor Directory</div><div class="po-sub">Name · Phone · Category · Functions · Catering menus &amp; headcount — no amounts</div></div></button>
       <button class="print-option-btn" id="printOptGuests"><span class="po-icon">👥</span><div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div></button>
       <button class="print-option-btn" id="printOptFunctionWise"><span class="po-icon">📅</span><div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div></button>
       <button class="print-option-btn" id="printOptTimeline"><span class="po-icon">🗓️</span><div><div class="po-label">Event timeline only</div><div class="po-sub">Dates, venues, dress codes, menus per function</div></div></button>
@@ -8159,6 +8160,136 @@ function printPageSection(mode,eventFilter){
 
 document.getElementById('printOptAll').onclick=()=>printPageSection('all');
 document.getElementById('printOptVendors').onclick=()=>printSection('vendor');
+document.getElementById('printOptVendorDir').onclick=()=>printVendorDirectory();
+
+function printVendorDirectory(){
+  document.getElementById('printPanelOverlay').classList.remove('show');
+
+  var MEAL_LABELS={breakfast:'Breakfast + Morning Tea',lunch:'Lunch',dinner:'Dinner',latenight:'Late Night Tea + Snacks'};
+  var MEAL_ICONS={breakfast:'🍳',lunch:'🍽️',dinner:'🍽️',latenight:'☕'};
+  var WEDDING_EVTS=typeof WEDDING_EVENTS!=='undefined'?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var couple=(branding&&branding.title)?branding.title:'Mrishana & Spandan';
+  var dateStr=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Group vendors by category
+  var byCategory={};
+  (vendors||[]).forEach(function(v){
+    var cat=(v.category||'Other').trim();
+    if(!byCategory[cat]) byCategory[cat]=[];
+    byCategory[cat].push(v);
+  });
+
+  // Build catering lookup: vendorId -> [{ev, meal, headcount, menu}]
+  var cateringByVendor={};
+  WEDDING_EVTS.forEach(function(ev){
+    var evData=(eventPlanner.catering||{})[ev]||{};
+    ['breakfast','lunch','dinner','latenight'].forEach(function(m){
+      var slot=typeof epMigrateSlot==='function'?epMigrateSlot(evData[m]):evData[m]||{};
+      if(slot.status==='not-required') return;
+      (slot.vendors||[]).forEach(function(sv){
+        var vid=sv.vendorId||sv.vendorName||'';
+        if(!vid) return;
+        if(!cateringByVendor[vid]) cateringByVendor[vid]=[];
+        cateringByVendor[vid].push({ev:ev,meal:m,headcount:slot.headcount||0,menu:sv.menu||''});
+      });
+    });
+  });
+
+  // Also build decor functions lookup: vendorId -> [ev]
+  var decorByVendor={};
+  WEDDING_EVTS.forEach(function(ev){
+    var dvs=((eventPlanner.decor||{})[ev]&&eventPlanner.decor[ev].vendors)||[];
+    dvs.forEach(function(dv){
+      var vid=dv.vendorId||dv.vendorName||'';
+      if(!vid) return;
+      if(!decorByVendor[vid]) decorByVendor[vid]=[];
+      decorByVendor[vid].push(ev);
+    });
+  });
+
+  function fmtDate(ev){ var t=(eventTimeline||{})[ev]; if(!t||!t.date) return ''; var d=new Date(t.date); return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}); }
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Vendor Directory — '+couple+'</title>'+
+    '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Georgia,serif;color:#333;padding:20px;}'+
+    '@media print{@page{margin:15mm;size:A4;}body{padding:0;}}'+
+    'h1{font-size:20px;color:#5C1A2B;text-align:center;}'+
+    '.subtitle{text-align:center;font-size:12px;color:#888;margin-bottom:20px;}'+
+    '.cat-header{background:linear-gradient(135deg,#5C1A2B,#8B1A6B);color:#fff;padding:8px 14px;font-size:13px;font-weight:700;border-radius:6px 6px 0 0;margin-top:20px;}'+
+    '.vendor-card{border:1px solid #e8d5c8;border-top:none;padding:12px 14px;margin-bottom:0;page-break-inside:avoid;}'+
+    '.vendor-card:last-child{border-radius:0 0 6px 6px;margin-bottom:16px;}'+
+    '.vendor-name{font-size:14px;font-weight:700;color:#5C1A2B;}'+
+    '.vendor-phone{font-size:12px;color:#555;margin-top:2px;}'+
+    '.func-header{font-size:11px;font-weight:700;color:#8B1A6B;margin-top:8px;margin-bottom:4px;}'+
+    '.ev-block{margin-bottom:8px;}'+
+    '.ev-name{font-size:12px;font-weight:700;color:#333;}'+
+    '.ev-date{font-size:10px;color:#999;margin-left:6px;}'+
+    '.meal-row{display:flex;gap:8px;font-size:11px;padding:3px 8px;background:#faf5f0;border-radius:4px;margin-top:2px;}'+
+    '.meal-hc{font-weight:700;color:#5C1A2B;min-width:80px;}'+
+    '.meal-menu{color:#666;}'+
+    '.func-list{font-size:12px;color:#555;margin-top:4px;}'+
+    '.notes{font-size:11px;color:#888;margin-top:4px;font-style:italic;}'+
+    '</style></head><body>'+
+    '<h1>🌸 '+couple+' — Vendor Directory</h1>'+
+    '<div class="subtitle">'+dateStr+' &nbsp;·&nbsp; No financial details included</div>';
+
+  var num=0;
+  Object.keys(byCategory).sort().forEach(function(cat){
+    html+='<div class="cat-header">'+cat.toUpperCase()+'</div>';
+    byCategory[cat].forEach(function(v){
+      num++;
+      html+='<div class="vendor-card">';
+      html+='<div class="vendor-name">'+num+'. '+escapeHtml(v.name)+'</div>';
+      if(v.phone) html+='<div class="vendor-phone">📞 '+escapeHtml(v.phone)+'</div>';
+      if(v.notes) html+='<div class="notes">'+escapeHtml(v.notes)+'</div>';
+
+      // Catering meals
+      var cEntries=cateringByVendor[v.id]||cateringByVendor[v.name]||[];
+      if(cEntries.length){
+        // Group by event
+        var byEv={};
+        cEntries.forEach(function(c){ if(!byEv[c.ev]) byEv[c.ev]=[]; byEv[c.ev].push(c); });
+        html+='<div class="func-header">🍛 Catering Functions</div>';
+        Object.keys(byEv).forEach(function(ev){
+          html+='<div class="ev-block">';
+          html+='<span class="ev-name">'+ev+'</span><span class="ev-date">'+fmtDate(ev)+'</span>';
+          byEv[ev].forEach(function(c){
+            if(c.headcount||c.menu){
+              html+='<div class="meal-row">'+
+                '<span>'+MEAL_ICONS[c.meal]+' '+MEAL_LABELS[c.meal]+'</span>'+
+                '<span class="meal-hc">'+c.headcount+' guests</span>'+
+                '<span class="meal-menu">'+(c.menu?escapeHtml(c.menu):'')+'</span>'+
+                '</div>';
+            }
+          });
+          html+='</div>';
+        });
+      }
+
+      // Decor functions
+      var dEvs=decorByVendor[v.id]||decorByVendor[v.name]||[];
+      if(dEvs.length){
+        html+='<div class="func-header">🌸 Decor Functions</div>';
+        html+='<div class="func-list">'+dEvs.join(' &nbsp;·&nbsp; ')+'</div>';
+      }
+
+      // If no EP data, show tagline/website
+      if(!cEntries.length&&!dEvs.length){
+        if(v.tagline) html+='<div class="func-list">'+escapeHtml(v.tagline)+'</div>';
+      }
+
+      html+='</div>';
+    });
+  });
+
+  html+='<div style="text-align:center;font-size:10px;color:#ccc;margin-top:20px;border-top:1px solid #eee;padding-top:10px;">Printed from Vivaah Ledger &nbsp;·&nbsp; No financial information included</div>';
+  html+='</body></html>';
+
+  var w=window.open('','_blank','width=900,height=700');
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},600);
+}
 document.getElementById('printOptGuests').onclick=()=>printSection('guests');
 document.getElementById('printOptTimeline').onclick=()=>printSection('timeline');
 document.getElementById('printOptFunctionWise').onclick=()=>{
