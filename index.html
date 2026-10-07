@@ -10176,7 +10176,22 @@ window.epRenderReminders=epRenderReminders;
 
 // Sync EP data to KV after EP save — calls saveReminders which includes EP
 async function epSyncRemindersToKV(){
-  if(googleUserEmail) await saveReminders();
+  if(!googleUserEmail) return;
+  // Wait for timeline to be populated before syncing to KV
+  // Timeline loads during onSignedIn — give it time to complete
+  var attempts = 0;
+  var waitForTimeline = function(resolve){
+    attempts++;
+    if(eventTimeline && Object.keys(eventTimeline).length > 0){
+      resolve();
+    } else if(attempts < 10){
+      setTimeout(function(){ waitForTimeline(resolve); }, 500);
+    } else {
+      resolve(); // give up after 5s, send what we have
+    }
+  };
+  await new Promise(waitForTimeline);
+  await saveReminders();
 }
 window.epSyncRemindersToKV=epSyncRemindersToKV;
 
