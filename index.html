@@ -9352,11 +9352,19 @@ function epSyncVendorAmounts(){
     });
   });
 
-  // Decor: quoted amount per function
+  // Decor: sum across all vendors per function (multi-vendor)
   evs.forEach(function(ev){
-    var dec=eventPlanner.decor[ev]||{};
-    if(dec.vendorId&&dec.vendorId!=='__manual__'&&dec.cost>0)
-      totals[dec.vendorId]=(totals[dec.vendorId]||0)+Number(dec.cost||0);
+    var dvs=((eventPlanner.decor||{})[ev]&&eventPlanner.decor[ev].vendors)||[];
+    dvs.forEach(function(v){
+      if(v.vendorId&&v.vendorId!=='__manual__'&&v.cost>0)
+        totals[v.vendorId]=(totals[v.vendorId]||0)+Number(v.cost||0);
+    });
+  });
+  // Home Decor vendors
+  var hdVsSync=(eventPlanner.homeDecor&&eventPlanner.homeDecor.vendors)||[];
+  hdVsSync.forEach(function(v){
+    if(v.vendorId&&v.vendorId!=='__manual__'&&v.cost>0)
+      totals[v.vendorId]=(totals[v.vendorId]||0)+Number(v.cost||0);
   });
   // Home Decor
   var hd=eventPlanner.homeDecor||{};
@@ -10403,7 +10411,9 @@ function epScanReminders(){
     var days=Math.round((deadline-today)/86400000);
     if(days<=60){
       var dec=ep.decor[ev]||{};
-      if(dec.status!=='confirmed') addRem('Decor: '+ev+' not confirmed',days,'decor');
+      var dvsScan=dec.vendors||[];
+      var anyNotConfirmed=dvsScan.length===0||dvsScan.some(function(v){return v.status!=='confirmed';});
+      if(anyNotConfirmed) addRem('Decor: '+ev+' not confirmed',days,'decor');
     }
   });
   // Home decor - 3 months before Kankotri
@@ -10649,35 +10659,22 @@ function epPrint(){
   });
   if(!catHtml) catHtml='<div style="color:#aaa;font-size:11px;">No catering data added yet.</div>';
 
-  // ── DECOR ─────────────────────────────────────────────────────────
-  var decHtml='<table style="width:100%;border-collapse:collapse;font-size:11px;">';
-  decHtml+='<tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Function</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Date</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Vendor</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Theme</th><th style="padding:4px 8px;text-align:right;border:1px solid #e8c8d8;">Amount</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+  // ── DECOR (multi-vendor) ──────────────────────────────────────────
+  var decHtml='';
   var hasDecor=false;
-  evs.forEach(function(ev){
-    var dec=ep.decor[ev]||{};
-    if(!dec.status&&!dec.vendorId&&!dec.vendorName) return;
+  function printDecorVendors(label,dateLabel,dvs){
+    if(!dvs||!dvs.length) return;
     hasDecor=true;
-    var vName=dec.vendorName||(dec.vendorId&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===dec.vendorId;});return vx?vx.name:'';}()):'');
-    decHtml+='<tr><td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+ev+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+fmtDate(ev)+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+vName+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+( dec.theme||'')+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(dec.cost?fmtAmt(dec.cost):'')+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(dec.status||'pending')+'</td></tr>';
-  });
-  // Home Decor
-  var hd=ep.homeDecor||{};
-  if(hd.status||hd.inside||hd.outside){
-    hasDecor=true;
-    var hvName=hd.vendorName||(hd.vendorId&&typeof vendors!=='undefined'?(function(){var vx=vendors.find(function(x){return x.id===hd.vendorId;});return vx?vx.name:'';}()):'');
-    decHtml+='<tr style="background:#fff8f5;"><td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">Home Decor</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">Inside + Outside</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+hvName+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(hd.inside?'Inside: '+hd.inside:'')+(hd.outside?' | Outside: '+hd.outside:'')+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:right;">'+(hd.cost?fmtAmt(hd.cost):'')+'</td>';
-    decHtml+='<td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(hd.status||'pending')+'</td></tr>';
+    decHtml+='<div style="margin-bottom:10px;"><div style="font-size:12px;font-weight:700;color:#5C1A2B;border-bottom:1px solid #e8c8d8;padding-bottom:3px;margin-bottom:5px;">'+label+(dateLabel?' <span style="font-weight:400;color:#999;font-size:10px;">'+dateLabel+'</span>':'')+'</div>';
+    decHtml+='<table style="width:100%;border-collapse:collapse;font-size:11px;"><tr style="background:#f9f0f9;"><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Vendor</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Theme</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Items</th><th style="padding:4px 8px;text-align:left;border:1px solid #e8c8d8;">Setup</th><th style="padding:4px 8px;text-align:center;border:1px solid #e8c8d8;">Status</th></tr>';
+    dvs.forEach(function(v,i){
+      decHtml+='<tr style="'+(i%2===0?'':'background:#fff8f5;')+'"><td style="padding:4px 8px;border:1px solid #e8c8d8;font-weight:600;">'+(v.vendorName||'Vendor '+(i+1))+'</td><td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(v.theme||'')+'</td><td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(v.items||'')+'</td><td style="padding:4px 8px;border:1px solid #e8c8d8;">'+(v.setupTime||'')+(v.pending?'<br><span style="color:#C45000;">'+v.pending+'</span>':'')+'</td><td style="padding:4px 8px;border:1px solid #e8c8d8;text-align:center;">'+badge(v.status||'pending')+'</td></tr>';
+    });
+    decHtml+='</table></div>';
   }
-  decHtml+='</table>';
+  var hd=ep.homeDecor||{}; var hdVsPrint=hd.vendors||[];
+  if(hd.inside||hd.outside||hdVsPrint.length){ hasDecor=true; decHtml+='<div style="margin-bottom:6px;"><div style="font-size:12px;font-weight:700;">\uD83C\uDFE0 Home Decor</div>'+(hd.inside?'<div style="font-size:11px;">Inside: '+hd.inside+'</div>':'')+(hd.outside?'<div style="font-size:11px;">Outside: '+hd.outside+'</div>':'')+'</div>'; printDecorVendors('Home Decor Vendors','',hdVsPrint); }
+  evs.forEach(function(ev){ var dvsPrint=((ep.decor||{})[ev]&&ep.decor[ev].vendors)||[]; printDecorVendors(ev,fmtDate(ev),dvsPrint); });
   if(!hasDecor) decHtml='<div style="color:#aaa;font-size:11px;">No decor data added yet.</div>';
 
   // ── PUJA ─────────────────────────────────────────────────────────
@@ -12740,32 +12737,56 @@ function epRenderPujaMob(el){
 function epRenderDecorMob(el){
   var evs=(typeof WEDDING_EVENTS!=='undefined')?WEDDING_EVENTS:['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var html='<div style="padding:8px 0 4px;">';
+
   // Home decor card
   var hd=eventPlanner.homeDecor||{};
+  var hdVs=epDecorGetVendors('__home__');
+  var hdStatus=hdVs.length?hdVs[0].status||'pending':'pending';
   html+='<div class="ep-event-card">';
-  html+='<div class="ep-event-head" onclick="epMobToggle(\'mob_decor_home\')"><div><div class="ep-event-title">&#127968; Home Decor</div><div class="ep-event-date">Inside + Outside</div></div>'+epStatusBadge(hd.status||'pending')+'</div>';
+  html+='<div class="ep-event-head" onclick="epMobToggle(\'mob_decor_home\')"><div><div class="ep-event-title">&#127968; Home Decor</div><div class="ep-event-date">Inside + Outside &middot; '+hdVs.length+' vendor'+(hdVs.length!==1?'s':'')+'</div></div>'+epStatusBadge(hdStatus)+'</div>';
   html+='<div class="ep-event-body" id="mob_decor_home">';
   if(hd.inside) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Inside:</strong> '+hd.inside+'</div>';
   if(hd.outside) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Outside:</strong> '+hd.outside+'</div>';
-  if(hd.notes) html+='<div style="font-size:11px;color:#888;margin-bottom:6px;">'+hd.notes+'</div>';
-  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\')">&#9998; Edit Home Decor</button>';
-  html+='</div></div>';
+  hdVs.forEach(function(v,i){
+    var vName=v.vendorName||('Vendor '+(i+1));
+    html+='<div style="border:1px solid #f0d8e8;border-radius:6px;padding:8px;margin-bottom:6px;">';
+    html+='<div style="display:flex;justify-content:space-between;"><span style="font-size:12px;font-weight:700;color:#5C1A2B;">'+vName+'</span>'+epStatusBadge(v.status||'pending')+'</div>';
+    if(v.theme) html+='<div style="font-size:11px;margin-top:3px;"><strong>Theme:</strong> '+v.theme+'</div>';
+    if(v.items) html+='<div style="font-size:11px;margin-top:2px;"><strong>Items:</strong> '+v.items+'</div>';
+    if(v.setupTime) html+='<div style="font-size:11px;margin-top:2px;"><strong>Setup:</strong> '+v.setupTime+'</div>';
+    if(v.pending) html+='<div style="font-size:11px;color:#C45000;margin-top:2px;">&#9888; '+v.pending+'</div>';
+    html+='<button class="ep-add-btn" style="margin-top:6px;" onclick="epOpenDecorModal(\'__home__\','+i+')">&#9998; Edit</button>';
+    html+='</div>';
+  });
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">';
+  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\',null)">&#9998; Home Details</button>';
+  html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\'__home__\',\'new\')">+ Add Vendor</button>';
+  html+='</div></div></div>';
+
   // All events
   evs.forEach(function(ev){
-    var dec=eventPlanner.decor[ev]||{};
-    var vName=dec.vendorName||'';
-    if(!vName&&dec.vendorId&&typeof vendors!=='undefined'){
-      var v=vendors.find(function(x){return x.id===dec.vendorId;}); vName=v?v.name:'';
-    }
+    var dvs=epDecorGetVendors(ev);
+    var anyStatus=dvs.length?dvs[0].status||'pending':'pending';
     var mobId='mob_decor_'+ev.replace(/[^a-zA-Z0-9]/g,'_');
     html+='<div class="ep-event-card">';
-    html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+(vName?' &middot; '+vName:'')+'</div></div>'+epStatusBadge(dec.status||'pending')+'</div>';
+    html+='<div class="ep-event-head" onclick="epMobToggle(\''+mobId+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+(dvs.length?' &middot; '+dvs.length+' vendor'+(dvs.length!==1?'s':''):'')+'</div></div>'+epStatusBadge(anyStatus)+'</div>';
     html+='<div class="ep-event-body" id="'+mobId+'">';
-    if(dec.theme) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Theme:</strong> '+dec.theme+'</div>';
-    if(dec.items) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Items:</strong> '+dec.items+'</div>';
-    if(dec.setupTime) html+='<div style="font-size:12px;margin-bottom:4px;"><strong>Setup:</strong> '+dec.setupTime+'</div>';
-    if(dec.pending) html+='<div style="font-size:12px;color:#C45000;margin-bottom:4px;">&#9888; '+dec.pending+'</div>';
-    html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\''+ev+'\')">&#9998; Edit Decor</button>';
+    dvs.forEach(function(v,i){
+      var vName=v.vendorName||('Vendor '+(i+1));
+      html+='<div style="border:1px solid #f0d8e8;border-radius:6px;padding:8px;margin-bottom:6px;">';
+      html+='<div style="display:flex;justify-content:space-between;"><span style="font-size:12px;font-weight:700;color:#5C1A2B;">'+vName+'</span>'+epStatusBadge(v.status||'pending')+'</div>';
+      if(v.theme) html+='<div style="font-size:11px;margin-top:3px;"><strong>Theme:</strong> '+v.theme+'</div>';
+      if(v.items) html+='<div style="font-size:11px;margin-top:2px;"><strong>Items:</strong> '+v.items+'</div>';
+      if(v.setupTime) html+='<div style="font-size:11px;margin-top:2px;"><strong>Setup:</strong> '+v.setupTime+'</div>';
+      if(v.pending) html+='<div style="font-size:11px;color:#C45000;margin-top:2px;">&#9888; '+v.pending+'</div>';
+      // Show Drive files
+      var allVFiles=(v.files||[]);
+      if(!allVFiles.length){ (v.images||[]).forEach(function(img,j){ if(img) allVFiles.push({name:'image-'+(j+1)+'.jpg',data:img}); }); (v.pdfs||[]).forEach(function(p){ allVFiles.push(p); }); }
+      if(allVFiles.length) html+='<div style="margin-top:4px;">'+renderFileAttachments(allVFiles,null)+'</div>';
+      html+='<button class="ep-add-btn" style="margin-top:6px;" onclick="epOpenDecorModal(\''+ev+'\','+i+')">&#9998; Edit</button>';
+      html+='</div>';
+    });
+    html+='<button class="ep-add-btn" onclick="epOpenDecorModal(\''+ev+'\',\'new\')">+ Add Vendor</button>';
     html+='</div></div>';
   });
   html+='</div>';
