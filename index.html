@@ -10025,6 +10025,12 @@ var EP_GIFT_AKHAND_ONLY = ['Marriage'];
 
 function epRenderGifts(){
   var el=document.getElementById('epPanelGifts'); if(!el) return;
+  // Remember which event sections are open before re-render
+  var openIds={};
+  EP_GIFT_EVENTS.forEach(function(ev){
+    var b=document.getElementById('gifts_'+ev);
+    if(b&&b.style.display==='block') openIds['gifts_'+ev]=true;
+  });
   var html='<div style="padding:8px 0 4px;">';
   EP_GIFT_EVENTS.forEach(function(ev){
     var gift=eventPlanner.gifts[ev]||{covers:[],ladies:[],akhand:[]};
@@ -10036,13 +10042,14 @@ function epRenderGifts(){
     html+='<div class="ep-event-card">';
     html+='<div class="ep-event-head" onclick="epToggleEvent(\'gifts_'+ev+'\')"><div><div class="ep-event-title">'+ev+'</div><div class="ep-event-date">'+epEventDate(ev)+'</div></div>'+chip+'</div>';
     html+='<div class="ep-event-body" id="gifts_'+ev+'" style="padding:10px 14px;">';
-    html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">';
+    html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">';
     if(!isAkhandOnly){
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'covers\')">+ Cover</button>';
       html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'ladies\')">+ Lady / Girl</button>';
       html+='<button class="ep-add-btn" style="background:#f0e8f8;border-color:#c8a0d8;" onclick="epImportLadies(\''+ev+'\')">&#128100; Import from Guest List</button>';
     }
     if(isAkhandOnly) html+='<button class="ep-add-btn" onclick="epAddGiftItem(\''+ev+'\',\'akhand\')">+ Akhand Saubhagya Vati</button>';
+    html+='<button id="epGiftDelBtn_'+ev+'" onclick="epGiftDeleteSelected(\''+ev+'\')" style="display:none;padding:5px 12px;background:#fff0f0;border:1px solid #f5c0c0;color:#c62828;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;">&#128465; Delete Selected</button>';
     html+='</div>';
     if(!isAkhandOnly){
       html+=epRenderGiftList(ev,'covers','&#128140; Covers',covers);
@@ -10053,6 +10060,11 @@ function epRenderGifts(){
   });
   html+='</div>';
   el.innerHTML=html;
+  // Restore open sections
+  Object.keys(openIds).forEach(function(id){
+    var b=document.getElementById(id);
+    if(b) b.style.display='block';
+  });
 }
 
 function epRenderGiftListLadies(ev,items){
@@ -10072,6 +10084,7 @@ function epRenderGiftListLadies(ev,items){
   }
   items.forEach(function(item,i){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5e8e8;">';
+    html+='<input type="checkbox" class="ep-gift-chk" data-ev="'+ev+'" data-type="ladies" data-idx="'+i+'" onchange="epGiftChkChange(\'"+ev+"\')" style="width:16px;height:16px;accent-color:#8B1A6B;flex-shrink:0;cursor:pointer;">';
     html+='<div style="flex:1;">';
     html+='<div style="font-size:12px;font-weight:600;">'+item.name+'</div>';
     if(item.family&&item.name.indexOf(item.family)===0) html+='<div style="font-size:10px;color:#aaa;">from '+item.family+' &mdash; tap Edit to add name</div>';
@@ -10084,7 +10097,7 @@ function epRenderGiftListLadies(ev,items){
     html+='<option value="prepared"'+(item.status==='prepared'?' selected':'')+'>Prepared</option>';
     html+='<option value="given"'+(item.status==='given'?' selected':'')+'>Given</option>';
     html+='</select>';
-    html+='<button onclick="epDeleteGiftItem(\''+ev+'\',\'ladies\','+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:15px;padding:0;">&#215;</button>';
+    html+='<button onclick="epDeleteGiftItem(\''+ev+'\',\'ladies\','+i+')" style="background:#fff0f0;border:1px solid #f5c0c0;color:#c62828;cursor:pointer;font-size:13px;padding:2px 7px;border-radius:6px;" title="Delete">🗑</button>';
     html+='</div>';
   });
   // Total summary at bottom
@@ -10104,13 +10117,14 @@ function epRenderGiftList(ev,type,title,items){
   var html='<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:#8B1A6B;margin-bottom:5px;padding-bottom:3px;border-bottom:1.5px solid #e8c8d8;">'+title+'</div>';
   items.forEach(function(item,i){
     html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5e8e8;">';
+    html+='<input type="checkbox" class="ep-gift-chk" data-ev="'+ev+'" data-type="'+type+'"  data-idx="'+i+'" onchange="epGiftChkChange(\'"+ev+"\')" style="width:16px;height:16px;accent-color:#8B1A6B;flex-shrink:0;cursor:pointer;">';
     html+='<div style="flex:1;font-size:12px;"><strong>'+item.name+'</strong>'+(item.amount?' &mdash; &#8377;'+item.amount:'')+(item.notes?' &middot; <span style="color:#888;">'+item.notes+'</span>':'')+'</div>';
     html+='<select onchange="epUpdateGiftStatus(\''+ev+'\',\''+type+'\','+i+',this.value)" style="font-size:11px;border:1px solid #ddd;border-radius:6px;padding:3px 6px;cursor:pointer;">';
     html+='<option value="pending"'+(item.status==='pending'?' selected':'')+'>Pending</option>';
     html+='<option value="prepared"'+(item.status==='prepared'?' selected':'')+'>Prepared</option>';
     html+='<option value="given"'+(item.status==='given'?' selected':'')+'>Given</option>';
     html+='</select>';
-    html+='<button onclick="epDeleteGiftItem(\''+ev+'\',\''+type+'\','+i+')" style="background:none;border:none;color:#ddd;cursor:pointer;font-size:15px;padding:0;">&#215;</button>';
+    html+='<button onclick="epDeleteGiftItem(\''+ev+'\',\''+type+'\','+i+')" style="background:#fff0f0;border:1px solid #f5c0c0;color:#c62828;cursor:pointer;font-size:13px;padding:2px 7px;border-radius:6px;" title="Delete">🗑</button>';
     html+='</div>';
   });
   html+='</div>';
@@ -10122,26 +10136,121 @@ function epImportLadies(ev){
   if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
   if(!eventPlanner.gifts[ev].ladies) eventPlanner.gifts[ev].ladies=[];
   var existing=eventPlanner.gifts[ev].ladies;
+
+  // Build picker list — show ALL guests, pre-check those with ladies count > 0
+  var pickerGuests=guests.filter(function(g){ return g.name&&g.name.trim(); });
+  if(!pickerGuests.length){ alert('No guests in guest list.'); return; }
+
+  // Remove existing modal if any
+  var oldM=document.getElementById('epLadyPickerModal'); if(oldM) oldM.remove();
+
+  var modalHTML='<div id="epLadyPickerModal" style="position:fixed;inset:0;z-index:9999;background:rgba(42,31,26,0.55);display:flex;align-items:center;justify-content:center;padding:16px;">';
+  modalHTML+='<div style="background:#fff;border-radius:16px;max-width:520px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.3);">';
+  // Header
+  modalHTML+='<div style="background:linear-gradient(135deg,#8B1A6B,#5C1A2B);color:#fff;padding:16px 20px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;">';
+  modalHTML+='<div><div style="font-size:15px;font-weight:700;">👩 Select Ladies / Girls</div><div style="font-size:11px;opacity:0.8;margin-top:2px;">'+ev+' — pick families & set count</div></div>';
+  modalHTML+='<button onclick="document.getElementById(\'epLadyPickerModal\').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;width:30px;height:30px;border-radius:50%;cursor:pointer;line-height:30px;text-align:center;">✕</button>';
+  modalHTML+='</div>';
+  // Search
+  modalHTML+='<div style="padding:10px 16px;border-bottom:1px solid #f0e8f0;">';
+  modalHTML+='<input id="epLadyPickerSearch" type="text" placeholder="🔍 Search family..." oninput="epLadyPickerFilter()" style="width:100%;border:1px solid #e0d0e0;border-radius:8px;padding:7px 12px;font-size:13px;box-sizing:border-box;">';
+  modalHTML+='</div>';
+  // Select all row
+  modalHTML+='<div style="padding:8px 16px;border-bottom:1px solid #f5eef5;display:flex;align-items:center;gap:8px;background:#fdf8fd;">';
+  modalHTML+='<input type="checkbox" id="epLadySelectAll" onchange="epLadyToggleAll(this.checked)" style="width:16px;height:16px;accent-color:#8B1A6B;">';
+  modalHTML+='<label for="epLadySelectAll" style="font-size:12px;font-weight:600;color:#5C1A2B;cursor:pointer;">Select / Deselect All</label>';
+  modalHTML+='<span style="margin-left:auto;font-size:11px;color:#999;" id="epLadyPickerCount">0 selected</span>';
+  modalHTML+='</div>';
+  // Guest rows
+  modalHTML+='<div id="epLadyPickerList" style="overflow-y:auto;flex:1;padding:8px 0;">';
+
+  pickerGuests.forEach(function(g,gi){
+    var guestLadyCount=Number((g.events&&g.events[ev]&&g.events[ev].ladies)||0);
+    var alreadyCount=existing.filter(function(e){ return e.family===g.name; }).length;
+    var defaultCount=guestLadyCount>0?guestLadyCount:1;
+    var sideLabel=g.side?('<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:'+(g.side.toLowerCase().indexOf('bride')>=0?'#fce4ec':'#e8eaf6')+';color:'+(g.side.toLowerCase().indexOf('bride')>=0?'#880E4F':'#283593')+';">'+g.side+'</span>'):'';
+    var alreadyBadge=alreadyCount>0?('<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:#e8f5e9;color:#2E7D32;margin-left:4px;">'+alreadyCount+' already added</span>'):'';
+    var preChecked=guestLadyCount>0&&alreadyCount<guestLadyCount;
+    modalHTML+='<div class="ep-lady-row" data-name="'+g.name.toLowerCase()+'" style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid #faf0fa;">';
+    modalHTML+='<input type="checkbox" data-gi="'+gi+'" class="ep-lady-chk" '+(preChecked?'checked':'')+' onchange="epLadyPickerUpdateCount()" style="width:16px;height:16px;accent-color:#8B1A6B;flex-shrink:0;">';
+    modalHTML+='<div style="flex:1;min-width:0;">';
+    modalHTML+='<div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(g.name)+' '+sideLabel+alreadyBadge+'</div>';
+    if(guestLadyCount>0) modalHTML+='<div style="font-size:10px;color:#888;">'+guestLadyCount+' ladies in guest list</div>';
+    modalHTML+='</div>';
+    modalHTML+='<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">';
+    modalHTML+='<span style="font-size:10px;color:#888;">Count:</span>';
+    modalHTML+='<button onclick="var i=document.getElementById(\'epLadyCnt'+gi+'\');var v=Math.max(1,Number(i.value)-1);i.value=v;epLadyPickerUpdateCount();" style="width:22px;height:22px;border:1px solid #e0d0e0;border-radius:4px;background:#f8f0f8;cursor:pointer;font-size:14px;line-height:1;padding:0;">-</button>';
+    modalHTML+='<input id="epLadyCnt'+gi+'" type="number" min="1" max="20" value="'+defaultCount+'" onchange="epLadyPickerUpdateCount()" style="width:36px;text-align:center;border:1px solid #e0d0e0;border-radius:4px;padding:2px 4px;font-size:12px;">';
+    modalHTML+='<button onclick="var i=document.getElementById(\'epLadyCnt'+gi+'\');var v=Math.min(20,Number(i.value)+1);i.value=v;epLadyPickerUpdateCount();" style="width:22px;height:22px;border:1px solid #e0d0e0;border-radius:4px;background:#f8f0f8;cursor:pointer;font-size:14px;line-height:1;padding:0;">+</button>';
+    modalHTML+='</div>';
+    modalHTML+='</div>';
+  });
+
+  modalHTML+='</div>';
+  // Footer
+  modalHTML+='<div style="padding:12px 16px;border-top:1px solid #f0e8f0;display:flex;gap:8px;justify-content:flex-end;background:#fdf8fd;border-radius:0 0 16px 16px;">';
+  modalHTML+='<button onclick="document.getElementById(\'epLadyPickerModal\').remove()" style="padding:8px 18px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;color:#555;">Cancel</button>';
+  modalHTML+='<button onclick="epLadyPickerConfirm(\''+ev+'\')" style="padding:8px 20px;border:none;border-radius:8px;background:linear-gradient(135deg,#8B1A6B,#5C1A2B);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">✅ Import Selected</button>';
+  modalHTML+='</div>';
+  modalHTML+='</div></div>';
+
+  document.body.insertAdjacentHTML('beforeend',modalHTML);
+  epLadyPickerUpdateCount();
+  document.getElementById('epLadyPickerSearch').focus();
+}
+
+function epLadyPickerFilter(){
+  var q=document.getElementById('epLadyPickerSearch').value.toLowerCase().trim();
+  document.querySelectorAll('#epLadyPickerList .ep-lady-row').forEach(function(row){
+    row.style.display=(!q||row.dataset.name.indexOf(q)>=0)?'flex':'none';
+  });
+}
+
+function epLadyToggleAll(checked){
+  document.querySelectorAll('#epLadyPickerList .ep-lady-chk').forEach(function(chk){
+    var row=chk.closest('.ep-lady-row');
+    if(row&&row.style.display!=='none') chk.checked=checked;
+  });
+  epLadyPickerUpdateCount();
+}
+
+function epLadyPickerUpdateCount(){
+  var n=0;
+  document.querySelectorAll('#epLadyPickerList .ep-lady-chk:checked').forEach(function(chk){
+    var gi=chk.dataset.gi;
+    var cnt=Number(document.getElementById('epLadyCnt'+gi).value)||1;
+    n+=cnt;
+  });
+  var el=document.getElementById('epLadyPickerCount');
+  if(el) el.textContent=n+' ladies to import';
+}
+
+function epLadyPickerConfirm(ev){
+  var pickerGuests=guests.filter(function(g){ return g.name&&g.name.trim(); });
+  if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+  if(!eventPlanner.gifts[ev].ladies) eventPlanner.gifts[ev].ladies=[];
+  var existing=eventPlanner.gifts[ev].ladies;
   var added=0;
-  guests.forEach(function(g){
-    var count=0;
-    if(g.events&&g.events[ev]) count=Number(g.events[ev].ladies||0);
-    if(count<=0) return;
-    var familyName=g.name||'Unknown Family';
+  document.querySelectorAll('#epLadyPickerList .ep-lady-chk:checked').forEach(function(chk){
+    var gi=Number(chk.dataset.gi);
+    var g=pickerGuests[gi]; if(!g) return;
+    var familyName=g.name;
+    var count=Number(document.getElementById('epLadyCnt'+gi).value)||1;
+    // Remove existing entries for this family first, then re-add with new count
+    var keep=existing.filter(function(e){ return e.family!==familyName; });
+    existing.length=0; keep.forEach(function(e){ existing.push(e); });
     for(var i=1;i<=count;i++){
-      var alreadyIn=existing.some(function(e){ return e.family===familyName&&e.slot===i; });
-      if(!alreadyIn){
-        existing.push({name:familyName+' (Lady '+i+')',family:familyName,slot:i,notes:'',status:'pending',imported:true});
-        added++;
-      }
+      existing.push({name:familyName+' (Lady '+i+')',family:familyName,slot:i,notes:'',status:'pending',imported:true});
+      added++;
     }
   });
-  if(added===0){ alert('All ladies from guest list are already imported for '+ev+'.'); return; }
+  document.getElementById('epLadyPickerModal').remove();
+  if(added===0){ showToast('Nothing selected to import'); return; }
   storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
   epRenderGifts();
   epMobRefreshAfterSave();
-  showToast(added+' ladies imported \u2705');
+  showToast(added+' ladies imported ✅');
 }
 
 function epEditLadyName(ev,idx){
@@ -10183,11 +10292,56 @@ function epDeleteGiftItem(ev,type,idx){
   if(typeof queueCloudSave==='function') queueCloudSave();
   epRenderGifts();
 }
+function epGiftChkChange(ev){
+  // Show/hide Delete Selected button based on whether any checkbox is checked
+  var any=document.querySelectorAll('.ep-gift-chk[data-ev="'+ev+'"]:checked').length>0;
+  var btn=document.getElementById('epGiftDelBtn_'+ev);
+  if(btn) btn.style.display=any?'inline-flex':'none';
+  if(btn&&any){
+    var n=document.querySelectorAll('.ep-gift-chk[data-ev="'+ev+'"]:checked').length;
+    btn.textContent='🗑 Delete '+n+' Selected';
+  }
+}
+function epGiftDeleteSelected(ev){
+  var checked=[].slice.call(document.querySelectorAll('.ep-gift-chk[data-ev="'+ev+'"]:checked'));
+  if(!checked.length) return;
+  var names=checked.map(function(chk){
+    var t=chk.dataset.type; var idx=Number(chk.dataset.idx);
+    var arr=(eventPlanner.gifts[ev]||{})[t]||[];
+    return arr[idx]?arr[idx].name:'item';
+  });
+  if(!confirm('Delete '+checked.length+' item(s)?'+names.join(', '))) return;
+  // Group by type, delete highest index first to avoid shifting
+  var byType={};
+  checked.forEach(function(chk){
+    var t=chk.dataset.type;
+    if(!byType[t]) byType[t]=[];
+    byType[t].push(Number(chk.dataset.idx));
+  });
+  Object.keys(byType).forEach(function(t){
+    var idxs=byType[t].sort(function(a,b){return b-a;}); // descending
+    idxs.forEach(function(idx){
+      if(eventPlanner.gifts[ev]&&eventPlanner.gifts[ev][t])
+        eventPlanner.gifts[ev][t].splice(idx,1);
+    });
+  });
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderGifts();
+  epMobRefreshAfterSave();
+  showToast(checked.length+' item(s) deleted');
+}
+window.epGiftChkChange=epGiftChkChange;
+window.epGiftDeleteSelected=epGiftDeleteSelected;
 window.epAddGiftItem=epAddGiftItem;
 window.epUpdateGiftStatus=epUpdateGiftStatus;
 window.epDeleteGiftItem=epDeleteGiftItem;
 window.epRenderGifts=epRenderGifts;
 window.epImportLadies=epImportLadies;
+window.epLadyPickerFilter=epLadyPickerFilter;
+window.epLadyToggleAll=epLadyToggleAll;
+window.epLadyPickerUpdateCount=epLadyPickerUpdateCount;
+window.epLadyPickerConfirm=epLadyPickerConfirm;
 window.epEditLadyName=epEditLadyName;
 
 
