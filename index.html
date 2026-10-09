@@ -10267,18 +10267,204 @@ function epEditLadyName(ev,idx){
 }
 
 function epAddGiftItem(ev,type){
-  var labels={covers:'Cover to whom (name):',ladies:"Lady / Girl name:",akhand:'Akhand Saubhagya Vati - name:'};
-  var name=prompt(labels[type]||'Name:'); if(!name||!name.trim()) return;
-  var amount=''; var notes='';
-  if(type==='covers') amount=prompt('Amount in cover (Rs.) - leave blank if not decided:')||'';
-  notes=prompt('Notes (optional - e.g. relation, item):')||'';
+  // Akhand: still a simple name prompt (not guest-based)
+  if(type==='akhand'){
+    var name=prompt('Akhand Saubhagya Vati — name:'); if(!name||!name.trim()) return;
+    var notes=prompt('Notes (optional):')||'';
+    if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+    if(!eventPlanner.gifts[ev][type]) eventPlanner.gifts[ev][type]=[];
+    eventPlanner.gifts[ev][type].push({name:name.trim(),notes:notes.trim(),status:'pending'});
+    storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+    if(typeof queueCloudSave==='function') queueCloudSave();
+    epRenderGifts(); epMobRefreshAfterSave(); return;
+  }
+  // Covers & Ladies: open guest picker modal
+  epOpenGiftPicker(ev,type);
+}
+
+function epOpenGiftPicker(ev,type){
+  var isCover=(type==='covers');
+  var title=isCover?'💝 Select Guest for Cover':'👩 Select Lady / Girl';
+  var subtitle=isCover?'Choose from guest list — covers given per family':'Choose from guest list — ladies gifts';
+  var accentColor=isCover?'#856404':'#8B1A6B';
+  var accentDark=isCover?'#5C4300':'#5C1A2B';
+
+  if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+  var existing=eventPlanner.gifts[ev][type]||[];
+
+  var allGuests=(typeof guests!=='undefined'&&guests)||[];
+  var pickerList=allGuests.filter(function(g){return g.name&&g.name.trim();});
+
+  // Remove old modal
+  var old=document.getElementById('epGiftPickerModal'); if(old) old.remove();
+
+  var m='<div id="epGiftPickerModal" style="position:fixed;inset:0;z-index:9999;background:rgba(42,31,26,0.6);display:flex;align-items:center;justify-content:center;padding:14px;">';
+  m+='<div style="background:#fff;border-radius:16px;max-width:540px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.3);">';
+
+  // Header
+  m+='<div style="background:linear-gradient(135deg,'+accentColor+','+accentDark+');color:#fff;padding:14px 18px;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;">';
+  m+='<div><div style="font-size:15px;font-weight:700;">'+title+'</div>';
+  m+='<div style="font-size:11px;opacity:0.8;margin-top:2px;">'+ev+' &nbsp;·&nbsp; '+subtitle+'</div></div>';
+  m+='<button onclick="document.getElementById(\'epGiftPickerModal\').remove()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:18px;width:30px;height:30px;border-radius:50%;cursor:pointer;line-height:30px;text-align:center;">✕</button>';
+  m+='</div>';
+
+  // Search
+  m+='<div style="padding:10px 14px;border-bottom:1px solid #f0e8e0;">';
+  m+='<input id="epGiftPickerSearch" type="text" placeholder="🔍 Search by name..." oninput="epGiftPickerFilter()" ';
+  m+='style="width:100%;border:1px solid #e0d0d0;border-radius:8px;padding:7px 12px;font-size:13px;box-sizing:border-box;">';
+  m+='</div>';
+
+  // Select-all row
+  m+='<div style="padding:7px 14px;border-bottom:1px solid #f5eee8;display:flex;align-items:center;gap:8px;background:#fdf9f5;">';
+  m+='<input type="checkbox" id="epGiftPickerAll" onchange="epGiftPickerToggleAll(this.checked,\''+type+'\')" style="width:16px;height:16px;accent-color:'+accentColor+';cursor:pointer;">';
+  m+='<label for="epGiftPickerAll" style="font-size:12px;font-weight:600;color:'+accentDark+';cursor:pointer;">Select / Deselect All</label>';
+  m+='<span id="epGiftPickerCount" style="margin-left:auto;font-size:11px;color:#999;">0 selected</span>';
+  m+='</div>';
+
+  // Guest rows
+  m+='<div id="epGiftPickerList" style="overflow-y:auto;flex:1;padding:6px 0;">';
+  if(!pickerList.length){
+    m+='<div style="padding:20px;text-align:center;color:#aaa;font-size:13px;">No guests in guest list yet.<br>Add guests first from the Guest List tab.</div>';
+  } else {
+    pickerList.forEach(function(g,gi){
+      var alreadyAdded=existing.filter(function(e){return e.family===g.name||e.name===g.name;}).length;
+      var sideColor=g.side&&g.side.toLowerCase().indexOf('bride')>=0?'#880E4F':'#283593';
+      var sideBg=g.side&&g.side.toLowerCase().indexOf('bride')>=0?'#fce4ec':'#e8eaf6';
+      var sideBadge=g.side?('<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:'+sideBg+';color:'+sideColor+';margin-left:4px;">'+g.side+'</span>'):'';
+      var alreadyBadge=alreadyAdded?('<span style="font-size:10px;padding:1px 6px;border-radius:4px;background:#e8f5e9;color:#2E7D32;margin-left:4px;">'+alreadyAdded+' added</span>'):'';
+
+      m+='<div class="ep-gpick-row" data-gi="'+gi+'" data-name="'+escapeHtml(g.name.toLowerCase())+'" ';
+      m+='style="display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid #faf5f0;cursor:pointer;" ';
+      m+='onclick="epGiftPickerRowClick(this)">';
+      m+='<input type="checkbox" class="ep-gpick-chk" data-gi="'+gi+'" ';
+      m+='onchange="epGiftPickerUpdateCount(\''+type+'\')" ';
+      m+='style="width:16px;height:16px;accent-color:'+accentColor+';flex-shrink:0;cursor:pointer;" onclick="event.stopPropagation();">';
+      m+='<div style="flex:1;min-width:0;">';
+      m+='<div style="font-size:13px;font-weight:600;color:#2A1F1A;">'+escapeHtml(g.name)+sideBadge+alreadyBadge+'</div>';
+      if(g.city||g.phone) m+='<div style="font-size:10px;color:#999;">'+(g.city||'')+(g.city&&g.phone?' · ':'')+( g.phone||'')+'</div>';
+      m+='</div>';
+
+      // For covers: show amount input; for ladies: show count input
+      if(isCover){
+        m+='<div style="display:flex;align-items:center;gap:4px;" onclick="event.stopPropagation();">';
+        m+='<span style="font-size:10px;color:#888;">₹</span>';
+        m+='<input id="epGPickAmt'+gi+'" type="number" min="0" placeholder="Amount" ';
+        m+='style="width:70px;border:1px solid #e0d0d0;border-radius:6px;padding:3px 6px;font-size:12px;text-align:right;">';
+        m+='</div>';
+      } else {
+        m+='<div style="display:flex;align-items:center;gap:3px;" onclick="event.stopPropagation();">';
+        m+='<button onclick="var i=document.getElementById(\'epGPickCnt'+gi+'\');i.value=Math.max(1,Number(i.value)-1);epGiftPickerUpdateCount(\''+type+'\')" ';
+        m+='style="width:22px;height:22px;border:1px solid #e0d0e0;border-radius:4px;background:#f8f0f8;cursor:pointer;font-size:14px;line-height:1;padding:0;">-</button>';
+        m+='<input id="epGPickCnt'+gi+'" type="number" min="1" max="20" value="';
+        var guestCount=Number((g.events&&g.events[ev]&&g.events[ev].ladies)||1);
+        m+=guestCount+'" style="width:34px;text-align:center;border:1px solid #e0d0e0;border-radius:4px;padding:2px 4px;font-size:12px;" onchange="epGiftPickerUpdateCount(\''+type+'\')">';
+        m+='<button onclick="var i=document.getElementById(\'epGPickCnt'+gi+'\');i.value=Math.min(20,Number(i.value)+1);epGiftPickerUpdateCount(\''+type+'\')" ';
+        m+='style="width:22px;height:22px;border:1px solid #e0d0e0;border-radius:4px;background:#f8f0f8;cursor:pointer;font-size:14px;line-height:1;padding:0;">+</button>';
+        m+='</div>';
+      }
+      m+='</div>';
+    });
+  }
+  m+='</div>';
+
+  // Also add manually section
+  m+='<div style="padding:10px 14px;border-top:1px solid #f0e8e0;background:#fdf9f5;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+  m+='<span style="font-size:11px;color:#888;">Not in list?</span>';
+  m+='<input id="epGiftPickerManual" type="text" placeholder="Type name manually..." ';
+  m+='style="flex:1;min-width:120px;border:1px solid #ddd;border-radius:6px;padding:5px 10px;font-size:12px;">';
+  if(isCover) m+='<input id="epGiftPickerManualAmt" type="number" min="0" placeholder="₹ Amount" style="width:80px;border:1px solid #ddd;border-radius:6px;padding:5px 8px;font-size:12px;">';
+  m+='<button onclick="epGiftPickerAddManual(\''+ev+'\',\''+type+'\')" ';
+  m+='style="padding:5px 12px;background:#f0f0f0;border:1px solid #ddd;border-radius:6px;font-size:12px;cursor:pointer;">+ Add</button>';
+  m+='</div>';
+
+  // Footer
+  m+='<div style="padding:10px 14px;border-top:1px solid #f0e8e0;display:flex;gap:8px;justify-content:flex-end;border-radius:0 0 16px 16px;">';
+  m+='<button onclick="document.getElementById(\'epGiftPickerModal\').remove()" ';
+  m+='style="padding:8px 16px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:13px;cursor:pointer;color:#555;">Cancel</button>';
+  m+='<button onclick="epGiftPickerConfirm(\''+ev+'\',\''+type+'\')" ';
+  m+='style="padding:8px 18px;border:none;border-radius:8px;background:linear-gradient(135deg,'+accentColor+','+accentDark+');color:#fff;font-size:13px;font-weight:600;cursor:pointer;">✅ Add Selected</button>';
+  m+='</div>';
+  m+='</div></div>';
+
+  document.body.insertAdjacentHTML('beforeend',m);
+  setTimeout(function(){document.getElementById('epGiftPickerSearch').focus();},100);
+}
+
+function epGiftPickerRowClick(row){
+  var chk=row.querySelector('.ep-gpick-chk');
+  if(chk){ chk.checked=!chk.checked; epGiftPickerUpdateCount(chk.dataset.type||''); }
+}
+function epGiftPickerFilter(){
+  var q=(document.getElementById('epGiftPickerSearch').value||'').toLowerCase().trim();
+  document.querySelectorAll('#epGiftPickerList .ep-gpick-row').forEach(function(row){
+    row.style.display=(!q||row.dataset.name.indexOf(q)>=0)?'flex':'none';
+  });
+}
+function epGiftPickerToggleAll(checked,type){
+  document.querySelectorAll('#epGiftPickerList .ep-gpick-chk').forEach(function(chk){
+    var row=chk.closest('.ep-gpick-row');
+    if(row&&row.style.display!=='none') chk.checked=checked;
+  });
+  epGiftPickerUpdateCount(type);
+}
+function epGiftPickerUpdateCount(type){
+  var n=0;
+  document.querySelectorAll('#epGiftPickerList .ep-gpick-chk:checked').forEach(function(chk){
+    var gi=chk.dataset.gi;
+    if(type==='ladies'){
+      var inp=document.getElementById('epGPickCnt'+gi);
+      n+=inp?Number(inp.value)||1:1;
+    } else { n++; }
+  });
+  var el=document.getElementById('epGiftPickerCount');
+  if(el) el.textContent=n+(type==='ladies'?' ladies selected':' guests selected');
+}
+function epGiftPickerAddManual(ev,type){
+  var nameEl=document.getElementById('epGiftPickerManual');
+  var name=(nameEl&&nameEl.value||'').trim(); if(!name) return;
+  var amount='';
+  if(type==='covers'){var amtEl=document.getElementById('epGiftPickerManualAmt');amount=(amtEl&&amtEl.value)||'';}
   if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
   if(!eventPlanner.gifts[ev][type]) eventPlanner.gifts[ev][type]=[];
-  eventPlanner.gifts[ev][type].push({name:name.trim(),amount:amount.trim(),notes:notes.trim(),status:'pending'});
+  eventPlanner.gifts[ev][type].push({name:name,family:name,amount:amount,notes:'',status:'pending'});
   storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
   if(typeof queueCloudSave==='function') queueCloudSave();
-  epRenderGifts();
-  epMobRefreshAfterSave();
+  epRenderGifts(); epMobRefreshAfterSave();
+  document.getElementById('epGiftPickerModal').remove();
+  showToast(name+' added ✅');
+}
+function epGiftPickerConfirm(ev,type){
+  var isCover=(type==='covers');
+  var allGuests=(typeof guests!=='undefined'&&guests)||[];
+  var pickerList=allGuests.filter(function(g){return g.name&&g.name.trim();});
+  if(!eventPlanner.gifts[ev]) eventPlanner.gifts[ev]={covers:[],ladies:[],akhand:[]};
+  if(!eventPlanner.gifts[ev][type]) eventPlanner.gifts[ev][type]=[];
+  var arr=eventPlanner.gifts[ev][type];
+  var added=0;
+  document.querySelectorAll('#epGiftPickerList .ep-gpick-chk:checked').forEach(function(chk){
+    var gi=Number(chk.dataset.gi);
+    var g=pickerList[gi]; if(!g) return;
+    if(isCover){
+      var amt=(document.getElementById('epGPickAmt'+gi)||{}).value||'';
+      arr.push({name:g.name,family:g.name,amount:amt,notes:g.side||'',status:'pending'});
+      added++;
+    } else {
+      var count=Number((document.getElementById('epGPickCnt'+gi)||{}).value)||1;
+      // Remove existing entries for this family then re-add
+      var keep=arr.filter(function(e){return e.family!==g.name;});
+      arr.length=0; keep.forEach(function(e){arr.push(e);});
+      for(var i=1;i<=count;i++){
+        arr.push({name:g.name+' (Lady '+i+')',family:g.name,slot:i,notes:g.side||'',status:'pending',imported:true});
+        added++;
+      }
+    }
+  });
+  document.getElementById('epGiftPickerModal').remove();
+  if(!added){showToast('Nothing selected');return;}
+  storageSet('wedding-eventplanner',JSON.stringify(eventPlanner));
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  epRenderGifts(); epMobRefreshAfterSave();
+  showToast(added+' item(s) added ✅');
 }
 function epUpdateGiftStatus(ev,type,idx,val){
   if(eventPlanner.gifts[ev]&&eventPlanner.gifts[ev][type]&&eventPlanner.gifts[ev][type][idx])
@@ -10334,6 +10520,13 @@ function epGiftDeleteSelected(ev){
 window.epGiftChkChange=epGiftChkChange;
 window.epGiftDeleteSelected=epGiftDeleteSelected;
 window.epAddGiftItem=epAddGiftItem;
+window.epOpenGiftPicker=epOpenGiftPicker;
+window.epGiftPickerFilter=epGiftPickerFilter;
+window.epGiftPickerToggleAll=epGiftPickerToggleAll;
+window.epGiftPickerUpdateCount=epGiftPickerUpdateCount;
+window.epGiftPickerAddManual=epGiftPickerAddManual;
+window.epGiftPickerConfirm=epGiftPickerConfirm;
+window.epGiftPickerRowClick=epGiftPickerRowClick;
 window.epUpdateGiftStatus=epUpdateGiftStatus;
 window.epDeleteGiftItem=epDeleteGiftItem;
 window.epRenderGifts=epRenderGifts;
