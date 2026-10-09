@@ -1652,6 +1652,13 @@
       <button class="print-option-btn" id="printOptVendorDir"><span class="po-icon">📋</span><div><div class="po-label">Vendor Directory</div><div class="po-sub">Name · Phone · Category · Functions · Catering menus &amp; headcount — no amounts</div></div></button>
       <button class="print-option-btn" id="printOptGuests"><span class="po-icon">👥</span><div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div></button>
       <button class="print-option-btn" id="printOptFunctionWise"><span class="po-icon">📅</span><div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div></button>
+      <div id="printFunctionFilterRow" style="display:none;background:#f8f4ee;border:1px solid #d4b0c8;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span style="font-size:12px;font-weight:600;color:#5C1A2B;">Print which function?</span>
+        <select id="printFunctionSelect" style="font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid #c8a0b8;background:#fff;color:#3E0F1C;flex:1;min-width:160px;">
+          <option value="all">📋 All functions</option>
+        </select>
+        <button class="btn btn-ghost" id="printFunctionGoBtn" style="padding:5px 16px;font-size:13px;">🖨️ Print</button>
+      </div>
       <button class="print-option-btn" id="printOptTimeline"><span class="po-icon">🗓️</span><div><div class="po-label">Event timeline only</div><div class="po-sub">Dates, venues, dress codes, menus per function</div></div></button>
     </div>
     <div style="margin-top:18px;text-align:right;"><button class="btn btn-ghost" id="printPanelCloseBtn">Close</button></div>
@@ -8144,7 +8151,11 @@ document.getElementById('remindersGrid').addEventListener('click',e=>{
    ================================================================ */
 document.getElementById('btnPrint').onclick=()=>document.getElementById('printPanelOverlay').classList.add('show');
 document.getElementById('btnPrintGuests').onclick=()=>document.getElementById('printPanelOverlay').classList.add('show');
-document.getElementById('printPanelCloseBtn').onclick=()=>document.getElementById('printPanelOverlay').classList.remove('show');
+document.getElementById('printPanelCloseBtn').onclick=()=>{
+  document.getElementById('printPanelOverlay').classList.remove('show');
+  var fr=document.getElementById('printFunctionFilterRow');
+  if(fr) fr.style.display='none';
+};
 
 function printPageSection(mode,eventFilter){
   document.getElementById('printPanelOverlay').classList.remove('show');
@@ -8355,10 +8366,11 @@ function printVendorDirectory(){
 }
 document.getElementById('printOptGuests').onclick=()=>printSection('guests');
 document.getElementById('printOptTimeline').onclick=()=>printSection('timeline');
-document.getElementById('printOptFunctionWise').onclick=()=>{
+function doPrintFunctionWise(filterEv){
   document.getElementById('printPanelOverlay').classList.remove('show');
   var dateStr = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
-  var sectionsHTML = WEDDING_EVENTS.map(function(ev){
+  var eventsToProcess = filterEv && filterEv!=='all' ? [filterEv] : WEDDING_EVENTS;
+  var sectionsHTML = eventsToProcess.map(function(ev){
     var evGuests = guests.filter(function(g){
       var c = guestEventCounts(g,ev);
       return WRITER_TRACKED_EVENTS.includes(ev) ? (c.adults>0||c.writer>0) : (c.adults>0||c.kids>0);
@@ -8415,7 +8427,7 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
   var bodyHTML =
     '<div style="font-family:Arial,sans-serif;color:#2A1F1A;">' +
     '<div style="background:linear-gradient(135deg,#5C1A2B,#8A2A3F);color:#fff;padding:20px 24px 16px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-      '<div style="font-size:24px;font-family:Georgia,serif;font-weight:700;">Function-wise Guest Lists</div>' +
+      '<div style="font-size:24px;font-family:Georgia,serif;font-weight:700;">'+(filterEv&&filterEv!=='all'?filterEv+' — Guest List':'Function-wise Guest Lists')+'</div>' +
       '<div style="font-size:11px;opacity:0.75;margin-top:4px;">Mrishana &amp; Spandan &nbsp;·&nbsp; Vivaah Ledger &nbsp;·&nbsp; '+dateStr+'</div>' +
     '</div>' +
     '<div style="padding:20px 24px;">'+sectionsHTML+'</div>' +
@@ -8454,6 +8466,24 @@ document.getElementById('printOptFunctionWise').onclick=()=>{
       if(o)o.remove(); if(s)s.remove();
     },1000);
   },300);
+}
+// Function-wise print button — show filter row instead of printing immediately
+document.getElementById('printOptFunctionWise').onclick=()=>{
+  var filterRow=document.getElementById('printFunctionFilterRow');
+  // Populate select with WEDDING_EVENTS
+  var sel=document.getElementById('printFunctionSelect');
+  sel.innerHTML='<option value="all">📋 All functions</option>';
+  (typeof WEDDING_EVENTS!=='undefined'?WEDDING_EVENTS:[]).forEach(function(ev){
+    var opt=document.createElement('option');
+    opt.value=ev; opt.textContent=ev;
+    sel.appendChild(opt);
+  });
+  filterRow.style.display='flex';
+  filterRow.scrollIntoView({behavior:'smooth',block:'nearest'});
+};
+document.getElementById('printFunctionGoBtn').onclick=()=>{
+  var sel=document.getElementById('printFunctionSelect');
+  doPrintFunctionWise(sel?sel.value:'all');
 };
 
 /* ================================================================
@@ -9256,7 +9286,9 @@ function epRenderMealVendorList(){
     html+='<div style="background:#fff8f0;border:1px solid #e8c8d8;border-radius:8px;padding:8px 12px;margin-bottom:6px;display:flex;align-items:flex-start;gap:8px;">';
     html+='<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#5C1A2B;">'+vName+'</div>';
     if(v.menu) html+='<div style="font-size:11px;color:#666;margin-top:2px;">'+v.menu+'</div>';
-    html+='<div style="font-size:11px;color:#8B1A6B;margin-top:2px;">&#8377;'+Number(v.costPerPerson||0)+'/person \u2192 '+epFmt(lineTotal)+'</div></div>';
+    html+='<div style="font-size:11px;color:#8B1A6B;margin-top:2px;">&#8377;'+Number(v.costPerPerson||0)+'/person \u2192 '+epFmt(lineTotal)+'</div>';
+    if(v.files&&v.files.length) html+='<div style="margin-top:4px;">'+renderFileAttachments(v.files,null)+'</div>';
+    html+='</div>';
     html+='<div style="display:flex;gap:4px;">';
     html+='<button onclick="epEditMealVendor('+i+')" style="font-size:11px;padding:3px 8px;border-radius:6px;background:#f0e8f0;border:1px solid #d4b0c8;color:#8B1A6B;cursor:pointer;">Edit</button>';
     html+='<button onclick="epRemoveMealVendor('+i+')" style="font-size:11px;padding:3px 8px;border-radius:6px;background:#fee;border:1px solid #fcc;color:#C62828;cursor:pointer;">\u00d7</button>';
@@ -9272,6 +9304,12 @@ function epShowAddCatererForm(){
   document.getElementById('epMealVendorManualName').value='';
   document.getElementById('epMealMenu').value='';
   document.getElementById('epMealCostPP').value='';
+  // Reset file upload state
+  window._epMealCurrentFiles=[];
+  var fl=document.getElementById('epMealFileList');
+  if(fl) fl.innerHTML='';
+  var fi=document.getElementById('epMealImgInput');
+  if(fi) fi.value='';
   document.getElementById('epMealVendorForm').style.display='block';
 }
 function epEditMealVendor(idx){
@@ -9283,6 +9321,12 @@ function epEditMealVendor(idx){
   document.getElementById('epMealVendorManualName').value=v.vendorName||'';
   document.getElementById('epMealMenu').value=v.menu||'';
   document.getElementById('epMealCostPP').value=v.costPerPerson||'';
+  // Load existing files for this vendor
+  window._epMealCurrentFiles=(v.files||[]).slice();
+  var fl=document.getElementById('epMealFileList');
+  if(fl) fl.innerHTML=window._epMealCurrentFiles.length?renderFileAttachments(window._epMealCurrentFiles,'epMealRemoveFile'):'';
+  var fi=document.getElementById('epMealImgInput');
+  if(fi) fi.value='';
   document.getElementById('epMealVendorForm').style.display='block';
 }
 function epRemoveMealVendor(idx){
@@ -9301,7 +9345,7 @@ function epConfirmMealVendor(){
   if(!vendorId&&!vendorName){alert('Please select or enter a caterer');return;}
   if(!eventPlanner.catering[_epMealEv]) eventPlanner.catering[_epMealEv]={};
   var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
-  var entry={vendorId:vendorId,vendorName:vendorName,menu:document.getElementById('epMealMenu').value.trim(),costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,images:[]};
+  var entry={vendorId:vendorId,vendorName:vendorName,menu:document.getElementById('epMealMenu').value.trim(),costPerPerson:Number(document.getElementById('epMealCostPP').value)||0,files:(window._epMealCurrentFiles||[]).slice(),images:[]};
   if(_epEditVendorIdx>=0) slot.vendors[_epEditVendorIdx]=entry;
   else slot.vendors.push(entry);
   eventPlanner.catering[_epMealEv][_epMealId]=slot;
@@ -10181,20 +10225,15 @@ function epOpenCarnivalModal(idx){
   document.getElementById('epCarnivalStatus').value=s.status||'pending';
   document.getElementById('epCarnivalNotes').value=s.notes||'';
   if(document.getElementById('epCarnivalCost')) document.getElementById('epCarnivalCost').value=s.cost||'';
-  document.getElementById('epCarnivalImgPreview').innerHTML=epRenderThumbs(s.images||[]);
+  var carnFiles=(s.files||[]);
+  if(!carnFiles.length)(s.images||[]).forEach(function(img,i){if(img)carnFiles.push({name:'image-'+(i+1)+'.jpg',data:img});});
+  window._epCarnivalCurrentFiles=carnFiles.slice();
+  var carnfl=document.getElementById('epCarnivalFileList');
+  if(carnfl) carnfl.innerHTML=renderFileAttachments(carnFiles,'epCarnivalRemoveFile');
   document.getElementById('epCarnivalModal').classList.add('show');
 }
 async function epSaveCarnival(){
   var idx=_epCarnivalIdx;
-  var existing=idx>=0?(eventPlanner.carnival.stalls[idx]||{}):{};
-  var imgs=existing.images||[];
-  var fi=document.getElementById('epCarnivalImgInput');
-  if(fi&&fi.files.length){
-    for(var i=0;i<fi.files.length;i++){
-      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
-      imgs.push(b64);
-    }
-  }
   var s={
     name:document.getElementById('epCarnivalName').value.trim(),
     provides:document.getElementById('epCarnivalProvides').value.trim(),
@@ -10203,7 +10242,7 @@ async function epSaveCarnival(){
     status:document.getElementById('epCarnivalStatus').value,
     cost:Number((document.getElementById('epCarnivalCost')||{}).value)||0,
     notes:document.getElementById('epCarnivalNotes').value.trim(),
-    images:imgs
+    files:window._epCarnivalCurrentFiles||[],images:[]
   };
   if(!s.name){ alert('Please enter stall name'); return; }
   if(!eventPlanner.carnival.stalls) eventPlanner.carnival.stalls=[];
@@ -10226,6 +10265,24 @@ function epDeleteCarnival(idx){
 window.epOpenCarnivalModal=epOpenCarnivalModal;
 window.epSaveCarnival=epSaveCarnival;
 window.epDeleteCarnival=epDeleteCarnival;
+
+// ── Carnival Drive upload ──────────────────────────────────────────
+async function epCarnivalHandleUpload(input){
+  var existing=window._epCarnivalCurrentFiles||[];
+  await handleFileUpload(input,'Carnival','Mehendi',existing,function(allFiles){
+    window._epCarnivalCurrentFiles=allFiles;
+    var fl=document.getElementById('epCarnivalFileList');
+    if(fl) fl.innerHTML=renderFileAttachments(allFiles,'epCarnivalRemoveFile');
+  });
+}
+window.epCarnivalHandleUpload=epCarnivalHandleUpload;
+function epCarnivalRemoveFile(idx){
+  window._epCarnivalCurrentFiles=window._epCarnivalCurrentFiles||[];
+  window._epCarnivalCurrentFiles.splice(idx,1);
+  var fl=document.getElementById('epCarnivalFileList');
+  if(fl) fl.innerHTML=renderFileAttachments(window._epCarnivalCurrentFiles,'epCarnivalRemoveFile');
+}
+window.epCarnivalRemoveFile=epCarnivalRemoveFile;
 
 /* EP Clothes Management Module */
 function epRenderClothes(){
@@ -10303,7 +10360,11 @@ function epOpenClothesModal(idx){
   document.getElementById('epClothesVendorManualName').value=item.vendorName||'';
   document.getElementById('epClothesCost').value=item.cost||'';
   document.getElementById('epClothesStatus').value=item.status||'pending';
-  document.getElementById('epClothesImgPreview').innerHTML=epRenderThumbs(item.images||[]);
+  var clothFiles=(item.files||[]);
+  if(!clothFiles.length)(item.images||[]).forEach(function(img,i){if(img)clothFiles.push({name:'image-'+(i+1)+'.jpg',data:img});});
+  window._epClothesCurrentFiles=clothFiles.slice();
+  var clf=document.getElementById('epClothesFileList');
+  if(clf) clf.innerHTML=renderFileAttachments(clothFiles,'epClothesRemoveFile');
   document.getElementById('epClothesModal').classList.add('show');
 }
 async function epSaveClothes(){
@@ -10315,11 +10376,11 @@ async function epSaveClothes(){
   if(vendorId==='__manual__') vendorName=document.getElementById('epClothesVendorManualName').value.trim();
   else if(vendorId&&typeof vendors!=='undefined'){ var v=vendors.find(function(x){return x.id===vendorId;}); vendorName=v?v.name:''; }
   var existing=idx>=0?(eventPlanner.clothes[idx]||{}):{};
-  var imgs=existing.images||[];
-  var fi=document.getElementById('epClothesImgInput');
-  if(fi&&fi.files.length){
-    for(var i=0;i<fi.files.length;i++){
-      var b64=await new Promise(function(res){var r=new FileReader();r.onload=function(e){res(e.target.result);};r.readAsDataURL(fi.files[i]);});
+  window._dummy_clothes_placeholder=true;
+  if(false){
+    var imgs=[];
+    for(var i=0;i<1;i++){
+      var b64='';
       imgs.push(b64);
     }
   }
@@ -10331,7 +10392,7 @@ async function epSaveClothes(){
     vendorId:vendorId, vendorName:vendorName,
     cost:Number(document.getElementById('epClothesCost').value)||0,
     status:document.getElementById('epClothesStatus').value,
-    images:imgs
+    files:window._epClothesCurrentFiles||[],images:[]
   };
   if(!eventPlanner.clothes) eventPlanner.clothes=[];
   if(idx>=0) eventPlanner.clothes[idx]=item;
@@ -10353,6 +10414,46 @@ function epDeleteClothes(idx){
 window.epOpenClothesModal=epOpenClothesModal;
 window.epSaveClothes=epSaveClothes;
 window.epDeleteClothes=epDeleteClothes;
+
+// ── Clothes Drive upload ───────────────────────────────────────────
+async function epClothesHandleUpload(input){
+  var item=_epClothesIdx>=0?(eventPlanner.clothes[_epClothesIdx]||{}):null;
+  var person=item?item.person:'Outfit';
+  var ev=item?item.event:'Clothes';
+  var existing=window._epClothesCurrentFiles||[];
+  await handleFileUpload(input,'Clothes',ev+' - '+person,existing,function(allFiles){
+    window._epClothesCurrentFiles=allFiles;
+    var fl=document.getElementById('epClothesFileList');
+    if(fl) fl.innerHTML=renderFileAttachments(allFiles,'epClothesRemoveFile');
+  });
+}
+window.epClothesHandleUpload=epClothesHandleUpload;
+function epClothesRemoveFile(idx){
+  window._epClothesCurrentFiles=window._epClothesCurrentFiles||[];
+  window._epClothesCurrentFiles.splice(idx,1);
+  var fl=document.getElementById('epClothesFileList');
+  if(fl) fl.innerHTML=renderFileAttachments(window._epClothesCurrentFiles,'epClothesRemoveFile');
+}
+window.epClothesRemoveFile=epClothesRemoveFile;
+
+// ── Catering Meal menu photo upload ───────────────────────────────
+async function epMealHandleUpload(input){
+  var existing=window._epMealCurrentFiles||[];
+  var subfolder=(_epMealEv||'Catering')+' - '+(_epMealId||'meal');
+  await handleFileUpload(input,'Catering',subfolder,existing,function(allFiles){
+    window._epMealCurrentFiles=allFiles;
+    var fl=document.getElementById('epMealFileList');
+    if(fl) fl.innerHTML=renderFileAttachments(allFiles,'epMealRemoveFile');
+  });
+}
+window.epMealHandleUpload=epMealHandleUpload;
+function epMealRemoveFile(idx){
+  window._epMealCurrentFiles=window._epMealCurrentFiles||[];
+  window._epMealCurrentFiles.splice(idx,1);
+  var fl=document.getElementById('epMealFileList');
+  if(fl) fl.innerHTML=renderFileAttachments(window._epMealCurrentFiles,'epMealRemoveFile');
+}
+window.epMealRemoveFile=epMealRemoveFile;
 
 /* EP Reminders Engine - scans all modules and generates reminders */
 function epScanReminders(){
@@ -11588,6 +11689,10 @@ function runGlobalSearch(q, gsInput, gsResults){
       <div class="ep-field"><label>Cost per person (&#8377;)</label>
         <input type="number" id="epMealCostPP" min="0" placeholder="0" oninput="epCalcMealTotal()">
       </div>
+      <div class="ep-field"><label>Menu photo / PDF reference</label>
+        <label class="ep-upload-btn">&#128247; Upload<input type="file" id="epMealImgInput" accept="image/*,application/pdf" multiple style="display:none;" onchange="epMealHandleUpload(this)"></label>
+        <div id="epMealFileList" style="margin-top:4px;"></div>
+      </div>
       <div style="display:flex;gap:8px;margin-top:4px;">
         <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epMealVendorForm').style.display='none'" style="flex:1;">Cancel</button>
         <button class="ep-btn ep-btn-save" onclick="epConfirmMealVendor()" style="flex:1;">Add to List</button>
@@ -11648,8 +11753,8 @@ function runGlobalSearch(q, gsInput, gsResults){
       </select>
     </div>
     <div class="ep-field"><label>Upload outfit photo (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epClothesImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epClothesImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+      <div><label class="ep-upload-btn">&#128247; Photo / PDF<input type="file" id="epClothesImgInput" accept="image/*,application/pdf" multiple style="display:none;" onchange="epClothesHandleUpload(this)"></label></div>
+      <div id="epClothesFileList" style="margin-top:6px;"></div>
     </div>
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epClothesModal').classList.remove('show')">Cancel</button>
@@ -11674,8 +11779,8 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="ep-field"><label>Quoted Amount (&#8377;)</label><input type="number" id="epCarnivalCost" min="0" placeholder="0"></div>
     <div class="ep-field"><label>Notes</label><textarea id="epCarnivalNotes" placeholder="Any notes, vendor contact, cost..."></textarea></div>
     <div class="ep-field"><label>Upload photo / reference (JPEG)</label>
-      <div><label class="ep-upload-btn">&#128247; Choose photo<input type="file" id="epCarnivalImgInput" accept="image/*" multiple style="display:none;"></label></div>
-      <div id="epCarnivalImgPreview" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+      <div><label class="ep-upload-btn">&#128247; Photo / PDF<input type="file" id="epCarnivalImgInput" accept="image/*,application/pdf" multiple style="display:none;" onchange="epCarnivalHandleUpload(this)"></label></div>
+      <div id="epCarnivalFileList" style="margin-top:6px;"></div>
     </div>
     <div class="ep-modal-actions">
       <button class="ep-btn ep-btn-cancel" onclick="document.getElementById('epCarnivalModal').classList.remove('show')">Cancel</button>
