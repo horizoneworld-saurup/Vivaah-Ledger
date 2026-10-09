@@ -576,11 +576,12 @@
     /* When overlay is active — hide entire main page, only overlay prints */
     /* When overlay is active — hide EVERYTHING except the overlay */
     body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
-    body.vl-printing #vivaahPrintOverlay { display:block !important; position:static !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+    body.vl-printing #vivaahPrintOverlay { display:block !important; position:fixed !important; top:0 !important; left:0 !important; width:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     /* When kankotri print area is present — hide everything else, show only the print area */
     body.kankotri-printing { margin:0 !important; padding:0 !important; }
+    @media print { @page { margin:8mm; } }
     body.kankotri-printing > *:not(#kankotriPrintArea) { display:none !important; }
     body.kankotri-printing #kankotriPrintArea { display:block !important; margin:0 !important; padding:0 !important; }
     #kankotriPrintArea { font-family: Arial, sans-serif; margin:0; padding:0; }
@@ -4601,8 +4602,10 @@ function printSection(section) {
     '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
     '@media print{' +
       '#vivaahPrintClose{display:none!important;}' +
+      '@page{margin:8mm;}' +
+      'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:static!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
     '}';
   document.head.appendChild(styleEl);
 
@@ -8461,8 +8464,10 @@ function doPrintFunctionWise(filterEv){
     +'#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}'
     +'@media print{'
       +'#vivaahPrintClose{display:none!important;}'
+      +'@page{margin:8mm;}'
+      +'body{margin:0!important;}'
       +'body>*:not(#vivaahPrintOverlay):not(style){display:none!important;}'
-      +'#vivaahPrintOverlay{position:static!important;overflow:visible!important;}'
+      +'#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}'
       +'-webkit-print-color-adjust:exact;print-color-adjust:exact;'
     +'}';
   document.head.appendChild(st);
@@ -8889,8 +8894,10 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
     '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
     '@media print{' +
       '#vivaahPrintClose{display:none!important;}' +
+      '@page{margin:8mm;}' +
+      'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:static!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}' +
       'h3{page-break-after:avoid;}' +
@@ -9119,8 +9126,10 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
     '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
     '@media print{' +
       '#vivaahPrintClose{display:none!important;}' +
+      '@page{margin:8mm;}' +
+      'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:static!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}h3{page-break-after:avoid;}' +
       '-webkit-print-color-adjust:exact;print-color-adjust:exact;' +
