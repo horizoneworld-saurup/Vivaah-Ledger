@@ -1652,10 +1652,18 @@
       <button class="print-option-btn" id="printOptVendorDir"><span class="po-icon">📋</span><div><div class="po-label">Vendor Directory</div><div class="po-sub">Name · Phone · Category · Functions · Catering menus &amp; headcount — no amounts</div></div></button>
       <button class="print-option-btn" id="printOptGuests"><span class="po-icon">👥</span><div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div></button>
       <button class="print-option-btn" id="printOptFunctionWise"><span class="po-icon">📅</span><div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div></button>
-      <div id="printFunctionFilterRow" style="display:none;background:#f8f4ee;border:1px solid #d4b0c8;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div id="printFunctionFilterRow" style="display:none;background:#f8f4ee;border:1px solid #d4b0c8;border-radius:10px;padding:10px 14px;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="font-size:12px;font-weight:600;color:#5C1A2B;">Print which function?</span>
         <select id="printFunctionSelect" style="font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid #c8a0b8;background:#fff;color:#3E0F1C;flex:1;min-width:160px;">
-          <option value="all">📋 All functions</option>
+          <option value="all">All functions</option>
+          <option value="Kankotri">Kankotri</option>
+          <option value="Ganesh-Grahshanti">Ganesh-Grahshanti</option>
+          <option value="Mosalu">Mosalu</option>
+          <option value="Mehendi">Mehendi</option>
+          <option value="Sangeet">Sangeet</option>
+          <option value="Haldi">Haldi</option>
+          <option value="Marriage">Marriage</option>
+          <option value="Reception">Reception</option>
         </select>
         <button class="btn btn-ghost" id="printFunctionGoBtn" style="padding:5px 16px;font-size:13px;">🖨️ Print</button>
       </div>
@@ -8470,14 +8478,6 @@ function doPrintFunctionWise(filterEv){
 // Function-wise print button — show filter row instead of printing immediately
 document.getElementById('printOptFunctionWise').onclick=()=>{
   var filterRow=document.getElementById('printFunctionFilterRow');
-  // Populate select with WEDDING_EVENTS
-  var sel=document.getElementById('printFunctionSelect');
-  sel.innerHTML='<option value="all">📋 All functions</option>';
-  (typeof WEDDING_EVENTS!=='undefined'?WEDDING_EVENTS:[]).forEach(function(ev){
-    var opt=document.createElement('option');
-    opt.value=ev; opt.textContent=ev;
-    sel.appendChild(opt);
-  });
   filterRow.style.display='flex';
   filterRow.scrollIntoView({behavior:'smooth',block:'nearest'});
 };
