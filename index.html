@@ -2204,6 +2204,85 @@
   </div>
 
   </div><!-- end guest sec-body -->
+
+  </div><!-- end rsvp placeholder -->
+    <!-- RSVP TRACKER SECTION -->
+    <div class="sec-header sec-collapsed sec-rsvp" id="rsvpSectionHeader" onclick="toggleSecBody('rsvpSectionHeader','rsvpSecBody')" style="background:linear-gradient(135deg,#0D3B26,#1B5E20);margin-top:28px;border-radius:12px 12px 0 0;">
+      <div class="sec-header-left">
+        <div class="sec-header-icon">📲</div>
+        <div>
+          <div class="sec-header-title" style="color:#A5D6A7;">RSVP Tracker — WhatsApp Response Dashboard</div>
+          <div class="sec-header-sub" style="color:#81C784;">Track who got the invitation, who confirmed, who declined</div>
+          <div class="sec-header-badges">
+            <span class="sec-badge" style="background:rgba(165,214,167,0.25);">📨 Sent: <span id="rsvpHdrSent">0</span></span>
+            <span class="sec-badge" style="background:rgba(165,214,167,0.25);">✅ Confirmed: <span id="rsvpHdrConfirmed">0</span></span>
+            <span class="sec-badge" style="background:rgba(255,82,82,0.2);">❌ Declined: <span id="rsvpHdrDeclined">0</span></span>
+            <span class="sec-badge" style="background:rgba(255,193,7,0.2);">⏳ No Reply: <span id="rsvpHdrNoReply">0</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="sec-header-actions">
+        <button onclick="event.stopPropagation();printRsvpTracker()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">🖨 Print</button>
+        <button onclick="event.stopPropagation();exportRsvpExcel()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📊 Excel</button>
+      </div>
+    </div>
+  <div class="sec-body collapsed" id="rsvpSecBody" style="background:#F1F8E9;">
+
+    <!-- Stats row -->
+    <div id="rsvpStatsRow" style="display:flex;gap:12px;flex-wrap:wrap;padding:18px 18px 0;"></div>
+
+    <!-- Progress bar -->
+    <div style="padding:10px 18px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px;">
+        <span>Response Rate</span>
+        <span id="rsvpRatePct">0%</span>
+      </div>
+      <div style="background:#C8E6C9;border-radius:8px;height:10px;overflow:hidden;">
+        <div id="rsvpProgressBar" style="background:linear-gradient(90deg,#2E7D32,#66BB6A);height:100%;width:0%;transition:width 0.4s;"></div>
+      </div>
+    </div>
+
+    <!-- Filter + search -->
+    <div style="padding:12px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <button class="rsvp-filter-btn rsvp-active" data-rsvp-filter="all" onclick="setRsvpFilter('all')" style="padding:5px 14px;border-radius:20px;border:1px solid #2E7D32;background:#2E7D32;color:#fff;font-size:12px;cursor:pointer;font-weight:600;">All</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="sent" onclick="setRsvpFilter('sent')" style="padding:5px 14px;border-radius:20px;border:1px solid #1565C0;background:#fff;color:#1565C0;font-size:12px;cursor:pointer;font-weight:600;">📨 WA Sent</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="confirmed" onclick="setRsvpFilter('confirmed')" style="padding:5px 14px;border-radius:20px;border:1px solid #2E7D32;background:#fff;color:#2E7D32;font-size:12px;cursor:pointer;font-weight:600;">✅ Confirmed</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="declined" onclick="setRsvpFilter('declined')" style="padding:5px 14px;border-radius:20px;border:1px solid #C62828;background:#fff;color:#C62828;font-size:12px;cursor:pointer;font-weight:600;">❌ Declined</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="maybe" onclick="setRsvpFilter('maybe')" style="padding:5px 14px;border-radius:20px;border:1px solid #856404;background:#fff;color:#856404;font-size:12px;cursor:pointer;font-weight:600;">🤔 Maybe</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="noreply" onclick="setRsvpFilter('noreply')" style="padding:5px 14px;border-radius:20px;border:1px solid #EF5350;background:#fff;color:#EF5350;font-size:12px;cursor:pointer;font-weight:600;">⏳ No Reply</button>
+      <button class="rsvp-filter-btn" data-rsvp-filter="notsent" onclick="setRsvpFilter('notsent')" style="padding:5px 14px;border-radius:20px;border:1px solid #9E9E9E;background:#fff;color:#9E9E9E;font-size:12px;cursor:pointer;font-weight:600;">📵 Not Sent</button>
+      <input id="rsvpSearch" oninput="renderRsvpList()" type="text" placeholder="🔍 Search guest..." style="padding:5px 10px;border-radius:20px;border:1px solid #ccc;font-size:12px;min-width:160px;outline:none;">
+    </div>
+
+    <!-- Guest RSVP table -->
+    <div style="padding:0 18px 18px;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;" id="rsvpTable">
+        <thead>
+          <tr style="background:#1B5E20;color:#fff;">
+            <th style="padding:9px 10px;text-align:left;border-radius:8px 0 0 0;">Guest / Family</th>
+            <th style="padding:9px 10px;text-align:left;">Side</th>
+            <th style="padding:9px 10px;text-align:left;">Phone</th>
+            <th style="padding:9px 10px;text-align:center;">WA Sent</th>
+            <th style="padding:9px 10px;text-align:center;">RSVP Status</th>
+            <th style="padding:9px 10px;text-align:center;">Confirmed #</th>
+            <th style="padding:9px 10px;text-align:center;border-radius:0 8px 0 0;">Quick Update</th>
+          </tr>
+        </thead>
+        <tbody id="rsvpTableBody">
+          <tr><td colspan="7" style="text-align:center;padding:24px;color:#888;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Bulk action bar -->
+    <div style="padding:0 18px 18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="font-size:12px;color:#555;">Bulk:</span>
+      <button onclick="bulkMarkWaSent()" style="padding:5px 14px;border-radius:8px;border:1px solid #1565C0;background:#E3F2FD;color:#1565C0;font-size:12px;cursor:pointer;font-weight:600;">📲 Mark All Visible as WA Sent</button>
+      <button onclick="exportRsvpPdf()" style="padding:5px 14px;border-radius:8px;border:1px solid #C62828;background:#FFEBEE;color:#C62828;font-size:12px;cursor:pointer;font-weight:600;">📄 Export PDF</button>
+    </div>
+
+  </div><!-- end rsvpSecBody -->
+
     <!-- Kankotri dedicated section -->
     <!-- KANKOTRI SECTION HEADER -->
     <div class="sec-header sec-collapsed sec-kankotri" id="kankotriSectionHeader" onclick="toggleSecBody('kankotriSectionHeader','kankotriSecBody')" style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);margin-top:28px;border-radius:12px 12px 0 0;">
@@ -7008,6 +7087,8 @@ function renderGuests(){
               ${(g.events && g.events['Kankotri'] && (Number(g.events['Kankotri'].adults||0)+Number(g.events['Kankotri'].kids||0))>0) ? `<button class="btn-kank btn-std" onclick="event.stopPropagation();openKankotriWA('${g.id}')" style="background:${g.kankWASent?'#E8F5E9':'#FFF3E0'};border:1px solid ${g.kankWASent?'#2E7D32':'#5C1A2B'};color:${g.kankWASent?'#2E7D32':'#5C1A2B'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Kankotri WhatsApp">${g.kankWASent?'📮✓':'📮 Kank'}</button>` : ''}
               ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button class="btn-std" onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
+            <button class="btn-wa-sent" onclick="event.stopPropagation();toggleGuestWaSent('${g.id}')" style="background:${g.waSent?'#E8F5E9':'#FFF3E0'};border:1px solid ${g.waSent?'#2E7D32':'#C0A070'};color:${g.waSent?'#2E7D32':'#856404'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="${g.waSent?'WA Invitation Sent':'Mark WA Sent'}">${g.waSent?'📲✓ Sent':'📲 Send'}</button>
+            ${g.callStatus ? `<span style="display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;background:${g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':'#FFF9C4'};color:${g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':'#856404'};border:1px solid ${g.callStatus==='confirmed'?'#4CAF5060':g.callStatus==='declined'?'#EF535060':'#FFC10760'};" title="RSVP Status">${g.callStatus==='confirmed'?'✅ Yes':g.callStatus==='declined'?'❌ No':'🤔 Maybe'}</span>` : ''}
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
             </button>
@@ -9228,7 +9309,7 @@ function epCalcMealTotal(){
   var slot=epMigrateSlot((eventPlanner.catering[_epMealEv]||{})[_epMealId]);
   var total=epSlotTotal(slot,h);
   var vCount=slot.vendors.length;
-  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(total)+(vCount?'  ('+vCount+' caterer'+(vCount>1?'s':'')+' � '+h+' people)':'  ('+h+' people)');
+  document.getElementById('epMealTotalBox').textContent='Total: '+epFmt(total)+(vCount?'  ('+vCount+' caterer'+(vCount>1?'s':'')+' × '+h+' people)':'  ('+h+' people)');
 }
 function epUpdateBadges(){
   var p=0,c=0;
@@ -13360,6 +13441,236 @@ if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+
+// ═══════════════════════════════════════════════════════
+// RSVP TRACKER FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+var _rsvpFilter = 'all';
+
+function setRsvpFilter(f) {
+  _rsvpFilter = f;
+  document.querySelectorAll('.rsvp-filter-btn').forEach(function(b) {
+    var isActive = b.getAttribute('data-rsvp-filter') === f;
+    b.style.background = isActive ? (
+      f==='confirmed'?'#2E7D32':f==='declined'?'#C62828':f==='maybe'?'#856404':f==='noreply'?'#EF5350':f==='notsent'?'#9E9E9E':f==='sent'?'#1565C0':'#2E7D32'
+    ) : '#fff';
+    b.style.color = isActive ? '#fff' : (
+      f==='confirmed'?'#2E7D32':f==='declined'?'#C62828':f==='maybe'?'#856404':f==='noreply'?'#EF5350':f==='notsent'?'#9E9E9E':f==='sent'?'#1565C0':'#2E7D32'
+    );
+  });
+  renderRsvpList();
+}
+
+function toggleGuestWaSent(guestId) {
+  var g = (guests||[]).find(function(x){return x.id===guestId;});
+  if (!g) return;
+  g.waSent = !g.waSent;
+  storageSet('wedding-guests', JSON.stringify(guests));
+  if (typeof queueCloudSave==='function') queueCloudSave();
+  renderGuests();
+  renderRsvpTracker();
+  showToast(g.waSent ? '📲 Marked as WA Sent ✅' : 'Marked as not sent');
+}
+
+function rsvpSetStatus(guestId, status) {
+  var g = (guests||[]).find(function(x){return x.id===guestId;});
+  if (!g) return;
+  g.callStatus = status;
+  storageSet('wedding-guests', JSON.stringify(guests));
+  if (typeof queueCloudSave==='function') queueCloudSave();
+  renderGuests();
+  renderRsvpTracker();
+  showToast('RSVP updated ✅');
+}
+
+function renderRsvpTracker() {
+  var total = (guests||[]).filter(function(g){return g.name&&g.name.trim();}).length;
+  var sent = (guests||[]).filter(function(g){return g.waSent;}).length;
+  var confirmed = (guests||[]).filter(function(g){return g.callStatus==='confirmed';}).length;
+  var declined = (guests||[]).filter(function(g){return g.callStatus==='declined';}).length;
+  var maybe = (guests||[]).filter(function(g){return g.callStatus==='maybe';}).length;
+  var noReply = (guests||[]).filter(function(g){return g.waSent && !g.callStatus;}).length;
+  var responded = confirmed + declined + maybe;
+  var ratePct = sent > 0 ? Math.round(responded/sent*100) : 0;
+
+  // Update header badges
+  var el = function(id){return document.getElementById(id);};
+  if(el('rsvpHdrSent')) el('rsvpHdrSent').textContent = sent;
+  if(el('rsvpHdrConfirmed')) el('rsvpHdrConfirmed').textContent = confirmed;
+  if(el('rsvpHdrDeclined')) el('rsvpHdrDeclined').textContent = declined;
+  if(el('rsvpHdrNoReply')) el('rsvpHdrNoReply').textContent = noReply;
+  if(el('rsvpProgressBar')) el('rsvpProgressBar').style.width = ratePct+'%';
+  if(el('rsvpRatePct')) el('rsvpRatePct').textContent = ratePct+'%';
+
+  // Stats tiles
+  var statsRow = el('rsvpStatsRow');
+  if (statsRow) {
+    var tiles = [
+      {label:'Total Guests', val:total, bg:'#E3F2FD', color:'#1565C0', icon:'👥'},
+      {label:'WA Sent', val:sent, bg:'#E8EAF6', color:'#283593', icon:'📲'},
+      {label:'Confirmed', val:confirmed, bg:'#E8F5E9', color:'#2E7D32', icon:'✅'},
+      {label:'Declined', val:declined, bg:'#FFEBEE', color:'#C62828', icon:'❌'},
+      {label:'Maybe', val:maybe, bg:'#FFFDE7', color:'#856404', icon:'🤔'},
+      {label:'No Reply', val:noReply, bg:'#FFF3E0', color:'#E65100', icon:'⏳'},
+    ];
+    statsRow.innerHTML = tiles.map(function(t){
+      return '<div style="flex:1;min-width:100px;background:'+t.bg+';border-radius:10px;padding:14px 10px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.08);">'
+        +'<div style="font-size:22px;">'+t.icon+'</div>'
+        +'<div style="font-size:22px;font-weight:800;color:'+t.color+';">'+t.val+'</div>'
+        +'<div style="font-size:11px;color:#555;margin-top:2px;">'+t.label+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  renderRsvpList();
+}
+
+function renderRsvpList() {
+  var tbody = document.getElementById('rsvpTableBody');
+  if (!tbody) return;
+  var search = (document.getElementById('rsvpSearch')||{}).value || '';
+  search = search.toLowerCase();
+  var list = (guests||[]).filter(function(g){ return g.name && g.name.trim(); });
+
+  // Apply filter
+  if (_rsvpFilter === 'sent') list = list.filter(function(g){ return g.waSent; });
+  else if (_rsvpFilter === 'confirmed') list = list.filter(function(g){ return g.callStatus==='confirmed'; });
+  else if (_rsvpFilter === 'declined') list = list.filter(function(g){ return g.callStatus==='declined'; });
+  else if (_rsvpFilter === 'maybe') list = list.filter(function(g){ return g.callStatus==='maybe'; });
+  else if (_rsvpFilter === 'noreply') list = list.filter(function(g){ return g.waSent && !g.callStatus; });
+  else if (_rsvpFilter === 'notsent') list = list.filter(function(g){ return !g.waSent; });
+
+  // Apply search
+  if (search) list = list.filter(function(g){ return (g.name||'').toLowerCase().indexOf(search)>=0 || (g.phone||'').indexOf(search)>=0; });
+
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#888;">No guests match this filter.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = list.map(function(g, i) {
+    var statusColor = g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#9E9E9E';
+    var statusBg = g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#F5F5F5';
+    var statusLabel = g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':g.callStatus==='maybe'?'🤔 Maybe':'—';
+    var confNum = g.confirmedAdults > 0 ? (g.confirmedAdults + (g.confirmedKids>0?' + '+g.confirmedKids+' kids':'')) : '—';
+    var rowBg = i%2===0 ? '#fff' : '#F9FBF9';
+    return '<tr style="background:'+rowBg+';border-bottom:1px solid #E8F5E9;">'
+      +'<td style="padding:8px 10px;font-weight:600;">'+escHtml(g.name||'')+'</td>'
+      +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+escHtml(g.side||'')+'</td>'
+      +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+(g.phone?'<a href="tel:'+escHtml(g.phone)+'" style="color:#1565C0;">'+escHtml(g.phone)+'</a>':'—')+'</td>'
+      +'<td style="padding:8px 10px;text-align:center;">'
+        +'<button onclick="toggleGuestWaSent(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#FFF3E0')+';border:1px solid '+(g.waSent?'#2E7D32':'#C0A070')+';color:'+(g.waSent?'#2E7D32':'#856404')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Send')+'</button>'
+      +'</td>'
+      +'<td style="padding:8px 10px;text-align:center;"><span style="background:'+statusBg+';color:'+statusColor+';padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">'+statusLabel+'</span></td>'
+      +'<td style="padding:8px 10px;text-align:center;font-size:13px;font-weight:600;color:#2E7D32;">'+confNum+'</td>'
+      +'<td style="padding:8px 10px;text-align:center;">'
+        +'<select onchange="rsvpSetStatus(\''+g.id+'\',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;cursor:pointer;">'
+        +'<option value="">— Update —</option>'
+        +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Confirmed</option>'
+        +'<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Declined</option>'
+        +'<option value="maybe"'+(g.callStatus==='maybe'?' selected':'')+'>🤔 Maybe</option>'
+        +'<option value=""'+(g.callStatus===''||!g.callStatus?' selected':'')+'>⏳ No Reply</option>'
+        +'</select>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function bulkMarkWaSent() {
+  var search = (document.getElementById('rsvpSearch')||{}).value || '';
+  search = search.toLowerCase();
+  var list = (guests||[]).filter(function(g){ return g.name && g.name.trim(); });
+  if (_rsvpFilter === 'notsent') list = list.filter(function(g){ return !g.waSent; });
+  if (search) list = list.filter(function(g){ return (g.name||'').toLowerCase().indexOf(search)>=0; });
+  var count = 0;
+  list.forEach(function(g){ if (!g.waSent) { g.waSent = true; count++; } });
+  if (count === 0) { showToast('All visible already marked as sent'); return; }
+  storageSet('wedding-guests', JSON.stringify(guests));
+  if (typeof queueCloudSave==='function') queueCloudSave();
+  renderGuests();
+  renderRsvpTracker();
+  showToast(count + ' guests marked as WA Sent ✅');
+}
+
+function printRsvpTracker() {
+  var list = (guests||[]).filter(function(g){ return g.name && g.name.trim(); });
+  var rows = list.map(function(g){
+    var statusLabel = g.callStatus==='confirmed'?'Confirmed':g.callStatus==='declined'?'Declined':g.callStatus==='maybe'?'Maybe':'No Reply';
+    var confNum = g.confirmedAdults > 0 ? String(g.confirmedAdults)+(g.confirmedKids>0?' + '+g.confirmedKids+' kids':'') : '—';
+    return '<tr style="border-bottom:1px solid #eee;">'
+      +'<td style="padding:6px 10px;">'+escHtml(g.name||'')+'</td>'
+      +'<td style="padding:6px 10px;">'+escHtml(g.side||'')+'</td>'
+      +'<td style="padding:6px 10px;">'+escHtml(g.phone||'')+'</td>'
+      +'<td style="padding:6px 10px;text-align:center;">'+(g.waSent?'✓':'—')+'</td>'
+      +'<td style="padding:6px 10px;text-align:center;">'+statusLabel+'</td>'
+      +'<td style="padding:6px 10px;text-align:center;">'+confNum+'</td>'
+      +'</tr>';
+  }).join('');
+  var total = list.length, sent = list.filter(function(g){return g.waSent;}).length;
+  var confirmed = list.filter(function(g){return g.callStatus==='confirmed';}).length;
+  var declined = list.filter(function(g){return g.callStatus==='declined';}).length;
+  var html = '<!DOCTYPE html><html><head><title>RSVP Tracker</title><style>body{font-family:Arial,sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;}th{background:#1B5E20;color:#fff;padding:8px 10px;text-align:left;}td{padding:6px 10px;}.stats{display:flex;gap:16px;margin-bottom:18px;}.stat{background:#f5f5f5;border-radius:8px;padding:10px 18px;text-align:center;}.stat-val{font-size:22px;font-weight:800;color:#1B5E20;}.stat-lbl{font-size:11px;color:#555;}</style></head>'
+    +'<body><h2 style="color:#1B5E20;">RSVP Tracker Report</h2>'
+    +'<p style="color:#555;font-size:12px;">Printed: '+new Date().toLocaleDateString()+'</p>'
+    +'<div class="stats">'
+    +'<div class="stat"><div class="stat-val">'+total+'</div><div class="stat-lbl">Total</div></div>'
+    +'<div class="stat"><div class="stat-val">'+sent+'</div><div class="stat-lbl">WA Sent</div></div>'
+    +'<div class="stat"><div class="stat-val">'+confirmed+'</div><div class="stat-lbl">Confirmed</div></div>'
+    +'<div class="stat"><div class="stat-val">'+declined+'</div><div class="stat-lbl">Declined</div></div>'
+    +'</div>'
+    +'<table><thead><tr><th>Guest</th><th>Side</th><th>Phone</th><th>WA Sent</th><th>RSVP</th><th>Confirmed #</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'</body></html>';
+  var w = window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  w.print();
+}
+
+function exportRsvpPdf() {
+  printRsvpTracker();
+  showToast('Use Print → Save as PDF from the print dialog 📄');
+}
+
+function exportRsvpExcel() {
+  var list = (guests||[]).filter(function(g){ return g.name && g.name.trim(); });
+  var wsData = [['Guest Name','Side','Phone','WA Sent','RSVP Status','Confirmed Adults','Confirmed Kids']];
+  list.forEach(function(g){
+    var statusLabel = g.callStatus==='confirmed'?'Confirmed':g.callStatus==='declined'?'Declined':g.callStatus==='maybe'?'Maybe':'No Reply';
+    wsData.push([g.name||'', g.side||'', g.phone||'', g.waSent?'Yes':'No', statusLabel, g.confirmedAdults||0, g.confirmedKids||0]);
+  });
+  if (typeof XLSX !== 'undefined') {
+    var wb = XLSX.utils.book_new();
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:22},{wch:10},{wch:14},{wch:10},{wch:14},{wch:16},{wch:14}];
+    XLSX.utils.book_append_sheet(wb, ws, 'RSVP Tracker');
+    XLSX.writeFile(wb, 'RSVP_Tracker.xlsx');
+    showToast('Excel exported ✅');
+  } else {
+    // CSV fallback
+    var csv = wsData.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+    var blob = new Blob([csv], {type:'text/csv'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'RSVP_Tracker.csv'; a.click();
+    showToast('CSV exported ✅');
+  }
+}
+
+// Hook into section open to auto-render RSVP tracker
+(function() {
+  var origToggle = window.toggleSecBody;
+  window.toggleSecBody = function(headerId, bodyId) {
+    if (typeof origToggle === 'function') origToggle(headerId, bodyId);
+    if (headerId === 'rsvpSectionHeader') {
+      setTimeout(renderRsvpTracker, 80);
+    }
+  };
+})();
+
 </script>
 
 </body>
