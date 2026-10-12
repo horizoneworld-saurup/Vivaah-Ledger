@@ -1156,8 +1156,8 @@
   .spb-em{background:rgba(46,125,50,0.2);color:#81C784;}
 
   /* Event Manager role — show only Guest List and Kankotri */
-  body.role-eventmanager .sec-header:not(.sec-guest):not(.sec-kankotri),
-  body.role-eventmanager .sec-body:not(#guestSecBody):not(#kankotriSecBody),
+  body.role-eventmanager .sec-header:not(.sec-guest):not(.sec-kankotri):not(.sec-rsvp),
+  body.role-eventmanager .sec-body:not(#guestSecBody):not(#kankotriSecBody):not(#rsvpSecBody),
   body.role-eventmanager .vendor-section,
   body.role-eventmanager #budgetSectionHeader,
   body.role-eventmanager #budgetSectionBody,
@@ -1171,12 +1171,18 @@
   body.role-eventmanager #epSecBody,
   body.role-eventmanager .admin-only,
   body.role-eventmanager .editor-only { display:none !important; }
-  /* EM can click WhatsApp, confirm, cancel — same as viewer exemptions */
-  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-confirm):not(.btn-std):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back),
+  /* EM can click WhatsApp, confirm, cancel, RSVP controls — same as viewer exemptions */
+  body.role-eventmanager button:not(#btnPrint):not(.lock-tab):not(.key-btn):not(#lockRemember):not(#btnSignOutRole):not(.event-chip):not(.guest-chev):not(.guest-row button):not(.btn-confirm):not(.btn-std):not(.btn-gold):not(.btn-ghost):not(#btnGoogleSignIn):not(.wa-modal button):not(.mob-dbtn):not(#musicBtn):not(.music-btn):not(#mobMusicBtn):not(#mobBtnBack):not(.mob-btn-google):not(.mob-btn-signout):not(.mob-btn-back):not(.btn-wa-sent):not(.rsvp-filter-btn):not(#rsvpSecBody button),
   body.role-eventmanager a.mob-dbtn,
-  body.role-eventmanager input:not(#lockRemember):not([data-lock-role]):not(.guest-confirm-input),
-  body.role-eventmanager select,
+  body.role-eventmanager input:not(#lockRemember):not([data-lock-role]):not(.guest-confirm-input):not(#rsvpSearch),
+  body.role-eventmanager select:not(.guest-row select):not(#rsvpSecBody select):not(#rsvpTable select),
   body.role-eventmanager textarea { pointer-events:none; opacity:0.6; }
+  /* RSVP section fully interactive for event managers */
+  body.role-eventmanager #rsvpSecBody button,
+  body.role-eventmanager #rsvpSecBody select,
+  body.role-eventmanager #rsvpSecBody input,
+  body.role-eventmanager .btn-wa-sent,
+  body.role-eventmanager .guest-row select { pointer-events:auto !important; opacity:1 !important; }
   .setup-pin-lbl{display:block;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;}
   .setup-pin-input{width:100%;background:rgba(0,0,0,0.25);border:1.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 8px;font-size:20px;font-weight:700;color:#fff;text-align:center;letter-spacing:6px;outline:none;}
   .setup-pin-input:focus{border-color:rgba(212,164,76,0.5);}
@@ -4159,6 +4165,8 @@ function waOpen(guestId) {
   const g = guests.find(x => x.id === guestId);
   if (!g || !g.phone) return;
   waCurrentGuestId = guestId;
+  window._pendingInvite = guestId; // 💬 regular WA also marks as sent
+  if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '💬 WhatsApp Message — ' + (g.name||'');
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
   // Restore saved custom message or use default
@@ -4176,6 +4184,18 @@ function openStd(guestId) {
   window._pendingStd = guestId;
 }
 
+function openWAInvite(guestId) {
+  const g = guests.find(x => x.id === guestId);
+  if (!g || !g.phone) { showToast('No phone number for this guest'); return; }
+  waCurrentGuestId = guestId;
+  window._pendingInvite = guestId; // mark as invitation send
+  if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '📲 WhatsApp Invitation — ' + (g.name||'');
+  document.getElementById('waGuestName').textContent = g.name;
+  document.getElementById('waGuestPhone').textContent = g.phone;
+  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
+  document.getElementById('waModalOverlay').classList.add('show');
+}
+
 function waSend() {
   const g = guests.find(x => x.id === waCurrentGuestId);
   if (!g) return;
@@ -4185,6 +4205,8 @@ function waSend() {
     g.waCustomMsg = rawMsg;
   }
   g.invitationSent = true;
+  // Mark waSent when sending via invite button OR regular WA
+  if (window._pendingInvite === g.id) { g.waSent = true; window._pendingInvite = null; }
   if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
   if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
   saveGuests();
@@ -4197,6 +4219,7 @@ function waSend() {
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
   if(typeof renderGuests === 'function') renderGuests();
   if(typeof mobRenderGuests === 'function') setTimeout(mobRenderGuests, 100);
+  if(typeof renderRsvpTracker === 'function') setTimeout(renderRsvpTracker, 150);
 }
 
 // ── Kankotri WhatsApp ─────────────────────────────────────────────
@@ -7080,15 +7103,20 @@ function renderGuests(){
         <td class="num">${secondColValue}</td>
         
         <td>
-          <div class="guest-action-btns">
+          <div class="guest-action-btns" style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;">
             ${g.phone ? `
               <a class="btn-call" href="tel:${escapeHtml(g.phone)}" title="Call ${escapeHtml(g.name)}">📞</a>
               <button class="btn-whatsapp" data-wa-guest="${g.id}" title="WhatsApp ${escapeHtml(g.name)}">💬</button>
               ${(g.events && g.events['Kankotri'] && (Number(g.events['Kankotri'].adults||0)+Number(g.events['Kankotri'].kids||0))>0) ? `<button class="btn-kank btn-std" onclick="event.stopPropagation();openKankotriWA('${g.id}')" style="background:${g.kankWASent?'#E8F5E9':'#FFF3E0'};border:1px solid ${g.kankWASent?'#2E7D32':'#5C1A2B'};color:${g.kankWASent?'#2E7D32':'#5C1A2B'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="Send Kankotri WhatsApp">${g.kankWASent?'📮✓':'📮 Kank'}</button>` : ''}
               ${(g.events && g.events['Marriage'] && (Number(g.events['Marriage'].adults||0)+Number(g.events['Marriage'].kids||0))>0) ? `<button class="btn-std" onclick="openStd('${g.id}')" style="background:${g.stdSent?'#FFE4E8':'#FFF8E1'};border:1px solid ${g.stdSent?'#C62828':'#D4A24C'};color:${g.stdSent?'#C62828':'#856404'};padding:${g.stdSent?'2px 6px':'3px 8px'};border-radius:6px;font-size:${g.stdSent?'18px':'11px'};cursor:pointer;font-weight:600;" title="Send Save the Date">${g.stdSent ? '❤️' : '💌 STD'}</button>` : ''}
             ` : '<span style="font-size:11px;color:#bbb;">No phone</span>'}
-            <button class="btn-wa-sent" onclick="event.stopPropagation();toggleGuestWaSent('${g.id}')" style="background:${g.waSent?'#E8F5E9':'#FFF3E0'};border:1px solid ${g.waSent?'#2E7D32':'#C0A070'};color:${g.waSent?'#2E7D32':'#856404'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="${g.waSent?'WA Invitation Sent':'Mark WA Sent'}">${g.waSent?'📲✓ Sent':'📲 Send'}</button>
-            ${g.callStatus ? `<span style="display:inline-block;padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700;background:${g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':'#FFF9C4'};color:${g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':'#856404'};border:1px solid ${g.callStatus==='confirmed'?'#4CAF5060':g.callStatus==='declined'?'#EF535060':'#FFC10760'};" title="RSVP Status">${g.callStatus==='confirmed'?'✅ Yes':g.callStatus==='declined'?'❌ No':'🤔 Maybe'}</span>` : ''}
+            <button class="btn-wa-sent" onclick="event.stopPropagation();openWAInvite('${g.id}')" style="background:${g.waSent?'#E8F5E9':'#E3F2FD'};border:1px solid ${g.waSent?'#2E7D32':'#1565C0'};color:${g.waSent?'#2E7D32':'#1565C0'};padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:600;" title="${g.waSent?'Invitation sent — click to resend':'Send WhatsApp Invitation'}">${g.waSent?'📲✓ Sent':'📲 Invite'}</button>
+            <select onchange="rsvpSetStatus('${g.id}',this.value);this.blur();" onclick="event.stopPropagation();" style="padding:3px 6px;border-radius:6px;border:1.5px solid ${g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#ccc'};background:${g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#fff'};color:${g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#888'};font-size:11px;cursor:pointer;font-weight:600;max-width:90px;">
+              <option value="">⏳ RSVP</option>
+              <option value="confirmed" ${g.callStatus==='confirmed'?'selected':''}>✅ Coming</option>
+              <option value="declined" ${g.callStatus==='declined'?'selected':''}>❌ Not Coming</option>
+              <option value="maybe" ${g.callStatus==='maybe'?'selected':''}>🤔 Maybe</option>
+            </select>
             <button class="btn-confirm" data-confirm-guest="${g.id}" title="Confirm headcount">
               ${g.confirmedAdults > 0 ? `✓ ${g.confirmedAdults}` : '✓ Confirm'}
             </button>
@@ -11633,13 +11661,16 @@ function runGlobalSearch(q, gsInput, gsResults){
 
 <div class="wa-modal-overlay" id="waModalOverlay">
   <div class="wa-modal">
-    <h3>💬 WhatsApp Message</h3>
+    <h3 id="waModalTitle">💬 WhatsApp Message</h3>
     <p style="font-size:12px;color:var(--ink-soft);margin:0 0 4px;">To: <strong id="waGuestName"></strong> (<span id="waGuestPhone"></span>)</p>
+    <div style="background:#E8F5E9;border:1px solid #A5D6A7;border-radius:8px;padding:8px 12px;margin:6px 0;font-size:11px;color:#2E7D32;line-height:1.5;">
+      📲 <strong>How this works:</strong> Clicking "Open WhatsApp" will open WhatsApp on your phone/computer with this message pre-filled for this guest. Just tap <em>Send</em> in WhatsApp. The system will automatically mark this guest as <strong>Invitation Sent ✓</strong> and update the RSVP tracker.
+    </div>
     <textarea id="waMessageText"></textarea>
-    <div style="font-size:11px;color:var(--ink-soft);">You can edit the message before sending. <strong>[Name]</strong> will be replaced with the guest's name.</div>
+    <div style="font-size:11px;color:var(--ink-soft);">✏️ Edit the message above if needed. <strong>[Name]</strong> will be auto-replaced with the guest's name when sent.</div>
     <div class="wa-modal-actions">
-      <button class="btn btn-ghost" onclick="document.getElementById('waModalOverlay').classList.remove('show')">Cancel</button>
-      <button class="btn btn-gold" onclick="waSend()">Open WhatsApp →</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;">Cancel</button>
+      <button class="btn btn-gold" onclick="waSend()">📲 Open WhatsApp & Mark Sent →</button>
     </div>
   </div>
 </div>
@@ -12845,10 +12876,18 @@ function mobRenderGuests(){
       '</div>'+
       '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
         (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
-        (ph?'<a href="https://wa.me/'+ph+'?text='+waMsg+'" target="_blank" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">💬</a>':'')+
+        (ph?'<button onclick="event.stopPropagation();if(typeof openWAInvite===\'function\')openWAInvite(\''+g.id+'\');else window.open(\'https://wa.me/'+ph+'?text='+waMsg+'\',\'_blank\')" style="flex:1;text-align:center;background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';border-radius:8px;padding:6px;font-size:13px;font-weight:600;cursor:pointer;color:'+(g.waSent?'#2E7D32':'#1565C0')+';">'+(g.waSent?'📲✓':'📲 Invite')+'</button>':'')+
         kankBtn+
         stdBtn+
         '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;margin-top:4px;">'+
+        '<select onchange="if(typeof rsvpSetStatus===\'function\')rsvpSetStatus(\''+g.id+'\',this.value);this.blur();" onclick="event.stopPropagation();" style="flex:1;padding:6px 8px;border-radius:8px;border:1.5px solid '+(g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#ccc')+';background:'+(g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#fff')+';color:'+(g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#888')+';font-size:12px;font-weight:600;">'+
+          '<option value="">⏳ Update RSVP</option>'+
+          '<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Coming</option>'+
+          '<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Not Coming</option>'+
+          '<option value="maybe"'+(g.callStatus==='maybe'?' selected':'')+'>🤔 Maybe</option>'+
+        '</select>'+
       '</div></div>';
   }
   var bride=filtered.filter(function(g){return g.side==='Bride';});
@@ -13469,6 +13508,7 @@ function toggleGuestWaSent(guestId) {
   storageSet('wedding-guests', JSON.stringify(guests));
   if (typeof queueCloudSave==='function') queueCloudSave();
   renderGuests();
+  if (typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 80);
   renderRsvpTracker();
   showToast(g.waSent ? '📲 Marked as WA Sent ✅' : 'Marked as not sent');
 }
@@ -13480,6 +13520,7 @@ function rsvpSetStatus(guestId, status) {
   storageSet('wedding-guests', JSON.stringify(guests));
   if (typeof queueCloudSave==='function') queueCloudSave();
   renderGuests();
+  if (typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 80);
   renderRsvpTracker();
   showToast('RSVP updated ✅');
 }
@@ -13560,7 +13601,7 @@ function renderRsvpList() {
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+escHtml(g.side||'')+'</td>'
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+(g.phone?'<a href="tel:'+escHtml(g.phone)+'" style="color:#1565C0;">'+escHtml(g.phone)+'</a>':'—')+'</td>'
       +'<td style="padding:8px 10px;text-align:center;">'
-        +'<button onclick="toggleGuestWaSent(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#FFF3E0')+';border:1px solid '+(g.waSent?'#2E7D32':'#C0A070')+';color:'+(g.waSent?'#2E7D32':'#856404')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Send')+'</button>'
+        +'<div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><button onclick="openWAInvite(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Invite')+'</button>'+(g.waSent?'<span style="font-size:10px;color:#888;">tap to resend</span>':'')+"</div>"
       +'</td>'
       +'<td style="padding:8px 10px;text-align:center;"><span style="background:'+statusBg+';color:'+statusColor+';padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">'+statusLabel+'</span></td>'
       +'<td style="padding:8px 10px;text-align:center;font-size:13px;font-weight:600;color:#2E7D32;">'+confNum+'</td>'
