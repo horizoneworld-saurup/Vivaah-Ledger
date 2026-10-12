@@ -6048,7 +6048,8 @@ function compressGuests(guestArr){
       g.confirmedAdults||0, g.confirmedKids||0, g.callStatus||'', '',
       g.invitationSent?1:0,
       g.stdSent?1:0,
-      g.kankWASent?1:0
+      g.kankWASent?1:0,
+      g.waSent?1:0
     ];
   });
 }
@@ -6070,7 +6071,7 @@ function expandGuests(compressed){
       invTier:invTier||'', invCards:invCards||0, invSent:!!invSent,
       confirmedAdults:Number(arr[16])||0, confirmedKids:Number(arr[17])||0,
       callStatus:arr[18]||'', waCustomMsg:'',
-      invitationSent:!!arr[20], stdSent:!!arr[21], kankWASent:!!arr[22]
+      invitationSent:!!arr[20], stdSent:!!arr[21], kankWASent:!!arr[22], waSent:!!arr[23]
     };
   });
 }
