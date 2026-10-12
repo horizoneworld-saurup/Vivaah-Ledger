@@ -13197,7 +13197,7 @@ var MOB_SECS={
   notes:    {title:'📝 Notes',     nav:null,         render:mobRenderNotes},
   catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering},
   eventplanner: {title:'Event Planner', nav:null, render:mobRenderEP},
-  rsvp: {title:'📲 RSVP Tracker', nav:'mobNavRsvp', render:mobRenderRsvpMobile}
+  rsvp: {title:'📲 RSVP Tracker', nav:'mobNavRsvp', render:function(){if(typeof mobRenderRsvpMobile==='function')mobRenderRsvpMobile();}}
 };
 
 window.mobShowDash=function(){
