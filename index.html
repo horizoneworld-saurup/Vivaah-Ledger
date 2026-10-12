@@ -695,7 +695,8 @@
   .confirmed-badge{font-size:11px;color:#2E7D32;font-weight:600;background:#E8F5E9;padding:3px 8px;border-radius:6px;}
 
   /* ── WhatsApp message editor modal ── */
-  .wa-modal-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;}
+  .wa-modal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px;display:none;touch-action:none;}
+  .wa-modal-overlay.show{display:flex;}
   .wa-modal-overlay.show{display:flex;}
   .wa-modal{background:#fff;border-radius:18px;padding:28px;max-width:480px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.18);}
   .wa-modal h3{margin:0 0 6px;font-size:17px;color:var(--maroon);}
@@ -3374,6 +3375,15 @@ function submitGuestRsvp(guestId) {
     if (note) g.rsvpNote = note;
     storageSet('wedding-guests', JSON.stringify(guests));
     if (typeof queueCloudSave==='function') queueCloudSave();
+    // Also push RSVP to worker KV so admin sees it cross-device
+    try {
+      var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
+      fetch(workerBase+'/guest-rsvp', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
+      }).catch(function(){});
+    } catch(e) {}
   }
 
   // Show thank you screen
@@ -11872,7 +11882,7 @@ function runGlobalSearch(q, gsInput, gsResults){
   </div>
 </div>
 
-<div class="wa-modal-overlay" id="waModalOverlay" onclick="if(event.target===this){document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;window._pendingStd=null;window._pendingKank=null;}">
+<div class="wa-modal-overlay" id="waModalOverlay" onclick="if(event.target===this){event.stopPropagation();document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;window._pendingStd=null;window._pendingKank=null;}" ontouchend="if(event.target===this){event.stopPropagation();event.preventDefault();document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;window._pendingStd=null;window._pendingKank=null;}">
   <div class="wa-modal">
     <h3 id="waModalTitle">💬 WhatsApp Message</h3>
     <p style="font-size:12px;color:var(--ink-soft);margin:0 0 4px;">To: <strong id="waGuestName"></strong> (<span id="waGuestPhone"></span>)</p>
@@ -11882,7 +11892,7 @@ function runGlobalSearch(q, gsInput, gsResults){
     <textarea id="waMessageText"></textarea>
     <div style="font-size:11px;color:var(--ink-soft);">✏️ Edit the message above if needed. <strong>[Name]</strong> will be auto-replaced with the guest's name when sent.</div>
     <div class="wa-modal-actions">
-      <button class="btn btn-ghost" onclick="document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;">Cancel</button>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();document.getElementById('waModalOverlay').classList.remove('show');window._pendingInvite=null;window._pendingStd=null;window._pendingKank=null;">Cancel</button>
       <button class="btn btn-gold" onclick="waSend()">📲 Open WhatsApp & Mark Sent →</button>
     </div>
   </div>
@@ -13426,15 +13436,21 @@ window.mobShowSec=function(sec){
   var cfg=MOB_SECS[sec]; if(!cfg) return;
   var el=document.getElementById('mobV'+sec.charAt(0).toUpperCase()+sec.slice(1));
   if(el) el.classList.add('active');
-  document.getElementById('mobTopTitle').textContent=cfg.title;
-  document.getElementById('mobTopSub').textContent='Tap ← to return home';
+  var titleEl=document.getElementById('mobTopTitle');
+  var subEl=document.getElementById('mobTopSub');
+  if(titleEl) titleEl.textContent=cfg.title;
+  if(subEl) subEl.textContent='Tap ← to return home';
   // Back button only for non-EM roles (EM has no home dashboard)
-  if(currentRole !== 'eventmanager'){
-    document.getElementById('mobBtnBack').classList.add('show');
-  }
+  var backBtn=document.getElementById('mobBtnBack');
+  if(backBtn && currentRole !== 'eventmanager') backBtn.classList.add('show');
   document.querySelectorAll('.mob-bnav-item').forEach(function(n){n.classList.remove('active');});
-  if(cfg.nav) document.getElementById(cfg.nav).classList.add('active');
-  if(cfg.render) cfg.render();
+  var navEl=cfg.nav?document.getElementById(cfg.nav):null;
+  if(navEl) navEl.classList.add('active');
+  if(cfg.render) {
+    try { cfg.render(); } catch(e) { console.warn('mobShowSec render error:',e); }
+    // Retry render after short delay in case function not yet defined
+    if(sec==='rsvp') setTimeout(function(){ try{ if(typeof mobRenderRsvpMobile==='function') mobRenderRsvpMobile(); }catch(e){} }, 150);
+  }
   window.scrollTo(0,0);
 };
 
@@ -13856,12 +13872,12 @@ function renderRsvpList() {
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+escHtml(g.side||'')+'</td>'
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+(g.phone?'<a href="tel:'+escHtml(g.phone)+'" style="color:#1565C0;">'+escHtml(g.phone)+'</a>':'—')+'</td>'
       +'<td style="padding:8px 10px;text-align:center;">'
-        +'<div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><button onclick="openWAInvite(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Invite')+'</button>'+(g.waSent?'<span style="font-size:10px;color:#888;">tap to resend</span>':'')+"</div>"
+        +'<div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><button onclick="event.stopPropagation();openWAInvite(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Invite')+'</button>'+(g.waSent?'<span style="font-size:10px;color:#888;">tap to resend</span>':'')+"</div>"
       +'</td>'
       +'<td style="padding:8px 10px;text-align:center;"><span style="background:'+statusBg+';color:'+statusColor+';padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">'+statusLabel+'</span></td>'
       +'<td style="padding:8px 10px;text-align:center;font-size:13px;font-weight:600;color:#2E7D32;">'+confNum+'</td>'
       +'<td style="padding:8px 10px;text-align:center;">'
-        +'<select onchange="rsvpSetStatus(\''+g.id+'\',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;cursor:pointer;">'
+        +'<select onchange="event.stopPropagation();rsvpSetStatus(\''+g.id+'\',this.value)" onclick="event.stopPropagation()" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;cursor:pointer;">'
         +'<option value="">— Update —</option>'
         +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Confirmed</option>'
         +'<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Declined</option>'
@@ -14009,6 +14025,35 @@ function mobOpenWAInvite(guestId) {
 function mobRenderRsvpMobile() {
   mobRenderRsvpStats();
   mobRenderRsvpList();
+  // Pull any guest RSVPs submitted via link (cross-device sync)
+  pollGuestRsvpsFromKV();
+}
+
+function pollGuestRsvpsFromKV() {
+  try {
+    fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(data) {
+        if (!data || !data.rsvps) return;
+        var updated = false;
+        data.rsvps.forEach(function(r) {
+          var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
+          if (g && r.callStatus) {
+            g.callStatus = r.callStatus;
+            if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
+            if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
+            if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
+            updated = true;
+          }
+        });
+        if (updated) {
+          storageSet('wedding-guests', JSON.stringify(guests));
+          mobRenderRsvpStats();
+          mobRenderRsvpList();
+          if (typeof renderRsvpList === 'function') renderRsvpList();
+        }
+      }).catch(function(){});
+  } catch(e) {}
 }
 
 function mobRenderRsvpStats() {
@@ -14087,8 +14132,8 @@ function mobRenderRsvpList() {
         +'<span style="background:'+statusBg+';color:'+statusColor+';padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+statusLabel+'</span>'
       +'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-        +(g.phone?'<button onclick="mobOpenWAInvite(\''+g.id+'\')" style="flex:1;padding:7px;border-radius:8px;border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';font-size:12px;font-weight:700;cursor:pointer;">'+(g.waSent?'📲✓ Sent (Resend)':'📲 Send Invite')+'</button>':'')
-        +'<select onchange="rsvpSetStatus(\''+g.id+'\',this.value);mobRenderRsvpMobile();this.blur();" style="flex:2;padding:7px;border-radius:8px;border:1.5px solid '+statusColor+';background:'+statusBg+';color:'+statusColor+';font-size:12px;font-weight:700;cursor:pointer;">'
+        +(g.phone?'<button onclick="event.stopPropagation();mobOpenWAInvite(\''+g.id+'\')" style="flex:1;padding:7px;border-radius:8px;border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';font-size:12px;font-weight:700;cursor:pointer;">'+(g.waSent?'📲✓ Sent (Resend)':'📲 Send Invite')+'</button>':'')
+        +'<select onclick="event.stopPropagation();" onchange="event.stopPropagation();rsvpSetStatus(\''+g.id+'\',this.value);mobRenderRsvpMobile();this.blur();" style="flex:2;padding:7px;border-radius:8px;border:1.5px solid '+statusColor+';background:'+statusBg+';color:'+statusColor+';font-size:12px;font-weight:700;cursor:pointer;">'
           +'<option value="">— Update RSVP —</option>'
           +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Coming</option>'
           +'<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Not Coming</option>'
