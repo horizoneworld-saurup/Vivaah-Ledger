@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#5C1A2B">
@@ -2138,7 +2139,7 @@
         </div>
       </div>
       <div class="sec-header-actions">
-        <button onclick="event.stopPropagation();(function(){var b=document.getElementById('rsvpSecBody'),h=document.getElementById('rsvpSectionHeader');if(b&&b.classList.contains('collapsed')){b.classList.remove('collapsed');if(h)h.classList.remove('sec-collapsed');}setTimeout(function(){if(h)h.scrollIntoView({behavior:'smooth',block:'start'});if(typeof renderRsvpTracker==='function')renderRsvpTracker();},150);})();" style="background:rgba(76,175,80,0.25);border:1px solid rgba(76,175,80,0.5);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📲 RSVP Tracker ↓</button>
+        <button onclick="event.stopPropagation();toggleSecBody('rsvpSectionHeader','rsvpSecBody');setTimeout(function(){var h=document.getElementById('rsvpSectionHeader');if(h)h.scrollIntoView({behavior:'smooth',block:'start'});},200);" style="background:rgba(76,175,80,0.25);border:1px solid rgba(76,175,80,0.5);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📲 RSVP Tracker ↓</button>
         <button class="btn-print-sec" onclick="event.stopPropagation();printSection('guests')">🖨️ Print</button>
       </div>
     </div>
@@ -4187,6 +4188,7 @@ function toggleSecBody(headerId, bodyId) {
       else if (bodyId === 'reminderSecBody') { renderReminders ? renderReminders() : null; }
       else if (bodyId === 'notesSecBody') { renderNotes ? renderNotes() : null; }
       else if (bodyId === 'epSecBody') { if(typeof epRenderCatering==='function') epRenderCatering(); if(typeof epScanReminders==='function'){ var _epR=epScanReminders(); epUpdateEPRemindersInMain&&epUpdateEPRemindersInMain(_epR); } }
+      else if (bodyId === 'rsvpSecBody') { setTimeout(function(){ if(typeof renderRsvpTracker==='function') renderRsvpTracker(); }, 80); }
     } catch(e) {}
   } else {
     body.classList.add('collapsed');
@@ -4205,7 +4207,8 @@ function toggleSecBody(headerId, bodyId) {
     ['guestSectionHeader','guestSecBody'],
     ['kankotriSectionHeader','kankotriSecBody'],
     ['vendorSectionHeader','vendorSecBody'],
-    ['epSectionHeader','epSecBody']
+    ['epSectionHeader','epSecBody'],
+    ['rsvpSectionHeader','rsvpSecBody']
   ];
   document.addEventListener('DOMContentLoaded', function() {
     pairs.forEach(function(pair) {
@@ -6191,7 +6194,24 @@ async function onSignedIn(){
               : (localLogoById[v.id]||'')
       }));
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
-      guests = cloudData.guests||guests;
+      // Merge cloud guests but preserve local waSent/callStatus if they're more up-to-date
+      // (prevents stale cloud pull from wiping freshly-set data that hasn't synced yet)
+      (function(){
+        var cloudGuests = cloudData.guests||guests;
+        var localById = {};
+        (guests||[]).forEach(function(g){ localById[g.id]=g; });
+        guests = cloudGuests.map(function(cg){
+          var loc = localById[cg.id];
+          if (!loc) return cg;
+          return Object.assign({}, cg, {
+            waSent: loc.waSent || cg.waSent || false,
+            callStatus: loc.callStatus || cg.callStatus || '',
+            confirmedAdults: loc.confirmedAdults || cg.confirmedAdults || 0,
+            confirmedKids: loc.confirmedKids || cg.confirmedKids || 0,
+            rsvpNote: loc.rsvpNote || cg.rsvpNote || ''
+          });
+        });
+      })();
       // Restore eventPlanner from cloud
       if(cloudData._ep){
         eventPlanner = {
@@ -6305,6 +6325,10 @@ async function onSignedIn(){
       if(av){
         var sid = av.id.replace('mobV','').toLowerCase();
         if(typeof MOB_SECS !== 'undefined' && MOB_SECS[sid] && MOB_SECS[sid].render) MOB_SECS[sid].render();
+        // Explicitly refresh RSVP stats after cloud data loads
+        if(sid === 'rsvp') {
+          setTimeout(function(){ if(typeof mobRenderRsvpMobile==='function') mobRenderRsvpMobile(); }, 200);
+        }
       }
     }
     // Deferred mobile refresh — runs after sync, regardless of timing
@@ -6313,6 +6337,9 @@ async function onSignedIn(){
       if(typeof mobUpdateDash === 'function') mobUpdateDash();
       if(typeof mobStartCountdown === 'function') mobStartCountdown();
       if(typeof mobRenderBudgetChart === 'function') mobRenderBudgetChart();
+      // Refresh RSVP stats if that view is active
+      var rsvpView = document.getElementById('mobVRsvp');
+      if(rsvpView && rsvpView.classList.contains('active') && typeof mobRenderRsvpMobile==='function') mobRenderRsvpMobile();
       var nm2 = googleUserEmail || 'Signed in';
       var gO = document.getElementById('mobGOut');
       var gI = document.getElementById('mobGIn');
@@ -12099,7 +12126,7 @@ function runGlobalSearch(q, gsInput, gsResults){
      MOBILE APP SHELL  — only rendered/active on screens ≤ 767px
      Hidden via CSS on desktop; JS activates after PIN unlock.
      ═══════════════════════════════════════════════════════════════ -->
-<div id="mobApp" style="display:none;">
+<div id="mobApp" style="display:none;position:fixed;inset:0;overflow:hidden;z-index:100;background:#f5f5f5;">
 
   <!-- Top bar -->
   <div class="mob-topbar">
@@ -13452,6 +13479,8 @@ window.mobShowSec=function(sec){
     if(sec==='rsvp') setTimeout(function(){ try{ if(typeof mobRenderRsvpMobile==='function') mobRenderRsvpMobile(); }catch(e){} }, 150);
   }
   window.scrollTo(0,0);
+  // Also scroll the active view div itself to top (iOS Safari fix)
+  if(el) { el.scrollTop = 0; }
 };
 
 // ── Hook into desktop unlock to also activate mobile ─────────────
@@ -13785,6 +13814,7 @@ function toggleGuestWaSent(guestId) {
 }
 
 function rsvpSetStatus(guestId, status) {
+  if (status === '_none_') return; // disabled placeholder
   var g = (guests||[]).find(function(x){return x.id===guestId;});
   if (!g) return;
   g.callStatus = status;
@@ -13796,7 +13826,12 @@ function rsvpSetStatus(guestId, status) {
   showToast('RSVP updated ✅');
 }
 
-function renderRsvpTracker() {
+function renderRsvpTracker(skipKvPoll) {
+  // Pull any guest RSVP confirmations submitted via link (cross-device sync)
+  // skipKvPoll=true prevents infinite loop when pollGuestRsvpsFromKV calls back here
+  if (!skipKvPoll && typeof pollGuestRsvpsFromKV === 'function') {
+    pollGuestRsvpsFromKV();
+  }
   var total = (guests||[]).filter(function(g){return g.name&&g.name.trim();}).length;
   var sent = (guests||[]).filter(function(g){return g.waSent;}).length;
   var confirmed = (guests||[]).filter(function(g){return g.callStatus==='confirmed';}).length;
@@ -13877,8 +13912,8 @@ function renderRsvpList() {
       +'<td style="padding:8px 10px;text-align:center;"><span style="background:'+statusBg+';color:'+statusColor+';padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">'+statusLabel+'</span></td>'
       +'<td style="padding:8px 10px;text-align:center;font-size:13px;font-weight:600;color:#2E7D32;">'+confNum+'</td>'
       +'<td style="padding:8px 10px;text-align:center;">'
-        +'<select onchange="event.stopPropagation();rsvpSetStatus(\''+g.id+'\',this.value)" onclick="event.stopPropagation()" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;cursor:pointer;">'
-        +'<option value="">— Update —</option>'
+        +'<select onchange="rsvpSetStatus(\''+g.id+'\',this.value)" style="padding:4px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;cursor:pointer;">'
+        +'<option value="_none_" disabled'+(!(g.callStatus)?'':'')+'>— Update —</option>'
         +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Confirmed</option>'
         +'<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Declined</option>'
         +'<option value="maybe"'+(g.callStatus==='maybe'?' selected':'')+'>🤔 Maybe</option>'
@@ -13972,18 +14007,6 @@ function exportRsvpExcel() {
   }
 }
 
-// Hook into section open to auto-render RSVP tracker
-(function() {
-  var origToggle = window.toggleSecBody;
-  window.toggleSecBody = function(headerId, bodyId) {
-    if (typeof origToggle === 'function') origToggle(headerId, bodyId);
-    if (headerId === 'rsvpSectionHeader') {
-      setTimeout(renderRsvpTracker, 80);
-    }
-  };
-})();
-
-
 // ═══════════════════════════════════════════════════════
 // MOBILE RSVP FUNCTIONS
 // ═══════════════════════════════════════════════════════
@@ -14040,6 +14063,7 @@ function pollGuestRsvpsFromKV() {
           var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
           if (g && r.callStatus) {
             g.callStatus = r.callStatus;
+            g.waSent = true; // they received the link, so WA was sent
             if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
             if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
             if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
@@ -14048,9 +14072,10 @@ function pollGuestRsvpsFromKV() {
         });
         if (updated) {
           storageSet('wedding-guests', JSON.stringify(guests));
-          mobRenderRsvpStats();
-          mobRenderRsvpList();
-          if (typeof renderRsvpList === 'function') renderRsvpList();
+          if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
+          if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
+          // Also update desktop RSVP tracker (skipKvPoll=true to avoid infinite loop)
+          if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
         }
       }).catch(function(){});
   } catch(e) {}
