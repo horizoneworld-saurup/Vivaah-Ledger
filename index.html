@@ -2137,7 +2137,7 @@
         </div>
       </div>
       <div class="sec-header-actions">
-        <button onclick="event.stopPropagation();expandSection('rsvpSecBody','rsvpSectionHeader');setTimeout(function(){document.getElementById('rsvpSectionHeader').scrollIntoView({behavior:'smooth',block:'start'});renderRsvpTracker();},120);" style="background:rgba(76,175,80,0.25);border:1px solid rgba(76,175,80,0.5);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📲 RSVP Tracker ↓</button>
+        <button onclick="event.stopPropagation();(function(){var b=document.getElementById('rsvpSecBody'),h=document.getElementById('rsvpSectionHeader');if(b&&b.classList.contains('collapsed')){b.classList.remove('collapsed');if(h)h.classList.remove('sec-collapsed');}setTimeout(function(){if(h)h.scrollIntoView({behavior:'smooth',block:'start'});if(typeof renderRsvpTracker==='function')renderRsvpTracker();},150);})();" style="background:rgba(76,175,80,0.25);border:1px solid rgba(76,175,80,0.5);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📲 RSVP Tracker ↓</button>
         <button class="btn-print-sec" onclick="event.stopPropagation();printSection('guests')">🖨️ Print</button>
       </div>
     </div>
@@ -2894,7 +2894,7 @@ function setRole(role){
   ['mobNavHome','mobNavVend','mobNavRem'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.style.display=isEM?'none':'';
   });
-  ['mobNavGuest','mobNavKank'].forEach(function(id){
+  ['mobNavGuest','mobNavKank','mobNavRsvp'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.style.display='';
   });
   // Owner Panel only for master owner emails
@@ -3246,7 +3246,7 @@ function generateInviteMsg(g) {
     var e = g.events && g.events[ev];
     return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
   });
-  if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'');
+  if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'') + '\n\n✅ Please reply:\n*1* - Yes, I will come\n*2* - No, I cannot make it\n*3* - Maybe';
   var lines = invited.map(function(ev) {
     var t = eventTimeline[ev]||{};
     var tl = TAGLINES[ev]||['',''];
@@ -3262,7 +3262,8 @@ function generateInviteMsg(g) {
     lines+'\n\n' +
     'Your presence will make our celebration truly special 🙏' +
     blessLine +
-    '🌸 ' + familyName + ' 🌸';
+    '🌸 ' + familyName + ' 🌸\n\n' +
+    '✅ *Kindly confirm your attendance by replying:*\n*1* ✅ Yes, I will attend!\n*2* ❌ Sorry, unable to make it\n*3* 🤔 Will try to come';
 }
 
 let waCurrentGuestId = null;
@@ -12134,6 +12135,47 @@ function runGlobalSearch(q, gsInput, gsResults){
     <div class="mob-bnav-item" id="mobNavGuest" onclick="mobShowSec('guest')"><span class="mob-bnav-icon">👥</span><span class="mob-bnav-lbl">Guests</span></div>
     <div class="mob-bnav-item" id="mobNavRem" onclick="mobShowSec('reminder')"><span class="mob-bnav-icon">🔔</span><span class="mob-bnav-lbl">Alerts</span></div>
     <div class="mob-bnav-item" id="mobNavKank" onclick="mobShowSec('kankotri')"><span class="mob-bnav-icon">𖥸</span><span class="mob-bnav-lbl">Kankotri</span></div>
+    <div class="mob-bnav-item" id="mobNavRsvp" onclick="mobShowSec('rsvp')"><span class="mob-bnav-icon">📲</span><span class="mob-bnav-lbl">RSVP</span></div>
+  </div>
+
+
+  <!-- RSVP TRACKER VIEW -->
+  <div class="mob-view" id="mobVRsvp">
+    <div class="mob-sec-head" style="background:linear-gradient(135deg,#0D3B26,#1B5E20);">
+      <div class="mob-sec-title" style="color:#A5D6A7;">📲 RSVP Tracker</div>
+      <div class="mob-sec-sub" style="color:#81C784;">WhatsApp invitations & responses</div>
+      <div class="mob-sec-badges" id="mobRsvpBadges"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button onclick="printRsvpTracker()" style="flex:1;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">🖨 Print</button>
+        <button onclick="exportRsvpExcel()" style="flex:1;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📊 Excel</button>
+        <button onclick="bulkMarkWaSent()" style="flex:1;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:7px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">📲 Mark All Sent</button>
+      </div>
+    </div>
+    <!-- Stats tiles -->
+    <div id="mobRsvpStats" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 12px 0;"></div>
+    <!-- Progress bar -->
+    <div style="padding:8px 12px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px;">
+        <span>Response Rate (of WA sent)</span><span id="mobRsvpPct">0%</span>
+      </div>
+      <div style="background:#C8E6C9;border-radius:8px;height:8px;overflow:hidden;">
+        <div id="mobRsvpBar" style="background:linear-gradient(90deg,#2E7D32,#66BB6A);height:100%;width:0%;transition:width 0.4s;"></div>
+      </div>
+    </div>
+    <!-- Filter chips -->
+    <div style="display:flex;gap:6px;padding:10px 12px;overflow-x:auto;">
+      <button class="mob-rsvp-chip active-chip" onclick="setMobRsvpFilter('all',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #2E7D32;background:#2E7D32;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">All</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('sent',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #1565C0;background:#fff;color:#1565C0;font-size:11px;font-weight:700;cursor:pointer;">📲 Sent</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('confirmed',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #2E7D32;background:#fff;color:#2E7D32;font-size:11px;font-weight:700;cursor:pointer;">✅ Confirmed</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('declined',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #C62828;background:#fff;color:#C62828;font-size:11px;font-weight:700;cursor:pointer;">❌ Declined</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('maybe',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #856404;background:#fff;color:#856404;font-size:11px;font-weight:700;cursor:pointer;">🤔 Maybe</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('noreply',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #EF5350;background:#fff;color:#EF5350;font-size:11px;font-weight:700;cursor:pointer;">⏳ No Reply</button>
+      <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('notsent',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #9E9E9E;background:#fff;color:#9E9E9E;font-size:11px;font-weight:700;cursor:pointer;">📵 Not Sent</button>
+    </div>
+    <!-- Search -->
+    <div class="mob-srch"><input id="mobRsvpSearch" placeholder="Search guest name or phone…" oninput="mobRenderRsvpList()"></div>
+    <!-- Guest RSVP cards -->
+    <div id="mobRsvpList" style="padding:0 10px 80px;"></div>
   </div>
 
   <!-- Guest detail sheet -->
@@ -12878,7 +12920,7 @@ function mobRenderGuests(){
       '</div>'+
       '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
         (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
-        (ph?'<button onclick="event.stopPropagation();if(typeof openWAInvite===\'function\')openWAInvite(\''+g.id+'\');else window.open(\'https://wa.me/'+ph+'?text='+waMsg+'\',\'_blank\')" style="flex:1;text-align:center;background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';border-radius:8px;padding:6px;font-size:13px;font-weight:600;cursor:pointer;color:'+(g.waSent?'#2E7D32':'#1565C0')+';">'+(g.waSent?'📲✓':'📲 Invite')+'</button>':'')+
+        (ph?'<button onclick="event.stopPropagation();mobOpenWAInvite(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';border-radius:8px;padding:6px;font-size:13px;font-weight:600;cursor:pointer;color:'+(g.waSent?'#2E7D32':'#1565C0')+';">'+(g.waSent?'📲✓ Sent':'📲 Invite')+'</button>':'')+
         kankBtn+
         stdBtn+
         '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
@@ -13154,7 +13196,8 @@ var MOB_SECS={
   timeline: {title:'📅 Timeline',  nav:null,         render:mobRenderTimeline},
   notes:    {title:'📝 Notes',     nav:null,         render:mobRenderNotes},
   catering: {title:'🍽️ Catering', nav:null,         render:mobRenderCatering},
-  eventplanner: {title:'Event Planner', nav:null, render:mobRenderEP}
+  eventplanner: {title:'Event Planner', nav:null, render:mobRenderEP},
+  rsvp: {title:'📲 RSVP Tracker', nav:'mobNavRsvp', render:mobRenderRsvpMobile}
 };
 
 window.mobShowDash=function(){
@@ -13713,6 +13756,149 @@ function exportRsvpExcel() {
     }
   };
 })();
+
+
+// ═══════════════════════════════════════════════════════
+// MOBILE RSVP FUNCTIONS
+// ═══════════════════════════════════════════════════════
+
+var _mobRsvpFilter = 'all';
+
+function setMobRsvpFilter(f, btn) {
+  _mobRsvpFilter = f;
+  document.querySelectorAll('.mob-rsvp-chip').forEach(function(b) {
+    b.classList.remove('active-chip');
+    b.style.background = '#fff';
+    b.style.color = b.getAttribute('data-color') || '#555';
+  });
+  if (btn) { btn.classList.add('active-chip'); btn.style.background = btn.style.borderColor || '#2E7D32'; btn.style.color = '#fff'; }
+  mobRenderRsvpList();
+}
+
+function mobOpenWAInvite(guestId) {
+  // Use the desktop WA modal if available (it's in the DOM for all views)
+  var modal = document.getElementById('waModalOverlay');
+  if (modal && typeof openWAInvite === 'function') {
+    openWAInvite(guestId);
+    return;
+  }
+  // Fallback: direct WA link
+  var g = (guests||[]).find(function(x){return x.id===guestId;});
+  if (!g || !g.ph) return;
+  var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
+  var ph = (g.phone||'').replace(/\D/g,'');
+  window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
+  g.waSent = true;
+  storageSet('wedding-guests', JSON.stringify(guests));
+  if (typeof queueCloudSave==='function') queueCloudSave();
+  mobRenderGuests();
+  mobRenderRsvpList();
+  showToast('📲 WA opened & marked sent ✅');
+}
+
+function mobRenderRsvpMobile() {
+  mobRenderRsvpStats();
+  mobRenderRsvpList();
+}
+
+function mobRenderRsvpStats() {
+  var gs = (guests||[]).filter(function(g){return g.name&&g.name.trim();});
+  var total = gs.length;
+  var sent = gs.filter(function(g){return g.waSent;}).length;
+  var confirmed = gs.filter(function(g){return g.callStatus==='confirmed';}).length;
+  var declined = gs.filter(function(g){return g.callStatus==='declined';}).length;
+  var maybe = gs.filter(function(g){return g.callStatus==='maybe';}).length;
+  var noReply = gs.filter(function(g){return g.waSent && !g.callStatus;}).length;
+  var responded = confirmed + declined + maybe;
+  var ratePct = sent > 0 ? Math.round(responded/sent*100) : 0;
+
+  var statsEl = document.getElementById('mobRsvpStats');
+  if (statsEl) {
+    var tiles = [
+      {icon:'👥', val:total, lbl:'Total', bg:'#E3F2FD', color:'#1565C0'},
+      {icon:'📲', val:sent, lbl:'WA Sent', bg:'#E8EAF6', color:'#283593'},
+      {icon:'✅', val:confirmed, lbl:'Confirmed', bg:'#E8F5E9', color:'#2E7D32'},
+      {icon:'❌', val:declined, lbl:'Declined', bg:'#FFEBEE', color:'#C62828'},
+      {icon:'🤔', val:maybe, lbl:'Maybe', bg:'#FFFDE7', color:'#856404'},
+      {icon:'⏳', val:noReply, lbl:'No Reply', bg:'#FFF3E0', color:'#E65100'},
+    ];
+    statsEl.innerHTML = tiles.map(function(t){
+      return '<div style="flex:1;min-width:80px;background:'+t.bg+';border-radius:10px;padding:10px 6px;text-align:center;">'
+        +'<div style="font-size:18px;">'+t.icon+'</div>'
+        +'<div style="font-size:18px;font-weight:800;color:'+t.color+';">'+t.val+'</div>'
+        +'<div style="font-size:10px;color:#555;">'+t.lbl+'</div>'
+        +'</div>';
+    }).join('');
+  }
+
+  var bar = document.getElementById('mobRsvpBar');
+  var pct = document.getElementById('mobRsvpPct');
+  if (bar) bar.style.width = ratePct+'%';
+  if (pct) pct.textContent = ratePct+'%';
+
+  var badges = document.getElementById('mobRsvpBadges');
+  if (badges) {
+    badges.innerHTML =
+      '<span class="mob-sbadge">📲 '+sent+' sent</span>'+
+      '<span class="mob-sbadge" style="background:rgba(76,175,80,0.3);">✅ '+confirmed+' confirmed</span>'+
+      '<span class="mob-sbadge" style="background:rgba(239,83,80,0.3);">❌ '+declined+' declined</span>'+
+      '<span class="mob-sbadge" style="background:rgba(255,193,7,0.3);">⏳ '+noReply+' no reply</span>';
+  }
+}
+
+function mobRenderRsvpList() {
+  var listEl = document.getElementById('mobRsvpList');
+  if (!listEl) return;
+  var q = ((document.getElementById('mobRsvpSearch')||{}).value||'').toLowerCase();
+  var list = (guests||[]).filter(function(g){ return g.name && g.name.trim(); });
+
+  if (_mobRsvpFilter === 'sent') list = list.filter(function(g){ return g.waSent; });
+  else if (_mobRsvpFilter === 'confirmed') list = list.filter(function(g){ return g.callStatus==='confirmed'; });
+  else if (_mobRsvpFilter === 'declined') list = list.filter(function(g){ return g.callStatus==='declined'; });
+  else if (_mobRsvpFilter === 'maybe') list = list.filter(function(g){ return g.callStatus==='maybe'; });
+  else if (_mobRsvpFilter === 'noreply') list = list.filter(function(g){ return g.waSent && !g.callStatus; });
+  else if (_mobRsvpFilter === 'notsent') list = list.filter(function(g){ return !g.waSent; });
+
+  if (q) list = list.filter(function(g){ return (g.name||'').toLowerCase().indexOf(q)>=0||(g.phone||'').indexOf(q)>=0; });
+
+  if (!list.length) { listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No guests match this filter.</div>'; return; }
+
+  listEl.innerHTML = list.map(function(g) {
+    var statusBg = g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#F5F5F5';
+    var statusColor = g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#9E9E9E';
+    var statusLabel = g.callStatus==='confirmed'?'✅ Confirmed':g.callStatus==='declined'?'❌ Declined':g.callStatus==='maybe'?'🤔 Maybe':'⏳ No Reply';
+    var confNum = g.confirmedAdults>0?(g.confirmedAdults+(g.confirmedKids>0?' + '+g.confirmedKids+' kids':'')):'—';
+    return '<div style="background:#fff;border-radius:10px;margin-bottom:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+        +'<div>'
+          +'<div style="font-size:14px;font-weight:700;">'+mobEsc(g.name||'')+'</div>'
+          +'<div style="font-size:11px;color:#888;">'+(g.side||'')+' · '+(g.phone||'—')+'</div>'
+        +'</div>'
+        +'<span style="background:'+statusBg+';color:'+statusColor+';padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+statusLabel+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
+        +(g.phone?'<button onclick="mobOpenWAInvite(\''+g.id+'\')" style="flex:1;padding:7px;border-radius:8px;border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';font-size:12px;font-weight:700;cursor:pointer;">'+(g.waSent?'📲✓ Sent (Resend)':'📲 Send Invite')+'</button>':'')
+        +'<select onchange="rsvpSetStatus(\''+g.id+'\',this.value);mobRenderRsvpMobile();this.blur();" style="flex:2;padding:7px;border-radius:8px;border:1.5px solid '+statusColor+';background:'+statusBg+';color:'+statusColor+';font-size:12px;font-weight:700;cursor:pointer;">'
+          +'<option value="">— Update RSVP —</option>'
+          +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Coming</option>'
+          +'<option value="declined"'+(g.callStatus==='declined'?' selected':'')+'>❌ Not Coming</option>'
+          +'<option value="maybe"'+(g.callStatus==='maybe'?' selected':'')+'>🤔 Maybe</option>'
+          +'<option value=""'+(g.callStatus===''||!g.callStatus?' selected':'')+'>⏳ No Reply</option>'
+        +'</select>'
+      +'</div>'
+      +(g.confirmedAdults>0?'<div style="margin-top:6px;font-size:11px;color:#2E7D32;font-weight:600;">✓ Confirmed: '+confNum+'</div>':'')
+      +'</div>';
+  }).join('');
+}
+
+// Also sync renderRsvpTracker (desktop) to call mobile render too
+var _origRsvpTracker = window.renderRsvpTracker;
+window.renderRsvpTracker = function() {
+  if (typeof _origRsvpTracker === 'function') _origRsvpTracker();
+  if (document.getElementById('mobVRsvp') && document.getElementById('mobVRsvp').classList.contains('active')) {
+    mobRenderRsvpStats();
+  }
+};
 
 </script>
 
