@@ -6401,6 +6401,14 @@ async function onSignedIn(){
       await storageSet('wedding-guests', JSON.stringify(guests));
       await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
       autoSaveLocalBackup(); // full backup snapshot after every cloud pull
+      // KV RSVP poll runs AFTER cloud sheet sync so it always wins over stale sheet data
+      if (typeof pollGuestRsvpsFromKV === 'function') {
+        pollGuestRsvpsFromKV(function() {
+          if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
+          if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
+          if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
+        });
+      }
     } else {
       // Only push to sheet if we actually have local data to push
       // Never overwrite cloud with empty data on a fresh load
@@ -14336,6 +14344,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T15:20 rsvp-kv-sync-fix-v12 -->
+<!-- deploy 2026-10-13T15:30 rsvp-kv-wins-over-sheet-v13 -->
 </body>
 </html>
