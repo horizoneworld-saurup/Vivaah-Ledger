@@ -1251,8 +1251,8 @@
   .mob-btn-signout { background:none; border:none; font-size:11px; color:#888; cursor:pointer; padding:4px; }
 
   /* ── Views ── */
-  .mob-view { display:none; height:calc(100vh - 56px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  .mob-view.active { display:block; animation:mobFadeUp .2s ease; height:calc(100vh - 56px); overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .mob-view { display:none; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .mob-view.active { display:block; animation:mobFadeUp .2s ease; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:60px; }
   @keyframes mobFadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 
   /* ── Summary bar ── */
@@ -4444,6 +4444,8 @@ function waSend() {
   if(typeof renderGuests === 'function') renderGuests();
   if(typeof mobRenderGuests === 'function') setTimeout(mobRenderGuests, 100);
   if(typeof renderRsvpTracker === 'function') setTimeout(renderRsvpTracker, 150);
+  // Update mobile RSVP stats immediately so WA sent count reflects the change
+  if(typeof mobRenderRsvpStats === 'function') setTimeout(mobRenderRsvpStats, 120);
 }
 
 // ── Kankotri WhatsApp ─────────────────────────────────────────────
@@ -12127,7 +12129,7 @@ function runGlobalSearch(q, gsInput, gsResults){
      MOBILE APP SHELL  — only rendered/active on screens ≤ 767px
      Hidden via CSS on desktop; JS activates after PIN unlock.
      ═══════════════════════════════════════════════════════════════ -->
-<div id="mobApp" style="display:none;position:fixed;inset:0;overflow:hidden;z-index:100;background:#f5f5f5;">
+<div id="mobApp" style="display:none;position:fixed;inset:0;overflow:hidden;z-index:100;background:#f5f5f5;flex-direction:column;">
 
   <!-- Top bar -->
   <div class="mob-topbar">
@@ -12732,7 +12734,7 @@ window.mobActivate = function(){
     document.querySelectorAll(sel).forEach(function(el){ el.style.display='none'; });
   });
 
-  document.getElementById('mobApp').style.display = 'block';
+  document.getElementById('mobApp').style.display = 'flex';
   window.scrollTo(0,0);
   mobApplyBranding();
   mobUpdateDash();
@@ -13810,6 +13812,7 @@ function toggleGuestWaSent(guestId) {
   if (typeof queueCloudSave==='function') queueCloudSave();
   renderGuests();
   if (typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 80);
+  if (typeof mobRenderRsvpStats==='function') setTimeout(mobRenderRsvpStats, 100);
   renderRsvpTracker();
   showToast(g.waSent ? '📲 Marked as WA Sent ✅' : 'Marked as not sent');
 }
@@ -13823,6 +13826,8 @@ function rsvpSetStatus(guestId, status) {
   if (typeof queueCloudSave==='function') queueCloudSave();
   renderGuests();
   if (typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 80);
+  if (typeof mobRenderRsvpStats==='function') setTimeout(mobRenderRsvpStats, 100);
+  if (typeof mobRenderRsvpList==='function') setTimeout(mobRenderRsvpList, 120);
   renderRsvpTracker();
   showToast('RSVP updated ✅');
 }
