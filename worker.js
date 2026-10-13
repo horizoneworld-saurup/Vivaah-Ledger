@@ -151,7 +151,13 @@ function scanReminders(reminderData, today) {
     // So: fire if dl <= firstTriggerDays AND (firstTriggerDays - dl) % 7 === 0
     const triggerDays = firstTriggerDays !== undefined ? firstTriggerDays : 0;
     const daysSinceFirst = triggerDays - dl;
+    // Fire every 7 days from trigger date onwards (including after deadline)
     if (daysSinceFirst >= 0 && daysSinceFirst % 7 === 0) {
+      alerts.push({ text, daysLeft: dl, module, emoji: emoji || '🌺' });
+    }
+    // If past deadline and not caught by weekly modulo, still fire every 7 days
+    // by checking daysSinceFirst independently of trigger alignment
+    if (dl < 0 && daysSinceFirst % 7 !== 0 && (-dl) % 7 === 0) {
       alerts.push({ text, daysLeft: dl, module, emoji: emoji || '🌺' });
     }
     // Always also send at 3 days and 1 day before deadline as final alerts
@@ -192,15 +198,21 @@ function scanReminders(reminderData, today) {
     });
   }
 
-  // Decor — weekly from 60 days before each function
+  // Decor — weekly from 60 days before each function (multi-vendor)
   EVENTS.forEach(ev => {
     const d = getDate(ev); if (!d) return;
     const dec = (ep.decor || {})[ev] || {};
-    if (dec.status !== 'confirmed') addAlert('Decor: ' + ev + ' not confirmed', deadline(d,60), 'Decor', '🌸', 0);
+    const dvs = dec.vendors || [];
+    // Check if any vendor is not confirmed
+    const anyPending = dvs.length === 0 || dvs.some(v => v.status !== 'confirmed');
+    if (anyPending) addAlert('Decor: ' + ev + ' not confirmed', deadline(d,60), 'Decor', '🌸', 0);
   });
   // Home Decor — weekly from 90 days before Kankotri
-  if (kankDate && (ep.homeDecor||{}).status !== 'confirmed')
-    addAlert('Home Decor not finalised (inside + outside)', deadline(kankDate,90), 'Decor', '🏠', 0);
+  if (kankDate) {
+    const hdVs = ((ep.homeDecor||{}).vendors)||[];
+    const hdPending = hdVs.length === 0 || hdVs.some(v => v.status !== 'confirmed');
+    if (hdPending) addAlert('Home Decor not finalised (inside + outside)', deadline(kankDate,90), 'Decor', '🏠', 0);
+  }
 
   // Puja — weekly from 60 days before Kankotri
   if (kankDate) {
@@ -413,6 +425,158 @@ export default {
       if (!raw) return jsonResp({ pinHashes: {} });
       const data = JSON.parse(raw);
       return jsonResp({ pinHashes: data.pinHashes || {} });
+    }
+
+    // POST /guest-rsvp — guest submits RSVP confirmation via link
+    if (path === '/guest-rsvp' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote, owner } = body;
+      if (!guestId || !callStatus) return jsonResp({ error: 'Missing guestId or callStatus' }, 400);
+      // Store per-guest RSVP under rsvp:<guestId>
+      await env.VIVAAH_KV.put(
+        `rsvp:${guestId}`,
+        JSON.stringify({ guestId, callStatus, confirmedAdults: confirmedAdults||0, confirmedKids: confirmedKids||0, rsvpNote: rsvpNote||'', updatedAt: Date.now() }),
+        { expirationTtl: 365 * 24 * 3600 }
+      );
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-guest-rsvps — admin polls for all guest RSVP submissions
+    if (path === '/get-guest-rsvps' && request.method === 'GET') {
+      const list = await env.VIVAAH_KV.list({ prefix: 'rsvp:' });
+      const rsvps = [];
+      for (const key of list.keys) {
+        const raw = await env.VIVAAH_KV.get(key.name);
+        if (raw) {
+          try { rsvps.push(JSON.parse(raw)); } catch(e) {}
+        }
+      }
+      return jsonResp({ rsvps });
+    }
+
+    // GET /list-approved — list all approved users for owner panel
+    if (path === '/list-approved' && request.method === 'GET') {
+      const ownerEmail = (url.searchParams.get('owner') || '').toLowerCase();
+      if (!OWNER_EMAILS.map(e=>e.toLowerCase()).includes(ownerEmail)) return jsonResp({ error: 'Unauthorized' }, 403);
+      const list = await env.VIVAAH_KV.list({ prefix: 'approved:' });
+      const approved = [];
+      for (const key of list.keys) {
+        const email = key.name.replace('approved:', '');
+        const raw = await env.VIVAAH_KV.get(key.name);
+        const data = raw ? JSON.parse(raw) : {};
+        approved.push({ email, approvedAt: data.approvedAt || 0 });
+      }
+      return jsonResp({ approved });
+    }
+
+    // GET /check-setup — check if owner has completed initial setup
+    if (path === '/check-setup' && request.method === 'GET') {
+      const email = (url.searchParams.get('email') || '').toLowerCase();
+      if (!email) return jsonResp({ setup: false });
+      const raw = await env.VIVAAH_KV.get(`branding:${email}`);
+      return jsonResp({ setup: !!raw });
+    }
+
+    // POST /save-branding — save couple branding data to KV
+    if (path === '/save-branding' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const email = (body.email || '').trim().toLowerCase();
+      if (!email) return jsonResp({ error: 'Missing email' }, 400);
+      await env.VIVAAH_KV.put(
+        `branding:${email}`,
+        JSON.stringify({ ...body, updatedAt: Date.now() }),
+        { expirationTtl: 365 * 24 * 3600 }
+      );
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-branding — retrieve branding data
+    if (path === '/get-branding' && request.method === 'GET') {
+      const email = (url.searchParams.get('email') || '').toLowerCase();
+      if (!email) return jsonResp({ error: 'Missing email' }, 400);
+      const raw = await env.VIVAAH_KV.get(`branding:${email}`);
+      if (!raw) return jsonResp({ branding: null });
+      return jsonResp({ branding: JSON.parse(raw) });
+    }
+
+    // POST /setup-pins — alias for save-pins used during initial setup
+    if (path === '/setup-pins' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const pinHashes = body.pinHashes || {};
+      if (!Object.keys(pinHashes).length) return jsonResp({ error: 'No pins' }, 400);
+      await env.VIVAAH_KV.put('pin-hashes', JSON.stringify({ pinHashes, updatedAt: Date.now() }), { expirationTtl: 365 * 24 * 3600 });
+      return jsonResp({ success: true });
+    }
+
+    // POST /submit-review — vendor review submission
+    if (path === '/submit-review' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { vendor, reviewer, rating, comment, owner } = body;
+      if (!vendor || !reviewer || !rating) return jsonResp({ error: 'Missing required fields' }, 400);
+      const key = `review:${encodeURIComponent(vendor)}:${Date.now()}`;
+      await env.VIVAAH_KV.put(
+        key,
+        JSON.stringify({ vendor, reviewer, rating, comment: comment||'', owner: owner||'', approved: false, submittedAt: Date.now() }),
+        { expirationTtl: 365 * 24 * 3600 }
+      );
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-reviews — public vendor reviews (approved only)
+    if (path === '/get-reviews' && request.method === 'GET') {
+      const vendor = url.searchParams.get('vendor') || '';
+      if (!vendor) return jsonResp({ reviews: [] });
+      const prefix = `review:${encodeURIComponent(vendor)}:`;
+      const list = await env.VIVAAH_KV.list({ prefix });
+      const reviews = [];
+      for (const key of list.keys) {
+        const raw = await env.VIVAAH_KV.get(key.name);
+        if (raw) {
+          try {
+            const r = JSON.parse(raw);
+            if (r.approved) reviews.push(r);
+          } catch(e) {}
+        }
+      }
+      return jsonResp({ reviews });
+    }
+
+    // GET /admin-reviews — all reviews for an owner (including unapproved)
+    if (path === '/admin-reviews' && request.method === 'GET') {
+      const ownerEmail = (url.searchParams.get('owner') || '').toLowerCase();
+      if (!OWNER_EMAILS.map(e=>e.toLowerCase()).includes(ownerEmail)) return jsonResp({ error: 'Unauthorized' }, 403);
+      const list = await env.VIVAAH_KV.list({ prefix: 'review:' });
+      const reviews = [];
+      for (const key of list.keys) {
+        const raw = await env.VIVAAH_KV.get(key.name);
+        if (raw) {
+          try { reviews.push({ key: key.name, ...JSON.parse(raw) }); } catch(e) {}
+        }
+      }
+      return jsonResp({ reviews });
+    }
+
+    // POST /admin-approve-review — approve or delete a review
+    if (path === '/admin-approve-review' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { key, action, ownerEmail } = body;
+      if (!OWNER_EMAILS.map(e=>e.toLowerCase()).includes((ownerEmail||'').toLowerCase())) return jsonResp({ error: 'Unauthorized' }, 403);
+      if (!key) return jsonResp({ error: 'Missing key' }, 400);
+      if (action === 'delete') {
+        await env.VIVAAH_KV.delete(key);
+        return jsonResp({ success: true });
+      }
+      const raw = await env.VIVAAH_KV.get(key);
+      if (!raw) return jsonResp({ error: 'Review not found' }, 404);
+      const review = JSON.parse(raw);
+      review.approved = true;
+      await env.VIVAAH_KV.put(key, JSON.stringify(review), { expirationTtl: 365 * 24 * 3600 });
+      return jsonResp({ success: true });
     }
 
     return jsonResp({ error: 'Not found' }, 404);
