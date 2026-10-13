@@ -3365,7 +3365,17 @@ function submitGuestRsvp(guestId) {
   var kids   = parseInt(document.getElementById('rsvpKids').value||0)||0;
   var note   = (document.getElementById('rsvpNote').value||'').trim();
 
-  // Update guest data
+  // Always push RSVP to worker KV so admin sees it cross-device (even if guest has no local data)
+  try {
+    var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
+    fetch(workerBase+'/guest-rsvp', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
+    }).catch(function(){});
+  } catch(e) {}
+
+  // Update local guest data if available (admin device — same phone)
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
   if (g) {
     g.callStatus = status;
@@ -3376,15 +3386,13 @@ function submitGuestRsvp(guestId) {
     if (note) g.rsvpNote = note;
     storageSet('wedding-guests', JSON.stringify(guests));
     if (typeof queueCloudSave==='function') queueCloudSave();
-    // Also push RSVP to worker KV so admin sees it cross-device
-    try {
-      var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
-      fetch(workerBase+'/guest-rsvp', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
-      }).catch(function(){});
-    } catch(e) {}
+    // Refresh UI immediately so RSVP tracker shows updated count
+    setTimeout(function(){
+      if (typeof renderRsvpTracker==='function') renderRsvpTracker();
+      if (typeof mobRenderRsvpStats==='function') mobRenderRsvpStats();
+      if (typeof mobRenderRsvpList==='function') mobRenderRsvpList();
+      if (typeof renderGuests==='function') renderGuests();
+    }, 200);
   }
 
   // Show thank you screen
@@ -3406,6 +3414,7 @@ function submitGuestRsvp(guestId) {
     + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
     + '</div>'
     + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
+    + (g ? '<button onclick="var p=document.getElementById(\'guestRsvpPortal\');if(p)p.remove();" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">← Back to App</button>' : '')
     + '</div>';
 }
 
@@ -3417,19 +3426,27 @@ function handleRsvpUrlParam() {
     if (!gid) return;
     // Remove params from URL immediately
     history.replaceState({}, '', window.location.pathname);
-    // Wait for app + guests to fully load
+    // Show portal immediately - guests may not be loaded (guest tapping link is not signed in)
+    // Try with guests data if available, else show portal with guestId only (name shown as 'Guest')
+    // Retry up to 3s in case local storage loads guests quickly, but don't block on Google sign-in
+    var _rsvpAttempts = 0;
     function tryShow() {
-      if (typeof guests === 'undefined' || !Array.isArray(guests)) {
-        setTimeout(tryShow, 300); return;
-      }
-      showGuestRsvpPortal(gid, s||'');
-      // Pre-select the status
-      if (s) {
-        var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
-        window._guestRsvpStatus = statusMap[s]||'';
+      _rsvpAttempts++;
+      var hasGuests = typeof guests !== 'undefined' && Array.isArray(guests) && guests.length > 0;
+      if (hasGuests || _rsvpAttempts >= 10) {
+        // Show portal (with or without guest data)
+        showGuestRsvpPortal(gid, s||'');
+        // Pre-select the status
+        if (s) {
+          var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
+          window._guestRsvpStatus = statusMap[s]||'';
+          setTimeout(function(){ guestRsvpSelect(statusMap[s]||''); }, 100);
+        }
+      } else {
+        setTimeout(tryShow, 300);
       }
     }
-    setTimeout(tryShow, 800);
+    setTimeout(tryShow, 500);
   } catch(e) { console.log('RSVP URL param error', e); }
 }
 window.addEventListener('load', handleRsvpUrlParam);
@@ -14187,6 +14204,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-
+<!-- deploy 2026-10-13T06:27 rsvp-full-fix-v2 -->
 </body>
-</html><!-- deploy Tue Oct 13 06:02:54 Asia 2026 -->
+</html>
