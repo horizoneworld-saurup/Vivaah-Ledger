@@ -3235,35 +3235,41 @@ function generateStdMsg(g) {
 function getRsvpConfirmLinks(guestId) {
   var base = (window.location.origin + window.location.pathname).replace(/\/$/, '');
   var enc = encodeURIComponent(guestId);
-  // Embed guest name + invited events + branding into URL so portal works in any browser
-  // (WhatsApp in-app browser has no localStorage from the admin's device)
-  var extra = '';
+  // Short clean links — guest data is stored in KV by saveGuestDataToKV() when WA is sent
+  return '*✅ Yes, I will attend →* ' + base + '?rsvp=' + enc + '&s=1\n'
+       + '*❌ Cannot make it →* ' + base + '?rsvp=' + enc + '&s=2\n'
+       + '*🤔 Will try →* ' + base + '?rsvp=' + enc + '&s=3';
+}
+
+// Save guest data to worker KV so portal can show name/events on link tap
+function saveGuestDataToKV(guestId) {
   try {
     var g = (guests||[]).find(function(x){ return x.id===guestId; });
-    if (g) {
-      var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
-      var invitedEvs = ALL_EVENTS.filter(function(ev){
-        var e = g.events && g.events[ev];
-        return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+    if (!g) return;
+    var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+    var invitedEvs = ALL_EVENTS.filter(function(ev){
+      var e = g.events && g.events[ev];
+      return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+    });
+    var tl = {};
+    if (typeof eventTimeline !== 'undefined' && eventTimeline) {
+      invitedEvs.forEach(function(ev){
+        if (eventTimeline[ev]) tl[ev] = { d: eventTimeline[ev].date||'', t: eventTimeline[ev].startTime||'', v: eventTimeline[ev].venue||'' };
       });
-      var payload = { n: g.name||'', ev: invitedEvs };
-      // Add event dates/times/venues if available
-      if (typeof eventTimeline !== 'undefined' && eventTimeline) {
-        var tl = {};
-        invitedEvs.forEach(function(ev){
-          if (eventTimeline[ev]) tl[ev] = { d: eventTimeline[ev].date||'', t: eventTimeline[ev].startTime||'', v: eventTimeline[ev].venue||'' };
-        });
-        if (Object.keys(tl).length) payload.tl = tl;
-      }
-      // Add couple name + family name from branding
-      if (typeof branding !== 'undefined' && branding && branding.title) payload.cn = branding.title;
-      if (typeof branding !== 'undefined' && branding && branding.familyName) payload.fn = branding.familyName;
-      extra = '&d=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
     }
+    var data = {
+      n: g.name||'',
+      ev: invitedEvs,
+      tl: tl,
+      cn: (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : '',
+      fn: (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : ''
+    };
+    fetch('https://vivaah-auth.rms-d21.workers.dev/save-guest-data', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ guestId: guestId, data: data })
+    }).catch(function(){});
   } catch(e) {}
-  return '*✅ Yes, I will attend →* ' + base + '?rsvp=' + enc + '&s=1' + extra + '\n'
-       + '*❌ Cannot make it →* ' + base + '?rsvp=' + enc + '&s=2' + extra + '\n'
-       + '*🤔 Will try →* ' + base + '?rsvp=' + enc + '&s=3' + extra;
 }
 
 // ── Guest RSVP Portal (shown when guest taps the link) ──────────
@@ -3482,40 +3488,32 @@ function handleRsvpUrlParam() {
     var gid = params.get('rsvp');
     var s = params.get('s');
     if (!gid) return;
-    // Remove params from URL immediately
+    // Remove params from URL immediately (clean URL bar)
     history.replaceState({}, '', window.location.pathname);
-    // Decode embedded guest data from URL (name, events, branding) — works in any browser
-    var urlData = null;
-    try {
-      var dParam = params.get('d');
-      if (dParam) {
-          try {
-            // Simple path: params.get() already URL-decodes, so just atob()
-            urlData = JSON.parse(atob(dParam));
-          } catch(e1) {
-            try {
-              // Fallback: handle double-encoded case
-              urlData = JSON.parse(atob(decodeURIComponent(dParam)));
-            } catch(e2) {
-              try {
-                // Last resort: TextDecoder for full UTF-8 support
-                var bytes = Uint8Array.from(atob(dParam), function(c){ return c.charCodeAt(0); });
-                urlData = JSON.parse(new TextDecoder().decode(bytes));
-              } catch(e3) {}
-            }
-          }
-        }
-    } catch(e) {}
-    // Show RSVP portal immediately — initAuth exits early for ?rsvp URLs
-    // Small delay lets the DOM settle after page load
-    setTimeout(function() {
+
+    function showPortalWithData(urlData) {
       showGuestRsvpPortal(gid, s||'', urlData);
       if (s) {
         var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
         window._guestRsvpStatus = statusMap[s]||'';
         setTimeout(function(){ if(typeof guestRsvpSelect==='function') guestRsvpSelect(statusMap[s]||''); }, 150);
       }
-    }, 600);
+    }
+
+    // Fetch guest data from KV worker (stored when admin sent the WA message)
+    // This keeps the WA link short — no long d= param needed
+    setTimeout(function() {
+      fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-data?guestId=' + encodeURIComponent(gid))
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(resp) {
+          var urlData = (resp && resp.data) ? resp.data : null;
+          showPortalWithData(urlData);
+        })
+        .catch(function() {
+          // If network fails, show portal anyway (name will show as "Guest")
+          showPortalWithData(null);
+        });
+    }, 400);
   } catch(e) { console.log('RSVP URL param error', e); }
 }
 window.addEventListener('load', handleRsvpUrlParam);
@@ -4468,8 +4466,9 @@ function waOpen(guestId) {
   if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '💬 WhatsApp Message — ' + (g.name||'');
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
-  // Restore saved custom message or use default
-  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
+  // Always regenerate fresh — never use cached waCustomMsg (it may have old long d= links)
+  g.waCustomMsg = '';
+  document.getElementById('waMessageText').value = generateInviteMsg(g);
   document.getElementById('waModalOverlay').classList.add('show');
 }
 
@@ -4491,7 +4490,9 @@ function openWAInvite(guestId) {
   if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '📲 WhatsApp Invitation — ' + (g.name||'');
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
-  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
+  // Always regenerate fresh — never use cached waCustomMsg (it may have old long d= links)
+  g.waCustomMsg = '';
+  document.getElementById('waMessageText').value = generateInviteMsg(g);
   document.getElementById('waModalOverlay').classList.add('show');
 }
 
@@ -4510,13 +4511,16 @@ function waSend() {
   const g = guests.find(x => x.id === waCurrentGuestId);
   if (!g) return;
   const rawMsg = document.getElementById('waMessageText').value;
-  // Only save custom message for regular invite (not STD or Kankotri)
-  if (!window._pendingStd && !window._pendingKank) {
-    g.waCustomMsg = rawMsg;
-  }
+  // Never save the message — always regenerate fresh next time (avoids stale long-link cache)
+  g.waCustomMsg = '';
   g.invitationSent = true;
   // Mark waSent when sending via invite button OR regular WA
-  if (window._pendingInvite === g.id) { g.waSent = true; window._pendingInvite = null; }
+  if (window._pendingInvite === g.id) {
+    g.waSent = true;
+    window._pendingInvite = null;
+    // Save guest data to KV so the RSVP portal can show name/events in any browser
+    if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
+  }
   if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
   if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
   saveGuests();
@@ -14156,6 +14160,7 @@ function mobOpenWAInvite(guestId) {
   var ph = (g.phone||'').replace(/\D/g,'');
   window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
+  if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
   storageSet('wedding-guests', JSON.stringify(guests));
   if (typeof queueCloudSave==='function') queueCloudSave();
   mobRenderGuests();
@@ -14299,6 +14304,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T10:45 rsvp-fix-base64-decode-v6 -->
+<!-- deploy 2026-10-13T14:15 rsvp-clear-cached-msg-v8 -->
 </body>
 </html>
