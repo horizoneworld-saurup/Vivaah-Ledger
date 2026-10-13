@@ -13973,9 +13973,13 @@ function rsvpSetStatus(guestId, status) {
 
 function renderRsvpTracker(skipKvPoll) {
   // Pull any guest RSVP confirmations submitted via link (cross-device sync)
-  // skipKvPoll=true prevents infinite loop when pollGuestRsvpsFromKV calls back here
+  // If not skipping, fetch KV first then re-render with fresh data
   if (!skipKvPoll && typeof pollGuestRsvpsFromKV === 'function') {
-    pollGuestRsvpsFromKV();
+    pollGuestRsvpsFromKV(function() {
+      // Re-render after KV data is merged (skipKvPoll=true to avoid loop)
+      renderRsvpTracker(true);
+    });
+    // Also render immediately with cached data so UI isn't blank while waiting
   }
   var total = (guests||[]).filter(function(g){return g.name&&g.name.trim();}).length;
   var sent = (guests||[]).filter(function(g){return g.waSent;}).length;
@@ -14198,33 +14202,38 @@ function mobRenderRsvpMobile() {
   pollGuestRsvpsFromKV();
 }
 
-function pollGuestRsvpsFromKV() {
+function pollGuestRsvpsFromKV(callback) {
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(data) {
-        if (!data || !data.rsvps) return;
         var updated = false;
-        data.rsvps.forEach(function(r) {
-          var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
-          if (g && r.callStatus) {
-            g.callStatus = r.callStatus;
-            g.waSent = true; // they received the link, so WA was sent
-            if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
-            if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
-            if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
-            updated = true;
+        if (data && data.rsvps) {
+          data.rsvps.forEach(function(r) {
+            var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
+            if (g && r.callStatus) {
+              g.callStatus = r.callStatus;
+              g.waSent = true;
+              if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
+              if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
+              if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
+              updated = true;
+            }
+          });
+          if (updated) {
+            storageSet('wedding-guests', JSON.stringify(guests));
+            if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
+            if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
           }
-        });
-        if (updated) {
-          storageSet('wedding-guests', JSON.stringify(guests));
-          if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
-          if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
-          // Also update desktop RSVP tracker (skipKvPoll=true to avoid infinite loop)
-          if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
         }
-      }).catch(function(){});
-  } catch(e) {}
+        // Always call callback so renderRsvpTracker re-renders with latest data
+        if (typeof callback === 'function') callback();
+      }).catch(function(){
+        if (typeof callback === 'function') callback();
+      });
+  } catch(e) {
+    if (typeof callback === 'function') callback();
+  }
 }
 
 function mobRenderRsvpStats() {
@@ -14327,6 +14336,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T15:10 rsvp-triple-fallback-v11 -->
+<!-- deploy 2026-10-13T15:20 rsvp-kv-sync-fix-v12 -->
 </body>
 </html>
