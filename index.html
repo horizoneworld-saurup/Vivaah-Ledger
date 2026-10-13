@@ -3488,7 +3488,23 @@ function handleRsvpUrlParam() {
     var urlData = null;
     try {
       var dParam = params.get('d');
-      if (dParam) urlData = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(dParam)))));
+      if (dParam) {
+          try {
+            // Simple path: params.get() already URL-decodes, so just atob()
+            urlData = JSON.parse(atob(dParam));
+          } catch(e1) {
+            try {
+              // Fallback: handle double-encoded case
+              urlData = JSON.parse(atob(decodeURIComponent(dParam)));
+            } catch(e2) {
+              try {
+                // Last resort: TextDecoder for full UTF-8 support
+                var bytes = Uint8Array.from(atob(dParam), function(c){ return c.charCodeAt(0); });
+                urlData = JSON.parse(new TextDecoder().decode(bytes));
+              } catch(e3) {}
+            }
+          }
+        }
     } catch(e) {}
     // Show RSVP portal immediately — initAuth exits early for ?rsvp URLs
     // Small delay lets the DOM settle after page load
@@ -14283,6 +14299,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T08:24 rsvp-wait-for-fetch-v5 -->
+<!-- deploy 2026-10-13T10:45 rsvp-fix-base64-decode-v6 -->
 </body>
 </html>

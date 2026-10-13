@@ -427,6 +427,29 @@ export default {
       return jsonResp({ pinHashes: data.pinHashes || {} });
     }
 
+    // POST /save-guest-data — admin saves guest info to KV when sending WA invite
+    if (path === '/save-guest-data' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { guestId, data } = body;
+      if (!guestId || !data) return jsonResp({ error: 'Missing guestId or data' }, 400);
+      await env.VIVAAH_KV.put(
+        `guestdata:${guestId}`,
+        JSON.stringify({ ...data, savedAt: Date.now() }),
+        { expirationTtl: 365 * 24 * 3600 }
+      );
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-guest-data — guest app fetches their info on link tap
+    if (path === '/get-guest-data' && request.method === 'GET') {
+      const guestId = url.searchParams.get('guestId') || '';
+      if (!guestId) return jsonResp({ error: 'Missing guestId' }, 400);
+      const raw = await env.VIVAAH_KV.get(`guestdata:${guestId}`);
+      if (!raw) return jsonResp({ data: null });
+      return jsonResp({ data: JSON.parse(raw) });
+    }
+
     // POST /guest-rsvp — guest submits RSVP confirmation via link
     if (path === '/guest-rsvp' && request.method === 'POST') {
       let body;
