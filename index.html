@@ -3426,27 +3426,17 @@ function handleRsvpUrlParam() {
     if (!gid) return;
     // Remove params from URL immediately
     history.replaceState({}, '', window.location.pathname);
-    // Show portal immediately - guests may not be loaded (guest tapping link is not signed in)
-    // Try with guests data if available, else show portal with guestId only (name shown as 'Guest')
-    // Retry up to 3s in case local storage loads guests quickly, but don't block on Google sign-in
-    var _rsvpAttempts = 0;
-    function tryShow() {
-      _rsvpAttempts++;
-      var hasGuests = typeof guests !== 'undefined' && Array.isArray(guests) && guests.length > 0;
-      if (hasGuests || _rsvpAttempts >= 10) {
-        // Show portal (with or without guest data)
-        showGuestRsvpPortal(gid, s||'');
-        // Pre-select the status
-        if (s) {
-          var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
-          window._guestRsvpStatus = statusMap[s]||'';
-          setTimeout(function(){ guestRsvpSelect(statusMap[s]||''); }, 100);
-        }
-      } else {
-        setTimeout(tryShow, 300);
+    // Show RSVP portal - initAuth returns early when ?rsvp param exists,
+    // so guests won't be loaded from Google Sheets. Show portal immediately.
+    // Small delay lets the DOM settle after page load.
+    setTimeout(function() {
+      showGuestRsvpPortal(gid, s||'');
+      if (s) {
+        var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
+        window._guestRsvpStatus = statusMap[s]||'';
+        setTimeout(function(){ if(typeof guestRsvpSelect==='function') guestRsvpSelect(statusMap[s]||''); }, 150);
       }
-    }
-    setTimeout(tryShow, 500);
+    }, 600);
   } catch(e) { console.log('RSVP URL param error', e); }
 }
 window.addEventListener('load', handleRsvpUrlParam);
@@ -5619,6 +5609,18 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
+  // If this is a guest opening an RSVP link, hide the lock screen immediately
+  // so the RSVP portal can show on top without any login UI blocking it
+  try {
+    var _rsvpCheck = new URLSearchParams(window.location.search).get('rsvp');
+    if (_rsvpCheck) {
+      var lo = document.getElementById('lockOverlay');
+      if (lo) lo.classList.add('hidden');
+      // Don't process auth at all — just let handleRsvpUrlParam show the portal
+      return;
+    }
+  } catch(e) {}
+
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
   const VALID_ROLES = ['owner','admin','editor','viewer','eventmanager'];
 
@@ -14204,6 +14206,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T06:27 rsvp-full-fix-v2 -->
+<!-- deploy 2026-10-13T08:02 rsvp-wa-inapp-fix-v3 -->
 </body>
 </html>
