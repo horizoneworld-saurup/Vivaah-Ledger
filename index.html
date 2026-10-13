@@ -3457,25 +3457,42 @@ function submitGuestRsvp(guestId) {
       + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
       + '</div>'
       + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
-      + (g ? '<button onclick="var p=document.getElementById(\'guestRsvpPortal\');if(p)p.remove();" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">← Back to App</button>' : '')
+      + '<button onclick="window.history.back();" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">← Close</button>'
       + '</div>';
   }
 
   try {
     var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
-    // 8 second timeout fallback — if worker doesn't respond, still show Thank You
-    var _saveTimeout = setTimeout(showThankYou, 8000);
-    fetch(workerBase+'/guest-rsvp', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
-    }).then(function(r){
-      clearTimeout(_saveTimeout);
-      showThankYou();
-    }).catch(function(){
-      clearTimeout(_saveTimeout);
-      showThankYou(); // show thank you even if network fails
-    });
+    var payload = JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note});
+
+    // sendBeacon: fire-and-forget, survives page unload & WhatsApp browser interruptions
+    // This is the key fix — WhatsApp's browser kills fetch() mid-flight but sendBeacon completes
+    var beaconSent = false;
+    if (navigator.sendBeacon) {
+      try {
+        var blob = new Blob([payload], {type:'application/json'});
+        beaconSent = navigator.sendBeacon(workerBase+'/guest-rsvp', blob);
+      } catch(e) {}
+    }
+
+    if (beaconSent) {
+      // Beacon queued — show Thank You immediately (beacon will complete in background)
+      setTimeout(showThankYou, 300);
+    } else {
+      // Fallback to fetch for browsers that don't support sendBeacon
+      var _saveTimeout = setTimeout(showThankYou, 8000);
+      fetch(workerBase+'/guest-rsvp', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:payload
+      }).then(function(r){
+        clearTimeout(_saveTimeout);
+        showThankYou();
+      }).catch(function(){
+        clearTimeout(_saveTimeout);
+        showThankYou();
+      });
+    }
   } catch(e) {
     showThankYou();
   }
@@ -14304,6 +14321,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T14:15 rsvp-clear-cached-msg-v8 -->
+<!-- deploy 2026-10-13T14:35 rsvp-sendbeacon-v9 -->
 </body>
 </html>
