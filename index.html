@@ -3235,53 +3235,98 @@ function generateStdMsg(g) {
 function getRsvpConfirmLinks(guestId) {
   var base = (window.location.origin + window.location.pathname).replace(/\/$/, '');
   var enc = encodeURIComponent(guestId);
-  return '*✅ Yes, I will attend →* ' + base + '?rsvp=' + enc + '&s=1\n'
-       + '*❌ Cannot make it →* ' + base + '?rsvp=' + enc + '&s=2\n'
-       + '*🤔 Will try →* ' + base + '?rsvp=' + enc + '&s=3';
+  // Embed guest name + invited events + branding into URL so portal works in any browser
+  // (WhatsApp in-app browser has no localStorage from the admin's device)
+  var extra = '';
+  try {
+    var g = (guests||[]).find(function(x){ return x.id===guestId; });
+    if (g) {
+      var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+      var invitedEvs = ALL_EVENTS.filter(function(ev){
+        var e = g.events && g.events[ev];
+        return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+      });
+      var payload = { n: g.name||'', ev: invitedEvs };
+      // Add event dates/times/venues if available
+      if (typeof eventTimeline !== 'undefined' && eventTimeline) {
+        var tl = {};
+        invitedEvs.forEach(function(ev){
+          if (eventTimeline[ev]) tl[ev] = { d: eventTimeline[ev].date||'', t: eventTimeline[ev].startTime||'', v: eventTimeline[ev].venue||'' };
+        });
+        if (Object.keys(tl).length) payload.tl = tl;
+      }
+      // Add couple name + family name from branding
+      if (typeof branding !== 'undefined' && branding && branding.title) payload.cn = branding.title;
+      if (typeof branding !== 'undefined' && branding && branding.familyName) payload.fn = branding.familyName;
+      extra = '&d=' + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+    }
+  } catch(e) {}
+  return '*✅ Yes, I will attend →* ' + base + '?rsvp=' + enc + '&s=1' + extra + '\n'
+       + '*❌ Cannot make it →* ' + base + '?rsvp=' + enc + '&s=2' + extra + '\n'
+       + '*🤔 Will try →* ' + base + '?rsvp=' + enc + '&s=3' + extra;
 }
 
 // ── Guest RSVP Portal (shown when guest taps the link) ──────────
-function showGuestRsvpPortal(guestId, preStatus) {
+// urlData: optional decoded payload from ?d= param — {n, ev, tl, cn, fn}
+function showGuestRsvpPortal(guestId, preStatus, urlData) {
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
-  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
-  var familyName = (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : 'Shah Family';
+  // Fallback to URL-embedded data when guests aren't in this browser's localStorage
+  var ud = urlData || {};
+  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : (ud.cn || 'Mrishana & Spandan');
+  var familyName = (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : (ud.fn || 'Shah Family');
   var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
   var initStatus = statusMap[preStatus] || '';
 
-  // Build events list for this guest
+  // Build events list — use guest object if available, else use URL-embedded event list
   var eventsHtml = '';
+  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+  var invited = [];
+  var tlSource = (typeof eventTimeline!=='undefined' && eventTimeline) ? eventTimeline : {};
+
   if (g && g.events) {
     var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
-    var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
-    var invited = ALL_EVENTS.filter(function(ev){
+    invited = ALL_EVENTS.filter(function(ev){
       var e = g.events[ev];
       return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0))>0;
     });
-    if (invited.length > 0) {
-      eventsHtml = '<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 14px;margin:12px 0;text-align:left;">'
-        + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">You\'re invited to</div>';
-      var tl = typeof eventTimeline!=='undefined'?eventTimeline:{};
-      eventsHtml += invited.map(function(ev){
-        var t = tl[ev]||{};
-        var dateStr = '';
-        if (t.date) {
-          var d = new Date(t.date);
-          dateStr = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-          if (t.startTime) {
-            var tp=t.startTime.split(':'),th=parseInt(tp[0]||0),tm=tp[1]||'00';
-            dateStr += ' · '+(th%12||12)+':'+tm+' '+(th>=12?'PM':'AM');
-          }
-        }
-        return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);">'
-          +'<span style="font-size:16px;">'+(EMOJIS[ev]||'📅')+'</span>'
-          +'<div><div style="font-size:13px;font-weight:600;color:#fff;">'+ev+'</div>'
-          +(dateStr?'<div style="font-size:11px;color:rgba(255,255,255,0.7);">'+dateStr+'</div>':'')+'</div></div>';
-      }).join('');
-      eventsHtml += '</div>';
+  } else if (ud.ev && ud.ev.length) {
+    invited = ud.ev;
+    // Use timeline from URL payload if local eventTimeline is empty
+    if (ud.tl && !Object.keys(tlSource).length) tlSource = ud.tl;
+    else if (ud.tl) {
+      // Merge URL timeline into local (URL may have keys local doesn't)
+      Object.keys(ud.tl).forEach(function(k){ if (!tlSource[k]) tlSource[k] = { date: ud.tl[k].d, startTime: ud.tl[k].t, venue: ud.tl[k].v }; });
     }
   }
 
-  var guestName = g ? (g.name||'Guest') : 'Guest';
+  if (invited.length > 0) {
+    eventsHtml = '<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 14px;margin:12px 0;text-align:left;">'
+      + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">You\'re invited to</div>';
+    eventsHtml += invited.map(function(ev){
+      var t = tlSource[ev] || {};
+      // Support both full keys (date/startTime) and short keys (d/t) from URL payload
+      var dateVal = t.date || t.d || '';
+      var timeVal = t.startTime || t.t || '';
+      var dateStr = '';
+      if (dateVal) {
+        var d = new Date(dateVal);
+        if (!isNaN(d)) {
+          dateStr = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+          if (timeVal) {
+            var tp=timeVal.split(':'),th=parseInt(tp[0]||0),tm=tp[1]||'00';
+            dateStr += ' · '+(th%12||12)+':'+tm+' '+(th>=12?'PM':'AM');
+          }
+        }
+      }
+      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);">'
+        +'<span style="font-size:16px;">'+(EMOJIS[ev]||'📅')+'</span>'
+        +'<div><div style="font-size:13px;font-weight:600;color:#fff;">'+ev+'</div>'
+        +(dateStr?'<div style="font-size:11px;color:rgba(255,255,255,0.7);">'+dateStr+'</div>':'')+'</div></div>';
+    }).join('');
+    eventsHtml += '</div>';
+  }
+
+  var guestName = g ? (g.name||'Guest') : (ud.n || 'Guest');
   var overlay = document.createElement('div');
   overlay.id = 'guestRsvpPortal';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#6D1B3A 0%,#4A0E24 40%,#1B2A4A 100%);display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:30px 20px 40px;';
@@ -3365,28 +3410,18 @@ function submitGuestRsvp(guestId) {
   var kids   = parseInt(document.getElementById('rsvpKids').value||0)||0;
   var note   = (document.getElementById('rsvpNote').value||'').trim();
 
-  // Always push RSVP to worker KV so admin sees it cross-device (even if guest has no local data)
-  try {
-    var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
-    fetch(workerBase+'/guest-rsvp', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
-    }).catch(function(){});
-  } catch(e) {}
+  // Disable button and show saving state so user knows it's working
+  var submitBtn = document.querySelector('#guestRsvpPortal button[onclick*="submitGuestRsvp"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Saving…'; }
 
   // Update local guest data if available (admin device — same phone)
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
   if (g) {
     g.callStatus = status;
-    if (status !== 'declined') {
-      g.confirmedAdults = adults;
-      g.confirmedKids = kids;
-    }
+    if (status !== 'declined') { g.confirmedAdults = adults; g.confirmedKids = kids; }
     if (note) g.rsvpNote = note;
     storageSet('wedding-guests', JSON.stringify(guests));
     if (typeof queueCloudSave==='function') queueCloudSave();
-    // Refresh UI immediately so RSVP tracker shows updated count
     setTimeout(function(){
       if (typeof renderRsvpTracker==='function') renderRsvpTracker();
       if (typeof mobRenderRsvpStats==='function') mobRenderRsvpStats();
@@ -3395,27 +3430,50 @@ function submitGuestRsvp(guestId) {
     }, 200);
   }
 
-  // Show thank you screen
-  var portal = document.getElementById('guestRsvpPortal');
-  if (!portal) return;
-  var labelMap = {'confirmed':'✅ Yes, attending!','declined':'❌ Not attending','maybe':'🤔 Will try to come'};
-  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
-  portal.innerHTML =
-    '<div style="max-width:440px;width:100%;text-align:center;padding-top:60px;">'
-    + '<div style="font-size:64px;margin-bottom:16px;">'+(status==='confirmed'?'🎉':status==='declined'?'💐':'🌸')+'</div>'
-    + '<div style="font-size:24px;font-weight:800;color:#F8D49D;margin-bottom:10px;">Thank You!</div>'
-    + '<div style="font-size:15px;color:#fff;margin-bottom:8px;">Your response has been recorded.</div>'
-    + '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;margin:20px 0;font-size:14px;color:#fff;">'
-    + '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your RSVP</div>'
-    + '<div style="font-size:20px;font-weight:800;">'+labelMap[status]+'</div>'
-    + (status!=='declined'&&(adults||kids)?'<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;">'+adults+' adult'+(adults!==1?'s':'')+(kids?' + '+kids+' child'+(kids!==1?'ren':''):'')+'</div>':'')
-    + '</div>'
-    + '<div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;">'
-    + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
-    + '</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
-    + (g ? '<button onclick="var p=document.getElementById(\'guestRsvpPortal\');if(p)p.remove();" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">← Back to App</button>' : '')
-    + '</div>';
+  // POST to worker KV — WAIT for response before showing Thank You
+  // This ensures the fetch completes before the page moves on (critical in WA browser)
+  function showThankYou() {
+    var portal = document.getElementById('guestRsvpPortal');
+    if (!portal) return;
+    var labelMap = {'confirmed':'✅ Yes, attending!','declined':'❌ Not attending','maybe':'🤔 Will try to come'};
+    var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
+    portal.innerHTML =
+      '<div style="max-width:440px;width:100%;text-align:center;padding-top:60px;">'
+      + '<div style="font-size:64px;margin-bottom:16px;">'+(status==='confirmed'?'🎉':status==='declined'?'💐':'🌸')+'</div>'
+      + '<div style="font-size:24px;font-weight:800;color:#F8D49D;margin-bottom:10px;">Thank You!</div>'
+      + '<div style="font-size:15px;color:#fff;margin-bottom:8px;">Your response has been recorded.</div>'
+      + '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;margin:20px 0;font-size:14px;color:#fff;">'
+      + '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your RSVP</div>'
+      + '<div style="font-size:20px;font-weight:800;">'+labelMap[status]+'</div>'
+      + (status!=='declined'&&(adults||kids)?'<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;">'+adults+' adult'+(adults!==1?'s':'')+(kids?' + '+kids+' child'+(kids!==1?'ren':''):'')+'</div>':'')
+      + '</div>'
+      + '<div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;">'
+      + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
+      + '</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
+      + (g ? '<button onclick="var p=document.getElementById(\'guestRsvpPortal\');if(p)p.remove();" style="margin-top:24px;padding:12px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:600;cursor:pointer;">← Back to App</button>' : '')
+      + '</div>';
+  }
+
+  try {
+    var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
+    // 8 second timeout fallback — if worker doesn't respond, still show Thank You
+    var _saveTimeout = setTimeout(showThankYou, 8000);
+    fetch(workerBase+'/guest-rsvp', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
+    }).then(function(r){
+      clearTimeout(_saveTimeout);
+      showThankYou();
+    }).catch(function(){
+      clearTimeout(_saveTimeout);
+      showThankYou(); // show thank you even if network fails
+    });
+  } catch(e) {
+    showThankYou();
+  }
+
 }
 
 function handleRsvpUrlParam() {
@@ -3426,11 +3484,16 @@ function handleRsvpUrlParam() {
     if (!gid) return;
     // Remove params from URL immediately
     history.replaceState({}, '', window.location.pathname);
-    // Show RSVP portal - initAuth returns early when ?rsvp param exists,
-    // so guests won't be loaded from Google Sheets. Show portal immediately.
-    // Small delay lets the DOM settle after page load.
+    // Decode embedded guest data from URL (name, events, branding) — works in any browser
+    var urlData = null;
+    try {
+      var dParam = params.get('d');
+      if (dParam) urlData = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(dParam)))));
+    } catch(e) {}
+    // Show RSVP portal immediately — initAuth exits early for ?rsvp URLs
+    // Small delay lets the DOM settle after page load
     setTimeout(function() {
-      showGuestRsvpPortal(gid, s||'');
+      showGuestRsvpPortal(gid, s||'', urlData);
       if (s) {
         var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
         window._guestRsvpStatus = statusMap[s]||'';
@@ -5609,14 +5672,28 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
-  // If this is a guest opening an RSVP link, hide the lock screen immediately
-  // so the RSVP portal can show on top without any login UI blocking it
+  // If this is a guest opening an RSVP link, skip all auth UI and just load
+  // guest data from localStorage so the portal can show their name + events
   try {
     var _rsvpCheck = new URLSearchParams(window.location.search).get('rsvp');
     if (_rsvpCheck) {
+      // Hide lock screen immediately — no auth needed for RSVP portal
       var lo = document.getElementById('lockOverlay');
       if (lo) lo.classList.add('hidden');
-      // Don't process auth at all — just let handleRsvpUrlParam show the portal
+      // Load guests, branding and timeline from localStorage so portal is personalised
+      try {
+        var _rg = localStorage.getItem('wedding-guests');
+        if (_rg) guests = JSON.parse(_rg);
+      } catch(e) {}
+      try {
+        var _rb = localStorage.getItem('wedding-branding');
+        if (_rb) branding = JSON.parse(_rb);
+      } catch(e) {}
+      try {
+        var _rt = localStorage.getItem('wedding-timeline');
+        if (_rt) eventTimeline = JSON.parse(_rt);
+      } catch(e) {}
+      // Don't run the rest of auth — handleRsvpUrlParam will show the portal
       return;
     }
   } catch(e) {}
@@ -14206,6 +14283,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T08:02 rsvp-wa-inapp-fix-v3 -->
+<!-- deploy 2026-10-13T08:24 rsvp-wait-for-fetch-v5 -->
 </body>
 </html>
