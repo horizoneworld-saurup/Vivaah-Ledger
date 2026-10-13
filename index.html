@@ -6336,24 +6336,25 @@ async function onSignedIn(){
               : (localLogoById[v.id]||'')
       }));
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
-      // Merge cloud guests but preserve local waSent/callStatus if they're more up-to-date
-      // (prevents stale cloud pull from wiping freshly-set data that hasn't synced yet)
+      // Merge cloud guests — KV RSVP cache always wins over sheet data
       (function(){
         var cloudGuests = cloudData.guests||guests;
         var localById = {};
+        // Load KV RSVP cache saved by pollGuestRsvpsFromKV — survives page reloads
+        var kvRsvpCache = {};
+        try { kvRsvpCache = JSON.parse(localStorage.getItem('vivaah-kv-rsvps')||'{}'); } catch(e) {}
         (guests||[]).forEach(function(g){ localById[g.id]=g; });
         guests = cloudGuests.map(function(cg){
           var loc = localById[cg.id];
           if (!loc) return cg;
           return Object.assign({}, cg, {
             waSent: loc.waSent || cg.waSent || false,
-            // If KV RSVP was received (kvRsvpAt set), trust local callStatus over sheet
-            // Sheet may have stale data; KV is always the freshest source of truth
-            callStatus: loc.kvRsvpAt ? (loc.callStatus || '') : (loc.callStatus || cg.callStatus || ''),
-            confirmedAdults: loc.kvRsvpAt ? (loc.confirmedAdults || 0) : (loc.confirmedAdults || cg.confirmedAdults || 0),
-            confirmedKids: loc.kvRsvpAt ? (loc.confirmedKids || 0) : (loc.confirmedKids || cg.confirmedKids || 0),
-            rsvpNote: loc.rsvpNote || cg.rsvpNote || '',
-            kvRsvpAt: loc.kvRsvpAt || 0
+            // KV RSVP cache (vivaah-kv-rsvps) is the freshest source — always wins over sheet
+            callStatus: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? kvRsvpCache[cg.id].callStatus : (loc.callStatus || cg.callStatus || ''),
+            confirmedAdults: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? (kvRsvpCache[cg.id].confirmedAdults||0) : (loc.confirmedAdults || cg.confirmedAdults || 0),
+            confirmedKids: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? (kvRsvpCache[cg.id].confirmedKids||0) : (loc.confirmedKids || cg.confirmedKids || 0),
+            rsvpNote: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].rsvpNote) ? kvRsvpCache[cg.id].rsvpNote : (loc.rsvpNote || cg.rsvpNote || ''),
+            kvRsvpAt: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].updatedAt) ? kvRsvpCache[cg.id].updatedAt : (loc.kvRsvpAt || 0)
           });
         });
       })();
@@ -14220,6 +14221,14 @@ function pollGuestRsvpsFromKV(callback) {
       .then(function(data) {
         var updated = false;
         if (data && data.rsvps) {
+          // Save KV RSVPs to separate localStorage key so they persist across reloads
+          // and are available BEFORE Google Sheet sync runs on next page load
+          try {
+            var kvCache = {};
+            data.rsvps.forEach(function(r){ if(r.guestId) kvCache[r.guestId] = r; });
+            localStorage.setItem('vivaah-kv-rsvps', JSON.stringify(kvCache));
+          } catch(e) {}
+
           data.rsvps.forEach(function(r) {
             var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
             if (g && r.callStatus) {
@@ -14352,6 +14361,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T15:35 rsvp-kvrsvpat-v14 -->
+<!-- deploy 2026-10-13T15:45 rsvp-kvcache-v15 -->
 </body>
-</html>  
+</html>
