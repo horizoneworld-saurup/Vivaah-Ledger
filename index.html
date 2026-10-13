@@ -3465,34 +3465,40 @@ function submitGuestRsvp(guestId) {
     var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
     var payload = JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note});
 
-    // sendBeacon: fire-and-forget, survives page unload & WhatsApp browser interruptions
-    // This is the key fix — WhatsApp's browser kills fetch() mid-flight but sendBeacon completes
-    var beaconSent = false;
-    if (navigator.sendBeacon) {
-      try {
-        var blob = new Blob([payload], {type:'application/json'});
-        beaconSent = navigator.sendBeacon(workerBase+'/guest-rsvp', blob);
-      } catch(e) {}
-    }
+    // Strategy: try ALL methods simultaneously for maximum reliability in WhatsApp browser
+    // 1. fetch with keepalive (survives page unload, works in modern WA browser)
+    // 2. sendBeacon (fire-and-forget fallback)
+    // 3. GET pixel fallback (works even when POST is blocked — encodes data in URL params)
+    var saved = false;
 
-    if (beaconSent) {
-      // Beacon queued — show Thank You immediately (beacon will complete in background)
-      setTimeout(showThankYou, 300);
-    } else {
-      // Fallback to fetch for browsers that don't support sendBeacon
-      var _saveTimeout = setTimeout(showThankYou, 8000);
+    // Method 1: fetch with keepalive:true — designed to survive page navigation/close
+    try {
       fetch(workerBase+'/guest-rsvp', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:payload
-      }).then(function(r){
-        clearTimeout(_saveTimeout);
-        showThankYou();
-      }).catch(function(){
-        clearTimeout(_saveTimeout);
-        showThankYou();
-      });
-    }
+        body:payload,
+        keepalive: true
+      }).then(function(r){ saved = true; }).catch(function(){});
+    } catch(e) {}
+
+    // Method 2: sendBeacon — fire-and-forget
+    try {
+      if (navigator.sendBeacon) {
+        var blob = new Blob([payload], {type:'application/json'});
+        navigator.sendBeacon(workerBase+'/guest-rsvp', blob);
+      }
+    } catch(e) {}
+
+    // Method 3: GET pixel — absolute fallback, encodes RSVP in URL params
+    // Works even if POST is blocked by WA browser — no body needed
+    try {
+      var px = new Image();
+      px.src = workerBase+'/rsvp-pixel?g='+encodeURIComponent(guestId)+'&s='+encodeURIComponent(status)+'&a='+(adults||0)+'&k='+(kids||0)+'&t='+Date.now();
+    } catch(e) {}
+
+    // Show Thank You after short delay (all methods fire-and-forget)
+    setTimeout(showThankYou, 500);
+
   } catch(e) {
     showThankYou();
   }
@@ -14321,6 +14327,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T14:50 rsvp-beacon-fix-v10 -->
+<!-- deploy 2026-10-13T15:10 rsvp-triple-fallback-v11 -->
 </body>
 </html>

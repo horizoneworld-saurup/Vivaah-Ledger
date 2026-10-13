@@ -451,9 +451,13 @@ export default {
     }
 
     // POST /guest-rsvp — guest submits RSVP confirmation via link
+    // Accepts both application/json (fetch) and text/plain (sendBeacon)
     if (path === '/guest-rsvp' && request.method === 'POST') {
       let body;
-      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      try {
+        const text = await request.text();
+        body = JSON.parse(text);
+      } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
       const { guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote, owner } = body;
       if (!guestId || !callStatus) return jsonResp({ error: 'Missing guestId or callStatus' }, 400);
       // Store per-guest RSVP under rsvp:<guestId>
@@ -463,6 +467,25 @@ export default {
         { expirationTtl: 365 * 24 * 3600 }
       );
       return jsonResp({ success: true });
+    }
+
+    // GET /rsvp-pixel — pixel fallback for WhatsApp browser that blocks POST
+    // Encodes RSVP data in URL params, returns 1x1 transparent GIF
+    if (path === '/rsvp-pixel' && request.method === 'GET') {
+      const guestId = url.searchParams.get('g') || '';
+      const callStatus = url.searchParams.get('s') || '';
+      const confirmedAdults = parseInt(url.searchParams.get('a') || '0') || 0;
+      const confirmedKids = parseInt(url.searchParams.get('k') || '0') || 0;
+      if (guestId && callStatus) {
+        await env.VIVAAH_KV.put(
+          `rsvp:${guestId}`,
+          JSON.stringify({ guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote: '', updatedAt: Date.now() }),
+          { expirationTtl: 365 * 24 * 3600 }
+        );
+      }
+      // Return 1x1 transparent GIF
+      const gif = new Uint8Array([71,73,70,56,57,97,1,0,1,0,128,0,0,255,255,255,0,0,0,33,249,4,0,0,0,0,0,44,0,0,0,0,1,0,1,0,0,2,2,68,1,0,59]);
+      return new Response(gif, { headers: { 'Content-Type': 'image/gif', 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' } });
     }
 
     // GET /get-guest-rsvps — admin polls for all guest RSVP submissions
