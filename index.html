@@ -6347,10 +6347,13 @@ async function onSignedIn(){
           if (!loc) return cg;
           return Object.assign({}, cg, {
             waSent: loc.waSent || cg.waSent || false,
-            callStatus: loc.callStatus || cg.callStatus || '',
-            confirmedAdults: loc.confirmedAdults || cg.confirmedAdults || 0,
-            confirmedKids: loc.confirmedKids || cg.confirmedKids || 0,
-            rsvpNote: loc.rsvpNote || cg.rsvpNote || ''
+            // If KV RSVP was received (kvRsvpAt set), trust local callStatus over sheet
+            // Sheet may have stale data; KV is always the freshest source of truth
+            callStatus: loc.kvRsvpAt ? (loc.callStatus || '') : (loc.callStatus || cg.callStatus || ''),
+            confirmedAdults: loc.kvRsvpAt ? (loc.confirmedAdults || 0) : (loc.confirmedAdults || cg.confirmedAdults || 0),
+            confirmedKids: loc.kvRsvpAt ? (loc.confirmedKids || 0) : (loc.confirmedKids || cg.confirmedKids || 0),
+            rsvpNote: loc.rsvpNote || cg.rsvpNote || '',
+            kvRsvpAt: loc.kvRsvpAt || 0
           });
         });
       })();
@@ -14220,12 +14223,17 @@ function pollGuestRsvpsFromKV(callback) {
           data.rsvps.forEach(function(r) {
             var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
             if (g && r.callStatus) {
-              g.callStatus = r.callStatus;
-              g.waSent = true;
-              if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
-              if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
-              if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
-              updated = true;
+              // Only update if KV record is newer than what we already have from KV
+              var kvTime = r.updatedAt || 0;
+              if (!g.kvRsvpAt || kvTime >= g.kvRsvpAt) {
+                g.callStatus = r.callStatus;
+                g.kvRsvpAt = kvTime; // stamp so sheet merge never overwrites this
+                g.waSent = true;
+                if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
+                if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
+                if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
+                updated = true;
+              }
             }
           });
           if (updated) {
@@ -14344,6 +14352,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T15:30 rsvp-kv-wins-over-sheet-v13 -->
+<!-- deploy 2026-10-13T15:35 rsvp-kvrsvpat-v14 -->
 </body>
-</html>
+</html>  
