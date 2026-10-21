@@ -5077,19 +5077,25 @@ function printSection(section) {
   overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
   document.body.appendChild(overlay);
 
-  // Short delay then print
+  // Allow browser to render overlay fully before printing
+  // Two-step: add class → rAF forces reflow → then print
   setTimeout(function() {
     document.body.classList.add('vl-printing');
-    window.print();
-    // After print dialog closes, remove overlay and class
-    setTimeout(function() {
-      document.body.classList.remove('vl-printing');
-      var ov = document.getElementById('vivaahPrintOverlay');
-      var st = document.getElementById('vivaahPrintStyle');
-      if (ov) ov.remove();
-      if (st) st.remove();
-    }, 1000);
-  }, 300);
+    // Force reflow so browser measures full document height before print
+    void document.getElementById('vivaahPrintOverlay').offsetHeight;
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        window.print();
+        setTimeout(function() {
+          document.body.classList.remove('vl-printing');
+          var ov = document.getElementById('vivaahPrintOverlay');
+          var st = document.getElementById('vivaahPrintStyle');
+          if (ov) ov.remove();
+          if (st) st.remove();
+        }, 1000);
+      });
+    });
+  }, 400);
 }
 
 /* ================================================================
@@ -9007,13 +9013,16 @@ function doPrintFunctionWise(filterEv){
   document.body.appendChild(ov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    window.print();
-    setTimeout(function(){
-      document.body.classList.remove('vl-printing');
-      var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
-      if(o)o.remove(); if(s)s.remove();
-    },1000);
-  },300);
+    void document.getElementById('vivaahPrintOverlay').offsetHeight;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      window.print();
+      setTimeout(function(){
+        document.body.classList.remove('vl-printing');
+        var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
+        if(o)o.remove(); if(s)s.remove();
+      },1000);
+    });});
+  },400);
 }
 // Function-wise print: show filter row on click, Print button triggers actual print
 document.getElementById('printOptFunctionWise').onclick=function(){
@@ -9447,13 +9456,16 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   document.body.appendChild(_pov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    window.print();
-    setTimeout(function(){
-      document.body.classList.remove('vl-printing');
-      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-      if(_o)_o.remove(); if(_s)_s.remove();
-    },1000);
-  },300);
+    void document.getElementById('vivaahPrintOverlay').offsetHeight;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      window.print();
+      setTimeout(function(){
+        document.body.classList.remove('vl-printing');
+        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+        if(_o)_o.remove(); if(_s)_s.remove();
+      },1000);
+    });});
+  },400);
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
@@ -9673,13 +9685,16 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   document.body.appendChild(_pov2);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    window.print();
-    setTimeout(function(){
-      document.body.classList.remove('vl-printing');
-      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-      if(_o)_o.remove(); if(_s)_s.remove();
-    },1000);
-  },300);
+    void document.getElementById('vivaahPrintOverlay').offsetHeight;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      window.print();
+      setTimeout(function(){
+        document.body.classList.remove('vl-printing');
+        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+        if(_o)_o.remove(); if(_s)_s.remove();
+      },1000);
+    });});
+  },400);
 };
 
 /* EP Catering Module - v2 multi-vendor */
@@ -14385,6 +14400,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-21T12:30 print-kankotri-intlphone-kvcache-rsvpopt-v23 -->
+<!-- deploy 2026-10-21T13:15 print-multipage-fix-v24 -->
 </body>
 </html>
