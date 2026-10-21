@@ -578,7 +578,7 @@
     /* When overlay is active — hide entire main page, only overlay prints */
     /* When overlay is active — hide EVERYTHING except the overlay */
     body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
-    body.vl-printing #vivaahPrintOverlay { display:block !important; position:fixed !important; top:0 !important; left:0 !important; width:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+    body.vl-printing #vivaahPrintOverlay { display:block !important; position:absolute !important; top:0 !important; left:0 !important; width:100% !important; height:auto !important; min-height:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     /* When kankotri print area is present — hide everything else, show only the print area */
@@ -2203,6 +2203,19 @@
     </div>
     <div class="guest-add-row">
       <input type="text" id="newGuestName" placeholder="Family / guest name">
+      <select id="newGuestCountryCode" title="Country code for WhatsApp" style="padding:9px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;min-width:90px;">
+        <option value="91">🇮🇳 +91</option>
+        <option value="1">🇺🇸 +1 US</option>
+        <option value="1CA">🇨🇦 +1 CA</option>
+        <option value="44">🇬🇧 +44</option>
+        <option value="61">🇦🇺 +61</option>
+        <option value="64">🇳🇿 +64</option>
+        <option value="971">🇦🇪 +971</option>
+        <option value="65">🇸🇬 +65</option>
+        <option value="60">🇲🇾 +60</option>
+        <option value="27">🇿🇦 +27</option>
+        <option value="49">🇩🇪 +49</option>
+      </select>
       <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
       <select id="newGuestSide">
         <option value="Bride">Bride's side</option>
@@ -2232,6 +2245,7 @@
       <div class="sec-header-actions">
         <button onclick="event.stopPropagation();printRsvpTracker()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">🖨 Print</button>
         <button onclick="event.stopPropagation();exportRsvpExcel()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📊 Excel</button>
+        <button onclick="event.stopPropagation();try{localStorage.removeItem('vl_rsvp_cache_ts');}catch(e){}renderRsvpTracker(false);this.textContent='⏳';setTimeout(function(t){t.textContent='🔄 Sync';},(1500),this);" style="background:rgba(76,175,80,0.3);border:1px solid rgba(76,175,80,0.6);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" title="Force refresh RSVPs from server">🔄 Sync</button>
       </div>
     </div>
   <div class="sec-body collapsed" id="rsvpSecBody" style="background:#F1F8E9;">
@@ -3246,7 +3260,8 @@ function saveGuestDataToKV(guestId) {
   try {
     var g = (guests||[]).find(function(x){ return x.id===guestId; });
     if (!g) return;
-    var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+    // Kankotri function is over — exclude from guest portal event list
+    var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
     var invitedEvs = ALL_EVENTS.filter(function(ev){
       var e = g.events && g.events[ev];
       return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
@@ -3553,7 +3568,8 @@ function generateInviteMsg(g) {
     'Marriage': ['The Forever Affair','Two hearts, two families and one beautiful\npromise to cherish a lifetime together.'],
     'Reception': ['The Afterglow','An evening of elegance and togetherness,\ncelebrating the beginning of their forever.']
   };
-  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  // Kankotri function is over — exclude from WA invitations
+  var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = (branding && branding.familyName) ? branding.familyName : (coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
@@ -4550,7 +4566,10 @@ function waSend() {
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
   const phone = g.phone.replace(/[^0-9]/g, '');
-  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+  // Use guest's stored country code (default India +91)
+  const cc = g.countryCode || '91';
+  const waPhone = phone.startsWith(cc) ? phone : cc + phone;
+  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
@@ -5046,7 +5065,7 @@ function printSection(section) {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
     '}';
   document.head.appendChild(styleEl);
 
@@ -6336,25 +6355,20 @@ async function onSignedIn(){
               : (localLogoById[v.id]||'')
       }));
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
-      // Merge cloud guests — KV RSVP cache always wins over sheet data
+      // Merge cloud guests — prefer local callStatus over sheet (KV poll will fix after)
       (function(){
         var cloudGuests = cloudData.guests||guests;
         var localById = {};
-        // Load KV RSVP cache saved by pollGuestRsvpsFromKV — survives page reloads
-        var kvRsvpCache = {};
-        try { kvRsvpCache = JSON.parse(localStorage.getItem('vivaah-kv-rsvps')||'{}'); } catch(e) {}
         (guests||[]).forEach(function(g){ localById[g.id]=g; });
         guests = cloudGuests.map(function(cg){
           var loc = localById[cg.id];
           if (!loc) return cg;
           return Object.assign({}, cg, {
             waSent: loc.waSent || cg.waSent || false,
-            // KV RSVP cache (vivaah-kv-rsvps) is the freshest source — always wins over sheet
-            callStatus: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? kvRsvpCache[cg.id].callStatus : (loc.callStatus || cg.callStatus || ''),
-            confirmedAdults: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? (kvRsvpCache[cg.id].confirmedAdults||0) : (loc.confirmedAdults || cg.confirmedAdults || 0),
-            confirmedKids: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].callStatus) ? (kvRsvpCache[cg.id].confirmedKids||0) : (loc.confirmedKids || cg.confirmedKids || 0),
-            rsvpNote: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].rsvpNote) ? kvRsvpCache[cg.id].rsvpNote : (loc.rsvpNote || cg.rsvpNote || ''),
-            kvRsvpAt: (kvRsvpCache[cg.id] && kvRsvpCache[cg.id].updatedAt) ? kvRsvpCache[cg.id].updatedAt : (loc.kvRsvpAt || 0)
+            callStatus: loc.callStatus || cg.callStatus || '',
+            confirmedAdults: loc.confirmedAdults || cg.confirmedAdults || 0,
+            confirmedKids: loc.confirmedKids || cg.confirmedKids || 0,
+            rsvpNote: loc.rsvpNote || cg.rsvpNote || ''
           });
         });
       })();
@@ -6432,10 +6446,9 @@ async function onSignedIn(){
         if(_h) _ph[_r]=_h;
       }
       if(Object.keys(_ph).length>0){
-        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({ownerEmail:googleUserEmail,pinHashes:_ph})
-        }).catch(function(){});
+        // Use GET to avoid CORS preflight (no OPTIONS needed for simple GET)
+        var _sp = new URLSearchParams({ownerEmail:googleUserEmail,pins:JSON.stringify(_ph)});
+        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins-get?'+_sp.toString()).catch(function(){});
       }
     })();
     // Sync EP reminders to KV so cron worker emails them
@@ -7565,9 +7578,13 @@ document.getElementById('btnAddGuest').onclick = ()=>{
   const nameInput = document.getElementById('newGuestName');
   const phoneInput = document.getElementById('newGuestPhone');
   const sideInput = document.getElementById('newGuestSide');
+  const ccInput = document.getElementById('newGuestCountryCode');
   const name = nameInput.value.trim();
   if(!name){ showToast('Enter a family/guest name first'); return; }
-  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:{}});
+  // Store country code: '1CA' → dial code '1' (Canada same as US), else use value directly
+  var cc = ccInput ? ccInput.value : '91';
+  var dialCode = cc === '1CA' ? '1' : cc;
+  guests.push({id:uid(), name, phone:phoneInput.value.trim(), countryCode:dialCode, side:sideInput.value, events:{}});
   nameInput.value=''; phoneInput.value='';
   saveGuests(); renderGuests();
   showToast('Added — click the row to set adults & kids per function');
@@ -8980,7 +8997,7 @@ function doPrintFunctionWise(filterEv){
       +'@page{margin:8mm;}'
       +'body{margin:0!important;}'
       +'body>*:not(#vivaahPrintOverlay):not(style){display:none!important;}'
-      +'#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}'
+      +'#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}'
       +'-webkit-print-color-adjust:exact;print-color-adjust:exact;'
     +'}';
   document.head.appendChild(st);
@@ -9410,7 +9427,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}' +
       'h3{page-break-after:avoid;}' +
@@ -9642,7 +9659,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
+      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}h3{page-break-after:avoid;}' +
       '-webkit-print-color-adjust:exact;print-color-adjust:exact;' +
@@ -14197,7 +14214,9 @@ function mobOpenWAInvite(guestId) {
   if (!g || !g.ph) return;
   var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
   var ph = (g.phone||'').replace(/\D/g,'');
-  window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
+  var cc = g.countryCode || '91';
+  var waph = ph.startsWith(cc) ? ph : cc + ph;
+  window.open('https://wa.me/'+waph+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
   if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
   storageSet('wedding-guests', JSON.stringify(guests));
@@ -14215,38 +14234,42 @@ function mobRenderRsvpMobile() {
 }
 
 function pollGuestRsvpsFromKV(callback) {
+  // 5-minute cache to reduce Cloudflare Worker quota usage
+  // Guests submit RSVPs via their own link — we don't need to poll every second
+  try {
+    var cacheKey = 'vl_rsvp_cache_ts';
+    var lastFetch = parseInt(localStorage.getItem(cacheKey) || '0', 10);
+    if (Date.now() - lastFetch < 300000) { // 5 minutes
+      // Cache still fresh — skip network call, just invoke callback
+      if (typeof callback === 'function') callback();
+      return;
+    }
+    localStorage.setItem(cacheKey, String(Date.now()));
+  } catch(e) { /* ignore storage errors */ }
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(data) {
         var updated = false;
         if (data && data.rsvps) {
-          // Save KV RSVPs to separate localStorage key so they persist across reloads
-          // and are available BEFORE Google Sheet sync runs on next page load
-          try {
-            var kvCache = {};
-            data.rsvps.forEach(function(r){ if(r.guestId) kvCache[r.guestId] = r; });
-            localStorage.setItem('vivaah-kv-rsvps', JSON.stringify(kvCache));
-          } catch(e) {}
-
           data.rsvps.forEach(function(r) {
             var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
             if (g && r.callStatus) {
-              // Only update if KV record is newer than what we already have from KV
-              var kvTime = r.updatedAt || 0;
-              if (!g.kvRsvpAt || kvTime >= g.kvRsvpAt) {
-                g.callStatus = r.callStatus;
-                g.kvRsvpAt = kvTime; // stamp so sheet merge never overwrites this
-                g.waSent = true;
-                if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
-                if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
-                if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
-                updated = true;
-              }
+              g.callStatus = r.callStatus;
+              g.waSent = true;
+              if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
+              if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
+              if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
+              updated = true;
             }
           });
           if (updated) {
             storageSet('wedding-guests', JSON.stringify(guests));
+            // Push KV RSVP updates to Google Sheet (debounced 3s to avoid 429 quota errors)
+            if (typeof pushToSheet === 'function') {
+              clearTimeout(window._kvPushTimer);
+              window._kvPushTimer = setTimeout(function(){ pushToSheet(); }, 3000);
+            }
             if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
             if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
           }
@@ -14323,6 +14346,7 @@ function mobRenderRsvpList() {
 
   if (!list.length) { listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No guests match this filter.</div>'; return; }
 
+  var _esc = typeof mobEsc==='function' ? mobEsc : function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   listEl.innerHTML = list.map(function(g) {
     var statusBg = g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#F5F5F5';
     var statusColor = g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#9E9E9E';
@@ -14331,7 +14355,7 @@ function mobRenderRsvpList() {
     return '<div style="background:#fff;border-radius:10px;margin-bottom:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
         +'<div>'
-          +'<div style="font-size:14px;font-weight:700;">'+mobEsc(g.name||'')+'</div>'
+          +'<div style="font-size:14px;font-weight:700;">'+_esc(g.name||'')+'</div>'
           +'<div style="font-size:11px;color:#888;">'+(g.side||'')+' · '+(g.phone||'—')+'</div>'
         +'</div>'
         +'<span style="background:'+statusBg+';color:'+statusColor+';padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+statusLabel+'</span>'
@@ -14361,6 +14385,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-13T15:45 rsvp-kvcache-v15 -->
+<!-- deploy 2026-10-21T12:30 print-kankotri-intlphone-kvcache-rsvpopt-v23 -->
 </body>
-</html>x
+</html>
