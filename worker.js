@@ -183,14 +183,14 @@ function scanReminders(reminderData, today) {
   });
 
   // EP reminders — also send weekly from trigger date until deadline
-  // NOTE: Kankotri function is over — removed from all reminder triggers
-  const EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  const EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  const kankDate   = getDate('Kankotri');
   const ganeshDate = getDate('Ganesh-Grahshanti');
   const meals      = ['breakfast','lunch','dinner','latenight'];
 
-  // Catering — weekly from 60 days before Ganesh-Grahshanti (earliest remaining event)
-  if (ganeshDate) {
-    const dl = deadline(ganeshDate, 60);
+  // Catering — weekly from 60 days before Kankotri
+  if (kankDate) {
+    const dl = deadline(kankDate, 60);
     EVENTS.forEach(ev => {
       const evData = (ep.catering || {})[ev] || {};
       const pend = meals.filter(m => { const s=(evData[m]||{}).status; return s!=='confirmed'&&s!=='not-required'; }).length;
@@ -207,19 +207,19 @@ function scanReminders(reminderData, today) {
     const anyPending = dvs.length === 0 || dvs.some(v => v.status !== 'confirmed');
     if (anyPending) addAlert('Decor: ' + ev + ' not confirmed', deadline(d,60), 'Decor', '🌸', 0);
   });
-  // Home Decor — weekly from 90 days before Ganesh-Grahshanti
-  if (ganeshDate) {
+  // Home Decor — weekly from 90 days before Kankotri
+  if (kankDate) {
     const hdVs = ((ep.homeDecor||{}).vendors)||[];
     const hdPending = hdVs.length === 0 || hdVs.some(v => v.status !== 'confirmed');
-    if (hdPending) addAlert('Home Decor not finalised (inside + outside)', deadline(ganeshDate,90), 'Decor', '🏠', 0);
+    if (hdPending) addAlert('Home Decor not finalised (inside + outside)', deadline(kankDate,90), 'Decor', '🏠', 0);
   }
 
-  // Puja — weekly from 60 days before Ganesh-Grahshanti
-  if (ganeshDate) {
-    ['Ganesh-Grahshanti','Marriage'].forEach(ev => {
+  // Puja — weekly from 60 days before Kankotri
+  if (kankDate) {
+    ['Kankotri','Ganesh-Grahshanti','Marriage'].forEach(ev => {
       const puja = (ep.puja||{})[ev]||{};
       const pend = ((puja.weProvide||[]).filter(i=>!i.done)).length + ((puja.maharajBrings||[]).filter(i=>!i.done)).length;
-      if (pend > 0) addAlert('Puja Samagri: ' + ev + ' — ' + pend + ' item' + (pend>1?'s':'') + ' pending', deadline(ganeshDate,60), 'Puja', '🪔', 0);
+      if (pend > 0) addAlert('Puja Samagri: ' + ev + ' — ' + pend + ' item' + (pend>1?'s':'') + ' pending', deadline(kankDate,60), 'Puja', '🪔', 0);
     });
   }
 
@@ -233,11 +233,11 @@ function scanReminders(reminderData, today) {
     });
   }
 
-  // Carnival — weekly from 90 days before Ganesh-Grahshanti
-  if (ganeshDate) {
+  // Carnival — weekly from 90 days before Kankotri
+  if (kankDate) {
     const stalls = (ep.carnival||{}).stalls||[];
     const notFin = stalls.filter(s=>s.status!=='finalised').length;
-    if (notFin > 0) addAlert('Carnival: ' + notFin + ' stall' + (notFin>1?'s':'') + ' not finalised', deadline(ganeshDate,90), 'Carnival', '🎪', 0);
+    if (notFin > 0) addAlert('Carnival: ' + notFin + ' stall' + (notFin>1?'s':'') + ' not finalised', deadline(kankDate,90), 'Carnival', '🎪', 0);
   }
 
   // Clothes — weekly from 30 days before each function
@@ -409,18 +409,6 @@ export default {
       return jsonResp({ success: true, email, alertCount: alerts.length, alerts });
     }
 
-    // GET /save-pins-get — no-preflight alternative for browsers that block OPTIONS
-    if (path === '/save-pins-get' && request.method === 'GET') {
-      const ownerEmail = url.searchParams.get('ownerEmail') || '';
-      const pinsRaw = url.searchParams.get('pins') || '{}';
-      let pinHashes = {};
-      try { pinHashes = JSON.parse(pinsRaw); } catch {}
-      if (Object.keys(pinHashes).length) {
-        await env.VIVAAH_KV.put('pin-hashes', JSON.stringify({ pinHashes, updatedAt: Date.now() }), { expirationTtl: 365 * 24 * 3600 });
-      }
-      return jsonResp({ success: true });
-    }
-
     // POST /save-pins — saves PIN hashes to KV (called after Admin Google sync)
     if (path === '/save-pins' && request.method === 'POST') {
       let body;
@@ -464,8 +452,6 @@ export default {
 
     // POST /guest-rsvp — guest submits RSVP confirmation via link
     // Accepts both application/json (fetch) and text/plain (sendBeacon)
-    // OPTIMISED: writes to both individual key AND aggregated 'all-rsvps' key
-    // so /get-guest-rsvps only needs ONE KV read instead of N reads
     if (path === '/guest-rsvp' && request.method === 'POST') {
       let body;
       try {
@@ -474,14 +460,12 @@ export default {
       } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
       const { guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote, owner } = body;
       if (!guestId || !callStatus) return jsonResp({ error: 'Missing guestId or callStatus' }, 400);
-      const entry = { guestId, callStatus, confirmedAdults: confirmedAdults||0, confirmedKids: confirmedKids||0, rsvpNote: rsvpNote||'', updatedAt: Date.now() };
-      // Write individual key (legacy support)
-      await env.VIVAAH_KV.put(`rsvp:${guestId}`, JSON.stringify(entry), { expirationTtl: 365 * 24 * 3600 });
-      // Update aggregated key — single read then write
-      const aggRaw = await env.VIVAAH_KV.get('all-rsvps');
-      const agg = aggRaw ? JSON.parse(aggRaw) : {};
-      agg[guestId] = entry;
-      await env.VIVAAH_KV.put('all-rsvps', JSON.stringify(agg), { expirationTtl: 365 * 24 * 3600 });
+      // Store per-guest RSVP under rsvp:<guestId>
+      await env.VIVAAH_KV.put(
+        `rsvp:${guestId}`,
+        JSON.stringify({ guestId, callStatus, confirmedAdults: confirmedAdults||0, confirmedKids: confirmedKids||0, rsvpNote: rsvpNote||'', updatedAt: Date.now() }),
+        { expirationTtl: 365 * 24 * 3600 }
+      );
       return jsonResp({ success: true });
     }
 
@@ -493,14 +477,11 @@ export default {
       const confirmedAdults = parseInt(url.searchParams.get('a') || '0') || 0;
       const confirmedKids = parseInt(url.searchParams.get('k') || '0') || 0;
       if (guestId && callStatus) {
-        const entry = { guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote: '', updatedAt: Date.now() };
-        // Write individual key (legacy support)
-        await env.VIVAAH_KV.put(`rsvp:${guestId}`, JSON.stringify(entry), { expirationTtl: 365 * 24 * 3600 });
-        // Update aggregated key
-        const aggRaw = await env.VIVAAH_KV.get('all-rsvps');
-        const agg = aggRaw ? JSON.parse(aggRaw) : {};
-        agg[guestId] = entry;
-        await env.VIVAAH_KV.put('all-rsvps', JSON.stringify(agg), { expirationTtl: 365 * 24 * 3600 });
+        await env.VIVAAH_KV.put(
+          `rsvp:${guestId}`,
+          JSON.stringify({ guestId, callStatus, confirmedAdults, confirmedKids, rsvpNote: '', updatedAt: Date.now() }),
+          { expirationTtl: 365 * 24 * 3600 }
+        );
       }
       // Return 1x1 transparent GIF
       const gif = new Uint8Array([71,73,70,56,57,97,1,0,1,0,128,0,0,255,255,255,0,0,0,33,249,4,0,0,0,0,0,44,0,0,0,0,1,0,1,0,0,2,2,68,1,0,59]);
@@ -508,12 +489,16 @@ export default {
     }
 
     // GET /get-guest-rsvps — admin polls for all guest RSVP submissions
-    // OPTIMISED: reads single aggregated 'all-rsvps' key = 1 KV read (was N+1)
     if (path === '/get-guest-rsvps' && request.method === 'GET') {
-      const aggRaw = await env.VIVAAH_KV.get('all-rsvps');
-      if (!aggRaw) return jsonResp({ rsvps: [] });
-      const agg = JSON.parse(aggRaw);
-      return jsonResp({ rsvps: Object.values(agg) });
+      const list = await env.VIVAAH_KV.list({ prefix: 'rsvp:' });
+      const rsvps = [];
+      for (const key of list.keys) {
+        const raw = await env.VIVAAH_KV.get(key.name);
+        if (raw) {
+          try { rsvps.push(JSON.parse(raw)); } catch(e) {}
+        }
+      }
+      return jsonResp({ rsvps });
     }
 
     // GET /list-approved — list all approved users for owner panel

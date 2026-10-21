@@ -578,7 +578,7 @@
     /* When overlay is active — hide entire main page, only overlay prints */
     /* When overlay is active — hide EVERYTHING except the overlay */
     body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
-    body.vl-printing #vivaahPrintOverlay { display:block !important; position:absolute !important; top:0 !important; left:0 !important; width:100% !important; height:auto !important; min-height:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+    body.vl-printing #vivaahPrintOverlay { display:block !important; position:fixed !important; top:0 !important; left:0 !important; width:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     /* When kankotri print area is present — hide everything else, show only the print area */
@@ -2203,19 +2203,6 @@
     </div>
     <div class="guest-add-row">
       <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <select id="newGuestCountryCode" title="Country code for WhatsApp" style="padding:9px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;min-width:90px;">
-        <option value="91">🇮🇳 +91</option>
-        <option value="1">🇺🇸 +1 US</option>
-        <option value="1CA">🇨🇦 +1 CA</option>
-        <option value="44">🇬🇧 +44</option>
-        <option value="61">🇦🇺 +61</option>
-        <option value="64">🇳🇿 +64</option>
-        <option value="971">🇦🇪 +971</option>
-        <option value="65">🇸🇬 +65</option>
-        <option value="60">🇲🇾 +60</option>
-        <option value="27">🇿🇦 +27</option>
-        <option value="49">🇩🇪 +49</option>
-      </select>
       <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
       <select id="newGuestSide">
         <option value="Bride">Bride's side</option>
@@ -2245,7 +2232,6 @@
       <div class="sec-header-actions">
         <button onclick="event.stopPropagation();printRsvpTracker()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">🖨 Print</button>
         <button onclick="event.stopPropagation();exportRsvpExcel()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📊 Excel</button>
-        <button onclick="event.stopPropagation();try{localStorage.removeItem('vl_rsvp_cache_ts');}catch(e){}renderRsvpTracker(false);this.textContent='⏳';setTimeout(function(t){t.textContent='🔄 Sync';},(1500),this);" style="background:rgba(76,175,80,0.3);border:1px solid rgba(76,175,80,0.6);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" title="Force refresh RSVPs from server">🔄 Sync</button>
       </div>
     </div>
   <div class="sec-body collapsed" id="rsvpSecBody" style="background:#F1F8E9;">
@@ -3260,8 +3246,7 @@ function saveGuestDataToKV(guestId) {
   try {
     var g = (guests||[]).find(function(x){ return x.id===guestId; });
     if (!g) return;
-    // Kankotri function is over — exclude from guest portal event list
-    var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+    var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
     var invitedEvs = ALL_EVENTS.filter(function(ev){
       var e = g.events && g.events[ev];
       return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
@@ -3568,8 +3553,7 @@ function generateInviteMsg(g) {
     'Marriage': ['The Forever Affair','Two hearts, two families and one beautiful\npromise to cherish a lifetime together.'],
     'Reception': ['The Afterglow','An evening of elegance and togetherness,\ncelebrating the beginning of their forever.']
   };
-  // Kankotri function is over — exclude from WA invitations
-  var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = (branding && branding.familyName) ? branding.familyName : (coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
@@ -4566,10 +4550,7 @@ function waSend() {
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
   const phone = g.phone.replace(/[^0-9]/g, '');
-  // Use guest's stored country code (default India +91)
-  const cc = g.countryCode || '91';
-  const waPhone = phone.startsWith(cc) ? phone : cc + phone;
-  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
@@ -5065,7 +5046,7 @@ function printSection(section) {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
     '}';
   document.head.appendChild(styleEl);
 
@@ -5077,25 +5058,19 @@ function printSection(section) {
   overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
   document.body.appendChild(overlay);
 
-  // Allow browser to render overlay fully before printing
-  // Two-step: add class → rAF forces reflow → then print
+  // Short delay then print
   setTimeout(function() {
     document.body.classList.add('vl-printing');
-    // Force reflow so browser measures full document height before print
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        window.print();
-        setTimeout(function() {
-          document.body.classList.remove('vl-printing');
-          var ov = document.getElementById('vivaahPrintOverlay');
-          var st = document.getElementById('vivaahPrintStyle');
-          if (ov) ov.remove();
-          if (st) st.remove();
-        }, 1000);
-      });
-    });
-  }, 400);
+    window.print();
+    // After print dialog closes, remove overlay and class
+    setTimeout(function() {
+      document.body.classList.remove('vl-printing');
+      var ov = document.getElementById('vivaahPrintOverlay');
+      var st = document.getElementById('vivaahPrintStyle');
+      if (ov) ov.remove();
+      if (st) st.remove();
+    }, 1000);
+  }, 300);
 }
 
 /* ================================================================
@@ -6452,9 +6427,10 @@ async function onSignedIn(){
         if(_h) _ph[_r]=_h;
       }
       if(Object.keys(_ph).length>0){
-        // Use GET to avoid CORS preflight (no OPTIONS needed for simple GET)
-        var _sp = new URLSearchParams({ownerEmail:googleUserEmail,pins:JSON.stringify(_ph)});
-        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins-get?'+_sp.toString()).catch(function(){});
+        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ownerEmail:googleUserEmail,pinHashes:_ph})
+        }).catch(function(){});
       }
     })();
     // Sync EP reminders to KV so cron worker emails them
@@ -7584,13 +7560,9 @@ document.getElementById('btnAddGuest').onclick = ()=>{
   const nameInput = document.getElementById('newGuestName');
   const phoneInput = document.getElementById('newGuestPhone');
   const sideInput = document.getElementById('newGuestSide');
-  const ccInput = document.getElementById('newGuestCountryCode');
   const name = nameInput.value.trim();
   if(!name){ showToast('Enter a family/guest name first'); return; }
-  // Store country code: '1CA' → dial code '1' (Canada same as US), else use value directly
-  var cc = ccInput ? ccInput.value : '91';
-  var dialCode = cc === '1CA' ? '1' : cc;
-  guests.push({id:uid(), name, phone:phoneInput.value.trim(), countryCode:dialCode, side:sideInput.value, events:{}});
+  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:{}});
   nameInput.value=''; phoneInput.value='';
   saveGuests(); renderGuests();
   showToast('Added — click the row to set adults & kids per function');
@@ -9003,7 +8975,7 @@ function doPrintFunctionWise(filterEv){
       +'@page{margin:8mm;}'
       +'body{margin:0!important;}'
       +'body>*:not(#vivaahPrintOverlay):not(style){display:none!important;}'
-      +'#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}'
+      +'#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}'
       +'-webkit-print-color-adjust:exact;print-color-adjust:exact;'
     +'}';
   document.head.appendChild(st);
@@ -9013,16 +8985,13 @@ function doPrintFunctionWise(filterEv){
   document.body.appendChild(ov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
-        if(o)o.remove(); if(s)s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
+      if(o)o.remove(); if(s)s.remove();
+    },1000);
+  },300);
 }
 // Function-wise print: show filter row on click, Print button triggers actual print
 document.getElementById('printOptFunctionWise').onclick=function(){
@@ -9436,7 +9405,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}' +
       'h3{page-break-after:avoid;}' +
@@ -9456,16 +9425,13 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   document.body.appendChild(_pov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-        if(_o)_o.remove(); if(_s)_s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+      if(_o)_o.remove(); if(_s)_s.remove();
+    },1000);
+  },300);
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
@@ -9671,7 +9637,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}h3{page-break-after:avoid;}' +
       '-webkit-print-color-adjust:exact;print-color-adjust:exact;' +
@@ -9685,16 +9651,13 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   document.body.appendChild(_pov2);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-        if(_o)_o.remove(); if(_s)_s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+      if(_o)_o.remove(); if(_s)_s.remove();
+    },1000);
+  },300);
 };
 
 /* EP Catering Module - v2 multi-vendor */
@@ -14229,9 +14192,7 @@ function mobOpenWAInvite(guestId) {
   if (!g || !g.ph) return;
   var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
   var ph = (g.phone||'').replace(/\D/g,'');
-  var cc = g.countryCode || '91';
-  var waph = ph.startsWith(cc) ? ph : cc + ph;
-  window.open('https://wa.me/'+waph+'?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
   if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
   storageSet('wedding-guests', JSON.stringify(guests));
@@ -14249,18 +14210,6 @@ function mobRenderRsvpMobile() {
 }
 
 function pollGuestRsvpsFromKV(callback) {
-  // 5-minute cache to reduce Cloudflare Worker quota usage
-  // Guests submit RSVPs via their own link — we don't need to poll every second
-  try {
-    var cacheKey = 'vl_rsvp_cache_ts';
-    var lastFetch = parseInt(localStorage.getItem(cacheKey) || '0', 10);
-    if (Date.now() - lastFetch < 300000) { // 5 minutes
-      // Cache still fresh — skip network call, just invoke callback
-      if (typeof callback === 'function') callback();
-      return;
-    }
-    localStorage.setItem(cacheKey, String(Date.now()));
-  } catch(e) { /* ignore storage errors */ }
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -14400,6 +14349,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-21T13:15 print-multipage-fix-v24 -->
+<!-- deploy 2026-10-13T18:00 rsvp-debounce-push-v20-b -->
 </body>
 </html>
