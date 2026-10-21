@@ -1,13 +1,3 @@
 /*
-  X-Frame-Options: SAMEORIGIN
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
-
-/sw.js
-  Cache-Control: no-cache
-
-/manifest.json
-  Cache-Control: no-cache
-
-/*.svg
-  Cache-Control: public, max-age=86400
+  Cross-Origin-Opener-Policy: unsafe-none
+  Cross-Origin-Embedder-Policy: unsafe-none
