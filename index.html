@@ -11,8 +11,6 @@
 <link rel="apple-touch-icon" href="/icon-192.svg">
 <title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<meta http-equiv="Cross-Origin-Opener-Policy" content="unsafe-none">
-<meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -580,7 +578,7 @@
     /* When overlay is active — hide entire main page, only overlay prints */
     /* When overlay is active — hide EVERYTHING except the overlay */
     body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
-    body.vl-printing #vivaahPrintOverlay { display:block !important; position:absolute !important; top:0 !important; left:0 !important; width:100% !important; height:auto !important; min-height:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+    body.vl-printing #vivaahPrintOverlay { display:block !important; position:fixed !important; top:0 !important; left:0 !important; width:100% !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
     /* When kankotri print area is present — hide everything else, show only the print area */
@@ -2205,19 +2203,6 @@
     </div>
     <div class="guest-add-row">
       <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <select id="newGuestCountryCode" title="Country code for WhatsApp" style="padding:9px 8px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;min-width:90px;">
-        <option value="91">🇮🇳 +91</option>
-        <option value="1">🇺🇸 +1 US</option>
-        <option value="1CA">🇨🇦 +1 CA</option>
-        <option value="44">🇬🇧 +44</option>
-        <option value="61">🇦🇺 +61</option>
-        <option value="64">🇳🇿 +64</option>
-        <option value="971">🇦🇪 +971</option>
-        <option value="65">🇸🇬 +65</option>
-        <option value="60">🇲🇾 +60</option>
-        <option value="27">🇿🇦 +27</option>
-        <option value="49">🇩🇪 +49</option>
-      </select>
       <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
       <select id="newGuestSide">
         <option value="Bride">Bride's side</option>
@@ -2247,7 +2232,6 @@
       <div class="sec-header-actions">
         <button onclick="event.stopPropagation();printRsvpTracker()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">🖨 Print</button>
         <button onclick="event.stopPropagation();exportRsvpExcel()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;">📊 Excel</button>
-        <button onclick="event.stopPropagation();try{localStorage.removeItem('vl_rsvp_cache_ts');}catch(e){}renderRsvpTracker(false);this.textContent='⏳';setTimeout(function(t){t.textContent='🔄 Sync';},(1500),this);" style="background:rgba(76,175,80,0.3);border:1px solid rgba(76,175,80,0.6);color:#A5D6A7;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600;" title="Force refresh RSVPs from server">🔄 Sync</button>
       </div>
     </div>
   <div class="sec-body collapsed" id="rsvpSecBody" style="background:#F1F8E9;">
@@ -3251,105 +3235,53 @@ function generateStdMsg(g) {
 function getRsvpConfirmLinks(guestId) {
   var base = (window.location.origin + window.location.pathname).replace(/\/$/, '');
   var enc = encodeURIComponent(guestId);
-  // Short clean links — guest data is stored in KV by saveGuestDataToKV() when WA is sent
   return '*✅ Yes, I will attend →* ' + base + '?rsvp=' + enc + '&s=1\n'
        + '*❌ Cannot make it →* ' + base + '?rsvp=' + enc + '&s=2\n'
        + '*🤔 Will try →* ' + base + '?rsvp=' + enc + '&s=3';
 }
 
-// Save guest data to worker KV so portal can show name/events on link tap
-function saveGuestDataToKV(guestId) {
-  try {
-    var g = (guests||[]).find(function(x){ return x.id===guestId; });
-    if (!g) return;
-    // Kankotri function is over — exclude from guest portal event list
-    var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
-    var invitedEvs = ALL_EVENTS.filter(function(ev){
-      var e = g.events && g.events[ev];
-      return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
-    });
-    var tl = {};
-    if (typeof eventTimeline !== 'undefined' && eventTimeline) {
-      invitedEvs.forEach(function(ev){
-        if (eventTimeline[ev]) tl[ev] = { d: eventTimeline[ev].date||'', t: eventTimeline[ev].startTime||'', v: eventTimeline[ev].venue||'' };
-      });
-    }
-    var data = {
-      n: g.name||'',
-      ev: invitedEvs,
-      tl: tl,
-      cn: (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : '',
-      fn: (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : ''
-    };
-    fetch('https://vivaah-auth.rms-d21.workers.dev/save-guest-data', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ guestId: guestId, data: data })
-    }).catch(function(){});
-  } catch(e) {}
-}
-
 // ── Guest RSVP Portal (shown when guest taps the link) ──────────
-// urlData: optional decoded payload from ?d= param — {n, ev, tl, cn, fn}
-function showGuestRsvpPortal(guestId, preStatus, urlData) {
+function showGuestRsvpPortal(guestId, preStatus) {
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
-  // Fallback to URL-embedded data when guests aren't in this browser's localStorage
-  var ud = urlData || {};
-  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : (ud.cn || 'Mrishana & Spandan');
-  var familyName = (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : (ud.fn || 'Shah Family');
+  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
+  var familyName = (typeof branding!=='undefined'&&branding&&branding.familyName) ? branding.familyName : 'Shah Family';
   var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
   var initStatus = statusMap[preStatus] || '';
 
-  // Build events list — use guest object if available, else use URL-embedded event list
+  // Build events list for this guest
   var eventsHtml = '';
-  var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
-  var invited = [];
-  var tlSource = (typeof eventTimeline!=='undefined' && eventTimeline) ? eventTimeline : {};
-
   if (g && g.events) {
     var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
-    invited = ALL_EVENTS.filter(function(ev){
+    var EMOJIS = {'Kankotri':'📮','Ganesh-Grahshanti':'🪔','Mosalu':'🪔','Mehendi':'🌿','Haldi':'💛','Sangeet':'🎶','Marriage':'💍','Reception':'🎊'};
+    var invited = ALL_EVENTS.filter(function(ev){
       var e = g.events[ev];
       return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0))>0;
     });
-  } else if (ud.ev && ud.ev.length) {
-    invited = ud.ev;
-    // Use timeline from URL payload if local eventTimeline is empty
-    if (ud.tl && !Object.keys(tlSource).length) tlSource = ud.tl;
-    else if (ud.tl) {
-      // Merge URL timeline into local (URL may have keys local doesn't)
-      Object.keys(ud.tl).forEach(function(k){ if (!tlSource[k]) tlSource[k] = { date: ud.tl[k].d, startTime: ud.tl[k].t, venue: ud.tl[k].v }; });
-    }
-  }
-
-  if (invited.length > 0) {
-    eventsHtml = '<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 14px;margin:12px 0;text-align:left;">'
-      + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">You\'re invited to</div>';
-    eventsHtml += invited.map(function(ev){
-      var t = tlSource[ev] || {};
-      // Support both full keys (date/startTime) and short keys (d/t) from URL payload
-      var dateVal = t.date || t.d || '';
-      var timeVal = t.startTime || t.t || '';
-      var dateStr = '';
-      if (dateVal) {
-        var d = new Date(dateVal);
-        if (!isNaN(d)) {
+    if (invited.length > 0) {
+      eventsHtml = '<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 14px;margin:12px 0;text-align:left;">'
+        + '<div style="font-size:11px;color:rgba(255,255,255,0.7);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">You\'re invited to</div>';
+      var tl = typeof eventTimeline!=='undefined'?eventTimeline:{};
+      eventsHtml += invited.map(function(ev){
+        var t = tl[ev]||{};
+        var dateStr = '';
+        if (t.date) {
+          var d = new Date(t.date);
           dateStr = d.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
-          if (timeVal) {
-            var tp=timeVal.split(':'),th=parseInt(tp[0]||0),tm=tp[1]||'00';
+          if (t.startTime) {
+            var tp=t.startTime.split(':'),th=parseInt(tp[0]||0),tm=tp[1]||'00';
             dateStr += ' · '+(th%12||12)+':'+tm+' '+(th>=12?'PM':'AM');
           }
         }
-      }
-      return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);">'
-        +'<span style="font-size:16px;">'+(EMOJIS[ev]||'📅')+'</span>'
-        +'<div><div style="font-size:13px;font-weight:600;color:#fff;">'+ev+'</div>'
-        +(dateStr?'<div style="font-size:11px;color:rgba(255,255,255,0.7);">'+dateStr+'</div>':'')+'</div></div>';
-    }).join('');
-    eventsHtml += '</div>';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.1);">'
+          +'<span style="font-size:16px;">'+(EMOJIS[ev]||'📅')+'</span>'
+          +'<div><div style="font-size:13px;font-weight:600;color:#fff;">'+ev+'</div>'
+          +(dateStr?'<div style="font-size:11px;color:rgba(255,255,255,0.7);">'+dateStr+'</div>':'')+'</div></div>';
+      }).join('');
+      eventsHtml += '</div>';
+    }
   }
 
-  var guestName = g ? (g.name||'Guest') : (ud.n || 'Guest');
+  var guestName = g ? (g.name||'Guest') : 'Guest';
   var overlay = document.createElement('div');
   overlay.id = 'guestRsvpPortal';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#6D1B3A 0%,#4A0E24 40%,#1B2A4A 100%);display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:30px 20px 40px;';
@@ -3433,93 +3365,48 @@ function submitGuestRsvp(guestId) {
   var kids   = parseInt(document.getElementById('rsvpKids').value||0)||0;
   var note   = (document.getElementById('rsvpNote').value||'').trim();
 
-  // Disable button and show saving state so user knows it's working
-  var submitBtn = document.querySelector('#guestRsvpPortal button[onclick*="submitGuestRsvp"]');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Saving…'; }
-
-  // Update local guest data if available (admin device — same phone)
+  // Update guest data
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
   if (g) {
     g.callStatus = status;
-    if (status !== 'declined') { g.confirmedAdults = adults; g.confirmedKids = kids; }
+    if (status !== 'declined') {
+      g.confirmedAdults = adults;
+      g.confirmedKids = kids;
+    }
     if (note) g.rsvpNote = note;
     storageSet('wedding-guests', JSON.stringify(guests));
     if (typeof queueCloudSave==='function') queueCloudSave();
-    setTimeout(function(){
-      if (typeof renderRsvpTracker==='function') renderRsvpTracker();
-      if (typeof mobRenderRsvpStats==='function') mobRenderRsvpStats();
-      if (typeof mobRenderRsvpList==='function') mobRenderRsvpList();
-      if (typeof renderGuests==='function') renderGuests();
-    }, 200);
-  }
-
-  // POST to worker KV — WAIT for response before showing Thank You
-  // This ensures the fetch completes before the page moves on (critical in WA browser)
-  function showThankYou() {
-    var portal = document.getElementById('guestRsvpPortal');
-    if (!portal) return;
-    var labelMap = {'confirmed':'✅ Yes, attending!','declined':'❌ Not attending','maybe':'🤔 Will try to come'};
-    var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
-    portal.innerHTML =
-      '<div style="max-width:440px;width:100%;text-align:center;padding-top:60px;">'
-      + '<div style="font-size:64px;margin-bottom:16px;">'+(status==='confirmed'?'🎉':status==='declined'?'💐':'🌸')+'</div>'
-      + '<div style="font-size:24px;font-weight:800;color:#F8D49D;margin-bottom:10px;">Thank You!</div>'
-      + '<div style="font-size:15px;color:#fff;margin-bottom:8px;">Your response has been recorded.</div>'
-      + '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;margin:20px 0;font-size:14px;color:#fff;">'
-      + '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your RSVP</div>'
-      + '<div style="font-size:20px;font-weight:800;">'+labelMap[status]+'</div>'
-      + (status!=='declined'&&(adults||kids)?'<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;">'+adults+' adult'+(adults!==1?'s':'')+(kids?' + '+kids+' child'+(kids!==1?'ren':''):'')+'</div>':'')
-      + '</div>'
-      + '<div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;">'
-      + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
-      + '</div>'
-      + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
-      + '<div style="margin-top:28px;font-size:13px;color:rgba(255,255,255,0.5);">You may now close this tab 🙏</div>'
-      + '</div>';
-  }
-
-  try {
-    var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
-    var payload = JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note});
-
-    // Strategy: try ALL methods simultaneously for maximum reliability in WhatsApp browser
-    // 1. fetch with keepalive (survives page unload, works in modern WA browser)
-    // 2. sendBeacon (fire-and-forget fallback)
-    // 3. GET pixel fallback (works even when POST is blocked — encodes data in URL params)
-    var saved = false;
-
-    // Method 1: fetch with keepalive:true — designed to survive page navigation/close
+    // Also push RSVP to worker KV so admin sees it cross-device
     try {
+      var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
       fetch(workerBase+'/guest-rsvp', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:payload,
-        keepalive: true
-      }).then(function(r){ saved = true; }).catch(function(){});
+        body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
+      }).catch(function(){});
     } catch(e) {}
-
-    // Method 2: sendBeacon — fire-and-forget
-    try {
-      if (navigator.sendBeacon) {
-        var blob = new Blob([payload], {type:'application/json'});
-        navigator.sendBeacon(workerBase+'/guest-rsvp', blob);
-      }
-    } catch(e) {}
-
-    // Method 3: GET pixel — absolute fallback, encodes RSVP in URL params
-    // Works even if POST is blocked by WA browser — no body needed
-    try {
-      var px = new Image();
-      px.src = workerBase+'/rsvp-pixel?g='+encodeURIComponent(guestId)+'&s='+encodeURIComponent(status)+'&a='+(adults||0)+'&k='+(kids||0)+'&t='+Date.now();
-    } catch(e) {}
-
-    // Show Thank You after short delay (all methods fire-and-forget)
-    setTimeout(showThankYou, 500);
-
-  } catch(e) {
-    showThankYou();
   }
 
+  // Show thank you screen
+  var portal = document.getElementById('guestRsvpPortal');
+  if (!portal) return;
+  var labelMap = {'confirmed':'✅ Yes, attending!','declined':'❌ Not attending','maybe':'🤔 Will try to come'};
+  var coupleName = (typeof branding!=='undefined'&&branding&&branding.title) ? branding.title : 'Mrishana & Spandan';
+  portal.innerHTML =
+    '<div style="max-width:440px;width:100%;text-align:center;padding-top:60px;">'
+    + '<div style="font-size:64px;margin-bottom:16px;">'+(status==='confirmed'?'🎉':status==='declined'?'💐':'🌸')+'</div>'
+    + '<div style="font-size:24px;font-weight:800;color:#F8D49D;margin-bottom:10px;">Thank You!</div>'
+    + '<div style="font-size:15px;color:#fff;margin-bottom:8px;">Your response has been recorded.</div>'
+    + '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:16px 20px;margin:20px 0;font-size:14px;color:#fff;">'
+    + '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your RSVP</div>'
+    + '<div style="font-size:20px;font-weight:800;">'+labelMap[status]+'</div>'
+    + (status!=='declined'&&(adults||kids)?'<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:6px;">'+adults+' adult'+(adults!==1?'s':'')+(kids?' + '+kids+' child'+(kids!==1?'ren':''):'')+'</div>':'')
+    + '</div>'
+    + '<div style="font-size:13px;color:rgba(255,255,255,0.7);line-height:1.6;">'
+    + (status==='confirmed'?'We can\'t wait to celebrate with you! See you at the wedding. 🌸':'We understand and will miss you. Thank you for letting us know. 🙏')
+    + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:30px;">With love, <br><strong style="color:#F8D49D;">'+coupleName+'\'s Family</strong></div>'
+    + '</div>';
 }
 
 function handleRsvpUrlParam() {
@@ -3528,32 +3415,21 @@ function handleRsvpUrlParam() {
     var gid = params.get('rsvp');
     var s = params.get('s');
     if (!gid) return;
-    // Remove params from URL immediately (clean URL bar)
+    // Remove params from URL immediately
     history.replaceState({}, '', window.location.pathname);
-
-    function showPortalWithData(urlData) {
-      showGuestRsvpPortal(gid, s||'', urlData);
+    // Wait for app + guests to fully load
+    function tryShow() {
+      if (typeof guests === 'undefined' || !Array.isArray(guests)) {
+        setTimeout(tryShow, 300); return;
+      }
+      showGuestRsvpPortal(gid, s||'');
+      // Pre-select the status
       if (s) {
         var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
         window._guestRsvpStatus = statusMap[s]||'';
-        setTimeout(function(){ if(typeof guestRsvpSelect==='function') guestRsvpSelect(statusMap[s]||''); }, 150);
       }
     }
-
-    // Fetch guest data from KV worker (stored when admin sent the WA message)
-    // This keeps the WA link short — no long d= param needed
-    setTimeout(function() {
-      fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-data?guestId=' + encodeURIComponent(gid))
-        .then(function(r){ return r.ok ? r.json() : null; })
-        .then(function(resp) {
-          var urlData = (resp && resp.data) ? resp.data : null;
-          showPortalWithData(urlData);
-        })
-        .catch(function() {
-          // If network fails, show portal anyway (name will show as "Guest")
-          showPortalWithData(null);
-        });
-    }, 400);
+    setTimeout(tryShow, 800);
   } catch(e) { console.log('RSVP URL param error', e); }
 }
 window.addEventListener('load', handleRsvpUrlParam);
@@ -3570,8 +3446,7 @@ function generateInviteMsg(g) {
     'Marriage': ['The Forever Affair','Two hearts, two families and one beautiful\npromise to cherish a lifetime together.'],
     'Reception': ['The Afterglow','An evening of elegance and togetherness,\ncelebrating the beginning of their forever.']
   };
-  // Kankotri function is over — exclude from WA invitations
-  var ALL_EVENTS = ['Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
+  var ALL_EVENTS = ['Kankotri','Ganesh-Grahshanti','Mosalu','Mehendi','Sangeet','Haldi','Marriage','Reception'];
   var coupleName = (branding && branding.title) ? branding.title : 'Mrishana & Spandan';
   var familyName = (branding && branding.familyName) ? branding.familyName : (coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
@@ -3751,25 +3626,21 @@ async function submitCommunityReview() {
   }
 }
 
-// Load community ratings for all vendors — parallel fetches with 8s timeout each
-// Never blocks the UI — called deferred after sign-in completes
+// Load community ratings for all vendors (runs on page load)
 async function loadCommunityRatings() {
   if (!vendors || vendors.length === 0) return;
-  var vendorsCopy = vendors.slice();
-  await Promise.all(vendorsCopy.map(async function(v) {
-    var ctrl = new AbortController();
-    var t = setTimeout(function(){ ctrl.abort(); }, 8000);
+  for (var i = 0; i < vendors.length; i++) {
+    var v = vendors[i];
     try {
-      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name), { signal: ctrl.signal });
-      clearTimeout(t);
+      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name));
       var data = await resp.json();
       if (data.found && data.approvedCount > 0) {
         v._communityRating = data.avgRating;
         v._communityCount  = data.approvedCount;
         _communityRatings[v.name] = data;
       }
-    } catch(e) { clearTimeout(t); /* timeout or network error — silently skip */ }
-  }));
+    } catch(e) {}
+  }
   render();
 }
 
@@ -4511,9 +4382,8 @@ function waOpen(guestId) {
   if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '💬 WhatsApp Message — ' + (g.name||'');
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
-  // Always regenerate fresh — never use cached waCustomMsg (it may have old long d= links)
-  g.waCustomMsg = '';
-  document.getElementById('waMessageText').value = generateInviteMsg(g);
+  // Restore saved custom message or use default
+  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
   document.getElementById('waModalOverlay').classList.add('show');
 }
 
@@ -4535,9 +4405,7 @@ function openWAInvite(guestId) {
   if (document.getElementById('waModalTitle')) document.getElementById('waModalTitle').textContent = '📲 WhatsApp Invitation — ' + (g.name||'');
   document.getElementById('waGuestName').textContent = g.name;
   document.getElementById('waGuestPhone').textContent = g.phone;
-  // Always regenerate fresh — never use cached waCustomMsg (it may have old long d= links)
-  g.waCustomMsg = '';
-  document.getElementById('waMessageText').value = generateInviteMsg(g);
+  document.getElementById('waMessageText').value = g.waCustomMsg || generateInviteMsg(g);
   document.getElementById('waModalOverlay').classList.add('show');
 }
 
@@ -4556,26 +4424,20 @@ function waSend() {
   const g = guests.find(x => x.id === waCurrentGuestId);
   if (!g) return;
   const rawMsg = document.getElementById('waMessageText').value;
-  // Never save the message — always regenerate fresh next time (avoids stale long-link cache)
-  g.waCustomMsg = '';
+  // Only save custom message for regular invite (not STD or Kankotri)
+  if (!window._pendingStd && !window._pendingKank) {
+    g.waCustomMsg = rawMsg;
+  }
   g.invitationSent = true;
   // Mark waSent when sending via invite button OR regular WA
-  if (window._pendingInvite === g.id) {
-    g.waSent = true;
-    window._pendingInvite = null;
-    // Save guest data to KV so the RSVP portal can show name/events in any browser
-    if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
-  }
+  if (window._pendingInvite === g.id) { g.waSent = true; window._pendingInvite = null; }
   if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
   if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
   saveGuests();
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
   const phone = g.phone.replace(/[^0-9]/g, '');
-  // Use guest's stored country code (default India +91)
-  const cc = g.countryCode || '91';
-  const waPhone = phone.startsWith(cc) ? phone : cc + phone;
-  const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
@@ -5071,7 +4933,7 @@ function printSection(section) {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
     '}';
   document.head.appendChild(styleEl);
 
@@ -5083,25 +4945,19 @@ function printSection(section) {
   overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
   document.body.appendChild(overlay);
 
-  // Allow browser to render overlay fully before printing
-  // Two-step: add class → rAF forces reflow → then print
+  // Short delay then print
   setTimeout(function() {
     document.body.classList.add('vl-printing');
-    // Force reflow so browser measures full document height before print
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() {
-        window.print();
-        setTimeout(function() {
-          document.body.classList.remove('vl-printing');
-          var ov = document.getElementById('vivaahPrintOverlay');
-          var st = document.getElementById('vivaahPrintStyle');
-          if (ov) ov.remove();
-          if (st) st.remove();
-        }, 1000);
-      });
-    });
-  }, 400);
+    window.print();
+    // After print dialog closes, remove overlay and class
+    setTimeout(function() {
+      document.body.classList.remove('vl-printing');
+      var ov = document.getElementById('vivaahPrintOverlay');
+      var st = document.getElementById('vivaahPrintStyle');
+      if (ov) ov.remove();
+      if (st) st.remove();
+    }, 1000);
+  }, 300);
 }
 
 /* ================================================================
@@ -5746,32 +5602,6 @@ document.getElementById('egEmailInput').addEventListener('keydown', e=>{
 });
 
 async function initAuth(){
-  // If this is a guest opening an RSVP link, skip all auth UI and just load
-  // guest data from localStorage so the portal can show their name + events
-  try {
-    var _rsvpCheck = new URLSearchParams(window.location.search).get('rsvp');
-    if (_rsvpCheck) {
-      // Hide lock screen immediately — no auth needed for RSVP portal
-      var lo = document.getElementById('lockOverlay');
-      if (lo) lo.classList.add('hidden');
-      // Load guests, branding and timeline from localStorage so portal is personalised
-      try {
-        var _rg = localStorage.getItem('wedding-guests');
-        if (_rg) guests = JSON.parse(_rg);
-      } catch(e) {}
-      try {
-        var _rb = localStorage.getItem('wedding-branding');
-        if (_rb) branding = JSON.parse(_rb);
-      } catch(e) {}
-      try {
-        var _rt = localStorage.getItem('wedding-timeline');
-        if (_rt) eventTimeline = JSON.parse(_rt);
-      } catch(e) {}
-      // Don't run the rest of auth — handleRsvpUrlParam will show the portal
-      return;
-    }
-  } catch(e) {}
-
   const OWNER_EMAILS = ['horizoneworld@gmail.com','rmsfincoresolutions@gmail.com','saurabh@horizoneworld.com'];
   const VALID_ROLES = ['owner','admin','editor','viewer','eventmanager'];
 
@@ -6137,21 +5967,13 @@ function initGoogleAuth(){
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
-    ux_mode: 'popup',
-    error_callback: function(err){
-      console.error('GSI error_callback:', JSON.stringify(err));
-      setSyncStatus(null,'');
-      storageSet('google-token-cache','');
-      showToast('Google sign-in error: ' + (err.type || err.message || JSON.stringify(err)));
-    },
     callback: async (resp)=>{
-      console.log('GSI callback resp:', JSON.stringify({error: resp.error, hasToken: !!resp.access_token, expires: resp.expires_in}));
       if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
-      if(resp.error || !resp.access_token){
+      if(resp.error){ 
         setSyncStatus(null,'');
         storageSet('google-token-cache','');
-        showToast('Google sign-in failed: ' + (resp.error || 'no token received'));
-        return;
+        showToast('Google sign-in failed — please try again'); 
+        return; 
       }
       googleAccessToken = resp.access_token;
       // Get signed-in user's email from Google
@@ -6190,12 +6012,20 @@ async function tryRestoreGoogleSession(){
         await onSignedIn();
         return;
       } else if(parsed.token && googleTokenClient){
-        // Token expired — clear cache and show sign-in button (silent refresh blocked by COOP)
-        storageSet('google-token-cache', '');
-        googleAccessToken = null;
-        setSyncStatus(null, '');
-        // Don't auto-attempt silent refresh — user must click Sign in button
-        return;
+        // Token expired — attempt a silent refresh (no popup if user already consented)
+        setSyncStatus('saving', 'Refreshing Google session…');
+        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
+        const refreshTimeout = setTimeout(()=>{
+          setSyncStatus(null, '');
+          showToast('Session expired — please sign in again');
+          // Clear bad cached token
+          storageSet('google-token-cache', '');
+          googleAccessToken = null;
+        }, 8000);
+        // Store timeout so callback can clear it
+        window._googleRefreshTimeout = refreshTimeout;
+        googleTokenClient.requestAccessToken({prompt:''});
+        return; // callback in initTokenClient will call onSignedIn() if successful
       }
     }
   }catch(e){}
@@ -6256,8 +6086,16 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
       _gsiWait += 500;
       if(googleTokenClient){
         clearInterval(_gsiTimer);
-        // Direct consent — avoids COOP popup-blocking
-        googleTokenClient.requestAccessToken({prompt:'consent'});
+        // Try silent first then fallback to consent
+        window._googleSilentFailed = false;
+        googleTokenClient.requestAccessToken({prompt:''});
+        // If silent fails within 4s, try with consent
+        window._gsiConsentFallback = setTimeout(function(){
+          if(!googleAccessToken){
+            window._googleSilentFailed = true;
+            googleTokenClient.requestAccessToken({prompt:'consent'});
+          }
+        }, 4000);
       } else if(_gsiWait >= 15000){
         clearInterval(_gsiTimer);
         setSyncStatus(null,'');
@@ -6266,8 +6104,18 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
     }, 500);
     return;
   }
-  // Direct consent — avoids COOP popup-blocking
-  googleTokenClient.requestAccessToken({prompt:'consent'});
+  // Clear any pending consent fallback
+  if(window._gsiConsentFallback) clearTimeout(window._gsiConsentFallback);
+  window._googleSilentFailed = false;
+  // Try silent first
+  googleTokenClient.requestAccessToken({prompt:''});
+  // Fallback to consent if silent fails within 4s
+  window._gsiConsentFallback = setTimeout(function(){
+    if(!googleAccessToken){
+      window._googleSilentFailed = true;
+      googleTokenClient.requestAccessToken({prompt:'consent'});
+    }
+  }, 4000);
 };
 
 document.getElementById('btnSignOut').onclick = async ()=>{
@@ -6285,53 +6133,32 @@ document.getElementById('btnOpenSheet').onclick = ()=>{
 };
 
 async function sheetsApi(path, options={}){
-  // 15-second timeout — prevents page freeze if Sheets API hangs (quota, network, expired token)
-  const controller = new AbortController();
-  const _timeout = setTimeout(() => controller.abort(), 15000);
-  try {
-    const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets${path}`, {
-      ...options,
-      signal: controller.signal,
-      headers:{
-        'Authorization': `Bearer ${googleAccessToken}`,
-        'Content-Type': 'application/json',
-        ...(options.headers||{})
-      }
-    });
-    clearTimeout(_timeout);
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      throw new Error(err.error && err.error.message ? err.error.message : `Sheets API error ${res.status}`);
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets${path}`, {
+    ...options,
+    headers:{
+      'Authorization': `Bearer ${googleAccessToken}`,
+      'Content-Type': 'application/json',
+      ...(options.headers||{})
     }
-    return res.json();
-  } catch(e) {
-    clearTimeout(_timeout);
-    if (e.name === 'AbortError') throw new Error('Sheets API timed out (15s) — check quota or network');
-    throw e;
+  });
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err.error && err.error.message ? err.error.message : `Sheets API error ${res.status}`);
   }
+  return res.json();
 }
 
 async function findOrCreateSheet(){
   // Search Drive for an existing file with our sheet name, owned by this user
   const q = encodeURIComponent(`name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
-  const driveController = new AbortController();
-  const driveTimeout = setTimeout(() => driveController.abort(), 15000);
-  try {
-    const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
-      headers:{'Authorization': `Bearer ${googleAccessToken}`},
-      signal: driveController.signal
-    });
-    clearTimeout(driveTimeout);
-    if(searchRes.ok){
-      const data = await searchRes.json();
-      if(data.files && data.files.length>0){
-        return data.files[0].id;
-      }
+  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
+    headers:{'Authorization': `Bearer ${googleAccessToken}`}
+  });
+  if(searchRes.ok){
+    const data = await searchRes.json();
+    if(data.files && data.files.length>0){
+      return data.files[0].id;
     }
-  } catch(e) {
-    clearTimeout(driveTimeout);
-    if(e.name === 'AbortError') throw new Error('Drive API timed out — check network or quota');
-    throw e;
   }
   // None found — create a new spreadsheet
   const created = await sheetsApi('', {
@@ -6370,7 +6197,8 @@ async function onSignedIn(){
               : (localLogoById[v.id]||'')
       }));
       functions = cloudData.functions&&cloudData.functions.length ? cloudData.functions : functions;
-      // Merge cloud guests — prefer local callStatus over sheet (KV poll will fix after)
+      // Merge cloud guests but preserve local waSent/callStatus if they're more up-to-date
+      // (prevents stale cloud pull from wiping freshly-set data that hasn't synced yet)
       (function(){
         var cloudGuests = cloudData.guests||guests;
         var localById = {};
@@ -6434,14 +6262,6 @@ async function onSignedIn(){
       await storageSet('wedding-guests', JSON.stringify(guests));
       await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
       autoSaveLocalBackup(); // full backup snapshot after every cloud pull
-      // KV RSVP poll runs AFTER cloud sheet sync so it always wins over stale sheet data
-      if (typeof pollGuestRsvpsFromKV === 'function') {
-        pollGuestRsvpsFromKV(function() {
-          if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
-          if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
-          if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
-        });
-      }
     } else {
       // Only push to sheet if we actually have local data to push
       // Never overwrite cloud with empty data on a fresh load
@@ -6461,9 +6281,10 @@ async function onSignedIn(){
         if(_h) _ph[_r]=_h;
       }
       if(Object.keys(_ph).length>0){
-        // Use GET to avoid CORS preflight (no OPTIONS needed for simple GET)
-        var _sp = new URLSearchParams({ownerEmail:googleUserEmail,pins:JSON.stringify(_ph)});
-        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins-get?'+_sp.toString()).catch(function(){});
+        fetch('https://vivaah-auth.rms-d21.workers.dev/save-pins',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ownerEmail:googleUserEmail,pinHashes:_ph})
+        }).catch(function(){});
       }
     })();
     // Sync EP reminders to KV so cron worker emails them
@@ -6479,8 +6300,7 @@ async function onSignedIn(){
     renderTimeline();
     startCountdown();
     renderBudgetChart();
-    // Defer community ratings — runs AFTER UI is interactive, never blocks sign-in flow
-    setTimeout(function(){ loadCommunityRatings(); }, 5000);
+    loadCommunityRatings();
     // Show admin review section for owner only
     var adminSec = document.getElementById('adminReviewSection');
     if (adminSec) adminSec.style.display = (currentRole === 'owner') ? 'block' : 'none';
@@ -7594,13 +7414,9 @@ document.getElementById('btnAddGuest').onclick = ()=>{
   const nameInput = document.getElementById('newGuestName');
   const phoneInput = document.getElementById('newGuestPhone');
   const sideInput = document.getElementById('newGuestSide');
-  const ccInput = document.getElementById('newGuestCountryCode');
   const name = nameInput.value.trim();
   if(!name){ showToast('Enter a family/guest name first'); return; }
-  // Store country code: '1CA' → dial code '1' (Canada same as US), else use value directly
-  var cc = ccInput ? ccInput.value : '91';
-  var dialCode = cc === '1CA' ? '1' : cc;
-  guests.push({id:uid(), name, phone:phoneInput.value.trim(), countryCode:dialCode, side:sideInput.value, events:{}});
+  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:{}});
   nameInput.value=''; phoneInput.value='';
   saveGuests(); renderGuests();
   showToast('Added — click the row to set adults & kids per function');
@@ -9013,7 +8829,7 @@ function doPrintFunctionWise(filterEv){
       +'@page{margin:8mm;}'
       +'body{margin:0!important;}'
       +'body>*:not(#vivaahPrintOverlay):not(style){display:none!important;}'
-      +'#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}'
+      +'#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}'
       +'-webkit-print-color-adjust:exact;print-color-adjust:exact;'
     +'}';
   document.head.appendChild(st);
@@ -9023,16 +8839,13 @@ function doPrintFunctionWise(filterEv){
   document.body.appendChild(ov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
-        if(o)o.remove(); if(s)s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
+      if(o)o.remove(); if(s)s.remove();
+    },1000);
+  },300);
 }
 // Function-wise print: show filter row on click, Print button triggers actual print
 document.getElementById('printOptFunctionWise').onclick=function(){
@@ -9446,7 +9259,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}' +
       'h3{page-break-after:avoid;}' +
@@ -9466,16 +9279,13 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   document.body.appendChild(_pov);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-        if(_o)_o.remove(); if(_s)_s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+      if(_o)_o.remove(); if(_s)_s.remove();
+    },1000);
+  },300);
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
@@ -9681,7 +9491,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
       '@page{margin:8mm;}' +
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
-      '#vivaahPrintOverlay{position:absolute!important;top:0!important;left:0!important;width:100%!important;height:auto!important;overflow:visible!important;min-height:100%!important;}' +
+      '#vivaahPrintOverlay{position:fixed!important;top:0!important;left:0!important;width:100%!important;overflow:visible!important;}' +
       'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
       'tr{page-break-inside:avoid;}h3{page-break-after:avoid;}' +
       '-webkit-print-color-adjust:exact;print-color-adjust:exact;' +
@@ -9695,16 +9505,13 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
   document.body.appendChild(_pov2);
   setTimeout(function(){
     document.body.classList.add('vl-printing');
-    void document.getElementById('vivaahPrintOverlay').offsetHeight;
-    requestAnimationFrame(function(){requestAnimationFrame(function(){
-      window.print();
-      setTimeout(function(){
-        document.body.classList.remove('vl-printing');
-        var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
-        if(_o)_o.remove(); if(_s)_s.remove();
-      },1000);
-    });});
-  },400);
+    window.print();
+    setTimeout(function(){
+      document.body.classList.remove('vl-printing');
+      var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
+      if(_o)_o.remove(); if(_s)_s.remove();
+    },1000);
+  },300);
 };
 
 /* EP Catering Module - v2 multi-vendor */
@@ -12980,7 +12787,7 @@ window.mobGoogleSignIn = function(){
       }));
       await window.callOnSignedIn();
     }
-  }).requestAccessToken({prompt:'consent'});
+  }).requestAccessToken();
 };
 window.mobSignOutRole = function(){
   // Sign out of PIN role - clears remembered email and goes to lock screen
@@ -14027,13 +13834,9 @@ function rsvpSetStatus(guestId, status) {
 
 function renderRsvpTracker(skipKvPoll) {
   // Pull any guest RSVP confirmations submitted via link (cross-device sync)
-  // If not skipping, fetch KV first then re-render with fresh data
+  // skipKvPoll=true prevents infinite loop when pollGuestRsvpsFromKV calls back here
   if (!skipKvPoll && typeof pollGuestRsvpsFromKV === 'function') {
-    pollGuestRsvpsFromKV(function() {
-      // Re-render after KV data is merged (skipKvPoll=true to avoid loop)
-      renderRsvpTracker(true);
-    });
-    // Also render immediately with cached data so UI isn't blank while waiting
+    pollGuestRsvpsFromKV();
   }
   var total = (guests||[]).filter(function(g){return g.name&&g.name.trim();}).length;
   var sent = (guests||[]).filter(function(g){return g.waSent;}).length;
@@ -14239,11 +14042,8 @@ function mobOpenWAInvite(guestId) {
   if (!g || !g.ph) return;
   var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
   var ph = (g.phone||'').replace(/\D/g,'');
-  var cc = g.countryCode || '91';
-  var waph = ph.startsWith(cc) ? ph : cc + ph;
-  window.open('https://wa.me/'+waph+'?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
-  if (typeof saveGuestDataToKV === 'function') saveGuestDataToKV(g.id);
   storageSet('wedding-guests', JSON.stringify(guests));
   if (typeof queueCloudSave==='function') queueCloudSave();
   mobRenderGuests();
@@ -14258,64 +14058,33 @@ function mobRenderRsvpMobile() {
   pollGuestRsvpsFromKV();
 }
 
-var _pollGuestRsvpsInFlight = false; // prevent concurrent calls
-function pollGuestRsvpsFromKV(callback) {
-  // 5-minute cache to reduce Cloudflare Worker quota usage
-  // Guests submit RSVPs via their own link — we don't need to poll every second
-  if (_pollGuestRsvpsInFlight) {
-    if (typeof callback === 'function') callback();
-    return;
-  }
-  try {
-    var cacheKey = 'vl_rsvp_cache_ts';
-    var lastFetch = parseInt(localStorage.getItem(cacheKey) || '0', 10);
-    if (Date.now() - lastFetch < 300000) { // 5 minutes
-      // Cache still fresh — skip network call, just invoke callback
-      if (typeof callback === 'function') callback();
-      return;
-    }
-    localStorage.setItem(cacheKey, String(Date.now()));
-  } catch(e) { /* ignore storage errors */ }
-  _pollGuestRsvpsInFlight = true;
+function pollGuestRsvpsFromKV() {
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(data) {
-        _pollGuestRsvpsInFlight = false;
+        if (!data || !data.rsvps) return;
         var updated = false;
-        if (data && data.rsvps) {
-          data.rsvps.forEach(function(r) {
-            var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
-            if (g && r.callStatus) {
-              g.callStatus = r.callStatus;
-              g.waSent = true;
-              if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
-              if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
-              if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
-              updated = true;
-            }
-          });
-          if (updated) {
-            storageSet('wedding-guests', JSON.stringify(guests));
-            // Push KV RSVP updates to Google Sheet (debounced 3s to avoid 429 quota errors)
-            if (typeof pushToSheet === 'function') {
-              clearTimeout(window._kvPushTimer);
-              window._kvPushTimer = setTimeout(function(){ pushToSheet(); }, 3000);
-            }
-            if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
-            if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
+        data.rsvps.forEach(function(r) {
+          var g = (guests||[]).find(function(x){ return x.id===r.guestId; });
+          if (g && r.callStatus) {
+            g.callStatus = r.callStatus;
+            g.waSent = true; // they received the link, so WA was sent
+            if (r.confirmedAdults !== undefined) g.confirmedAdults = r.confirmedAdults;
+            if (r.confirmedKids !== undefined) g.confirmedKids = r.confirmedKids;
+            if (r.rsvpNote) g.rsvpNote = r.rsvpNote;
+            updated = true;
           }
+        });
+        if (updated) {
+          storageSet('wedding-guests', JSON.stringify(guests));
+          if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
+          if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
+          // Also update desktop RSVP tracker (skipKvPoll=true to avoid infinite loop)
+          if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
         }
-        // Always call callback so renderRsvpTracker re-renders with latest data
-        if (typeof callback === 'function') callback();
-      }).catch(function(){
-        _pollGuestRsvpsInFlight = false;
-        if (typeof callback === 'function') callback();
-      });
-  } catch(e) {
-    _pollGuestRsvpsInFlight = false;
-    if (typeof callback === 'function') callback();
-  }
+      }).catch(function(){});
+  } catch(e) {}
 }
 
 function mobRenderRsvpStats() {
@@ -14380,7 +14149,6 @@ function mobRenderRsvpList() {
 
   if (!list.length) { listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No guests match this filter.</div>'; return; }
 
-  var _esc = typeof mobEsc==='function' ? mobEsc : function(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
   listEl.innerHTML = list.map(function(g) {
     var statusBg = g.callStatus==='confirmed'?'#E8F5E9':g.callStatus==='declined'?'#FFEBEE':g.callStatus==='maybe'?'#FFFDE7':'#F5F5F5';
     var statusColor = g.callStatus==='confirmed'?'#2E7D32':g.callStatus==='declined'?'#C62828':g.callStatus==='maybe'?'#856404':'#9E9E9E';
@@ -14389,7 +14157,7 @@ function mobRenderRsvpList() {
     return '<div style="background:#fff;border-radius:10px;margin-bottom:8px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
         +'<div>'
-          +'<div style="font-size:14px;font-weight:700;">'+_esc(g.name||'')+'</div>'
+          +'<div style="font-size:14px;font-weight:700;">'+mobEsc(g.name||'')+'</div>'
           +'<div style="font-size:11px;color:#888;">'+(g.side||'')+' · '+(g.phone||'—')+'</div>'
         +'</div>'
         +'<span style="background:'+statusBg+';color:'+statusColor+';padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;">'+statusLabel+'</span>'
@@ -14419,6 +14187,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-22T11:45 google-signin-coop-meta-v33-ratings-timeout -->
+
 </body>
-</html>
+</html><!-- deploy Tue Oct 13 06:02:54 Asia 2026 -->

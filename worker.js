@@ -588,19 +588,9 @@ export default {
     }
 
     // GET /get-reviews — public vendor reviews (approved only)
-    // Uses a 1-hour cached summary key to avoid N KV reads per vendor per page load
     if (path === '/get-reviews' && request.method === 'GET') {
       const vendor = url.searchParams.get('vendor') || '';
-      if (!vendor) return jsonResp({ found: false, approvedCount: 0, avgRating: 0, reviews: [] });
-
-      // Try cached summary first (1 KV read instead of N)
-      const cacheKey = `review-cache:${encodeURIComponent(vendor)}`;
-      const cached = await env.VIVAAH_KV.get(cacheKey);
-      if (cached) {
-        try { return jsonResp(JSON.parse(cached)); } catch(e) {}
-      }
-
-      // Cache miss — read all reviews for this vendor and build summary
+      if (!vendor) return jsonResp({ reviews: [] });
       const prefix = `review:${encodeURIComponent(vendor)}:`;
       const list = await env.VIVAAH_KV.list({ prefix });
       const reviews = [];
@@ -613,15 +603,7 @@ export default {
           } catch(e) {}
         }
       }
-      const approvedCount = reviews.length;
-      const avgRating = approvedCount > 0
-        ? Math.round((reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / approvedCount) * 10) / 10
-        : 0;
-      const result = { found: approvedCount > 0, approvedCount, avgRating, reviews };
-
-      // Cache for 1 hour — invalidated when a new review is approved
-      await env.VIVAAH_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: 3600 });
-      return jsonResp(result);
+      return jsonResp({ reviews });
     }
 
     // GET /admin-reviews — all reviews for an owner (including unapproved)
@@ -655,9 +637,6 @@ export default {
       const review = JSON.parse(raw);
       review.approved = true;
       await env.VIVAAH_KV.put(key, JSON.stringify(review), { expirationTtl: 365 * 24 * 3600 });
-      // Invalidate the 1-hour review cache for this vendor so ratings update immediately
-      const vendorCacheKey = `review-cache:${encodeURIComponent(review.vendor || '')}`;
-      if (review.vendor) await env.VIVAAH_KV.delete(vendorCacheKey);
       return jsonResp({ success: true });
     }
 
