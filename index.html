@@ -6131,13 +6131,20 @@ function initGoogleAuth(){
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
+    error_callback: function(err){
+      console.error('GSI error_callback:', JSON.stringify(err));
+      setSyncStatus(null,'');
+      storageSet('google-token-cache','');
+      showToast('Google sign-in error: ' + (err.type || err.message || JSON.stringify(err)));
+    },
     callback: async (resp)=>{
+      console.log('GSI callback resp:', JSON.stringify({error: resp.error, hasToken: !!resp.access_token, expires: resp.expires_in}));
       if(window._googleRefreshTimeout){ clearTimeout(window._googleRefreshTimeout); window._googleRefreshTimeout = null; }
-      if(resp.error){ 
+      if(resp.error || !resp.access_token){
         setSyncStatus(null,'');
         storageSet('google-token-cache','');
-        showToast('Google sign-in failed — please try again'); 
-        return; 
+        showToast('Google sign-in failed: ' + (resp.error || 'no token received'));
+        return;
       }
       googleAccessToken = resp.access_token;
       // Get signed-in user's email from Google
@@ -6176,20 +6183,12 @@ async function tryRestoreGoogleSession(){
         await onSignedIn();
         return;
       } else if(parsed.token && googleTokenClient){
-        // Token expired — attempt a silent refresh (no popup if user already consented)
-        setSyncStatus('saving', 'Refreshing Google session…');
-        // Set a timeout — if silent refresh takes > 8 seconds, show sign-in button
-        const refreshTimeout = setTimeout(()=>{
-          setSyncStatus(null, '');
-          showToast('Session expired — please sign in again');
-          // Clear bad cached token
-          storageSet('google-token-cache', '');
-          googleAccessToken = null;
-        }, 8000);
-        // Store timeout so callback can clear it
-        window._googleRefreshTimeout = refreshTimeout;
-        googleTokenClient.requestAccessToken({prompt:''});
-        return; // callback in initTokenClient will call onSignedIn() if successful
+        // Token expired — clear cache and show sign-in button (silent refresh blocked by COOP)
+        storageSet('google-token-cache', '');
+        googleAccessToken = null;
+        setSyncStatus(null, '');
+        // Don't auto-attempt silent refresh — user must click Sign in button
+        return;
       }
     }
   }catch(e){}
@@ -6250,16 +6249,8 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
       _gsiWait += 500;
       if(googleTokenClient){
         clearInterval(_gsiTimer);
-        // Try silent first then fallback to consent
-        window._googleSilentFailed = false;
-        googleTokenClient.requestAccessToken({prompt:''});
-        // If silent fails within 4s, try with consent
-        window._gsiConsentFallback = setTimeout(function(){
-          if(!googleAccessToken){
-            window._googleSilentFailed = true;
-            googleTokenClient.requestAccessToken({prompt:'consent'});
-          }
-        }, 4000);
+        // Direct consent — avoids COOP popup-blocking
+        googleTokenClient.requestAccessToken({prompt:'consent'});
       } else if(_gsiWait >= 15000){
         clearInterval(_gsiTimer);
         setSyncStatus(null,'');
@@ -6268,18 +6259,8 @@ document.getElementById('btnGoogleSignIn').onclick = ()=>{
     }, 500);
     return;
   }
-  // Clear any pending consent fallback
-  if(window._gsiConsentFallback) clearTimeout(window._gsiConsentFallback);
-  window._googleSilentFailed = false;
-  // Try silent first
-  googleTokenClient.requestAccessToken({prompt:''});
-  // Fallback to consent if silent fails within 4s
-  window._gsiConsentFallback = setTimeout(function(){
-    if(!googleAccessToken){
-      window._googleSilentFailed = true;
-      googleTokenClient.requestAccessToken({prompt:'consent'});
-    }
-  }, 4000);
+  // Direct consent — avoids COOP popup-blocking
+  googleTokenClient.requestAccessToken({prompt:'consent'});
 };
 
 document.getElementById('btnSignOut').onclick = async ()=>{
@@ -12981,7 +12962,7 @@ window.mobGoogleSignIn = function(){
       }));
       await window.callOnSignedIn();
     }
-  }).requestAccessToken();
+  }).requestAccessToken({prompt:'consent'});
 };
 window.mobSignOutRole = function(){
   // Sign out of PIN role - clears remembered email and goes to lock screen
@@ -14259,9 +14240,14 @@ function mobRenderRsvpMobile() {
   pollGuestRsvpsFromKV();
 }
 
+var _pollGuestRsvpsInFlight = false; // prevent concurrent calls
 function pollGuestRsvpsFromKV(callback) {
   // 5-minute cache to reduce Cloudflare Worker quota usage
   // Guests submit RSVPs via their own link — we don't need to poll every second
+  if (_pollGuestRsvpsInFlight) {
+    if (typeof callback === 'function') callback();
+    return;
+  }
   try {
     var cacheKey = 'vl_rsvp_cache_ts';
     var lastFetch = parseInt(localStorage.getItem(cacheKey) || '0', 10);
@@ -14272,10 +14258,12 @@ function pollGuestRsvpsFromKV(callback) {
     }
     localStorage.setItem(cacheKey, String(Date.now()));
   } catch(e) { /* ignore storage errors */ }
+  _pollGuestRsvpsInFlight = true;
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
       .then(function(data) {
+        _pollGuestRsvpsInFlight = false;
         var updated = false;
         if (data && data.rsvps) {
           data.rsvps.forEach(function(r) {
@@ -14303,9 +14291,11 @@ function pollGuestRsvpsFromKV(callback) {
         // Always call callback so renderRsvpTracker re-renders with latest data
         if (typeof callback === 'function') callback();
       }).catch(function(){
+        _pollGuestRsvpsInFlight = false;
         if (typeof callback === 'function') callback();
       });
   } catch(e) {
+    _pollGuestRsvpsInFlight = false;
     if (typeof callback === 'function') callback();
   }
 }
@@ -14411,6 +14401,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-21T14:00 sheets-timeout-freeze-fix-v25 -->
+<!-- deploy 2026-10-21T14:00 google-signin-debug-v29 -->
 </body>
 </html>
