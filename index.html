@@ -11,6 +11,8 @@
 <link rel="apple-touch-icon" href="/icon-192.svg">
 <title>Vivaah Ledger — Wedding Vendor Budget</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta http-equiv="Cross-Origin-Opener-Policy" content="unsafe-none">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="unsafe-none">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -6131,6 +6133,7 @@ function initGoogleAuth(){
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
     scope: SHEETS_SCOPE,
+    ux_mode: 'popup',
     error_callback: function(err){
       console.error('GSI error_callback:', JSON.stringify(err));
       setSyncStatus(null,'');
@@ -14401,6 +14404,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-21T14:00 google-signin-debug-v29 -->
+<!-- deploy 2026-10-21T14:00 google-signin-coop-meta-v30 -->
 </body>
 </html>
