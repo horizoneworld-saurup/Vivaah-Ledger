@@ -3751,11 +3751,11 @@ async function submitCommunityReview() {
   }
 }
 
-// Load community ratings for all vendors (runs on page load)
+// Load community ratings for all vendors — fires ALL vendor fetches in parallel (no sequential await freeze)
 async function loadCommunityRatings() {
   if (!vendors || vendors.length === 0) return;
-  for (var i = 0; i < vendors.length; i++) {
-    var v = vendors[i];
+  var vendorsCopy = vendors.slice(); // snapshot in case vendors changes mid-fetch
+  await Promise.all(vendorsCopy.map(async function(v) {
     try {
       var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name));
       var data = await resp.json();
@@ -3765,7 +3765,7 @@ async function loadCommunityRatings() {
         _communityRatings[v.name] = data;
       }
     } catch(e) {}
-  }
+  }));
   render();
 }
 
@@ -6310,14 +6310,24 @@ async function sheetsApi(path, options={}){
 async function findOrCreateSheet(){
   // Search Drive for an existing file with our sheet name, owned by this user
   const q = encodeURIComponent(`name='${SHEET_NAME}' and mimeType='application/vnd.google-apps.spreadsheet' and trashed=false`);
-  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
-    headers:{'Authorization': `Bearer ${googleAccessToken}`}
-  });
-  if(searchRes.ok){
-    const data = await searchRes.json();
-    if(data.files && data.files.length>0){
-      return data.files[0].id;
+  const driveController = new AbortController();
+  const driveTimeout = setTimeout(() => driveController.abort(), 15000);
+  try {
+    const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`, {
+      headers:{'Authorization': `Bearer ${googleAccessToken}`},
+      signal: driveController.signal
+    });
+    clearTimeout(driveTimeout);
+    if(searchRes.ok){
+      const data = await searchRes.json();
+      if(data.files && data.files.length>0){
+        return data.files[0].id;
+      }
     }
+  } catch(e) {
+    clearTimeout(driveTimeout);
+    if(e.name === 'AbortError') throw new Error('Drive API timed out — check network or quota');
+    throw e;
   }
   // None found — create a new spreadsheet
   const created = await sheetsApi('', {
@@ -6465,7 +6475,8 @@ async function onSignedIn(){
     renderTimeline();
     startCountdown();
     renderBudgetChart();
-    loadCommunityRatings();
+    // Defer community ratings — runs AFTER UI is interactive, never blocks sign-in flow
+    setTimeout(function(){ loadCommunityRatings(); }, 5000);
     // Show admin review section for owner only
     var adminSec = document.getElementById('adminReviewSection');
     if (adminSec) adminSec.style.display = (currentRole === 'owner') ? 'block' : 'none';
@@ -14404,6 +14415,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-21T14:00 google-signin-coop-meta-v30 -->
+<!-- deploy 2026-10-22T11:30 google-signin-coop-meta-v32-parallel-ratings -->
 </body>
 </html>
