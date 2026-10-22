@@ -578,6 +578,7 @@
     /* When overlay is active — hide entire main page, only overlay prints */
     /* When overlay is active — hide EVERYTHING except the overlay */
     body.vl-printing > *:not(#vivaahPrintOverlay):not(style):not(script) { display:none !important; }
+    body.vl-printing .print-header { display:none !important; }
     body.vl-printing #vivaahPrintOverlay { display:block !important; position:static !important; top:auto !important; left:auto !important; width:100% !important; height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
     /* Force colors to print */
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
@@ -2203,7 +2204,15 @@
     </div>
     <div class="guest-add-row">
       <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <input type="text" id="newGuestPhone" placeholder="Phone (optional)">
+      <select id="newGuestDialCode" style="padding:9px 6px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;max-width:110px;">
+        <option value="91">🇮🇳 +91</option>
+        <option value="1">🇺🇸 +1 USA</option>
+        <option value="1">🇨🇦 +1 CAN</option>
+        <option value="44">🇬🇧 +44</option>
+        <option value="61">🇦🇺 +61</option>
+        <option value="971">🇦🇪 +971</option>
+      </select>
+      <input type="text" id="newGuestPhone" placeholder="Phone (optional)" style="max-width:130px;">
       <select id="newGuestSide">
         <option value="Bride">Bride's side</option>
         <option value="Groom">Groom's side</option>
@@ -4437,7 +4446,7 @@ function waSend() {
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
   const phone = g.phone.replace(/[^0-9]/g, '');
-  const waUrl = `https://wa.me/${phone.startsWith('91') ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+  const waUrl = `https://wa.me/${phone.length >= 10 && (phone.startsWith('91')||phone.startsWith('1')||phone.startsWith('44')||phone.startsWith('61')||phone.startsWith('971')) ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
@@ -4957,7 +4966,7 @@ function printSection(section) {
       if (ov) ov.remove();
       if (st) st.remove();
     }, 1000);
-  }, 300);
+  }, 1500);
 }
 
 /* ================================================================
@@ -7333,7 +7342,15 @@ function renderGuests(){
           <input type="text" class="guest-inline-edit" value="${escapeHtml(g.name)}" data-guest-inline="${g.id}|name" style="width:100%;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
         </td>
         <td>
-          <input type="text" class="guest-inline-edit" value="${escapeHtml(g.phone||'')}" placeholder="—" data-guest-inline="${g.id}|phone" style="width:90px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
+          <div style="display:flex;gap:3px;align-items:center;">
+          <select class="guest-inline-dialcode" data-guest-dialcode="${g.id}" style="padding:3px 4px;border:1.5px solid var(--line);border-radius:7px;font-size:11px;font-family:'Inter';background:#fff;max-width:80px;">${(function(){
+            const ph=(g.phone||'').replace(/\D/g,'');
+            const sel=(code)=>ph.startsWith(code)?'selected':'';
+            const cur=ph.startsWith('971')?'971':ph.startsWith('44')?'44':ph.startsWith('61')?'61':ph.startsWith('1')?'1':'91';
+            return `<option value="91" ${cur==='91'?'selected':''}>🇮🇳+91</option><option value="1" ${cur==='1'?'selected':''}>🇺🇸+1</option><option value="44" ${cur==='44'?'selected':''}>🇬🇧+44</option><option value="61" ${cur==='61'?'selected':''}>🇦🇺+61</option><option value="971" ${cur==='971'?'selected':''}>🇦🇪+971</option>`;
+          })()}</select>
+          <input type="text" class="guest-inline-edit" value="${(function(){const ph=(g.phone||'').replace(/\D/g,'');const pfx=ph.startsWith('971')?'971':ph.startsWith('44')?'44':ph.startsWith('61')?'61':ph.startsWith('1')?'1':'91';return ph.startsWith(pfx)&&ph.length>pfx.length?ph.slice(pfx.length):ph;}())}" placeholder="—" data-guest-inline="${g.id}|phone" style="width:80px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
+          </div>
         </td>
         <td>
           <select class="guest-inline-edit" data-guest-inline="${g.id}|side" style="padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
@@ -7386,12 +7403,33 @@ function renderGuests(){
   wireGuestActionBtns();
 
   // Save inline edits (name, phone, side) — runs after every renderGuests()
+  document.querySelectorAll('.guest-inline-dialcode').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const gid = e.target.dataset.guestDialcode;
+      const g = guests.find(x => x.id === gid);
+      if (!g) return;
+      const dialCode = e.target.value;
+      const phoneInput = e.target.parentElement.querySelector('.guest-inline-edit');
+      const localNum = (phoneInput ? phoneInput.value : '').replace(/\D/g,'');
+      g.phone = localNum ? (dialCode + localNum) : '';
+      saveGuests(); showToast('Saved ✓');
+    });
+    sel.addEventListener('click', e => e.stopPropagation());
+  });
   document.querySelectorAll('.guest-inline-edit').forEach(el => {
     el.addEventListener('change', (e) => {
       e.stopPropagation();
       const [gid, field] = e.target.dataset.guestInline.split('|');
       const g = guests.find(x => x.id === gid);
       if (!g) return;
+      if (field === 'phone') {
+        const localNum = e.target.value.trim().replace(/\D/g,'');
+        const dialSel = e.target.parentElement.querySelector('.guest-inline-dialcode');
+        const dialCode = dialSel ? dialSel.value : '91';
+        g.phone = localNum ? (dialCode + localNum) : '';
+        saveGuests(); showToast('Saved ✓'); return;
+      }
       const val = e.target.value.trim();
       if (field === 'name' && !val) { showToast('Name cannot be empty'); e.target.value = g.name; return; }
       g[field] = val;
@@ -7413,10 +7451,14 @@ document.getElementById('guestEventChips').addEventListener('click', (e)=>{
 document.getElementById('btnAddGuest').onclick = ()=>{
   const nameInput = document.getElementById('newGuestName');
   const phoneInput = document.getElementById('newGuestPhone');
+  const dialSelect = document.getElementById('newGuestDialCode');
   const sideInput = document.getElementById('newGuestSide');
   const name = nameInput.value.trim();
   if(!name){ showToast('Enter a family/guest name first'); return; }
-  guests.push({id:uid(), name, phone:phoneInput.value.trim(), side:sideInput.value, events:{}});
+  const localNum = phoneInput.value.trim().replace(/\D/g,'');
+  const dialCode = dialSelect ? dialSelect.value : '91';
+  const phone = localNum ? (dialCode + localNum) : '';
+  guests.push({id:uid(), name, phone, side:sideInput.value, events:{}});
   nameInput.value=''; phoneInput.value='';
   saveGuests(); renderGuests();
   showToast('Added — click the row to set adults & kids per function');
@@ -8845,7 +8887,7 @@ function doPrintFunctionWise(filterEv){
       var o=document.getElementById('vivaahPrintOverlay'),s=document.getElementById('vivaahPrintStyle');
       if(o)o.remove(); if(s)s.remove();
     },1000);
-  },300);
+  },1500);
 }
 // Function-wise print: show filter row on click, Print button triggers actual print
 document.getElementById('printOptFunctionWise').onclick=function(){
@@ -9285,7 +9327,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
       if(_o)_o.remove(); if(_s)_s.remove();
     },1000);
-  },300);
+  },1500);
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
@@ -9511,7 +9553,7 @@ document.getElementById('btnEnvelopeStuffing').onclick = function() {
       var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
       if(_o)_o.remove(); if(_s)_s.remove();
     },1000);
-  },300);
+  },1500);
 };
 
 /* EP Catering Module - v2 multi-vendor */
@@ -14042,7 +14084,7 @@ function mobOpenWAInvite(guestId) {
   if (!g || !g.ph) return;
   var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
   var ph = (g.phone||'').replace(/\D/g,'');
-  window.open('https://wa.me/'+(ph.startsWith('91')?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
+  window.open('https://wa.me/'+(ph.length>=10&&(ph.startsWith('91')||ph.startsWith('1')||ph.startsWith('44')||ph.startsWith('61')||ph.startsWith('971'))?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
   storageSet('wedding-guests', JSON.stringify(guests));
   if (typeof queueCloudSave==='function') queueCloudSave();
