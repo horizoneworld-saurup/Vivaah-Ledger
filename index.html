@@ -3751,20 +3751,24 @@ async function submitCommunityReview() {
   }
 }
 
-// Load community ratings for all vendors — fires ALL vendor fetches in parallel (no sequential await freeze)
+// Load community ratings for all vendors — parallel fetches with 8s timeout each
+// Never blocks the UI — called deferred after sign-in completes
 async function loadCommunityRatings() {
   if (!vendors || vendors.length === 0) return;
-  var vendorsCopy = vendors.slice(); // snapshot in case vendors changes mid-fetch
+  var vendorsCopy = vendors.slice();
   await Promise.all(vendorsCopy.map(async function(v) {
+    var ctrl = new AbortController();
+    var t = setTimeout(function(){ ctrl.abort(); }, 8000);
     try {
-      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name));
+      var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-reviews?vendor=' + encodeURIComponent(v.name), { signal: ctrl.signal });
+      clearTimeout(t);
       var data = await resp.json();
       if (data.found && data.approvedCount > 0) {
         v._communityRating = data.avgRating;
         v._communityCount  = data.approvedCount;
         _communityRatings[v.name] = data;
       }
-    } catch(e) {}
+    } catch(e) { clearTimeout(t); /* timeout or network error — silently skip */ }
   }));
   render();
 }
@@ -14415,6 +14419,6 @@ window.renderRsvpTracker = function() {
 };
 
 </script>
-<!-- deploy 2026-10-22T11:30 google-signin-coop-meta-v32-parallel-ratings -->
+<!-- deploy 2026-10-22T11:45 google-signin-coop-meta-v33-ratings-timeout -->
 </body>
 </html>
