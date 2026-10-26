@@ -7368,10 +7368,11 @@ function renderGuests(){
           <select class="guest-inline-dialcode" data-guest-dialcode="${g.id}" style="padding:3px 4px;border:1.5px solid var(--line);border-radius:7px;font-size:11px;font-family:'Inter';background:#fff;max-width:80px;">${(function(){
             const ph=(g.phone||'').replace(/\D/g,'');
             const sel=(code)=>ph.startsWith(code)?'selected':'';
-            const cur=ph.startsWith('971')?'971':ph.startsWith('44')?'44':ph.startsWith('61')?'61':ph.startsWith('1')?'1':'91';
-            return `<option value="91" ${cur==='91'?'selected':''}>🇮🇳+91</option><option value="1" ${cur==='1'?'selected':''}>🇺🇸+1</option><option value="44" ${cur==='44'?'selected':''}>🇬🇧+44</option><option value="61" ${cur==='61'?'selected':''}>🇦🇺+61</option><option value="971" ${cur==='971'?'selected':''}>🇦🇪+971</option>`;
+            const allCodes=[['91','🇮🇳','IN'],['65','🇸🇬','SG'],['971','🇦🇪','AE'],['974','🇶🇦','QA'],['966','🇸🇦','SA'],['968','🇴🇲','OM'],['973','🇧🇭','BH'],['965','🇰🇼','KW'],['44','🇬🇧','GB'],['1','🇺🇸','US'],['61','🇦🇺','AU'],['64','🇳🇿','NZ'],['60','🇲🇾','MY'],['852','🇭🇰','HK'],['81','🇯🇵','JP'],['49','🇩🇪','DE'],['33','🇫🇷','FR'],['39','🇮🇹','IT'],['41','🇨🇭','CH'],['31','🇳🇱','NL'],['46','🇸🇪','SE'],['27','🇿🇦','ZA'],['254','🇰🇪','KE']];
+            const cur=allCodes.find(([c])=>ph.startsWith(c)&&ph.length>c.length)?.[0]||'91';
+            return allCodes.map(([c,flag,cc])=>`<option value="${c}" ${cur===c?'selected':''}>${flag}+${c}</option>`).join('');
           })()}</select>
-          <input type="text" class="guest-inline-edit" value="${(function(){const ph=(g.phone||'').replace(/\D/g,'');const pfx=ph.startsWith('971')?'971':ph.startsWith('44')?'44':ph.startsWith('61')?'61':ph.startsWith('1')?'1':'91';return ph.startsWith(pfx)&&ph.length>pfx.length?ph.slice(pfx.length):ph;}())}" placeholder="—" data-guest-inline="${g.id}|phone" style="width:80px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
+          <input type="text" class="guest-inline-edit" value="${(function(){const ph=(g.phone||'').replace(/\D/g,'');const allC=['91','65','971','974','966','968','973','965','44','1','61','64','60','852','81','49','33','39','41','31','46','27','254'];const pfx=allC.find(c=>ph.startsWith(c)&&ph.length>c.length)||'91';return ph.startsWith(pfx)&&ph.length>pfx.length?ph.slice(pfx.length):ph;}())}" placeholder="—" data-guest-inline="${g.id}|phone" style="width:80px;padding:4px 7px;border:1.5px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter';box-sizing:border-box;">
           </div>
         </td>
         <td>
