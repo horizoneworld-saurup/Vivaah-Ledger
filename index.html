@@ -531,7 +531,7 @@
   .geb-field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:3px;}
   .geb-field input{width:100%; padding:6px 8px; border-radius:7px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
   .geb-hint{font-size:10.5px; color:var(--ink-soft); margin-top:6px; font-style:italic;}
-  .guest-add-row{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; align-items:center;}
+  .guest-add-row{display:flex; gap:8px; margin-top:4px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
   .guest-add-row input[type=text]{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter';}
   .guest-add-row select{padding:9px 11px; border-radius:8px; border:1px solid var(--line); font-size:12.5px; font-family:'Inter'; background:#fff;}
   .guest-del-btn{background:none; border:none; color:var(--ink-soft); cursor:pointer; font-size:13px;}
@@ -2160,6 +2160,43 @@
       </div>
     </div>
 
+    <div class="guest-add-row" style="margin-bottom:12px;margin-top:4px;">
+      <input type="text" id="newGuestName" placeholder="Family / guest name">
+      <select id="newGuestDialCode" style="padding:9px 6px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;max-width:130px;">
+        <option value="91">🇮🇳 +91 India</option>
+        <option value="65">🇸🇬 +65 Singapore</option>
+        <option value="971">🇦🇪 +971 UAE</option>
+        <option value="974">🇶🇦 +974 Qatar</option>
+        <option value="966">🇸🇦 +966 Saudi Arabia</option>
+        <option value="968">🇴🇲 +968 Oman</option>
+        <option value="973">🇧🇭 +973 Bahrain</option>
+        <option value="965">🇰🇼 +965 Kuwait</option>
+        <option value="44">🇬🇧 +44 UK</option>
+        <option value="1">🇺🇸 +1 USA</option>
+        <option value="1">🇨🇦 +1 Canada</option>
+        <option value="61">🇦🇺 +61 Australia</option>
+        <option value="64">🇳🇿 +64 New Zealand</option>
+        <option value="60">🇲🇾 +60 Malaysia</option>
+        <option value="852">🇭🇰 +852 Hong Kong</option>
+        <option value="81">🇯🇵 +81 Japan</option>
+        <option value="49">🇩🇪 +49 Germany</option>
+        <option value="33">🇫🇷 +33 France</option>
+        <option value="39">🇮🇹 +39 Italy</option>
+        <option value="41">🇨🇭 +41 Switzerland</option>
+        <option value="31">🇳🇱 +31 Netherlands</option>
+        <option value="46">🇸🇪 +46 Sweden</option>
+        <option value="27">🇿🇦 +27 South Africa</option>
+        <option value="254">🇰🇪 +254 Kenya</option>
+        <option value="1">🇺🇸 +1 Caribbean</option>
+      </select>
+      <input type="text" id="newGuestPhone" placeholder="Phone (optional)" style="max-width:130px;">
+      <select id="newGuestSide">
+        <option value="Bride">Bride's side</option>
+        <option value="Groom">Groom's side</option>
+        <option value="Both">Both</option>
+      </select>
+      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
+    </div>
     <div class="guest-event-chips" id="guestEventChips"></div>
     <div class="guest-summary-row" id="guestSummaryRow"></div>
     <div class="accom-summary" id="accomSummary"></div>
@@ -2200,25 +2237,7 @@
         </thead>
         <tbody id="guestTableBody"></tbody>
       </table>
-      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family below, or upload an Excel sheet.</div>
-    </div>
-    <div class="guest-add-row">
-      <input type="text" id="newGuestName" placeholder="Family / guest name">
-      <select id="newGuestDialCode" style="padding:9px 6px;border-radius:8px;border:1px solid var(--line);font-size:12px;font-family:'Inter';background:#fff;max-width:110px;">
-        <option value="91">🇮🇳 +91</option>
-        <option value="1">🇺🇸 +1 USA</option>
-        <option value="1">🇨🇦 +1 CAN</option>
-        <option value="44">🇬🇧 +44</option>
-        <option value="61">🇦🇺 +61</option>
-        <option value="971">🇦🇪 +971</option>
-      </select>
-      <input type="text" id="newGuestPhone" placeholder="Phone (optional)" style="max-width:130px;">
-      <select id="newGuestSide">
-        <option value="Bride">Bride's side</option>
-        <option value="Groom">Groom's side</option>
-        <option value="Both">Both</option>
-      </select>
-      <button class="btn btn-primary" id="btnAddGuest">+ Add family</button>
+      <div class="guest-empty" id="guestEmpty" style="display:none;">No guests added yet — add your first family above, or upload an Excel sheet.</div>
     </div>
   </div>
 
@@ -4446,7 +4465,10 @@ function waSend() {
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
   const phone = g.phone.replace(/[^0-9]/g, '');
-  const waUrl = `https://wa.me/${phone.length >= 10 && (phone.startsWith('91')||phone.startsWith('1')||phone.startsWith('44')||phone.startsWith('61')||phone.startsWith('971')) ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
+  // If phone already has a known country code prefix (10+ digits), use as-is; else assume India +91
+  const knownPrefixes = ['91','1','44','61','64','65','60','81','852','49','33','39','41','31','46','27','254','971','974','966','968','973','965'];
+  const hasDialCode = phone.length >= 10 && knownPrefixes.some(p => phone.startsWith(p));
+  const waUrl = `https://wa.me/${hasDialCode ? phone : '91' + phone}?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
   document.getElementById('waModalOverlay').classList.remove('show');
   // Refresh guest list to update sent icons (💌→❤️, 📮→📮✓)
