@@ -14108,24 +14108,23 @@ function setMobRsvpFilter(f, btn) {
 }
 
 function mobOpenWAInvite(guestId) {
-  // Use the desktop WA modal if available (it's in the DOM for all views)
-  var modal = document.getElementById('waModalOverlay');
-  if (modal && typeof openWAInvite === 'function') {
-    openWAInvite(guestId);
-    return;
-  }
-  // Fallback: direct WA link
+  // On mobile: always use direct WA link (desktop modal doesn't work on mobile)
   var g = (guests||[]).find(function(x){return x.id===guestId;});
-  if (!g || !g.ph) return;
+  if (!g) return;
+  if (!g.phone) { if(typeof showToast==='function') showToast('No phone number for this guest'); return; }
   var msg = typeof generateInviteMsg==='function' ? generateInviteMsg(g) : 'Dear '+g.name+', You are cordially invited to our wedding!';
+  msg = msg.replace(/\[Name\]/g, g.name);
   var ph = (g.phone||'').replace(/\D/g,'');
-  window.open('https://wa.me/'+(ph.length>=10&&(ph.startsWith('91')||ph.startsWith('1')||ph.startsWith('44')||ph.startsWith('61')||ph.startsWith('971'))?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
+  var knownPfx=['91','65','971','974','966','968','973','965','44','1','61','64','60','852','81','49','33','39','41','31','46','27','254'];
+  var hasCode = ph.length>=10 && knownPfx.some(function(p){return ph.startsWith(p);});
+  window.open('https://wa.me/'+(hasCode?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
   g.waSent = true;
-  storageSet('wedding-guests', JSON.stringify(guests));
-  if (typeof queueCloudSave==='function') queueCloudSave();
-  mobRenderGuests();
-  mobRenderRsvpList();
-  showToast('📲 WA opened & marked sent ✅');
+  g.invitationSent = true;
+  if(typeof saveGuests==='function') saveGuests();
+  if(typeof queueCloudSave==='function') queueCloudSave();
+  if(typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 100);
+  if(typeof mobRenderRsvpList==='function') setTimeout(mobRenderRsvpList, 150);
+  if(typeof showToast==='function') showToast('📲 WA opened & marked sent ✅');
 }
 
 function mobRenderRsvpMobile() {
