@@ -3478,9 +3478,18 @@ function generateInviteMsg(g) {
   var familyName = (branding && branding.familyName) ? branding.familyName : (coupleName.split(/\s+and\s+|\s+&\s+/i)[0].trim().split(' ').pop() + ' Family');
   var blessings = (branding && branding.blessings) ? branding.blessings : '';
   var blessLine = blessings ? '\nWith Blessings,\n' + blessings + '\n\n' : '\n';
+  var now = new Date();
   var invited = ALL_EVENTS.filter(function(ev) {
     var e = g.events && g.events[ev];
-    return e && (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) > 0;
+    if (!e || (Number(e.adults||0)+Number(e.kids||0)+Number(e.ladies||0)) === 0) return false;
+    // Skip events whose date has already passed
+    var t = eventTimeline && eventTimeline[ev];
+    if (t && t.date) {
+      var evDate = new Date(t.date);
+      evDate.setHours(23,59,59,999); // include the full day
+      if (evDate < now) return false;
+    }
+    return true;
   });
   if (invited.length === 0) return DEFAULT_WA_MSG.replace('[Name]', g.name||'') + '\n\n✅ *Kindly confirm — tap a link:*\n' + getRsvpConfirmLinks(g.id);
   var lines = invited.map(function(ev) {
