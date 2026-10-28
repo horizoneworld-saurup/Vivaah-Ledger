@@ -640,6 +640,60 @@ export default {
       return jsonResp({ success: true });
     }
 
+    // POST /save-sheet-id — Owner saves their Google Sheet ID to KV so EVT Manager can find it
+    if (path === '/save-sheet-id' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { ownerEmail, sheetId } = body;
+      if (!ownerEmail || !sheetId) return jsonResp({ error: 'Missing ownerEmail or sheetId' }, 400);
+      await env.VIVAAH_KV.put(`sheet-id:${encodeURIComponent(ownerEmail)}`, sheetId, { expirationTtl: 365 * 24 * 3600 });
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-sheet-id — EVT Manager fetches owner's Sheet ID from KV using owner email
+    if (path === '/get-sheet-id' && request.method === 'GET') {
+      const ownerEmail = url.searchParams.get('ownerEmail') || '';
+      if (!ownerEmail) return jsonResp({ sheetId: null });
+      const sheetId = await env.VIVAAH_KV.get(`sheet-id:${encodeURIComponent(ownerEmail)}`);
+      return jsonResp({ sheetId: sheetId || null });
+    }
+
+    // POST /save-wa-status — EVT Manager saves waSent/kankWASent/stdSent updates to KV
+    // Admin portal reads these back on load and merges into guest list
+    if (path === '/save-wa-status' && request.method === 'POST') {
+      let body;
+      try { body = await request.json(); } catch { return jsonResp({ error: 'Invalid JSON' }, 400); }
+      const { ownerEmail, guestId, waSent, kankWASent, stdSent, invitationSent } = body;
+      if (!ownerEmail || !guestId) return jsonResp({ error: 'Missing ownerEmail or guestId' }, 400);
+      const key = `wa-status:${encodeURIComponent(ownerEmail)}:${guestId}`;
+      const existing = await env.VIVAAH_KV.get(key);
+      const prev = existing ? JSON.parse(existing) : {};
+      await env.VIVAAH_KV.put(key, JSON.stringify({
+        ...prev,
+        guestId,
+        waSent: waSent !== undefined ? waSent : prev.waSent,
+        kankWASent: kankWASent !== undefined ? kankWASent : prev.kankWASent,
+        stdSent: stdSent !== undefined ? stdSent : prev.stdSent,
+        invitationSent: invitationSent !== undefined ? invitationSent : prev.invitationSent,
+        updatedAt: Date.now()
+      }), { expirationTtl: 30 * 24 * 3600 });
+      return jsonResp({ success: true });
+    }
+
+    // GET /get-wa-updates — admin fetches all waSent updates made by EVT Manager
+    if (path === '/get-wa-updates' && request.method === 'GET') {
+      const ownerEmail = url.searchParams.get('ownerEmail') || '';
+      if (!ownerEmail) return jsonResp({ updates: [] });
+      const prefix = `wa-status:${encodeURIComponent(ownerEmail)}:`;
+      const list = await env.VIVAAH_KV.list({ prefix });
+      const updates = [];
+      for (const k of list.keys) {
+        const raw = await env.VIVAAH_KV.get(k.name);
+        if (raw) { try { updates.push(JSON.parse(raw)); } catch(e) {} }
+      }
+      return jsonResp({ updates });
+    }
+
     return jsonResp({ error: 'Not found' }, 404);
   },
 

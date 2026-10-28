@@ -4463,9 +4463,11 @@ function waSend() {
   }
   g.invitationSent = true;
   // Mark waSent when sending via invite button OR regular WA
-  if (window._pendingInvite === g.id) { g.waSent = true; window._pendingInvite = null; }
-  if (window._pendingStd === g.id) { g.stdSent = true; window._pendingStd = null; }
-  if (window._pendingKank === g.id) { g.kankWASent = true; window._pendingKank = null; }
+  var _waUpdates = {};
+  if (window._pendingInvite === g.id) { g.waSent = true; _waUpdates.waSent = true; window._pendingInvite = null; }
+  if (window._pendingStd === g.id) { g.stdSent = true; _waUpdates.stdSent = true; window._pendingStd = null; }
+  if (window._pendingKank === g.id) { g.kankWASent = true; _waUpdates.kankWASent = true; window._pendingKank = null; }
+  if (Object.keys(_waUpdates).length) pushWAStatusToKV(g.id, _waUpdates);
   saveGuests();
   // Replace [Name] placeholder
   const msg = rawMsg.replace(/\[Name\]/g, g.name);
@@ -6218,8 +6220,26 @@ async function onSignedIn(){
   setSyncStatus('saving','Connecting…');
   try{
     let cachedId = await storageGet('wedding-sheet-id');
+    if (!cachedId && currentRole && currentRole !== 'owner' && currentRole !== 'admin') {
+      // Non-owner role: try to fetch the owner's sheet ID from KV using vivaah-approved-email
+      var _ownerEmail = localStorage.getItem('vivaah-approved-email') || '';
+      if (_ownerEmail) {
+        try {
+          var _kvResp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-sheet-id?ownerEmail='+encodeURIComponent(_ownerEmail));
+          var _kvData = await _kvResp.json();
+          if (_kvData && _kvData.sheetId) { cachedId = _kvData.sheetId; }
+        } catch(e) {}
+      }
+    }
     sheetId = cachedId || await findOrCreateSheet();
     await storageSet('wedding-sheet-id', sheetId);
+    // Save sheet ID to KV so non-owner roles on other devices can find it
+    if (googleUserEmail) {
+      fetch('https://vivaah-auth.rms-d21.workers.dev/save-sheet-id', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ownerEmail: googleUserEmail, sheetId: sheetId })
+      }).catch(function(){});
+    }
     const cloudData = await pullFromSheet();
     if(cloudData){
       // Logos: prefer cloud (by ID), fall back to local
@@ -6244,6 +6264,9 @@ async function onSignedIn(){
           if (!loc) return cg;
           return Object.assign({}, cg, {
             waSent: loc.waSent || cg.waSent || false,
+            kankWASent: loc.kankWASent || cg.kankWASent || false,
+            stdSent: loc.stdSent || cg.stdSent || false,
+            invitationSent: loc.invitationSent || cg.invitationSent || false,
             callStatus: loc.callStatus || cg.callStatus || '',
             confirmedAdults: loc.confirmedAdults || cg.confirmedAdults || 0,
             confirmedKids: loc.confirmedKids || cg.confirmedKids || 0,
@@ -6308,6 +6331,16 @@ async function onSignedIn(){
       }
     }
     setSyncStatus('ok','Synced just now');
+    // Pull any waSent updates made by EVT Manager and merge into guest list
+    setTimeout(pullWAUpdatesFromKV, 1500);
+    // Start periodic KV polls so admin sees updates live without manual refresh
+    if (window._waKvPollTimer) clearInterval(window._waKvPollTimer);
+    window._waKvPollTimer = setInterval(function(){
+      // Poll WA sent status (from EVT Manager)
+      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV();
+      // Poll guest RSVP confirmations (from guests clicking WA link)
+      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV();
+    }, 2*60*1000);
     // Push PIN hashes to KV so new devices can get them without Google OAuth
     (async function(){
       const _roles=['admin','editor','viewer','owner','eventmanager'];
@@ -12893,7 +12926,15 @@ window.mobSyncNow = function(){
       mobUpdateDash(); mobStartCountdown(); mobRenderBudgetChart();
       var av = document.querySelector('.mob-view.active');
       if(av){ var sid=av.id.replace('mobV','').toLowerCase(); if(MOB_SECS[sid]&&MOB_SECS[sid].render) MOB_SECS[sid].render(); }
+      // Also pull latest WA sent status + guest RSVPs from KV
+      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV();
+      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV();
     }).catch(function(){ mobSetSync('error','Sync failed'); });
+  } else {
+    // Even without full sync, still pull WA updates from KV
+    if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV().then(function(){
+      mobSetSync('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+    });
   }
 };
 
@@ -14133,9 +14174,49 @@ function mobOpenWAInvite(guestId) {
   g.invitationSent = true;
   if(typeof saveGuests==='function') saveGuests();
   if(typeof queueCloudSave==='function') queueCloudSave();
+  // Push waSent update to KV so admin portal and other devices see it
+  pushWAStatusToKV(guestId, { waSent: true, invitationSent: true });
   if(typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 100);
   if(typeof mobRenderRsvpList==='function') setTimeout(mobRenderRsvpList, 150);
   if(typeof showToast==='function') showToast('📲 WA opened & marked sent ✅');
+}
+
+// Push waSent/kankWASent/stdSent to KV so admin sees EVT Manager updates
+function pushWAStatusToKV(guestId, updates) {
+  var ownerEmail = localStorage.getItem('vivaah-approved-email') || googleUserEmail || '';
+  if (!ownerEmail || !guestId) return;
+  fetch('https://vivaah-auth.rms-d21.workers.dev/save-wa-status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ ownerEmail: ownerEmail, guestId: guestId }, updates))
+  }).catch(function(){});
+}
+
+// Admin: pull waSent updates from KV and merge into local guest list
+async function pullWAUpdatesFromKV() {
+  // Always prefer vivaah-approved-email (owner's email) — for EVT Manager, googleUserEmail is their own email not owner's
+  var ownerEmail = localStorage.getItem('vivaah-approved-email') || googleUserEmail || '';
+  if (!ownerEmail) return;
+  try {
+    var resp = await fetch('https://vivaah-auth.rms-d21.workers.dev/get-wa-updates?ownerEmail=' + encodeURIComponent(ownerEmail));
+    var data = await resp.json();
+    if (!data || !data.updates || !data.updates.length) return;
+    var changed = false;
+    data.updates.forEach(function(upd) {
+      var g = (guests||[]).find(function(x){ return x.id === upd.guestId; });
+      if (!g) return;
+      if (upd.waSent && !g.waSent) { g.waSent = true; changed = true; }
+      if (upd.kankWASent && !g.kankWASent) { g.kankWASent = true; changed = true; }
+      if (upd.stdSent && !g.stdSent) { g.stdSent = true; changed = true; }
+      if (upd.invitationSent && !g.invitationSent) { g.invitationSent = true; changed = true; }
+    });
+    if (changed) {
+      if(typeof saveGuests==='function') await saveGuests();
+      if(typeof renderGuests==='function') renderGuests();
+      if(typeof mobRenderGuests==='function') mobRenderGuests();
+      showToast('📲 WA status synced from Event Manager');
+    }
+  } catch(e) {}
 }
 
 function mobRenderRsvpMobile() {
@@ -14165,10 +14246,14 @@ function pollGuestRsvpsFromKV() {
         });
         if (updated) {
           storageSet('wedding-guests', JSON.stringify(guests));
+          // Push RSVP confirmations back to Google Sheet so all devices see them
+          if (typeof queueCloudSave === 'function') queueCloudSave();
           if (typeof mobRenderRsvpStats === 'function') mobRenderRsvpStats();
           if (typeof mobRenderRsvpList === 'function') mobRenderRsvpList();
           // Also update desktop RSVP tracker (skipKvPoll=true to avoid infinite loop)
           if (typeof renderRsvpTracker === 'function') renderRsvpTracker(true);
+          if (typeof renderGuests === 'function') renderGuests();
+          if (typeof showToast === 'function') showToast('🎉 Guest RSVP received!');
         }
       }).catch(function(){});
   } catch(e) {}
