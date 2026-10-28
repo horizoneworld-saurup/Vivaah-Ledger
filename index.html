@@ -12965,6 +12965,29 @@ function mobUpdateDash(){
 
 // ── Music — exact same approach as vivaah_mobile.html ────────────
 var _mobMusicPlaying = false;
+
+// iOS Home Screen (standalone) music start — must be triggered by direct button tap
+(function(){
+  var isIosStandalone = (window.navigator.standalone === true);
+  if (!isIosStandalone) return;
+  // Show a floating "tap to start music" button that iOS will accept
+  window.addEventListener('load', function(){
+    var overlay = document.createElement('button');
+    overlay.id = 'iosMusicStart';
+    overlay.innerHTML = '🎵 Tap to play music';
+    overlay.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:99999;background:linear-gradient(135deg,#7a1838,#e8892a);color:#fff;border:none;border-radius:30px;padding:12px 28px;font-size:15px;font-family:Inter,sans-serif;font-weight:600;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,0.25);letter-spacing:0.3px;';
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(){
+      var a1 = document.getElementById('mobWeddingMusic');
+      var a2 = document.getElementById('weddingMusic');
+      [a1, a2].forEach(function(a){ if(a){ a.volume=0.45; a.muted=false; a.play().then(function(){ _mobMusicPlaying=true; var btn=document.getElementById('mobMusicBtn'); if(btn){btn.textContent='🔇';btn.style.background='#f9a8c9';} var btn2=document.getElementById('musicBtn'); if(btn2){btn2.textContent='🔇 Mute';btn2.style.background='#f9a8c9';} }).catch(function(){}); } });
+      overlay.remove();
+    });
+    // Auto-hide after 8 seconds if not tapped
+    setTimeout(function(){ if(overlay.parentNode) overlay.remove(); }, 8000);
+  });
+})();
+
 window.mobToggleMusic = function() {
   var audio = document.getElementById('mobWeddingMusic');
   var btn = document.getElementById('mobMusicBtn');
