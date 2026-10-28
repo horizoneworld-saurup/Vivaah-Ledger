@@ -509,11 +509,32 @@ export default {
 
     // GET /get-guest-rsvps — admin polls for all guest RSVP submissions
     // OPTIMISED: reads single aggregated 'all-rsvps' key = 1 KV read (was N+1)
+    // FALLBACK: if all-rsvps is empty, scan individual rsvp: keys (migration from old worker)
     if (path === '/get-guest-rsvps' && request.method === 'GET') {
       const aggRaw = await env.VIVAAH_KV.get('all-rsvps');
-      if (!aggRaw) return jsonResp({ rsvps: [] });
-      const agg = JSON.parse(aggRaw);
-      return jsonResp({ rsvps: Object.values(agg) });
+      if (aggRaw) {
+        const agg = JSON.parse(aggRaw);
+        return jsonResp({ rsvps: Object.values(agg) });
+      }
+      // Fallback: scan individual rsvp: keys (old format before aggregation)
+      const list = await env.VIVAAH_KV.list({ prefix: 'rsvp:' });
+      const rsvps = [];
+      const agg = {};
+      for (const k of list.keys) {
+        const raw = await env.VIVAAH_KV.get(k.name);
+        if (raw) {
+          try {
+            const entry = JSON.parse(raw);
+            rsvps.push(entry);
+            if (entry.guestId) agg[entry.guestId] = entry;
+          } catch(e) {}
+        }
+      }
+      // Migrate: write aggregated key so next call is fast
+      if (Object.keys(agg).length > 0) {
+        await env.VIVAAH_KV.put('all-rsvps', JSON.stringify(agg), { expirationTtl: 365 * 24 * 3600 });
+      }
+      return jsonResp({ rsvps });
     }
 
     // GET /list-approved — list all approved users for owner panel

@@ -6321,6 +6321,9 @@ async function onSignedIn(){
       await storageSet('wedding-guests', JSON.stringify(guests));
       await storageSet('wedding-timeline', JSON.stringify(eventTimeline));
       autoSaveLocalBackup(); // full backup snapshot after every cloud pull
+      // Push merged data back to sheet — captures any local waSent/callStatus
+      // that was set before Google sign-in (e.g. WA sent while offline/no-token)
+      setTimeout(function(){ if(googleAccessToken && sheetId) pushToSheet(); }, 2000);
     } else {
       // Only push to sheet if we actually have local data to push
       // Never overwrite cloud with empty data on a fresh load
