@@ -13314,6 +13314,7 @@ function mobRenderGuests(){
       '<div style="display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid rgba(0,0,0,0.06);">'+
         (ph?'<a href="tel:+'+ph+'" style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:6px;text-decoration:none;font-size:16px;">📞</a>':'')+
         (ph?'<button class="mob-dbtn-wa" onclick="event.stopPropagation();mobOpenWAInvite(\''+g.id+'\')" style="flex:1;text-align:center;background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';border-radius:8px;padding:6px;font-size:13px;font-weight:600;cursor:pointer;color:'+(g.waSent?'#2E7D32':'#1565C0')+';">'+(g.waSent?'📲✓ Sent':'📲 Invite')+'</button>':'')+
+        (ph&&g.waSent&&!g.callStatus?'<button onclick="event.stopPropagation();mobResendRsvpLink(\''+g.id+'\')" style="flex:1;text-align:center;background:#FFF8E1;border:1px solid #F57F17;border-radius:8px;padding:6px;font-size:12px;font-weight:700;cursor:pointer;color:#F57F17;">🔁 RSVP</button>':'')+
         kankBtn+
         stdBtn+
         '<button style="flex:1;text-align:center;background:var(--ivory-deep);border:none;border-radius:8px;padding:6px;font-size:14px;cursor:pointer;" onclick="mobOpenConfirm(\''+g.id+'\')">'+lbl+'</button>'+
@@ -14056,7 +14057,7 @@ function renderRsvpList() {
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+escHtml(g.side||'')+'</td>'
       +'<td style="padding:8px 10px;font-size:12px;color:#555;">'+(g.phone?'<a href="tel:'+escHtml(g.phone)+'" style="color:#1565C0;">'+escHtml(g.phone)+'</a>':'—')+'</td>'
       +'<td style="padding:8px 10px;text-align:center;">'
-        +'<div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><button onclick="event.stopPropagation();openWAInvite(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Invite')+'</button>'+(g.waSent?'<span style="font-size:10px;color:#888;">tap to resend</span>':'')+"</div>"
+        +'<div style="display:flex;flex-direction:column;gap:3px;align-items:center;"><button onclick="event.stopPropagation();openWAInvite(\''+g.id+'\')" style="background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';padding:3px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600;">'+(g.waSent?'📲 Sent':'📲 Invite')+'</button>'+(g.waSent&&!g.callStatus?'<button onclick="event.stopPropagation();mobResendRsvpLink(\''+g.id+'\')" style="background:#FFF8E1;border:1px solid #F57F17;color:#F57F17;padding:3px 8px;border-radius:6px;font-size:11px;cursor:pointer;font-weight:700;white-space:nowrap;">🔁 Resend RSVP</button>':g.waSent?'<span style="font-size:10px;color:#888;">tap to resend</span>':'')+"</div>"
       +'</td>'
       +'<td style="padding:8px 10px;text-align:center;"><span style="background:'+statusBg+';color:'+statusColor+';padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;">'+statusLabel+'</span></td>'
       +'<td style="padding:8px 10px;text-align:center;font-size:13px;font-weight:600;color:#2E7D32;">'+confNum+'</td>'
@@ -14193,6 +14194,28 @@ function mobOpenWAInvite(guestId) {
   if(typeof mobRenderGuests==='function') setTimeout(mobRenderGuests, 100);
   if(typeof mobRenderRsvpList==='function') setTimeout(mobRenderRsvpList, 150);
   if(typeof showToast==='function') showToast('📲 WA opened & marked sent ✅');
+}
+
+// Send a short follow-up WA message asking guest to confirm RSVP via link
+function mobResendRsvpLink(guestId) {
+  var g = (guests||[]).find(function(x){return x.id===guestId;});
+  if (!g) return;
+  if (!g.phone) { if(typeof showToast==='function') showToast('No phone number for this guest'); return; }
+  var base = (window.location.origin + window.location.pathname).replace(/\/$/, '');
+  var enc = encodeURIComponent(guestId);
+  var name = g.name || 'there';
+  var msg = 'Dear ' + name + ',\n\n'
+    + 'We noticed we haven\'t received your RSVP yet for our wedding celebrations. 🙏\n\n'
+    + 'Could you please take a moment to confirm your attendance?\n\n'
+    + '✅ Yes, I will attend → ' + base + '?rsvp=' + enc + '&s=1\n'
+    + '❌ Cannot make it → ' + base + '?rsvp=' + enc + '&s=2\n'
+    + '🤔 Will try → ' + base + '?rsvp=' + enc + '&s=3\n\n'
+    + 'Just tap the link above — it only takes a second! Thank you 💕';
+  var ph = (g.phone||'').replace(/\D/g,'');
+  var knownPfx=['91','65','971','974','966','968','973','965','44','1','61','64','60','852','81','49','33','39','41','31','46','27','254'];
+  var hasCode = ph.length>=10 && knownPfx.some(function(p){return ph.startsWith(p);});
+  window.open('https://wa.me/'+(hasCode?ph:'91'+ph)+'?text='+encodeURIComponent(msg),'_blank');
+  if(typeof showToast==='function') showToast('📲 RSVP reminder sent!');
 }
 
 // Push waSent/kankWASent/stdSent to KV so admin sees EVT Manager updates
@@ -14350,6 +14373,7 @@ function mobRenderRsvpList() {
       +'</div>'
       +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'
         +(g.phone?'<button onclick="event.stopPropagation();mobOpenWAInvite(\''+g.id+'\')" style="flex:1;padding:7px;border-radius:8px;border:1px solid '+(g.waSent?'#2E7D32':'#1565C0')+';background:'+(g.waSent?'#E8F5E9':'#E3F2FD')+';color:'+(g.waSent?'#2E7D32':'#1565C0')+';font-size:12px;font-weight:700;cursor:pointer;">'+(g.waSent?'📲✓ Sent (Resend)':'📲 Send Invite')+'</button>':'')
+        +(g.phone&&g.waSent&&!g.callStatus?'<button onclick="event.stopPropagation();mobResendRsvpLink(\''+g.id+'\')" style="flex:1;padding:7px;border-radius:8px;border:1px solid #F57F17;background:#FFF8E1;color:#F57F17;font-size:12px;font-weight:700;cursor:pointer;">🔁 Resend RSVP</button>':'')
         +'<select onclick="event.stopPropagation();" onchange="event.stopPropagation();rsvpSetStatus(\''+g.id+'\',this.value);mobRenderRsvpMobile();this.blur();" style="flex:2;padding:7px;border-radius:8px;border:1.5px solid '+statusColor+';background:'+statusBg+';color:'+statusColor+';font-size:12px;font-weight:700;cursor:pointer;">'
           +'<option value="">— Update RSVP —</option>'
           +'<option value="confirmed"'+(g.callStatus==='confirmed'?' selected':'')+'>✅ Coming</option>'
