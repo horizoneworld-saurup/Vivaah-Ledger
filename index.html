@@ -1780,10 +1780,7 @@
   <!-- RANGOLI COUNTDOWN TIMER -->
   <div class="rangoli-wrap countdown-hide" id="countdownWrap">
     <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Toggle music">🎵 Music</button>
-    <audio id="weddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
-    <script>/* Mute desktop audio immediately on mobile — runs inline before any other JS */
-    (function(){ if(window.matchMedia('(max-width:767px)').matches){ var a=document.getElementById('weddingMusic'); if(a){a.muted=true;a.volume=0;} } })();
-    </script>
+    <audio id="weddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
     <div class="card">
       <svg class="bg-svg" viewBox="0 0 660 340" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
         <defs>
@@ -4314,8 +4311,6 @@ function toggleMusic() {
 }
 
 document.addEventListener('click', function _firstClick() {
-  // On mobile, desktop audio is disabled — mobile has its own audio
-  if(window._mobActive){ document.removeEventListener('click', _firstClick); return; }
   var audio = document.getElementById('weddingMusic');
   if (audio && !_musicPlaying) {
     audio.volume = 0.45;
@@ -12215,7 +12210,7 @@ function runGlobalSearch(q, gsInput, gsResults){
 
   <!-- Countdown -->
   <div class="mob-cd-wrap hidden" id="mobCdWrap" style="position:relative;overflow:hidden;">
-    <audio id="mobWeddingMusic" loop><source src="Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
+    <audio id="mobWeddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
     <button id="mobMusicBtn" onclick="mobToggleMusic()" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(255,255,255,0.85);border:1.5px solid #e8892a;border-radius:20px;padding:3px 8px;font-size:13px;cursor:pointer;color:#7a1838;">🎵</button>
     <div id="mobPetals" style="position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;"></div>
     <div class="mob-cd-left">
@@ -12980,7 +12975,8 @@ var _mobMusicPlaying = false;
     overlay.addEventListener('click', function(){
       var a1 = document.getElementById('mobWeddingMusic');
       var a2 = document.getElementById('weddingMusic');
-      [a1, a2].forEach(function(a){ if(a){ a.volume=0.45; a.muted=false; a.play().then(function(){ _mobMusicPlaying=true; var btn=document.getElementById('mobMusicBtn'); if(btn){btn.textContent='🔇';btn.style.background='#f9a8c9';} var btn2=document.getElementById('musicBtn'); if(btn2){btn2.textContent='🔇 Mute';btn2.style.background='#f9a8c9';} }).catch(function(){}); } });
+      var a1 = document.getElementById('mobWeddingMusic');
+      if(a1){ a1.muted=false; a1.volume=0.45; a1.load(); a1.play().then(function(){ _mobMusicPlaying=true; var btn=document.getElementById('mobMusicBtn'); if(btn){btn.textContent='🔇';btn.style.background='#f9a8c9';} }).catch(function(e){ console.log('iOS music err:',e); }); }
       overlay.remove();
     });
     // Auto-hide after 8 seconds if not tapped
