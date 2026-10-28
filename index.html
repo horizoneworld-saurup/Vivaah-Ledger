@@ -3392,7 +3392,16 @@ function submitGuestRsvp(guestId) {
   var kids   = parseInt(document.getElementById('rsvpKids').value||0)||0;
   var note   = (document.getElementById('rsvpNote').value||'').trim();
 
-  // Update guest data
+  // ALWAYS push RSVP to KV — works even if guest opens link on their own phone (guests array empty)
+  try {
+    fetch('https://vivaah-auth.rms-d21.workers.dev/guest-rsvp', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
+    }).catch(function(){});
+  } catch(e) {}
+
+  // Also update local guest data if guests are loaded (admin device)
   var g = (guests||[]).find(function(x){ return x.id===guestId; });
   if (g) {
     g.callStatus = status;
@@ -3403,15 +3412,6 @@ function submitGuestRsvp(guestId) {
     if (note) g.rsvpNote = note;
     storageSet('wedding-guests', JSON.stringify(guests));
     if (typeof queueCloudSave==='function') queueCloudSave();
-    // Also push RSVP to worker KV so admin sees it cross-device
-    try {
-      var workerBase = 'https://vivaah-auth.rms-d21.workers.dev';
-      fetch(workerBase+'/guest-rsvp', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
-      }).catch(function(){});
-    } catch(e) {}
   }
 
   // Show thank you screen
@@ -3444,17 +3444,28 @@ function handleRsvpUrlParam() {
     if (!gid) return;
     // Remove params from URL immediately
     history.replaceState({}, '', window.location.pathname);
-    // Wait for app + guests to fully load
+    // Pre-select status
+    var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
+    if (s) window._guestRsvpStatus = statusMap[s] || '';
+    // If status already in URL (guest tapped a direct link), push to KV immediately
+    // This fires even if guests array is empty (guest's own phone, no sign-in)
+    if (s && statusMap[s]) {
+      try {
+        fetch('https://vivaah-auth.rms-d21.workers.dev/guest-rsvp', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({guestId:gid, callStatus:statusMap[s], confirmedAdults:0, confirmedKids:0, rsvpNote:''})
+        }).catch(function(){});
+      } catch(e) {}
+    }
+    // Wait for app to load, show portal for count confirmation (max 3s wait)
+    var _waited = 0;
     function tryShow() {
-      if (typeof guests === 'undefined' || !Array.isArray(guests)) {
+      _waited += 300;
+      if ((typeof guests === 'undefined' || !Array.isArray(guests)) && _waited < 3000) {
         setTimeout(tryShow, 300); return;
       }
       showGuestRsvpPortal(gid, s||'');
-      // Pre-select the status
-      if (s) {
-        var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
-        window._guestRsvpStatus = statusMap[s]||'';
-      }
     }
     setTimeout(tryShow, 800);
   } catch(e) { console.log('RSVP URL param error', e); }
