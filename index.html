@@ -3362,9 +3362,17 @@ function showGuestRsvpPortal(guestId, preStatus) {
     + '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:16px;">'+familyName+' · Powered by Vivaah Ledger</div>'
     + '</div>';
 
-  // Set initial status
+  // Set initial status — MUST set _guestRsvpStatus here so Submit works without guest re-tapping the button
   overlay.dataset.selectedStatus = initStatus;
   document.body.appendChild(overlay);
+  // If status was pre-selected from URL (?s=1), activate it now so _guestRsvpStatus is definitely set
+  if (initStatus) {
+    window._guestRsvpStatus = initStatus;
+    // Also visually highlight the selected button
+    setTimeout(function() {
+      if (typeof guestRsvpSelect === 'function') guestRsvpSelect(initStatus);
+    }, 50);
+  }
 }
 
 window._guestRsvpStatus = '';
@@ -3393,12 +3401,23 @@ function submitGuestRsvp(guestId) {
   var note   = (document.getElementById('rsvpNote').value||'').trim();
 
   // ALWAYS push RSVP to KV — works even if guest opens link on their own phone (guests array empty)
+  // Uses 3 methods to guarantee delivery even in WhatsApp/Instagram WebViews on Android:
+  var _rsvpPayload = JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note});
+  var _rsvpUrl = 'https://vivaah-auth.rms-d21.workers.dev/guest-rsvp';
+  // Method 1: fetch POST (works in most browsers)
   try {
-    fetch('https://vivaah-auth.rms-d21.workers.dev/guest-rsvp', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({guestId:guestId, callStatus:status, confirmedAdults:adults, confirmedKids:kids, rsvpNote:note})
-    }).catch(function(){});
+    fetch(_rsvpUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body:_rsvpPayload }).catch(function(){});
+  } catch(e) {}
+  // Method 2: sendBeacon (works even if page unloads, Android WebView friendly)
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(_rsvpUrl, new Blob([_rsvpPayload], {type:'application/json'}));
+    }
+  } catch(e) {}
+  // Method 3: pixel GET fallback (works even if POST is blocked)
+  try {
+    var _statusNum = status==='confirmed'?'confirmed':status==='declined'?'declined':'maybe';
+    new Image().src = 'https://vivaah-auth.rms-d21.workers.dev/rsvp-pixel?g='+encodeURIComponent(guestId)+'&s='+encodeURIComponent(_statusNum)+'&a='+adults+'&k='+kids;
   } catch(e) {}
 
   // Also update local guest data if guests are loaded (admin device)
@@ -3448,15 +3467,16 @@ function handleRsvpUrlParam() {
     var statusMap = {'1':'confirmed','2':'declined','3':'maybe'};
     if (s) window._guestRsvpStatus = statusMap[s] || '';
     // If status already in URL (guest tapped a direct link), push to KV immediately
-    // This fires even if guests array is empty (guest's own phone, no sign-in)
+    // Uses 3 methods — handles WhatsApp/Instagram WebViews on Android that may block fetch POST
     if (s && statusMap[s]) {
-      try {
-        fetch('https://vivaah-auth.rms-d21.workers.dev/guest-rsvp', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({guestId:gid, callStatus:statusMap[s], confirmedAdults:0, confirmedKids:0, rsvpNote:''})
-        }).catch(function(){});
-      } catch(e) {}
+      var _urlPayload = JSON.stringify({guestId:gid, callStatus:statusMap[s], confirmedAdults:0, confirmedKids:0, rsvpNote:''});
+      var _urlRsvpEndpoint = 'https://vivaah-auth.rms-d21.workers.dev/guest-rsvp';
+      // Method 1: fetch POST
+      try { fetch(_urlRsvpEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body:_urlPayload }).catch(function(){}); } catch(e) {}
+      // Method 2: sendBeacon
+      try { if (navigator.sendBeacon) navigator.sendBeacon(_urlRsvpEndpoint, new Blob([_urlPayload], {type:'application/json'})); } catch(e) {}
+      // Method 3: pixel GET (guaranteed to fire, worker stores it)
+      try { new Image().src = 'https://vivaah-auth.rms-d21.workers.dev/rsvp-pixel?g='+encodeURIComponent(gid)+'&s='+encodeURIComponent(statusMap[s])+'&a=0&k=0'; } catch(e) {}
     }
     // Wait for app to load, show portal for count confirmation (max 3s wait)
     var _waited = 0;
