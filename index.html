@@ -4317,8 +4317,7 @@ document.addEventListener('click', function _firstClick() {
   // On mobile, desktop audio is disabled — mobile has its own audio
   if(window._mobActive){ document.removeEventListener('click', _firstClick); return; }
   var audio = document.getElementById('weddingMusic');
-  var wrap = document.getElementById('countdownWrap');
-  if (audio && wrap && !wrap.classList.contains('countdown-hide') && !_musicPlaying) {
+  if (audio && !_musicPlaying) {
     audio.volume = 0.45;
     audio.play().then(function() {
       _musicPlaying = true;
@@ -12999,21 +12998,15 @@ document.addEventListener('click', function _mobFirstClick(e) {
     return;
   }
   var audio = document.getElementById('mobWeddingMusic');
-  var wrap = document.getElementById('mobCdWrap');
-  if (audio && wrap && !wrap.classList.contains('hidden') && !_mobMusicPlaying) {
+  if (audio && !_mobMusicPlaying) {
     audio.volume = 0.45;
     audio.play().then(function() {
       _mobMusicPlaying = true;
       var btn = document.getElementById('mobMusicBtn');
       if (btn) { btn.textContent = '🔇'; btn.style.background = '#f9a8c9'; }
     }).catch(function(){});
-    document.removeEventListener('click', _mobFirstClick);
-  } else if(wrap && wrap.classList.contains('hidden')){
-    // Countdown not visible yet (sync still in progress) — keep listener active
-    // so music plays once countdown appears after sync completes
-  } else {
-    document.removeEventListener('click', _mobFirstClick);
   }
+  document.removeEventListener('click', _mobFirstClick);
 });
 
 // ── Countdown ─────────────────────────────────────────────────────
