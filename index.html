@@ -2263,6 +2263,13 @@
     </div>
   <div class="sec-body collapsed" id="rsvpSecBody" style="background:#F1F8E9;">
 
+    <!-- RSVP Debug Tool — temporary, remove after diagnosis -->
+    <div id="rsvpDebugBox" style="margin:12px 18px 0;padding:10px 14px;background:#FFF3E0;border:1px solid #FF9800;border-radius:8px;font-size:12px;">
+      <b>🔍 RSVP Debug:</b>
+      <button onclick="window._debugRsvp()" style="margin-left:8px;padding:3px 10px;border-radius:6px;border:1px solid #E65100;background:#fff;color:#E65100;font-size:12px;cursor:pointer;font-weight:700;">Check KV Data</button>
+      <button onclick="document.getElementById('rsvpDebugBox').style.display='none'" style="margin-left:6px;padding:3px 8px;border-radius:6px;border:1px solid #999;background:#fff;color:#666;font-size:12px;cursor:pointer;">Hide</button>
+      <div id="rsvpDebugOut" style="margin-top:8px;white-space:pre-wrap;font-family:monospace;font-size:11px;max-height:200px;overflow-y:auto;"></div>
+    </div>
     <!-- Stats row -->
     <div id="rsvpStatsRow" style="display:flex;gap:12px;flex-wrap:wrap;padding:18px 18px 0;"></div>
 
@@ -14315,6 +14322,32 @@ function pollGuestRsvpsFromKV() {
       }).catch(function(){});
   } catch(e) {}
 }
+
+// TEMPORARY DEBUG — shows raw KV RSVP data vs guest IDs in memory
+window._debugRsvp = function() {
+  var out = document.getElementById('rsvpDebugOut');
+  if (out) out.textContent = 'Fetching…';
+  fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var lines = [];
+      lines.push('KV has ' + (data.rsvps||[]).length + ' RSVP(s):');
+      (data.rsvps||[]).forEach(function(r) {
+        var match = (guests||[]).find(function(x){ return x.id === r.guestId; });
+        lines.push('  guestId: ' + r.guestId);
+        lines.push('  status:  ' + r.callStatus);
+        lines.push('  match:   ' + (match ? '✅ ' + match.name : '❌ NO MATCH IN GUEST LIST'));
+        lines.push('');
+      });
+      if (!(data.rsvps||[]).length) lines.push('(empty — no RSVPs in KV yet)');
+      lines.push('Your guest list has ' + (guests||[]).length + ' guests.');
+      lines.push('First 3 guest IDs: ' + (guests||[]).slice(0,3).map(function(g){ return g.id+' ('+g.name+')'; }).join(', '));
+      if (out) out.textContent = lines.join('\n');
+    })
+    .catch(function(e) {
+      if (out) out.textContent = 'Error: ' + e.message;
+    });
+};
 
 function mobRenderRsvpStats() {
   var gs = (guests||[]).filter(function(g){return g.name&&g.name.trim();});
