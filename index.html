@@ -312,6 +312,36 @@
   .sync-meta.saving{color:var(--gold);}
   .sync-meta.error{color:var(--rust);}
   .btn-tiny{padding:6px 11px; font-size:12px;}
+  /* Sync error alert banner */
+  #syncErrorAlert{
+    display:none; align-items:center; gap:10px; flex-wrap:wrap;
+    background:#FFF3E0; border:2px solid #E65100; border-radius:10px;
+    padding:10px 14px; margin-bottom:16px; font-size:13px; color:#BF360C;
+    font-weight:600; animation:syncAlertPulse 2s ease-in-out 3;
+  }
+  #syncErrorAlert.visible{ display:flex; }
+  @keyframes syncAlertPulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(230,81,0,0); }
+    50%{ box-shadow:0 0 0 6px rgba(230,81,0,0.18); }
+  }
+  #syncErrorAlert .sync-alert-btn{
+    padding:5px 13px; border-radius:7px; border:1.5px solid #E65100;
+    background:#E65100; color:#fff; font-size:12px; font-weight:700;
+    cursor:pointer; white-space:nowrap; flex-shrink:0;
+  }
+  /* Mobile sync error strip */
+  #mobSyncAlert{
+    display:none; align-items:center; gap:8px;
+    background:#E65100; color:#fff; font-size:11.5px; font-weight:700;
+    padding:7px 14px; cursor:pointer; flex-shrink:0;
+  }
+  #mobSyncAlert.visible{ display:flex; }
+  #mobSyncAlert .mob-alert-btn{
+    margin-left:auto; background:rgba(255,255,255,0.25); border:1px solid rgba(255,255,255,0.6);
+    color:#fff; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:700; cursor:pointer;
+  }
+  /* Orange dot on mob sync dot when error */
+  .mob-sync-dot.error{ background:#E65100 !important; }
 
   /* ---------- Guest & catering calculator ---------- */
   /* ── Caterer Auto-Tally ── */
@@ -547,6 +577,22 @@
   }
   .voice-fab:hover{transform:scale(1.06);}
   .voice-fab.listening{background:var(--rust); animation:voice-pulse 1.2s ease-in-out infinite;}
+  /* Scroll-nav buttons */
+  .scroll-nav{
+    position:fixed; right:16px; bottom:90px; display:flex; flex-direction:column; gap:6px;
+    z-index:200; opacity:0; pointer-events:none; transition:opacity .25s;
+  }
+  .scroll-nav.visible{ opacity:1; pointer-events:auto; }
+  .scroll-nav-btn{
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
+    background:rgba(92,26,43,0.88); color:#fff; font-size:16px; line-height:1;
+    box-shadow:0 4px 14px rgba(0,0,0,0.28); display:flex; align-items:center; justify-content:center;
+    transition:background .15s, transform .12s;
+  }
+  .scroll-nav-btn:hover{ background:var(--maroon); transform:scale(1.1); }
+  @media(min-width:768px){
+    .scroll-nav{ bottom:36px; right:24px; }
+  }
   @keyframes voice-pulse{
     0%, 100%{ box-shadow:0 0 0 0 rgba(181,86,47,0.5); }
     50%{ box-shadow:0 0 0 14px rgba(181,86,47,0); }
@@ -563,7 +609,7 @@
     body{background:#fff;}
     .topbar-actions, .sync-banner, .toolbar .filters, .empty-state,
     .row-actions, .icon-btn, .chev, .guest-chev, #btnAddVendor, .catering-actions,
-    .add-payment-form, .pay-item .del, .footnote, .ticker-wrap, .voice-fab,
+    .add-payment-form, .pay-item .del, .footnote, .ticker-wrap, .voice-fab, .scroll-nav,
     .voice-caption, .reminder-add-row, .guest-add-row, .guest-del-btn,
     .guest-head-actions, #btnEditBranding { display:none !important; }
     .card, .ledger, .catering-card, .reminder-card, .guest-card{box-shadow:none; border:1px solid #ccc;}
@@ -1743,6 +1789,14 @@
     </span>
   </div>
 
+  <!-- Sync error alert (desktop) — shown when Google sync breaks -->
+  <div id="syncErrorAlert">
+    <span>⚠️ Google sync is broken —</span>
+    <span id="syncErrorMsg">your changes are saved locally but not to Google Sheets.</span>
+    <button class="sync-alert-btn" onclick="document.getElementById('btnGoogleSignIn').click()">Sign In Again</button>
+    <button onclick="document.getElementById('syncErrorAlert').classList.remove('visible')" style="background:none;border:none;cursor:pointer;color:#BF360C;font-size:16px;line-height:1;margin-left:auto;" title="Dismiss">✕</button>
+  </div>
+
   <!-- Global search bar -->
   <div class="global-search-wrap" id="globalSearchWrap">
     <div class="global-search-inner">
@@ -2759,6 +2813,12 @@
 
 <button class="voice-fab" id="voiceFab" title="Voice reminders">🎤</button>
 <div class="voice-caption" id="voiceCaption"></div>
+
+<!-- Scroll-to-top / bottom nav -->
+<div class="scroll-nav" id="scrollNav">
+  <button class="scroll-nav-btn" id="scrollTopBtn" title="Back to top" onclick="scrollNavGo('top')">↑</button>
+  <button class="scroll-nav-btn" id="scrollBotBtn" title="Jump to bottom" onclick="scrollNavGo('bottom')">↓</button>
+</div>
 
 <script>
 /* ================================================================
@@ -6026,12 +6086,33 @@ function setSyncStatus(state, text){
     document.getElementById('btnGoogleSignIn').style.display = 'none';
     document.getElementById('btnOpenSheet').style.display = 'inline-flex';
     document.getElementById('btnSignOut').style.display = 'inline-flex';
+    // Hide sync error alerts
+    var deskAlert = document.getElementById('syncErrorAlert');
+    var mobAlert  = document.getElementById('mobSyncAlert');
+    var mobDot    = document.getElementById('mobSyncDot');
+    if(deskAlert) deskAlert.classList.remove('visible');
+    if(mobAlert)  mobAlert.classList.remove('visible');
+    if(mobDot)    mobDot.classList.remove('error');
   } else {
     banner.classList.remove('connected');
     textEl.innerHTML = '⟲ Sign in with Google to save your ledger online — it\'ll then load automatically on every device, no exporting or uploading needed.';
     document.getElementById('btnGoogleSignIn').style.display = 'inline-flex';
     document.getElementById('btnOpenSheet').style.display = 'none';
     document.getElementById('btnSignOut').style.display = 'none';
+    // Show sync error alerts when state is 'error' (not just null/saving)
+    if(state === 'error'){
+      var deskAlert = document.getElementById('syncErrorAlert');
+      var mobAlert  = document.getElementById('mobSyncAlert');
+      var mobDot    = document.getElementById('mobSyncDot');
+      var msgEl     = document.getElementById('syncErrorMsg');
+      var errMsg    = text || 'your changes are saved locally but not to Google Sheets.';
+      if(msgEl) msgEl.textContent = errMsg;
+      if(deskAlert) deskAlert.classList.add('visible');
+      if(mobAlert)  mobAlert.classList.add('visible');
+      if(mobDot)    mobDot.classList.add('error');
+      // Also flash a toast so they can't miss it
+      showToast('⚠️ Sync error: ' + errMsg);
+    }
   }
 }
 
@@ -6372,16 +6453,16 @@ async function onSignedIn(){
       }
     }
     setSyncStatus('ok','Synced just now');
-    // Pull any waSent updates made by EVT Manager and merge into guest list
-    setTimeout(pullWAUpdatesFromKV, 1500);
+    // Pull any waSent updates made by EVT Manager and merge into guest list (forced on sign-in)
+    setTimeout(function(){ pullWAUpdatesFromKV(true); }, 1500);
     // Start periodic KV polls so admin sees updates live without manual refresh
     if (window._waKvPollTimer) clearInterval(window._waKvPollTimer);
     window._waKvPollTimer = setInterval(function(){
-      // Poll WA sent status (from EVT Manager)
-      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV();
-      // Poll guest RSVP confirmations (from guests clicking WA link)
-      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV();
-    }, 2*60*1000);
+      // Poll WA sent status (from EVT Manager) — force=true bypasses cooldown
+      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV(true);
+      // Poll guest RSVP confirmations (from guests clicking WA link) — force=true
+      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(true);
+    }, 10*60*1000);
     // Push PIN hashes to KV so new devices can get them without Google OAuth
     (async function(){
       const _roles=['admin','editor','viewer','owner','eventmanager'];
@@ -12293,6 +12374,12 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
   </div>
 
+  <!-- Sync error alert strip (mobile) -->
+  <div id="mobSyncAlert" onclick="document.getElementById('btnGoogleSignIn')&&document.getElementById('btnGoogleSignIn').click()">
+    <span>⚠️ Google sync broken — tap to sign in again</span>
+    <span class="mob-alert-btn">Sign In</span>
+  </div>
+
   <!-- Countdown -->
   <div class="mob-cd-wrap hidden" id="mobCdWrap" style="position:relative;overflow:hidden;">
     <audio id="mobWeddingMusic" loop><source src="/Sajna_Darshan_Raval.mp3" type="audio/mpeg"></audio>
@@ -12430,7 +12517,7 @@ function runGlobalSearch(q, gsInput, gsResults){
       <div class="mob-sec-badges" id="mobGuestBadges"></div>
       <button onclick="mobCopyMarriageNums()" style="margin-top:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.5);color:var(--gold);padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">📋 Copy All Marriage Guest Numbers</button>
     </div>
-    <div class="mob-srch"><input id="mobGuestSearch" placeholder="Search family name or phone…" oninput="mobRenderGuests()"></div>
+    <div class="mob-srch"><input id="mobGuestSearch" placeholder="Search family name or phone…" oninput="mobRenderGuests()" onkeyup="mobRenderGuests()" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     <div id="mobEvtSummary" style="padding:10px 14px;background:#fff8e1;border-bottom:1px solid #e8d5b0;"></div>
     <div id="mobEvtChips" style="display:flex;gap:6px;padding:8px 14px;overflow-x:auto;background:#faf0e6;border-bottom:1px solid #e8d5b0;">
       <div class="mob-evt-chip active" onclick="mobFilterEvent(null)">All</div>
@@ -12567,7 +12654,7 @@ function runGlobalSearch(q, gsInput, gsResults){
       <button class="mob-rsvp-chip" onclick="setMobRsvpFilter('notsent',this)" style="white-space:nowrap;padding:5px 12px;border-radius:20px;border:1px solid #9E9E9E;background:#fff;color:#9E9E9E;font-size:11px;font-weight:700;cursor:pointer;">📵 Not Sent</button>
     </div>
     <!-- Search -->
-    <div class="mob-srch"><input id="mobRsvpSearch" placeholder="Search guest name or phone…" oninput="mobRenderRsvpList()"></div>
+    <div class="mob-srch"><input id="mobRsvpSearch" placeholder="Search guest name or phone…" oninput="mobRenderRsvpList()" onkeyup="mobRenderRsvpList()" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
     <!-- Guest RSVP cards -->
     <div id="mobRsvpList" style="padding:0 10px 80px;"></div>
   </div>
@@ -12967,13 +13054,13 @@ window.mobSyncNow = function(){
       mobUpdateDash(); mobStartCountdown(); mobRenderBudgetChart();
       var av = document.querySelector('.mob-view.active');
       if(av){ var sid=av.id.replace('mobV','').toLowerCase(); if(MOB_SECS[sid]&&MOB_SECS[sid].render) MOB_SECS[sid].render(); }
-      // Also pull latest WA sent status + guest RSVPs from KV
-      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV();
-      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV();
+      // Also pull latest WA sent status + guest RSVPs from KV (forced on manual sync)
+      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV(true);
+      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(true);
     }).catch(function(){ mobSetSync('error','Sync failed'); });
   } else {
-    // Even without full sync, still pull WA updates from KV
-    if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV().then(function(){
+    // Even without full sync, still pull WA updates from KV (forced on manual sync)
+    if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV(true).then(function(){
       mobSetSync('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
     });
   }
@@ -14257,7 +14344,15 @@ function pushWAStatusToKV(guestId, updates) {
 }
 
 // Admin: pull waSent updates from KV and merge into local guest list
-async function pullWAUpdatesFromKV() {
+// KV fetch cooldown — prevents redundant reads when tabs open frequently
+var _lastRsvpKvFetch = 0;
+var _lastWaKvFetch   = 0;
+var KV_FETCH_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between KV reads
+
+async function pullWAUpdatesFromKV(force) {
+  // Skip if fetched recently (unless forced by timer)
+  if (!force && (Date.now() - _lastWaKvFetch) < KV_FETCH_COOLDOWN_MS) return;
+  _lastWaKvFetch = Date.now();
   // Always prefer vivaah-approved-email (owner's email) — for EVT Manager, googleUserEmail is their own email not owner's
   var ownerEmail = localStorage.getItem('vivaah-approved-email') || googleUserEmail || '';
   if (!ownerEmail) return;
@@ -14287,10 +14382,14 @@ function mobRenderRsvpMobile() {
   mobRenderRsvpStats();
   mobRenderRsvpList();
   // Pull any guest RSVPs submitted via link (cross-device sync)
-  pollGuestRsvpsFromKV();
+  // Debounced: only fetch from KV if more than 5 minutes since last fetch
+  pollGuestRsvpsFromKV(false);
 }
 
-function pollGuestRsvpsFromKV() {
+function pollGuestRsvpsFromKV(force) {
+  // Skip if fetched recently (unless forced by timer or explicit call)
+  if (!force && (Date.now() - _lastRsvpKvFetch) < KV_FETCH_COOLDOWN_MS) return;
+  _lastRsvpKvFetch = Date.now();
   try {
     fetch('https://vivaah-auth.rms-d21.workers.dev/get-guest-rsvps')
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -14448,6 +14547,78 @@ window.renderRsvpTracker = function() {
     mobRenderRsvpStats();
   }
 };
+
+// ── Scroll-to-top / bottom navigation ─────────────────────────────────────
+(function(){
+  var nav = document.getElementById('scrollNav');
+  if (!nav) return;
+
+  // Sections where the buttons should show (mobile view IDs + desktop section header IDs)
+  var MOB_VIEWS  = ['mobVGuest','mobVRsvp','mobVVendor','mobVKankotri'];
+  var DESK_SECS  = ['guestSectionHeader','rsvpSectionHeader'];
+
+  // Which scrollable element to use right now
+  function activeScroller() {
+    // Mobile: the active mob-view div
+    var mobActive = document.querySelector('.mob-view.active');
+    if (mobActive && MOB_VIEWS.indexOf(mobActive.id) !== -1) return mobActive;
+    // Desktop: check if a relevant section is expanded and visible on page
+    for (var i = 0; i < DESK_SECS.length; i++) {
+      var hdr = document.getElementById(DESK_SECS[i]);
+      if (hdr) {
+        var bodyId = DESK_SECS[i].replace('SectionHeader','SecBody');
+        var body   = document.getElementById(bodyId);
+        if (body && body.style.display !== 'none' && body.offsetHeight > 0) {
+          return window; // desktop uses window scroll
+        }
+      }
+    }
+    return null;
+  }
+
+  function getScrollPos(el) {
+    return el === window ? (window.scrollY || document.documentElement.scrollTop) : el.scrollTop;
+  }
+
+  function getScrollHeight(el) {
+    if (el === window) return document.documentElement.scrollHeight - window.innerHeight;
+    return el.scrollHeight - el.clientHeight;
+  }
+
+  function updateVisibility() {
+    var el = activeScroller();
+    if (!el) { nav.classList.remove('visible'); return; }
+    var pos = getScrollPos(el);
+    if (pos > 80) nav.classList.add('visible');
+    else          nav.classList.remove('visible');
+  }
+
+  window.scrollNavGo = function(dir) {
+    var el = activeScroller();
+    if (!el) return;
+    var target = dir === 'top' ? 0 : getScrollHeight(el);
+    if (el === window) window.scrollTo({top: target, behavior:'smooth'});
+    else               el.scrollTo({top: target, behavior:'smooth'});
+  };
+
+  // Listen on window (desktop) and all mob-views (mobile)
+  window.addEventListener('scroll', updateVisibility, {passive:true});
+  document.querySelectorAll('.mob-view').forEach(function(v){
+    v.addEventListener('scroll', updateVisibility, {passive:true});
+  });
+
+  // Re-check when tabs switch (mob view changes)
+  var origMobShowSec = window.mobShowSec;
+  window.mobShowSec = function(sec) {
+    if (typeof origMobShowSec === 'function') origMobShowSec(sec);
+    setTimeout(updateVisibility, 100);
+  };
+  var origMobShowDash = window.mobShowDash;
+  window.mobShowDash = function() {
+    if (typeof origMobShowDash === 'function') origMobShowDash();
+    nav.classList.remove('visible');
+  };
+})();
 
 </script>
 
