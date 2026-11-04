@@ -1710,6 +1710,8 @@
       <button class="print-option-btn" id="printOptVendors"><span class="po-icon">🏢</span><div><div class="po-label">Vendor list only</div><div class="po-sub">All vendors with payment status and balances</div></div></button>
       <button class="print-option-btn" id="printOptVendorDir"><span class="po-icon">📋</span><div><div class="po-label">Vendor Directory</div><div class="po-sub">Name · Phone · Category · Functions · Catering menus &amp; headcount — no amounts</div></div></button>
       <button class="print-option-btn" id="printOptGuests"><span class="po-icon">👥</span><div><div class="po-label">Complete guest list</div><div class="po-sub">All guests with event attendance and accommodation</div></div></button>
+      <button class="print-option-btn" id="printOptInviteSent"><span class="po-icon">✅</span><div><div class="po-label">Invite Sent list</div><div class="po-sub">Only guests who have already received WhatsApp invite</div></div></button>
+      <button class="print-option-btn" id="printOptInvitePending"><span class="po-icon">📵</span><div><div class="po-label">Invite Pending list</div><div class="po-sub">Only guests who have NOT yet received WhatsApp invite</div></div></button>
       <button class="print-option-btn" id="printOptFunctionWise"><span class="po-icon">📅</span><div><div class="po-label">Function-wise guest lists</div><div class="po-sub">One section per event showing attending guests</div></div></button>
       <div id="printFunctionFilterRow" style="display:none;background:#f8f4ee;border:1px solid #d4b0c8;border-radius:10px;padding:10px 14px;align-items:center;gap:10px;flex-wrap:wrap;">
         <span style="font-size:12px;font-weight:600;color:#5C1A2B;">Print which function?</span>
@@ -2424,6 +2426,11 @@
           <option value="vip,premium">👑⭐ VIP + Premium</option>
           <option value="vip,normal">👑✏️ VIP + Normal</option>
           <option value="premium,normal">⭐✏️ Premium + Normal</option>
+        </select>
+        <select id="kankotriPrintStatus" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid #d4a24c;background:#fff8f0;color:#5C1A2B;cursor:pointer;">
+          <option value="all">📋 All Status</option>
+          <option value="sent">✅ Invite Sent only</option>
+          <option value="pending">📵 Invite Pending only</option>
         </select>
         <button class="btn-ivory" id="btnPrintKankotri">🖺 Print</button>
         <button class="btn-ivory" id="btnEnvelopeStuffing" style="background:#5C1A2B;color:#FBF6EE;border-color:#5C1A2B;">📋 Envelope Stuffing</button>
@@ -5091,19 +5098,16 @@ function printSection(section) {
   overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
   document.body.appendChild(overlay);
 
-  // Short delay then print
+  // Short delay then print — overlay CSS handles hiding body content via @media print
   setTimeout(function() {
-    document.body.classList.add('vl-printing');
     window.print();
-    // After print dialog closes, remove overlay and class
     setTimeout(function() {
-      document.body.classList.remove('vl-printing');
       var ov = document.getElementById('vivaahPrintOverlay');
       var st = document.getElementById('vivaahPrintStyle');
       if (ov) ov.remove();
       if (st) st.remove();
     }, 1000);
-  }, 1500);
+  }, 300);
 }
 
 /* ================================================================
@@ -7403,9 +7407,9 @@ function renderGuests(){
     });
   }
   if (_guestWaFilter === 'notsent') {
-    _filteredGuests = _filteredGuests.filter(function(g){ return !g.waSent; });
+    _filteredGuests = _filteredGuests.filter(function(g){ return !g.waSent && !g.invitationSent; });
   } else if (_guestWaFilter === 'sent') {
-    _filteredGuests = _filteredGuests.filter(function(g){ return !!g.waSent; });
+    _filteredGuests = _filteredGuests.filter(function(g){ return !!g.waSent || !!g.invitationSent; });
   }
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
   const chipsEl = document.getElementById('guestEventChips');
@@ -9030,6 +9034,120 @@ function printVendorDirectory(){
   setTimeout(function(){w.print();},600);
 }
 document.getElementById('printOptGuests').onclick=()=>printSection('guests');
+document.getElementById('printOptInviteSent').onclick=()=>printGuestsByWaStatus('sent');
+document.getElementById('printOptInvitePending').onclick=()=>printGuestsByWaStatus('pending');
+
+function printGuestsByWaStatus(status){
+  var label = status === 'sent' ? '✅ Invite Sent' : '📵 Invite Pending';
+  var filteredList = guests.filter(function(g){
+    var isSent = !!g.waSent || !!g.invitationSent;
+    return status === 'sent' ? isSent : !isSent;
+  });
+  document.getElementById('printPanelOverlay').classList.remove('show');
+
+  // Use same config as printSection('guests')
+  var cfg = {
+    color:'#5C1A2B',
+    bg:'linear-gradient(135deg,#5C1A2B,#8A2A3F)',
+    light:'#FBF6EE',
+    icon:'👥',
+    title:'Guest List — ' + label
+  };
+  var dateStr = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  var timeStr = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+  // Build rows in exact same format as printSection('guests')
+  var EVCOLORS = {'Kankotri':'#5C1A2B','Ganesh-Grahshanti':'#856404','Mosalu':'#A0522D','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
+  var gRows = filteredList.map(function(g,i){
+    var invited = Object.keys(g.events||{}).filter(function(ev){
+      var e=g.events[ev]; return e&&(Number(e.adults||0)+Number(e.kids||0)+Number(e.writer||0))>0;
+    });
+    var chips = invited.map(function(ev){
+      var c=EVCOLORS[ev]||'#555';
+      var short={'Kankotri':'Kank','Ganesh-Grahshanti':'Ganesh','Mosalu':'Mosalu','Mehendi':'Mehnd','Sangeet':'Sang','Haldi':'Haldi','Marriage':'Marr','Reception':'Recep'}[ev]||ev;
+      return '<span class="chip" style="background:'+c+'18;color:'+c+';border:0.5px solid '+c+'40;">'+short+'</span>';
+    }).join('');
+    var adults = guestTotalAdults(g);
+    var kids = guestTotalKids(g);
+    var ladies = guestTotalLadies(g);
+    var waStatus = (!!g.waSent || !!g.invitationSent) ? '<span style="color:#2E6B1A;font-weight:600;">✅ Sent</span>' : '<span style="color:#C45000;font-weight:600;">📵 Pending</span>';
+    return '<tr>' +
+      '<td style="color:#aaa;font-size:11px;">'+(i+1)+'</td>' +
+      '<td><strong>'+escapeHtml(g.name||'')+'</strong></td>' +
+      '<td>'+escapeHtml(g.phone||'—')+'</td>' +
+      '<td>'+escapeHtml(g.side||'—')+'</td>' +
+      '<td>'+chips+'</td>' +
+      '<td class="c">'+adults+'</td>' +
+      '<td class="c">'+kids+'</td>' +
+      '<td class="c">'+ladies+'</td>' +
+      '<td class="c">'+waStatus+'</td>' +
+      '</tr>';
+  }).join('');
+
+  var bodyHTML =
+    '<p style="font-size:12px;color:#6b5d52;margin-bottom:12px;">Showing: <strong>'+label+'</strong> — '+filteredList.length+' families</p>' +
+    '<table><thead><tr>' +
+    '<th>#</th><th>Family / Guest Name</th><th>Phone</th><th>Side</th><th>Invited To</th>' +
+    '<th class="c">Adults</th><th class="c">Kids</th><th class="c">Ladies</th><th class="c">WA Status</th>' +
+    '</tr></thead><tbody>'+(gRows||'<tr><td colspan="9">No guests in this category.</td></tr>')+'</tbody></table>';
+
+  // Build overlay HTML — same as printSection
+  var html =
+    '<div class="vl-print-hdr">' +
+      '<div class="vl-print-icon">'+cfg.icon+'</div>' +
+      '<div><div class="vl-print-title">'+cfg.title+'</div>' +
+      '<div class="vl-print-meta">Mrishana &amp; Spandan &nbsp;·&nbsp; Vivaah Ledger &nbsp;·&nbsp; '+dateStr+' at '+timeStr+'</div></div>' +
+    '</div>' +
+    '<div class="vl-print-body">'+bodyHTML+'</div>';
+
+  // Inject print styles — same as printSection
+  var styleId = 'vivaahPrintStyle';
+  var oldStyle = document.getElementById(styleId);
+  if (oldStyle) oldStyle.remove();
+  var styleEl = document.createElement('style');
+  styleEl.id = styleId;
+  styleEl.textContent =
+    '#vivaahPrintOverlay{position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;padding:0;}' +
+    '.vl-print-hdr{background:'+cfg.bg+';color:#fff;padding:20px 28px 16px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-icon{font-size:32px;opacity:0.9;}' +
+    '.vl-print-title{font-size:22px;font-family:Georgia,serif;font-weight:700;margin:0;}' +
+    '.vl-print-meta{font-size:11px;opacity:0.75;margin-top:3px;}' +
+    '.vl-print-body{padding:20px 28px;}' +
+    '.vl-print-body table{width:100%;border-collapse:collapse;margin:12px 0;}' +
+    '.vl-print-body th{background:'+cfg.color+';color:#fff;padding:8px 10px;font-size:11px;text-align:left;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-body th.c{text-align:center;}' +
+    '.vl-print-body td{padding:7px 10px;font-size:12px;border-bottom:1px solid #E3D7C2;}' +
+    '.vl-print-body td.c{text-align:center;}' +
+    '.vl-print-body tr:nth-child(even) td{background:'+cfg.light+';-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-body .chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;margin:1px;}' +
+    '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
+    '@media print{' +
+      '#vivaahPrintClose{display:none!important;}' +
+      '@page{margin:8mm;}' +
+      'body{margin:0!important;}' +
+      'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
+      '#vivaahPrintOverlay{position:static!important;top:auto!important;left:auto!important;width:100%!important;height:auto!important;overflow:visible!important;}' +
+    '}';
+  document.head.appendChild(styleEl);
+
+  // Create overlay — same as printSection
+  var oldOv = document.getElementById('vivaahPrintOverlay');
+  if (oldOv) oldOv.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'vivaahPrintOverlay';
+  overlay.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();" title="Close">✕</button>' + html;
+  document.body.appendChild(overlay);
+
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){
+      var ov = document.getElementById('vivaahPrintOverlay');
+      var st = document.getElementById('vivaahPrintStyle');
+      if (ov) ov.remove();
+      if (st) st.remove();
+    }, 1000);
+  }, 300);
+}
 document.getElementById('printOptTimeline').onclick=()=>printSection('timeline');
 function doPrintFunctionWise(filterEv){
   var EV_COLORS={'Kankotri':'#5C1A2B','Ganesh-Grahshanti':'#856404','Mosalu':'#A0522D','Mehendi':'#2E7D32','Sangeet':'#1A3A8A','Haldi':'#c44400','Marriage':'#880E4F','Reception':'#4A148C'};
@@ -9447,6 +9565,9 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   const tierSel = document.getElementById('kankotriPrintTier');
   const selectedTiers = tierSel ? tierSel.value.split(',') : ['all'];
   const printAll = selectedTiers[0] === 'all';
+  // Get selected status filter
+  const statusSel = document.getElementById('kankotriPrintStatus');
+  const printStatus = statusSel ? statusSel.value : 'all'; // 'all' | 'sent' | 'pending'
 
   const printArea=document.createElement('div');
   printArea.id='kankotriPrintArea';
@@ -9472,10 +9593,17 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
     return total > 0 ? String(total) : '—';
   }
 
-  // Build rows for one tier — uses invTier (Kankotri section assignment)
+  // Build rows for one tier — uses invTier (Kankotri section assignment), filtered by printStatus
   function tierRows(tierKey) {
-    var list = guests.filter(function(g){ return g.invTier === tierKey; });
-    if (list.length === 0) return '<tr><td colspan="10" style="padding:8px;color:#888;font-style:italic;">No families in this tier</td></tr>';
+    var list = guests.filter(function(g){
+      if (g.invTier !== tierKey) return false;
+      var isSent = !!g.waSent || !!g.invitationSent;
+      if (printStatus === 'sent')    return isSent;
+      if (printStatus === 'pending') return !isSent;
+      return true;
+    });
+    var statusLabel = printStatus === 'sent' ? ' — ✅ Invite Sent' : printStatus === 'pending' ? ' — 📵 Invite Pending' : '';
+    if (list.length === 0) return '<tr><td colspan="10" style="padding:8px;color:#888;font-style:italic;">No families'+statusLabel+' in this tier</td></tr>';
     var rows = list.map(function(g, i) {
       var cells = EVENTS.map(function(ev){
         return '<td style="padding:5px 6px;text-align:center;font-size:11px;">' + kankEvCount(g, ev) + '</td>';
@@ -9527,7 +9655,8 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   // Print output — starts directly with tier tables, no summary pages
   printArea.innerHTML =
     '<div style="font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;">' +
-    '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 4px;font-size:18px;">𖥸 Kankotri — Invitation Card Management</h2>' +
+    '<h2 style="color:#3E0F1C;font-family:serif;margin:0 0 4px;font-size:18px;">𖥸 Kankotri — Invitation Card Management' +
+      (printStatus==='sent'?' — ✅ Invite Sent':printStatus==='pending'?' — 📵 Invite Pending':'') + '</h2>' +
     '<p style="font-size:11px;color:#6b5d52;margin:0 0 16px;">' +
       'Generated ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) +
       ' &nbsp;·&nbsp; 👑 VIP: ' + vipCount +
@@ -9538,13 +9667,37 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
     sections +
     '</div>';
 
-  // Visible overlay print — works in all browsers without popup blocker
+  // Build overlay using same vl-print-hdr / vl-print-body system as printSection
+  var kCfg = {
+    color:'#5C1A2B',
+    bg:'linear-gradient(135deg,#3E0F1C,#5C1A2B)',
+    light:'#FBF6EE'
+  };
+  var kDateStr = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+  var kTimeStr = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  var kStatusLabel = printStatus==='sent' ? ' — ✅ Invite Sent' : printStatus==='pending' ? ' — 📵 Invite Pending' : '';
+
   var _povStyle = document.getElementById('vivaahPrintStyle');
   if (_povStyle) _povStyle.remove();
   var _pst = document.createElement('style');
   _pst.id = 'vivaahPrintStyle';
   _pst.textContent =
-    '#vivaahPrintOverlay{position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;padding:0;font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;}' +
+    '#vivaahPrintOverlay{position:fixed;inset:0;background:#fff;z-index:99999;overflow:auto;padding:0;}' +
+    '.vl-print-hdr{background:'+kCfg.bg+';color:#fff;padding:20px 28px 16px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-icon{font-size:32px;opacity:0.9;}' +
+    '.vl-print-title{font-size:22px;font-family:Georgia,serif;font-weight:700;margin:0;}' +
+    '.vl-print-meta{font-size:11px;opacity:0.75;margin-top:3px;}' +
+    '.vl-print-body{padding:20px 28px;}' +
+    '.vl-print-body table{width:100%;border-collapse:collapse;margin:8px 0;page-break-inside:auto;}' +
+    '.vl-print-body tr{page-break-inside:avoid;}' +
+    '.vl-print-body th{background:'+kCfg.color+';color:#fff;padding:7px 8px;font-size:11px;text-align:left;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-body th.c{text-align:center;}' +
+    '.vl-print-body td{padding:6px 8px;font-size:12px;border-bottom:1px solid #E3D7C2;}' +
+    '.vl-print-body td.c{text-align:center;}' +
+    '.vl-print-body tr:nth-child(even) td{background:'+kCfg.light+';-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-body .total-row td{background:#e8d5b0;font-weight:700;color:'+kCfg.color+';border-top:2px solid '+kCfg.color+';-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.vl-print-body .tier-title{font-size:14px;font-weight:700;color:'+kCfg.color+';margin:18px 0 6px;padding-bottom:4px;border-bottom:2px solid '+kCfg.color+';page-break-after:avoid;}' +
+    '.vl-print-body .summary-bar{font-size:11px;color:#6b5d52;margin:0 0 14px;}' +
     '#vivaahPrintClose{position:fixed;top:16px;right:20px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:36px;height:36px;font-size:20px;cursor:pointer;z-index:100000;line-height:36px;text-align:center;}' +
     '@media print{' +
       '#vivaahPrintClose{display:none!important;}' +
@@ -9552,32 +9705,78 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
       'body{margin:0!important;}' +
       'body>*:not(#vivaahPrintOverlay):not(#vivaahPrintStyle){display:none!important;}' +
       '#vivaahPrintOverlay{position:static!important;top:auto!important;left:auto!important;width:100%!important;height:auto!important;overflow:visible!important;}' +
-      'table{width:100%;border-collapse:collapse;page-break-inside:auto;}' +
-      'tr{page-break-inside:avoid;}' +
-      'h3{page-break-after:avoid;}' +
     '}';
   document.head.appendChild(_pst);
+
+  // Rebuild sections using vl-print-body CSS classes (no inline styles needed)
+  var tableHdrClass =
+    '<thead><tr>' +
+    '<th>Family / Guest Name</th>' +
+    '<th>Phone</th>' +
+    '<th>Side</th>' +
+    EVENTS.map(function(ev){ return '<th class="c">'+EV_SHORT[ev]+'</th>'; }).join('') +
+    '<th class="c">Cards</th>' +
+    '</tr></thead>';
+
+  function tierRowsStyled(tierKey) {
+    var list = guests.filter(function(g){
+      if (g.invTier !== tierKey) return false;
+      var isSent = !!g.waSent || !!g.invitationSent;
+      if (printStatus === 'sent')    return isSent;
+      if (printStatus === 'pending') return !isSent;
+      return true;
+    });
+    if (list.length === 0) return '<tr><td colspan="'+(3+EVENTS.length+1)+'" style="padding:8px;color:#888;font-style:italic;">No families'+kStatusLabel+' in this tier</td></tr>';
+    var rows = list.map(function(g) {
+      var cells = EVENTS.map(function(ev){
+        return '<td class="c">'+kankEvCount(g, ev)+'</td>';
+      }).join('');
+      return '<tr>' +
+        '<td><strong>'+escapeHtml(g.name)+'</strong></td>' +
+        '<td>'+escapeHtml(g.phone||'—')+'</td>' +
+        '<td>'+escapeHtml(g.side||'—')+'</td>' +
+        cells +
+        '<td class="c"><strong>'+(g.invCards||0)+'</strong></td>' +
+        '</tr>';
+    });
+    var totals = EVENTS.map(function(ev){
+      var t = list.reduce(function(s,g){ var e=g.events&&g.events[ev]; return s+(e?Number(e.adults||0)+Number(e.kids||0):0); }, 0);
+      return '<td class="c">'+(t>0?t:'—')+'</td>';
+    });
+    var totalCards = list.reduce(function(s,g){ return s+(Number(g.invCards)||0); }, 0);
+    rows.push('<tr class="total-row"><td colspan="3">Total ('+list.length+' families)</td>'+totals.join('')+'<td class="c">'+totalCards+'</td></tr>');
+    return rows.join('');
+  }
+
+  var sectionsStyled = TIERS.map(function(tier){
+    return '<div class="tier-title">'+tier.label+kStatusLabel+' — '+guests.filter(function(g){return g.invTier===tier.key;}).length+' families</div>' +
+      '<table>'+tableHdrClass+'<tbody>'+tierRowsStyled(tier.key)+'</tbody></table>';
+  }).join('<div style="height:12px;border-top:1px dashed #D4A24C;margin:16px 0;"></div>');
+
+  var bodyContent =
+    '<div class="summary-bar">👑 VIP: '+vipCount+' &nbsp;·&nbsp; ⭐ Premium: '+premCount+' &nbsp;·&nbsp; ✏️ Normal: '+normalCount+' &nbsp;·&nbsp; Total Cards: '+totalCards+'</div>' +
+    sectionsStyled;
+
   var _povOld = document.getElementById('vivaahPrintOverlay');
   if (_povOld) _povOld.remove();
   var _pov = document.createElement('div');
   _pov.id = 'vivaahPrintOverlay';
-  _pov.innerHTML = '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();">✕</button>' +
-    '<div style="font-family:Arial,sans-serif;font-size:12px;color:#2A1F1A;padding:0;">' +
-    '<div style="background:linear-gradient(135deg,#3E0F1C,#5C1A2B);color:#fff;padding:20px 28px 16px;display:flex;align-items:center;gap:14px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-      '<div style="font-size:28px;">𖥸</div>' +
-      '<div><div style="font-size:20px;font-family:Georgia,serif;font-weight:700;">Kankotri — Invitation Card Management</div>' +
-      '<div style="font-size:11px;opacity:0.75;margin-top:3px;">Mrishana &amp; Spandan &nbsp;·&nbsp; ' + new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}) + '</div></div></div>' +
-    printArea.innerHTML + '</div>';
+  _pov.innerHTML =
+    '<button id="vivaahPrintClose" onclick="var o=document.getElementById(&quot;vivaahPrintOverlay&quot;);var s=document.getElementById(&quot;vivaahPrintStyle&quot;);if(o)o.remove();if(s)s.remove();">✕</button>' +
+    '<div class="vl-print-hdr">' +
+      '<div class="vl-print-icon">𖥸</div>' +
+      '<div><div class="vl-print-title">Kankotri — Invitation Card Management'+kStatusLabel+'</div>' +
+      '<div class="vl-print-meta">Mrishana &amp; Spandan &nbsp;·&nbsp; Vivaah Ledger &nbsp;·&nbsp; '+kDateStr+' at '+kTimeStr+'</div></div>' +
+    '</div>' +
+    '<div class="vl-print-body">'+bodyContent+'</div>';
   document.body.appendChild(_pov);
   setTimeout(function(){
-    document.body.classList.add('vl-printing');
     window.print();
     setTimeout(function(){
-      document.body.classList.remove('vl-printing');
       var _o=document.getElementById('vivaahPrintOverlay'); var _s=document.getElementById('vivaahPrintStyle');
       if(_o)_o.remove(); if(_s)_s.remove();
     },1000);
-  },1500);
+  },300);
 };
 /* ---------------- Envelope Stuffing Print ---------------- */
 document.getElementById('btnEnvelopeStuffing').onclick = function() {
@@ -13486,8 +13685,8 @@ function mobRenderGuests(){
   var q=(document.getElementById('mobGuestSearch').value||'').toLowerCase();
   var filtered=gs;
   if(_mobActiveFilter) filtered=filtered.filter(function(g){var e=g.events&&g.events[_mobActiveFilter];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;});
-  if(_mobWaFilter==='notsent') filtered=filtered.filter(function(g){return !g.waSent;});
-  else if(_mobWaFilter==='sent') filtered=filtered.filter(function(g){return !!g.waSent;});
+  if(_mobWaFilter==='notsent') filtered=filtered.filter(function(g){return !g.waSent && !g.invitationSent;});
+  else if(_mobWaFilter==='sent') filtered=filtered.filter(function(g){return !!g.waSent || !!g.invitationSent;});
   if(q) filtered=filtered.filter(function(g){return(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q);});
   var conf=gs.filter(function(g){return g.callStatus==='confirmed';}).length;
   // ✅ FIX: correct marriage count
