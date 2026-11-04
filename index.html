@@ -7407,9 +7407,9 @@ function renderGuests(){
     });
   }
   if (_guestWaFilter === 'notsent') {
-    _filteredGuests = _filteredGuests.filter(function(g){ return !g.waSent && !g.invitationSent; });
+    _filteredGuests = _filteredGuests.filter(function(g){ return !g.waSent && !g.invitationSent && !g.invSent; });
   } else if (_guestWaFilter === 'sent') {
-    _filteredGuests = _filteredGuests.filter(function(g){ return !!g.waSent || !!g.invitationSent; });
+    _filteredGuests = _filteredGuests.filter(function(g){ return !!g.waSent || !!g.invitationSent || !!g.invSent; });
   }
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
   const chipsEl = document.getElementById('guestEventChips');
@@ -9040,7 +9040,7 @@ document.getElementById('printOptInvitePending').onclick=()=>printGuestsByWaStat
 function printGuestsByWaStatus(status){
   var label = status === 'sent' ? '✅ Invite Sent' : '📵 Invite Pending';
   var filteredList = guests.filter(function(g){
-    var isSent = !!g.waSent || !!g.invitationSent;
+    var isSent = !!g.waSent || !!g.invitationSent || !!g.invSent;
     return status === 'sent' ? isSent : !isSent;
   });
   document.getElementById('printPanelOverlay').classList.remove('show');
@@ -9070,7 +9070,7 @@ function printGuestsByWaStatus(status){
     var adults = guestTotalAdults(g);
     var kids = guestTotalKids(g);
     var ladies = guestTotalLadies(g);
-    var waStatus = (!!g.waSent || !!g.invitationSent) ? '<span style="color:#2E6B1A;font-weight:600;">✅ Sent</span>' : '<span style="color:#C45000;font-weight:600;">📵 Pending</span>';
+    var waStatus = (!!g.waSent || !!g.invitationSent || !!g.invSent) ? '<span style="color:#2E6B1A;font-weight:600;">✅ Sent</span>' : '<span style="color:#C45000;font-weight:600;">📵 Pending</span>';
     return '<tr>' +
       '<td style="color:#aaa;font-size:11px;">'+(i+1)+'</td>' +
       '<td><strong>'+escapeHtml(g.name||'')+'</strong></td>' +
@@ -9597,7 +9597,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   function tierRows(tierKey) {
     var list = guests.filter(function(g){
       if (g.invTier !== tierKey) return false;
-      var isSent = !!g.waSent || !!g.invitationSent;
+      var isSent = !!g.waSent || !!g.invitationSent || !!g.invSent;
       if (printStatus === 'sent')    return isSent;
       if (printStatus === 'pending') return !isSent;
       return true;
@@ -9721,7 +9721,7 @@ document.getElementById('btnPrintKankotri').onclick=()=>{
   function tierRowsStyled(tierKey) {
     var list = guests.filter(function(g){
       if (g.invTier !== tierKey) return false;
-      var isSent = !!g.waSent || !!g.invitationSent;
+      var isSent = !!g.waSent || !!g.invitationSent || !!g.invSent;
       if (printStatus === 'sent')    return isSent;
       if (printStatus === 'pending') return !isSent;
       return true;
@@ -13685,8 +13685,8 @@ function mobRenderGuests(){
   var q=(document.getElementById('mobGuestSearch').value||'').toLowerCase();
   var filtered=gs;
   if(_mobActiveFilter) filtered=filtered.filter(function(g){var e=g.events&&g.events[_mobActiveFilter];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;});
-  if(_mobWaFilter==='notsent') filtered=filtered.filter(function(g){return !g.waSent && !g.invitationSent;});
-  else if(_mobWaFilter==='sent') filtered=filtered.filter(function(g){return !!g.waSent || !!g.invitationSent;});
+  if(_mobWaFilter==='notsent') filtered=filtered.filter(function(g){return !g.waSent && !g.invitationSent && !g.invSent;});
+  else if(_mobWaFilter==='sent') filtered=filtered.filter(function(g){return !!g.waSent || !!g.invitationSent || !!g.invSent;});
   if(q) filtered=filtered.filter(function(g){return(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q);});
   var conf=gs.filter(function(g){return g.callStatus==='confirmed';}).length;
   // ✅ FIX: correct marriage count
