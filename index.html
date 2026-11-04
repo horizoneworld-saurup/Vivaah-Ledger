@@ -2269,6 +2269,11 @@
         <option value="Marriage">💍 Marriage</option>
         <option value="Reception">🎊 Reception</option>
       </select>
+      <select class="sec-filter-select" id="guestWaFilter" onchange="filterGuestsByWa(this.value)" style="margin-left:8px;">
+        <option value="all">📲 All WA Status</option>
+        <option value="notsent">📵 Not Sent Yet</option>
+        <option value="sent">✅ Invite Sent</option>
+      </select>
       <span class="sec-filter-count" id="guestFilterCount"></span>
     </div>
     <div class="guest-table-wrap" style="border-radius:0 0 12px 12px;box-shadow:0 2px 12px rgba(92,26,43,0.07);margin-bottom:20px;">
@@ -4254,8 +4259,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── Section Filter Functions ─────────────────────────────────────────────
 var _guestEventFilter = 'all';
+var _guestWaFilter = 'all';
 var _vendorCatFilter = 'all';
 
+function filterGuestsByWa(val) {
+  _guestWaFilter = val;
+  renderGuests();
+}
 function filterGuestsByEvent(ev) {
   _guestEventFilter = ev;
   renderGuests();
@@ -6389,7 +6399,13 @@ async function onSignedIn(){
             callStatus: loc.callStatus || cg.callStatus || '',
             confirmedAdults: loc.confirmedAdults || cg.confirmedAdults || 0,
             confirmedKids: loc.confirmedKids || cg.confirmedKids || 0,
-            rsvpNote: loc.rsvpNote || cg.rsvpNote || ''
+            rsvpNote: loc.rsvpNote || cg.rsvpNote || '',
+            // Preserve local tier/cards assignment — these are changed locally and
+            // must not be overwritten by an older cloud snapshot on re-sign-in
+            invTier: loc.invTier || cg.invTier || '',
+            invCards: loc.invCards || cg.invCards || 0,
+            kankotriTier: loc.kankotriTier || cg.kankotriTier || '',
+            kankotriSent: loc.kankotriSent || cg.kankotriSent || false
           });
         });
       })();
@@ -6553,22 +6569,30 @@ async function onSignedIn(){
 
 async function pullFromSheet(){
   try{
-    const res = await sheetsApi(`/${sheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_DATA_RANGE)}&ranges=${encodeURIComponent(SHEET_LOGO_RANGE)}&ranges=${encodeURIComponent('Data!C1')}&ranges=${encodeURIComponent(SHEET_EP_RANGE)}`);
+    const res = await sheetsApi(`/${sheetId}/values:batchGet?ranges=${encodeURIComponent(SHEET_DATA_RANGE)}&ranges=${encodeURIComponent(SHEET_LOGO_RANGE)}&ranges=${encodeURIComponent('Data!C1')}&ranges=${encodeURIComponent(SHEET_EP_RANGE)}&ranges=${encodeURIComponent('Data!C2')}`);
     const vr = res.valueRanges || [];
     const mainRaw  = vr[0]&&vr[0].values&&vr[0].values[0]&&vr[0].values[0][0];
     const logoRaw  = vr[1]&&vr[1].values&&vr[1].values[0]&&vr[1].values[0][0];
     const guestRaw = vr[2]&&vr[2].values&&vr[2].values[0]&&vr[2].values[0][0];
     const epRaw    = vr[3]&&vr[3].values&&vr[3].values[0]&&vr[3].values[0][0];
+    const guestRaw2= vr[4]&&vr[4].values&&vr[4].values[0]&&vr[4].values[0][0];
     if(!mainRaw) return null;
     const mainData = JSON.parse(mainRaw);
     let logoData = null;
     if(logoRaw){ try{ logoData = JSON.parse(logoRaw); }catch(e){} }
-    // Guests: prefer the dedicated C1 cell (compressed format), fall back to legacy A1 embedded guests
+    // Guests: prefer C1 cell (compressed), fall back to legacy A1 embedded guests
+    // If C2 also has data (split for large lists), merge both halves
     let cloudGuests = [];
     if(guestRaw){
       try{
         const compressed = JSON.parse(guestRaw);
         cloudGuests = expandGuests(compressed);
+        if(guestRaw2){
+          try{
+            const compressed2 = JSON.parse(guestRaw2);
+            cloudGuests = cloudGuests.concat(expandGuests(compressed2));
+          }catch(e){}
+        }
       }catch(e){ cloudGuests = mainData.guests || []; }
     } else {
       cloudGuests = mainData.guests || [];
@@ -6623,6 +6647,18 @@ async function pushToSheet(){
   (epForSync.carnival?.stalls||[]).forEach(s => { s.images=[]; });
   (epForSync.clothes||[]).forEach(c => { c.images=[]; });
   const epPayload    = JSON.stringify(epForSync);
+  // If guest payload exceeds 45k chars, split across C1+C2 proactively (50k is Google's cell limit)
+  const GUEST_SPLIT = guestPayload.length > 45000;
+  const half = Math.ceil(guests.length / 2);
+  const guestData = GUEST_SPLIT
+    ? [
+        {range:'Data!C1', values:[[JSON.stringify(compressGuests(guests.slice(0,half)))]]},
+        {range:'Data!C2', values:[[JSON.stringify(compressGuests(guests.slice(half)))]]}
+      ]
+    : [
+        {range:'Data!C1', values:[[guestPayload]]},
+        {range:'Data!C2', values:[['']]}  // clear C2 if not needed
+      ];
   try{
     await sheetsApi(`/${sheetId}/values:batchUpdate`,{
       method:'POST',
@@ -6631,7 +6667,7 @@ async function pushToSheet(){
         data:[
           {range:SHEET_DATA_RANGE, values:[[mainPayload]]},
           {range:SHEET_LOGO_RANGE, values:[[logosPayload]]},
-          {range:'Data!C1',        values:[[guestPayload]]},
+          ...guestData,
           {range:SHEET_EP_RANGE,   values:[[epPayload]]}
         ]
       })
@@ -6639,10 +6675,36 @@ async function pushToSheet(){
     setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){
     console.error('push failed',e);
-    if(e.message&&(e.message.includes('401')||e.message.includes('403'))){
+    const msg = e.message||'';
+    if(msg.includes('401')||msg.includes('403')){
       googleAccessToken=null;
       await storageSet('google-token-cache','');
       setSyncStatus('error','Google session expired — please sign in again');
+    } else if(msg.includes('400')||msg.includes('exceeds')||msg.includes('too large')||guestPayload.length>48000){
+      // Google Sheets 50k cell limit hit — split guest payload across two cells
+      console.warn('Guest payload too large ('+guestPayload.length+' chars) — splitting across C1/C2');
+      const half = Math.ceil(guests.length/2);
+      const part1 = JSON.stringify(compressGuests(guests.slice(0,half)));
+      const part2 = JSON.stringify(compressGuests(guests.slice(half)));
+      try {
+        await sheetsApi(`/${sheetId}/values:batchUpdate`,{
+          method:'POST',
+          body:JSON.stringify({
+            valueInputOption:'RAW',
+            data:[
+              {range:SHEET_DATA_RANGE, values:[[mainPayload]]},
+              {range:SHEET_LOGO_RANGE, values:[[logosPayload]]},
+              {range:'Data!C1',        values:[[part1]]},
+              {range:'Data!C2',        values:[[part2]]},
+              {range:SHEET_EP_RANGE,   values:[[epPayload]]}
+            ]
+          })
+        });
+        setSyncStatus('ok','Synced '+new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}));
+      } catch(e2){
+        console.error('split push also failed',e2);
+        setSyncStatus('error','Sync failed — data saved locally. Guest list too large.');
+      }
     } else {
       setSyncStatus('error','Sync failed — data saved locally');
     }
@@ -7339,6 +7401,11 @@ function renderGuests(){
       var e = g.events && g.events[_guestEventFilter];
       return e && (Number(e.adults||0) + Number(e.kids||0)) > 0;
     });
+  }
+  if (_guestWaFilter === 'notsent') {
+    _filteredGuests = _filteredGuests.filter(function(g){ return !g.waSent; });
+  } else if (_guestWaFilter === 'sent') {
+    _filteredGuests = _filteredGuests.filter(function(g){ return !!g.waSent; });
   }
   // Event filter chips — counts now reflect families invited to that event (adults+kids > 0)
   const chipsEl = document.getElementById('guestEventChips');
@@ -12518,6 +12585,11 @@ function runGlobalSearch(q, gsInput, gsResults){
       <button onclick="mobCopyMarriageNums()" style="margin-top:8px;background:rgba(212,164,76,0.2);border:1px solid rgba(212,164,76,0.5);color:var(--gold);padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;width:100%;">📋 Copy All Marriage Guest Numbers</button>
     </div>
     <div class="mob-srch"><input id="mobGuestSearch" placeholder="Search family name or phone…" oninput="mobRenderGuests()" onkeyup="mobRenderGuests()" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+    <div style="display:flex;gap:6px;padding:6px 14px;background:#fdf6ee;border-bottom:1px solid #e8d5b0;">
+      <button onclick="mobSetWaFilter('all')" id="mobWaFilterAll" style="flex:1;padding:5px;border-radius:20px;border:1.5px solid var(--maroon);background:var(--maroon);color:#fff;font-size:11px;font-weight:700;cursor:pointer;">All</button>
+      <button onclick="mobSetWaFilter('notsent')" id="mobWaFilterNot" style="flex:1;padding:5px;border-radius:20px;border:1.5px solid #9E9E9E;background:#fff;color:#555;font-size:11px;font-weight:700;cursor:pointer;">📵 Not Sent</button>
+      <button onclick="mobSetWaFilter('sent')" id="mobWaFilterSent" style="flex:1;padding:5px;border-radius:20px;border:1.5px solid #9E9E9E;background:#fff;color:#555;font-size:11px;font-weight:700;cursor:pointer;">✅ Sent</button>
+    </div>
     <div id="mobEvtSummary" style="padding:10px 14px;background:#fff8e1;border-bottom:1px solid #e8d5b0;"></div>
     <div id="mobEvtChips" style="display:flex;gap:6px;padding:8px 14px;overflow-x:auto;background:#faf0e6;border-bottom:1px solid #e8d5b0;">
       <div class="mob-evt-chip active" onclick="mobFilterEvent(null)">All</div>
@@ -13393,12 +13465,29 @@ function mobBuildEvtSummary(){
 }
 window.mobFilterEvent=function(ev){ _mobActiveFilter=ev; mobBuildEvtSummary(); mobRenderGuests(); };
 
+var _mobWaFilter = 'all';
+window.mobSetWaFilter = function(val) {
+  _mobWaFilter = val;
+  var btns = {all:'mobWaFilterAll', notsent:'mobWaFilterNot', sent:'mobWaFilterSent'};
+  Object.keys(btns).forEach(function(k){
+    var el = document.getElementById(btns[k]);
+    if (!el) return;
+    var active = k === val;
+    el.style.background = active ? 'var(--maroon)' : '#fff';
+    el.style.color = active ? '#fff' : '#555';
+    el.style.borderColor = active ? 'var(--maroon)' : '#9E9E9E';
+  });
+  mobRenderGuests();
+};
+
 // ── Render Guests ─────────────────────────────────────────────────
 function mobRenderGuests(){
   var gs=getGuests();
   var q=(document.getElementById('mobGuestSearch').value||'').toLowerCase();
   var filtered=gs;
   if(_mobActiveFilter) filtered=filtered.filter(function(g){var e=g.events&&g.events[_mobActiveFilter];return e&&(Number(e.adults||0)+Number(e.kids||0))>0;});
+  if(_mobWaFilter==='notsent') filtered=filtered.filter(function(g){return !g.waSent;});
+  else if(_mobWaFilter==='sent') filtered=filtered.filter(function(g){return !!g.waSent;});
   if(q) filtered=filtered.filter(function(g){return(g.name||'').toLowerCase().includes(q)||(g.phone||'').includes(q);});
   var conf=gs.filter(function(g){return g.callStatus==='confirmed';}).length;
   // ✅ FIX: correct marriage count
