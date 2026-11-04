@@ -4269,9 +4269,11 @@ var _guestEventFilter = 'all';
 var _guestWaFilter = 'all';
 var _vendorCatFilter = 'all';
 
+var _waFilterTimer = null;
 function filterGuestsByWa(val) {
   _guestWaFilter = val;
-  renderGuests();
+  if (_waFilterTimer) clearTimeout(_waFilterTimer);
+  _waFilterTimer = setTimeout(function(){ renderGuests(); }, 60);
 }
 function filterGuestsByEvent(ev) {
   _guestEventFilter = ev;
@@ -7514,10 +7516,8 @@ function renderGuests(){
   // Table body
   const body = document.getElementById('guestTableBody');
   const empty = document.getElementById('guestEmpty');
-  const filtered = activeEventFilter ? guests.filter(g=>{
-    const c = guestEventCounts(g, activeEventFilter);
-    return isWriterFilterActive ? (c.adults>0||c.writer>0) : (c.adults>0||c.kids>0);
-  }) : guests;
+  // _filteredGuests already has both event + WA filter applied from above
+  const filtered = _filteredGuests;
 
   if(filtered.length===0){
     body.innerHTML = '';
