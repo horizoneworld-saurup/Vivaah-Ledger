@@ -1787,6 +1787,13 @@
     <span class="sync-meta-group">
       <span class="sync-meta" id="syncMeta"></span>
       <button class="btn btn-ghost btn-tiny" id="btnOpenSheet" style="display:none;">Open Google Sheet ↗</button>
+      <button class="btn btn-ghost btn-tiny" id="btnSyncKV" style="display:none;" onclick="event.stopPropagation();(async function(){
+        var b=document.getElementById('btnSyncKV'); b.textContent='⏳ Syncing…'; b.disabled=true;
+        if(typeof pullWAUpdatesFromKV==='function') await pullWAUpdatesFromKV(true);
+        if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(true);
+        b.textContent='🔄 Sync KV'; b.disabled=false;
+        showToast('✅ KV synced!');
+      })()">🔄 Sync KV</button>
       <button class="btn btn-ghost btn-tiny" id="btnSignOut" style="display:none;">Sign out</button>
     </span>
   </div>
@@ -2538,7 +2545,7 @@
         </div>
         <div style="font-size:13px;font-weight:700;color:var(--maroon);">📋 Invitation Distribution List</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <input type="text" id="invSearchInput" placeholder="Search family…" style="padding:6px 11px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:160px;">
+          <input type="text" id="invSearchInput" placeholder="🔍 Search family / phone…" style="padding:6px 11px;border:2px solid var(--maroon);border-radius:8px;font-size:13px;font-family:'Inter';outline:none;width:200px;background:#fff9f4;">
           <select id="invTierFilter" style="padding:6px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13px;font-family:'Inter';background:#fff;cursor:pointer;">
             <option value="">All Tiers</option>
             <option value="vip">👑 VIP Premium</option>
@@ -6101,6 +6108,7 @@ function setSyncStatus(state, text){
     textEl.innerHTML = '⛁ Connected to Google Sheets — your ledger syncs automatically across every device you sign in on.';
     document.getElementById('btnGoogleSignIn').style.display = 'none';
     document.getElementById('btnOpenSheet').style.display = 'inline-flex';
+    document.getElementById('btnSyncKV').style.display = 'inline-flex';
     document.getElementById('btnSignOut').style.display = 'inline-flex';
     // Hide sync error alerts
     var deskAlert = document.getElementById('syncErrorAlert');
@@ -6114,6 +6122,7 @@ function setSyncStatus(state, text){
     textEl.innerHTML = '⟲ Sign in with Google to save your ledger online — it\'ll then load automatically on every device, no exporting or uploading needed.';
     document.getElementById('btnGoogleSignIn').style.display = 'inline-flex';
     document.getElementById('btnOpenSheet').style.display = 'none';
+    document.getElementById('btnSyncKV').style.display = 'none';
     document.getElementById('btnSignOut').style.display = 'none';
     // Show sync error alerts when state is 'error' (not just null/saving)
     if(state === 'error'){
@@ -6480,11 +6489,11 @@ async function onSignedIn(){
     // Start periodic KV polls so admin sees updates live without manual refresh
     if (window._waKvPollTimer) clearInterval(window._waKvPollTimer);
     window._waKvPollTimer = setInterval(function(){
-      // Poll WA sent status (from EVT Manager) — force=true bypasses cooldown
-      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV(true);
-      // Poll guest RSVP confirmations (from guests clicking WA link) — force=true
-      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(true);
-    }, 10*60*1000);
+      // Poll WA sent status (from EVT Manager) — every 30 mins to stay within KV free tier
+      if(typeof pullWAUpdatesFromKV==='function') pullWAUpdatesFromKV(false);
+      // Poll guest RSVP confirmations (from guests clicking WA link)
+      if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(false);
+    }, 30*60*1000);
     // Push PIN hashes to KV so new devices can get them without Google OAuth
     (async function(){
       const _roles=['admin','editor','viewer','owner','eventmanager'];
@@ -12636,6 +12645,13 @@ function runGlobalSearch(q, gsInput, gsResults){
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
       <span class="mob-sync-dot" id="mobSyncDot"></span>
+      <button id="mobBtnSyncKV" onclick="(async function(){
+        var b=document.getElementById('mobBtnSyncKV'); b.textContent='⏳…'; b.disabled=true;
+        if(typeof pullWAUpdatesFromKV==='function') await pullWAUpdatesFromKV(true);
+        if(typeof pollGuestRsvpsFromKV==='function') pollGuestRsvpsFromKV(true);
+        b.textContent='🔄'; b.disabled=false;
+        showToast('✅ KV synced!');
+      })()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:12px;font-size:11px;color:#fff;cursor:pointer;padding:3px 7px;white-space:nowrap;">🔄</button>
       <button class="mob-btn-signout" onclick="mobSignOutRole()" style="background:none;border:none;font-size:10px;color:rgba(255,255,255,0.7);cursor:pointer;padding:4px;white-space:nowrap;">&#x21A9; Sign out</button>
     </div>
   </div>
@@ -14635,7 +14651,7 @@ function pushWAStatusToKV(guestId, updates) {
 // KV fetch cooldown — prevents redundant reads when tabs open frequently
 var _lastRsvpKvFetch = 0;
 var _lastWaKvFetch   = 0;
-var KV_FETCH_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between KV reads
+var KV_FETCH_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutes between KV reads (keeps within free tier)
 
 async function pullWAUpdatesFromKV(force) {
   // Skip if fetched recently (unless forced by timer)
