@@ -237,6 +237,28 @@
   .pay-item .amt{font-weight:700; color:var(--maroon-dark);}
   .pay-item .del{cursor:pointer; color:var(--ink-soft); border:none; background:none; font-size:14px; padding:0 4px;}
   .pay-item .del:hover{color:var(--rust);}
+  /* ── Payment Schedule ── */
+  .pay-sched-wrap{margin-top:14px;}
+  .pay-sched-wrap h4{margin-bottom:8px;}
+  .pay-sched-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;max-height:200px;overflow-y:auto;}
+  .pay-sched-item{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;background:var(--ivory);border-radius:8px;border:1px solid var(--line);}
+  .pay-sched-item.overdue{border-left:3px solid #C62828;background:#FFF5F5;}
+  .pay-sched-item.due-soon{border-left:3px solid #E65100;background:#FFF8F0;}
+  .pay-sched-item.paid{opacity:0.55;text-decoration:line-through;}
+  .pay-sched-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+  .pay-sched-badge.red{background:#FFEBEE;color:#C62828;}
+  .pay-sched-badge.amber{background:#FFF3E0;color:#E65100;}
+  .pay-sched-badge.green{background:#E8F5E9;color:#2E7D32;}
+  .pay-sched-badge.grey{background:#F5F5F5;color:#666;}
+  .add-sched-form{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+  .add-sched-form input{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12px;font-family:'Inter';}
+  .add-sched-form input[type=number]{width:95px;}
+  .add-sched-form input[type=date]{width:135px;}
+  .add-sched-form input[type=text]{width:140px;}
+  .add-sched-form select{border:1px solid var(--line);border-radius:7px;padding:6px 8px;font-size:12px;font-family:'Inter';background:#fff;}
+  .vendor-pay-alert{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:8px;}
+  .vendor-pay-alert.red{background:#FFEBEE;color:#C62828;}
+  .vendor-pay-alert.amber{background:#FFF3E0;color:#E65100;}
   .add-payment-form{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
   .add-payment-form input{
     font-family:'Inter'; font-size:12.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--line);
@@ -2591,6 +2613,7 @@
         <div class="sec-header-badges">
           <span class="sec-badge" id="vendorHeaderCount">0 vendors</span>
           <span class="sec-badge" id="vendorHeaderPending">0 pending payment</span>
+          <span class="sec-badge" id="vendorHeaderSchedAlert" style="display:none;background:#C62828;color:#fff;"></span>
         </div>
       </div>
     </div>
@@ -5155,6 +5178,22 @@ function updateSectionBadges() {
   const pendingVendors = vendors ? vendors.filter(v => (v.quoted||0) > (v.payments||[]).reduce((s,p)=>s+(p.amount||0),0)).length : 0;
   if (document.getElementById('vendorHeaderCount')) document.getElementById('vendorHeaderCount').textContent = vendorCount + ' vendors';
   if (document.getElementById('vendorHeaderPending')) document.getElementById('vendorHeaderPending').textContent = pendingVendors + ' pending payment';
+  (function(){
+    var el=document.getElementById('vendorHeaderSchedAlert');
+    if(!el||!vendors) return;
+    var today=new Date(); today.setHours(0,0,0,0);
+    var overdue=0,soon=0;
+    vendors.forEach(function(v){
+      (v.paySchedule||[]).forEach(function(s){
+        if(s.paid||!s.dueDate) return;
+        var dl=Math.round((new Date(s.dueDate)-today)/86400000);
+        if(dl<0) overdue++; else if(dl<=7) soon++;
+      });
+    });
+    if(overdue){el.style.display='';el.style.background='#C62828';el.textContent='🔴 '+overdue+' payment'+(overdue>1?'s':'')+' overdue';}
+    else if(soon){el.style.display='';el.style.background='#E65100';el.textContent='🟡 '+soon+' payment'+(soon>1?'s':'')+' due soon';}
+    else{el.style.display='none';}
+  })();
 
   // Guest badges
   const total = guests ? guests.length : 0;
@@ -5905,6 +5944,92 @@ const uid = () => 'v_' + Math.random().toString(36).slice(2,10) + Date.now().toS
 
 function vendorPaid(v){ return (v.payments||[]).reduce((s,p)=>s+Number(p.amount||0),0); }
 function vendorOutstanding(v){ return Math.max(0, Number(v.quoted||0) - vendorPaid(v)); }
+
+/* ── Payment Schedule helpers ───────────────────────────────────────────── */
+function schedItemAmount(v,s){
+  if(s.pct) return Math.round(Number(v.quoted||0)*Number(s.pct)/100);
+  return Number(s.amount||0);
+}
+function schedDaysLeft(s){
+  if(!s.dueDate) return null;
+  const due=new Date(s.dueDate); due.setHours(0,0,0,0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  return Math.round((due-now)/86400000);
+}
+function vendorSchedAlert(v){
+  const sched=(v.paySchedule||[]).filter(s=>!s.paid);
+  if(!sched.length) return '';
+  const overdue=sched.filter(s=>{const d=schedDaysLeft(s);return d!==null&&d<0;});
+  const urgent =sched.filter(s=>{const d=schedDaysLeft(s);return d!==null&&d>=0&&d<=7;});
+  if(overdue.length) return '<span class="vendor-pay-alert red">🔴 '+overdue.length+' overdue</span>';
+  if(urgent.length)  return '<span class="vendor-pay-alert amber">🟡 due ≤7d</span>';
+  return '';
+}
+function renderSchedItems(v){
+  const sched=v.paySchedule||[];
+  if(!sched.length) return '<li style="font-size:12px;color:var(--ink-soft);padding:6px 0;">No schedule yet. Add entries below.</li>';
+  return sched.map(function(s){
+    const amt=schedItemAmount(v,s);
+    const dl=schedDaysLeft(s);
+    let badge='',cls='';
+    if(s.paid){badge='<span class="pay-sched-badge grey">✅ Paid</span>';cls='paid';}
+    else if(dl===null){badge='<span class="pay-sched-badge grey">No date</span>';}
+    else if(dl<0){badge='<span class="pay-sched-badge red">🔴 Overdue '+Math.abs(dl)+'d</span>';cls='overdue';}
+    else if(dl===0){badge='<span class="pay-sched-badge red">🔴 TODAY</span>';cls='overdue';}
+    else if(dl<=3){badge='<span class="pay-sched-badge red">🔴 '+dl+'d left</span>';cls='due-soon';}
+    else if(dl<=7){badge='<span class="pay-sched-badge amber">🟡 '+dl+'d left</span>';cls='due-soon';}
+    else{badge='<span class="pay-sched-badge green">🟢 '+dl+'d away</span>';}
+    const lbl=s.note?escapeHtml(s.note):(s.pct?s.pct+'%':'');
+    const dateStr=s.dueDate||'—';
+    const amtStr=s.pct?'₹'+Math.round(amt).toLocaleString('en-IN')+' ('+s.pct+'%)':'₹'+Math.round(amt).toLocaleString('en-IN');
+    return `<li class="pay-sched-item ${cls}" id="sr-${s.id}">
+      <span style="font-size:12.5px;"><strong>${lbl||dateStr}</strong> <span style="color:var(--ink-soft);font-size:11px;">${lbl?'· '+dateStr:''}</span></span>
+      <span style="display:flex;align-items:center;gap:6px;">
+        <span style="font-weight:700;font-size:13px;color:var(--maroon-dark);">${amtStr}</span>
+        ${badge}
+        <button title="${s.paid?'Mark unpaid':'Mark paid'}" onclick="toggleSchedPaid('${v.id}','${s.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">${s.paid?'↩️':'✅'}</button>
+        <button class="del" onclick="deleteSchedItem('${v.id}','${s.id}')" title="Remove">✕</button>
+      </span>
+    </li>`;
+  }).join('');
+}
+function addSchedItem(vid){
+  const v=vendors.find(x=>x.id===vid); if(!v) return;
+  const dateEl=document.getElementById('sddate-'+vid);
+  const pctEl =document.getElementById('sdpct-'+vid);
+  const amtEl =document.getElementById('sdamt-'+vid);
+  const noteEl=document.getElementById('sdnote-'+vid);
+  const dueDate=dateEl.value||'';
+  const pct=parseFloat(pctEl.value)||0;
+  const amt=parseFloat(amtEl.value)||0;
+  if(!pct&&!amt){showToast('Enter % of quoted or fixed ₹ amount');return;}
+  const entry={id:uid(),dueDate,note:noteEl.value.trim(),paid:false};
+  if(pct){entry.pct=pct;}else{entry.amount=amt;}
+  if(!v.paySchedule) v.paySchedule=[];
+  v.paySchedule.push(entry);
+  v.paySchedule.sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
+  pctEl.value=''; amtEl.value=''; noteEl.value=''; dateEl.value=new Date().toISOString().slice(0,10);
+  document.getElementById('sched-'+vid).innerHTML=renderSchedItems(v);
+  saveData(); saveReminders();
+  showToast('💰 Payment schedule saved');
+}
+function deleteSchedItem(vid,sid){
+  const v=vendors.find(x=>x.id===vid); if(!v) return;
+  v.paySchedule=(v.paySchedule||[]).filter(s=>s.id!==sid);
+  document.getElementById('sched-'+vid).innerHTML=renderSchedItems(v);
+  saveData(); saveReminders();
+}
+function toggleSchedPaid(vid,sid){
+  const v=vendors.find(x=>x.id===vid); if(!v) return;
+  const s=(v.paySchedule||[]).find(x=>x.id===sid); if(!s) return;
+  s.paid=!s.paid;
+  document.getElementById('sched-'+vid).innerHTML=renderSchedItems(v);
+  renderTable();
+  saveData(); saveReminders();
+  showToast(s.paid?'✅ Marked paid':'↩️ Marked unpaid');
+}
+/* ── end Payment Schedule helpers ── */
+
 function vendorStatus(v){
   const paid = vendorPaid(v), q = Number(v.quoted||0);
   if(q<=0) return 'unpaid';
@@ -6063,7 +6188,10 @@ async function saveReminders(){
           reminders: reminders,
           timeline:  eventTimeline  || {},
           branding:  branding       || {},
-          ep:        eventPlanner   || {}
+          ep:        eventPlanner   || {},
+          vendorSchedules: vendors.map(function(v){
+            return {id:v.id, name:v.name, quoted:v.quoted||0, paySchedule:v.paySchedule||[]};
+          })
         })
       });
     } catch(e){ console.log('Reminder KV sync skipped:', e.message); }
@@ -7106,6 +7234,20 @@ function renderTable(){
                   <input type="text" id="pnote-${v.id}" placeholder="Note (optional)">
                   <button class="btn btn-gold" data-add-payment="${v.id}" style="padding:8px 12px;">+ Add</button>
                 </div>
+                <!-- ── Payment Schedule ── -->
+                <div class="pay-sched-wrap">
+                  <h4>📅 Payment Schedule <span style="font-size:11px;font-weight:400;color:var(--ink-soft);">(reminders: 7d · 3d · 1d before)</span></h4>
+                  <ul class="pay-sched-list" id="sched-${v.id}">
+                    ${renderSchedItems(v)}
+                  </ul>
+                  <div class="add-sched-form">
+                    <input type="date" id="sddate-${v.id}">
+                    <input type="number" id="sdpct-${v.id}" placeholder="% of quoted" min="0" max="100" title="Percentage of quoted amount">
+                    <input type="number" id="sdamt-${v.id}" placeholder="OR fixed ₹" min="0" title="Fixed amount in ₹">
+                    <input type="text"   id="sdnote-${v.id}" placeholder="Label (Advance / Final…)">
+                    <button class="btn btn-gold" data-add-sched="${v.id}" style="padding:7px 12px;font-size:12px;">+ Schedule</button>
+                  </div>
+                </div>
               </div>
               <div class="detail-block">
                 <h4>Vendor details</h4>
@@ -7146,6 +7288,7 @@ function renderTable(){
           ${v.featured ? '<span class="featured-badge" title="Featured in advertisement banner">📢</span>' : ''}
           ${v.rating ? '<span style="font-size:11px;" title="'+(['','Poor','Fair','Good','Very Good','Excellent'][v.rating]||'')+'">'+'⭐'.repeat(v.rating)+'</span>' : ''}
           ${v._communityRating ? '<span class="community-badge" data-vn="'+encodeURIComponent(v.name)+'" onclick="event.stopPropagation();showCommunityRating(decodeURIComponent(this.dataset.vn))" title="Vivaah community rating">\ud83c\udf38 '+v._communityRating.toFixed(1)+'\u2b50 community</span>' : ''}
+          ${vendorSchedAlert(v)}
         </td>
         <td class="cat"><span class="cat-pill">${escapeHtml(v.category||'Uncategorized')}</span></td>
         <td class="num">${fmt(q)}</td>
@@ -7953,8 +8096,9 @@ document.getElementById('guestFileInput').addEventListener('change', (e)=>{
 document.getElementById('ledgerBody').addEventListener('click', (e)=>{
   const editBtn = e.target.closest('[data-edit]');
   const delBtn = e.target.closest('[data-remove]');
-  const addPayBtn = e.target.closest('[data-add-payment]');
-  const delPayBtn = e.target.closest('[data-del-payment]');
+  const addPayBtn  = e.target.closest('[data-add-payment]');
+  const delPayBtn  = e.target.closest('[data-del-payment]');
+  const addSchedBtn= e.target.closest('[data-add-sched]');
   const row = e.target.closest('tr.vendor-row');
 
   if(editBtn){
@@ -7989,6 +8133,10 @@ document.getElementById('ledgerBody').addEventListener('click', (e)=>{
     const [vid, pid] = delPayBtn.dataset.delPayment.split('|');
     const v = vendors.find(x=>x.id===vid);
     if(v){ v.payments = (v.payments||[]).filter(p=>p.id!==pid); saveData(); render(); }
+    return;
+  }
+  if(addSchedBtn){
+    addSchedItem(addSchedBtn.dataset.addSched);
     return;
   }
   if(row){
@@ -14858,8 +15006,22 @@ window.renderRsvpTracker = function() {
   if (!nav) return;
 
   // Sections where the buttons should show (mobile view IDs + desktop section header IDs)
-  var MOB_VIEWS  = ['mobVGuest','mobVRsvp','mobVVendor','mobVKankotri'];
-  var DESK_SECS  = ['guestSectionHeader','rsvpSectionHeader'];
+  var MOB_VIEWS  = ['mobVGuest','mobVRsvp','mobVVendor','mobVKankotri','mobVBudget','mobVReminder','mobVTimeline','mobVNotes','mobVCatering','mobVEventplanner'];
+  var DESK_SECS  = ['budgetSectionHeader','timelineSectionHeader','reminderSectionHeader','notesSectionHeader','cateringSectionHeader','guestSectionHeader','rsvpSectionHeader','kankotriSectionHeader','vendorSectionHeader','epSectionHeader'];
+
+  // Map header IDs → body IDs (for sections that don't follow the SectionHeader→SecBody pattern)
+  var DESK_BODY_MAP = {
+    'budgetSectionHeader':   'budgetSectionBody',
+    'timelineSectionHeader': 'timelineSecBody',
+    'reminderSectionHeader': 'reminderSecBody',
+    'notesSectionHeader':    'notesSecBody',
+    'cateringSectionHeader': 'cateringSecBody',
+    'guestSectionHeader':    'guestSecBody',
+    'rsvpSectionHeader':     'rsvpSecBody',
+    'kankotriSectionHeader': 'kankotriSecBody',
+    'vendorSectionHeader':   'vendorSecBody',
+    'epSectionHeader':       'epSecBody'
+  };
 
   // Which scrollable element to use right now
   function activeScroller() {
@@ -14870,7 +15032,7 @@ window.renderRsvpTracker = function() {
     for (var i = 0; i < DESK_SECS.length; i++) {
       var hdr = document.getElementById(DESK_SECS[i]);
       if (hdr) {
-        var bodyId = DESK_SECS[i].replace('SectionHeader','SecBody');
+        var bodyId = DESK_BODY_MAP[DESK_SECS[i]] || DESK_SECS[i].replace('SectionHeader','SecBody');
         var body   = document.getElementById(bodyId);
         if (body && body.style.display !== 'none' && body.offsetHeight > 0) {
           return window; // desktop uses window scroll
