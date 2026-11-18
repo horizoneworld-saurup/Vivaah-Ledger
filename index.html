@@ -5947,29 +5947,36 @@ function vendorOutstanding(v){ return Math.max(0, Number(v.quoted||0) - vendorPa
 
 /* ── Payment Schedule helpers ───────────────────────────────────────────── */
 function schedItemAmount(v,s){
-  // pct is always of total quoted (e.g. "50% advance" = 50% of full contract)
-  if(s.pct) return Math.round(Number(v.quoted||0)*Number(s.pct)/100);
+  // pct is of the OUTSTANDING balance (quoted minus already paid in Payment History)
+  // e.g. Quoted ₹3,60,000, Paid ₹80,000 → outstanding ₹2,80,000
+  // "30%" → 30% of ₹2,80,000 = ₹84,000
+  if(s.pct){
+    const outstanding = Math.max(0, Number(v.quoted||0) - vendorPaid(v));
+    return Math.round(outstanding * Number(s.pct) / 100);
+  }
   return Number(s.amount||0);
 }
-// Total amount scheduled across ALL entries (paid + unpaid)
+// Total amount scheduled across ALL unpaid entries
 function schedTotalPlanned(v){
   return (v.paySchedule||[]).reduce(function(sum,s){ return sum+schedItemAmount(v,s); },0);
 }
-// Auto-sync: mark schedule entries as paid based on cumulative Payment History
-// Logic: sort schedule by date, fill from oldest first using actual paid amount
+// Auto-sync: for % entries, amount is already off outstanding — just check if fixed-amount entries are covered
+// For % entries, they are "pending" by definition (they represent future tranches of outstanding)
+// Only mark paid if explicitly added to Payment History (amount-based entries)
 function autoSyncSchedPaid(v){
-  const sched = (v.paySchedule||[]).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
+  // For % entries: always unpaid (they represent % of outstanding — if paid, user records in Payment History)
+  // For fixed-amount entries: mark paid if cumulative payment history covers them (oldest first)
+  const fixedEntries = (v.paySchedule||[]).filter(s=>!s.pct).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
   const totalPaidActual = vendorPaid(v);
+  // For fixed entries: fill from oldest
   let covered = 0;
-  sched.forEach(function(s){
-    const amt = schedItemAmount(v,s);
-    if(covered+amt <= totalPaidActual){
-      s.paid = true;
-      covered += amt;
-    } else {
-      s.paid = false;
-    }
+  fixedEntries.forEach(function(s){
+    const amt = Number(s.amount||0);
+    if(covered + amt <= totalPaidActual){ s.paid = true; covered += amt; }
+    else { s.paid = false; }
   });
+  // For % entries: always unpaid (outstanding-based, user pays and records separately)
+  (v.paySchedule||[]).filter(s=>s.pct).forEach(function(s){ s.paid = false; });
 }
 function schedDaysLeft(s){
   if(!s.dueDate) return null;
@@ -5994,19 +6001,21 @@ function renderSchedItems(v){
 
   // Summary bar
   const totalPaidActual = vendorPaid(v);
-  const totalScheduled  = schedTotalPlanned(v);
-  const schedPaidAmt    = sched.filter(s=>s.paid).reduce(function(sum,s){return sum+schedItemAmount(v,s);},0);
-  const schedUnpaidAmt  = totalScheduled - schedPaidAmt;
   const q               = Number(v.quoted||0);
-  const unscheduled     = Math.max(0, q - totalScheduled);
+  const outstanding     = Math.max(0, q - totalPaidActual);
+  const totalScheduled  = schedTotalPlanned(v); // sum of all % entries (off outstanding) + fixed entries
+  const schedUnpaidAmt  = sched.filter(s=>!s.paid).reduce(function(sum,s){return sum+schedItemAmount(v,s);},0);
+  const totalWillPay    = totalPaidActual + schedUnpaidAmt;
+  const gap             = Math.max(0, q - totalWillPay);
 
   const summaryBar = `<li style="list-style:none;padding:8px 10px;margin-bottom:6px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:8px;border:1px solid #FFD580;font-size:11.5px;">
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-      <span>💰 <strong>Paid so far:</strong> ₹${Math.round(totalPaidActual).toLocaleString('en-IN')}</span>
-      <span>📅 <strong>Still due (scheduled):</strong> ₹${Math.round(schedUnpaidAmt).toLocaleString('en-IN')}</span>
-      ${unscheduled>0?`<span style="color:#C45000;">⚠️ <strong>Unscheduled balance:</strong> ₹${Math.round(unscheduled).toLocaleString('en-IN')}</span>`:''}
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <span>✅ <strong>Paid:</strong> ₹${Math.round(totalPaidActual).toLocaleString('en-IN')}</span>
+      <span>📅 <strong>Outstanding:</strong> ₹${Math.round(outstanding).toLocaleString('en-IN')}</span>
+      <span>🔜 <strong>Scheduled to pay:</strong> ₹${Math.round(schedUnpaidAmt).toLocaleString('en-IN')}</span>
+      ${gap>0?`<span style="color:#C45000;">⚠️ <strong>Still unscheduled:</strong> ₹${Math.round(gap).toLocaleString('en-IN')}</span>`:'<span style="color:#2E7D32;">✔ Fully scheduled</span>'}
     </div>
-    <div style="margin-top:5px;font-size:10.5px;color:#888;">✅ Entries auto-marked paid based on Payment History above</div>
+    <div style="margin-top:4px;font-size:10.5px;color:#888;">% entries calculated on outstanding balance (₹${Math.round(outstanding).toLocaleString('en-IN')})</div>
   </li>`;
 
   return summaryBar + sched.map(function(s){
@@ -6020,12 +6029,15 @@ function renderSchedItems(v){
     else if(dl<=3){badge='<span class="pay-sched-badge red">🔴 '+dl+'d left</span>';cls='due-soon';}
     else if(dl<=7){badge='<span class="pay-sched-badge amber">🟡 '+dl+'d left</span>';cls='due-soon';}
     else{badge='<span class="pay-sched-badge green">🟢 '+dl+'d away</span>';}
-    const lbl=s.note?escapeHtml(s.note):(s.pct?s.pct+'% of total':'');
+    const lbl=s.note?escapeHtml(s.note):(s.pct?s.pct+'% of balance':'');
     const dateStr=s.dueDate||'—';
-    const amtStr=s.pct?'₹'+Math.round(amt).toLocaleString('en-IN')+' ('+s.pct+'% of ₹'+Math.round(q).toLocaleString('en-IN')+')':'₹'+Math.round(amt).toLocaleString('en-IN');
+    // Show clearly: amount + basis
+    const amtStr=s.pct
+      ? '₹'+Math.round(amt).toLocaleString('en-IN')+' <span style="font-size:10px;color:var(--ink-soft);">('+s.pct+'% of outstanding ₹'+Math.round(outstanding).toLocaleString('en-IN')+')</span>'
+      : '₹'+Math.round(amt).toLocaleString('en-IN');
     return `<li class="pay-sched-item ${cls}" id="sr-${s.id}">
       <span style="font-size:12.5px;"><strong>${lbl||dateStr}</strong> <span style="color:var(--ink-soft);font-size:11px;">${lbl?'· '+dateStr:''}</span></span>
-      <span style="display:flex;align-items:center;gap:6px;">
+      <span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <span style="font-weight:700;font-size:13px;color:${s.paid?'var(--ink-soft)':'var(--maroon-dark)'};">${amtStr}</span>
         ${badge}
         <button class="del" onclick="deleteSchedItem('${v.id}','${s.id}')" title="Remove">✕</button>

@@ -250,17 +250,26 @@ function scanReminders(reminderData, today) {
   // ── Vendor Payment Schedules ────────────────────────────────────────────
   // Auto-sync: sort schedule by date, mark paid entries covered by actual payments
   function schedAmt(v, s) {
-    return s.pct ? Math.round(Number(v.quoted||0) * Number(s.pct) / 100) : Number(s.amount||0);
+    // pct = % of outstanding balance (quoted minus already paid), same logic as app
+    if (s.pct) {
+      const totalPaid = (v.payments||[]).reduce(function(sum,p){ return sum+Number(p.amount||0); }, 0);
+      const outstanding = Math.max(0, Number(v.quoted||0) - totalPaid);
+      return Math.round(outstanding * Number(s.pct) / 100);
+    }
+    return Number(s.amount||0);
   }
   function autoSyncVendor(v) {
+    // Only auto-sync fixed-amount entries; % entries are always "pending" (of outstanding balance)
     const totalPaid = (v.payments||[]).reduce(function(sum,p){ return sum+Number(p.amount||0); }, 0);
-    const sorted = (v.paySchedule||[]).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
+    const fixedSorted = (v.paySchedule||[]).filter(s=>!s.pct).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
     let covered = 0;
-    sorted.forEach(function(s){
-      const amt = schedAmt(v, s);
+    fixedSorted.forEach(function(s){
+      const amt = Number(s.amount||0);
       s.paid = (covered + amt <= totalPaid);
       if(s.paid) covered += amt;
     });
+    // % entries always unpaid
+    (v.paySchedule||[]).filter(s=>s.pct).forEach(function(s){ s.paid = false; });
   }
 
   const vendorSchedules = reminderData.vendorSchedules || [];
@@ -273,9 +282,11 @@ function scanReminders(reminderData, today) {
       // Fire at 7, 3, 1 days before + on day + keep firing weekly after overdue
       const shouldFire = (dl === 7 || dl === 3 || dl === 1 || dl === 0 || (dl < 0 && (-dl) % 7 === 0));
       if (!shouldFire) return;
+      const totalPaidV = (v.payments||[]).reduce(function(sum,p){ return sum+Number(p.amount||0); }, 0);
+      const outstandingV = Math.max(0, Number(v.quoted||0) - totalPaidV);
       const amt    = schedAmt(v, s);
-      const amtStr = '₹' + Math.round(amt).toLocaleString('en-IN') + (s.pct ? ' ('+s.pct+'% of contract)' : '');
-      const lbl    = s.note || (s.pct ? s.pct+'% instalment' : '');
+      const amtStr = '₹' + Math.round(amt).toLocaleString('en-IN') + (s.pct ? ' ('+s.pct+'% of outstanding ₹'+Math.round(outstandingV).toLocaleString('en-IN')+')' : '');
+      const lbl    = s.note || (s.pct ? s.pct+'% of balance' : '');
       alerts.push({
         text:     '💰 Pay ' + amtStr + ' to ' + v.name + (lbl ? ' — ' + lbl : '') + ' (due ' + s.dueDate + ')',
         daysLeft: dl,
