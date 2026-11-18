@@ -5947,8 +5947,29 @@ function vendorOutstanding(v){ return Math.max(0, Number(v.quoted||0) - vendorPa
 
 /* ── Payment Schedule helpers ───────────────────────────────────────────── */
 function schedItemAmount(v,s){
+  // pct is always of total quoted (e.g. "50% advance" = 50% of full contract)
   if(s.pct) return Math.round(Number(v.quoted||0)*Number(s.pct)/100);
   return Number(s.amount||0);
+}
+// Total amount scheduled across ALL entries (paid + unpaid)
+function schedTotalPlanned(v){
+  return (v.paySchedule||[]).reduce(function(sum,s){ return sum+schedItemAmount(v,s); },0);
+}
+// Auto-sync: mark schedule entries as paid based on cumulative Payment History
+// Logic: sort schedule by date, fill from oldest first using actual paid amount
+function autoSyncSchedPaid(v){
+  const sched = (v.paySchedule||[]).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
+  const totalPaidActual = vendorPaid(v);
+  let covered = 0;
+  sched.forEach(function(s){
+    const amt = schedItemAmount(v,s);
+    if(covered+amt <= totalPaidActual){
+      s.paid = true;
+      covered += amt;
+    } else {
+      s.paid = false;
+    }
+  });
 }
 function schedDaysLeft(s){
   if(!s.dueDate) return null;
@@ -5966,28 +5987,47 @@ function vendorSchedAlert(v){
   return '';
 }
 function renderSchedItems(v){
+  // Auto-sync paid status based on actual Payment History before rendering
+  autoSyncSchedPaid(v);
   const sched=v.paySchedule||[];
   if(!sched.length) return '<li style="font-size:12px;color:var(--ink-soft);padding:6px 0;">No schedule yet. Add entries below.</li>';
-  return sched.map(function(s){
+
+  // Summary bar
+  const totalPaidActual = vendorPaid(v);
+  const totalScheduled  = schedTotalPlanned(v);
+  const schedPaidAmt    = sched.filter(s=>s.paid).reduce(function(sum,s){return sum+schedItemAmount(v,s);},0);
+  const schedUnpaidAmt  = totalScheduled - schedPaidAmt;
+  const q               = Number(v.quoted||0);
+  const unscheduled     = Math.max(0, q - totalScheduled);
+
+  const summaryBar = `<li style="list-style:none;padding:8px 10px;margin-bottom:6px;background:linear-gradient(135deg,#FFF8F0,#FFF3E0);border-radius:8px;border:1px solid #FFD580;font-size:11.5px;">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <span>💰 <strong>Paid so far:</strong> ₹${Math.round(totalPaidActual).toLocaleString('en-IN')}</span>
+      <span>📅 <strong>Still due (scheduled):</strong> ₹${Math.round(schedUnpaidAmt).toLocaleString('en-IN')}</span>
+      ${unscheduled>0?`<span style="color:#C45000;">⚠️ <strong>Unscheduled balance:</strong> ₹${Math.round(unscheduled).toLocaleString('en-IN')}</span>`:''}
+    </div>
+    <div style="margin-top:5px;font-size:10.5px;color:#888;">✅ Entries auto-marked paid based on Payment History above</div>
+  </li>`;
+
+  return summaryBar + sched.map(function(s){
     const amt=schedItemAmount(v,s);
     const dl=schedDaysLeft(s);
     let badge='',cls='';
-    if(s.paid){badge='<span class="pay-sched-badge grey">✅ Paid</span>';cls='paid';}
+    if(s.paid){badge='<span class="pay-sched-badge grey">✅ Covered</span>';cls='paid';}
     else if(dl===null){badge='<span class="pay-sched-badge grey">No date</span>';}
     else if(dl<0){badge='<span class="pay-sched-badge red">🔴 Overdue '+Math.abs(dl)+'d</span>';cls='overdue';}
     else if(dl===0){badge='<span class="pay-sched-badge red">🔴 TODAY</span>';cls='overdue';}
     else if(dl<=3){badge='<span class="pay-sched-badge red">🔴 '+dl+'d left</span>';cls='due-soon';}
     else if(dl<=7){badge='<span class="pay-sched-badge amber">🟡 '+dl+'d left</span>';cls='due-soon';}
     else{badge='<span class="pay-sched-badge green">🟢 '+dl+'d away</span>';}
-    const lbl=s.note?escapeHtml(s.note):(s.pct?s.pct+'%':'');
+    const lbl=s.note?escapeHtml(s.note):(s.pct?s.pct+'% of total':'');
     const dateStr=s.dueDate||'—';
-    const amtStr=s.pct?'₹'+Math.round(amt).toLocaleString('en-IN')+' ('+s.pct+'%)':'₹'+Math.round(amt).toLocaleString('en-IN');
+    const amtStr=s.pct?'₹'+Math.round(amt).toLocaleString('en-IN')+' ('+s.pct+'% of ₹'+Math.round(q).toLocaleString('en-IN')+')':'₹'+Math.round(amt).toLocaleString('en-IN');
     return `<li class="pay-sched-item ${cls}" id="sr-${s.id}">
       <span style="font-size:12.5px;"><strong>${lbl||dateStr}</strong> <span style="color:var(--ink-soft);font-size:11px;">${lbl?'· '+dateStr:''}</span></span>
       <span style="display:flex;align-items:center;gap:6px;">
-        <span style="font-weight:700;font-size:13px;color:var(--maroon-dark);">${amtStr}</span>
+        <span style="font-weight:700;font-size:13px;color:${s.paid?'var(--ink-soft)':'var(--maroon-dark)'};">${amtStr}</span>
         ${badge}
-        <button title="${s.paid?'Mark unpaid':'Mark paid'}" onclick="toggleSchedPaid('${v.id}','${s.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;padding:0 2px;">${s.paid?'↩️':'✅'}</button>
         <button class="del" onclick="deleteSchedItem('${v.id}','${s.id}')" title="Remove">✕</button>
       </span>
     </li>`;
@@ -6190,7 +6230,7 @@ async function saveReminders(){
           branding:  branding       || {},
           ep:        eventPlanner   || {},
           vendorSchedules: vendors.map(function(v){
-            return {id:v.id, name:v.name, quoted:v.quoted||0, paySchedule:v.paySchedule||[]};
+            return {id:v.id, name:v.name, quoted:v.quoted||0, paySchedule:v.paySchedule||[], payments:v.payments||[]};
           })
         })
       });

@@ -248,26 +248,39 @@ function scanReminders(reminderData, today) {
   });
 
   // ── Vendor Payment Schedules ────────────────────────────────────────────
+  // Auto-sync: sort schedule by date, mark paid entries covered by actual payments
+  function schedAmt(v, s) {
+    return s.pct ? Math.round(Number(v.quoted||0) * Number(s.pct) / 100) : Number(s.amount||0);
+  }
+  function autoSyncVendor(v) {
+    const totalPaid = (v.payments||[]).reduce(function(sum,p){ return sum+Number(p.amount||0); }, 0);
+    const sorted = (v.paySchedule||[]).slice().sort((a,b)=>(a.dueDate||'9999')>(b.dueDate||'9999')?1:-1);
+    let covered = 0;
+    sorted.forEach(function(s){
+      const amt = schedAmt(v, s);
+      s.paid = (covered + amt <= totalPaid);
+      if(s.paid) covered += amt;
+    });
+  }
+
   const vendorSchedules = reminderData.vendorSchedules || [];
   vendorSchedules.forEach(function(v) {
+    autoSyncVendor(v); // apply same logic as app before checking alerts
     (v.paySchedule || []).forEach(function(s) {
-      if (s.paid || !s.dueDate) return;
+      if (s.paid || !s.dueDate) return; // skip entries covered by existing payments
       const due = new Date(s.dueDate); due.setHours(0,0,0,0);
       const dl  = Math.round((due - today) / 86400000);
-      // Fire at 7, 3, 1 days before + on day + keep firing weekly after
+      // Fire at 7, 3, 1 days before + on day + keep firing weekly after overdue
       const shouldFire = (dl === 7 || dl === 3 || dl === 1 || dl === 0 || (dl < 0 && (-dl) % 7 === 0));
       if (!shouldFire) return;
-      // Calculate amount
-      const amt = s.pct ? Math.round(Number(v.quoted||0) * Number(s.pct) / 100) : Number(s.amount||0);
-      const amtStr = '₹' + Math.round(amt).toLocaleString('en-IN') + (s.pct ? ' ('+s.pct+'%)' : '');
-      const lbl = s.note || (s.pct ? s.pct+'% advance' : amtStr);
-      const urgTag = dl < 0 ? '🔴 OVERDUE' : dl === 0 ? '🔴 TODAY' : dl <= 3 ? '🔴 ' + dl + 'd left' : '🟡 ' + dl + 'd away';
+      const amt    = schedAmt(v, s);
+      const amtStr = '₹' + Math.round(amt).toLocaleString('en-IN') + (s.pct ? ' ('+s.pct+'% of contract)' : '');
+      const lbl    = s.note || (s.pct ? s.pct+'% instalment' : '');
       alerts.push({
-        text:     '💰 Pay ' + amtStr + ' to ' + v.name + ' — ' + lbl + ' (due ' + s.dueDate + ')',
+        text:     '💰 Pay ' + amtStr + ' to ' + v.name + (lbl ? ' — ' + lbl : '') + ' (due ' + s.dueDate + ')',
         daysLeft: dl,
         module:   'Vendor Payment',
-        emoji:    '💰',
-        urgTag
+        emoji:    '💰'
       });
     });
   });
